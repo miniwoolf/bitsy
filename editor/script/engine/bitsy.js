@@ -1430,44 +1430,63 @@ function parseTitle(lines, i) {
 	return i;
 }
 
-function parseRoom(lines, i, compatibilityFlags) {
-	var id = getId(lines[i]);
-	room[id] = {
+function createRoom(id, palId) {
+	return {
 		id : id,
-		tilemap : [],
+		tilemap : [
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"]
+			],
 		walls : [],
 		exits : [],
 		endings : [],
 		items : [], // TODO : remove
 		objectLocations : [],
 		objectInstances : [],
-		pal : null,
-		name : null
+		pal : palId,
+		name : null,
 	};
+}
+
+function parseRoom(lines, i, compatibilityFlags) {
+	var id = getId(lines[i]);
+	room[id] = createRoom(id);
 	i++;
 
 	// create tile map
-	if ( flags.ROOM_FORMAT == 0 ) {
+	if (flags.ROOM_FORMAT == 0) {
 		// old way: no commas, single char tile ids
 		var end = i + mapsize;
 		var y = 0;
-		for (; i<end; i++) {
-			room[id].tilemap.push( [] );
-			for (x = 0; x<mapsize; x++) {
-				room[id].tilemap[y].push( lines[i].charAt(x) );
+		for (; i < end; i++) {
+			for (x = 0; x < mapsize; x++) {
+				room[id].tilemap[y][x] = lines[i].charAt(x);
 			}
 			y++;
 		}
 	}
-	else if ( flags.ROOM_FORMAT == 1 ) {
+	else if (flags.ROOM_FORMAT == 1) {
 		// new way: comma separated, multiple char tile ids
 		var end = i + mapsize;
 		var y = 0;
-		for (; i<end; i++) {
-			room[id].tilemap.push( [] );
+		for (; i < end; i++) {
 			var lineSep = lines[i].split(",");
-			for (x = 0; x<mapsize; x++) {
-				room[id].tilemap[y].push( lineSep[x] );
+			for (x = 0; x < mapsize; x++) {
+				room[id].tilemap[y][x] = lineSep[x];
 			}
 			y++;
 		}
