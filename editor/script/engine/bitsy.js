@@ -4,9 +4,9 @@ var context; // TODO : remove if safe?
 var ctx;
 
 var room = {};
-var tile = {};
-var sprite = {};
-var item = {};
+var tile = {}; // TODO : remove
+var sprite = {}; // TODO : remove
+var item = {}; // TODO : remove
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
 var palette = { //start off with a default palette
@@ -60,8 +60,6 @@ function updateNamesFromCurData() {
 	names.dialog = createNameMap(dialog);
 }
 
-var spriteStartLocations = {};
-
 /* VERSION */
 var version = {
 	major: 7, // major changes
@@ -102,8 +100,6 @@ function clearGameData() {
 	variable = {};
 
 	// TODO RENDERER : clear data?
-
-	spriteStartLocations = {};
 
 	// hacky to have this multiple times...
 	names = {
@@ -1038,8 +1034,6 @@ function isSpriteOffstage(id) {
 }
 
 function parseWorld(file) {
-	spriteStartLocations = {};
-
 	resetFlags();
 
 	var versionNumber = 0;
@@ -1115,8 +1109,6 @@ function parseWorld(file) {
 			i++;
 		}
 	}
-
-	placeSprites();
 
 	var roomIds = Object.keys(room);
 	if (player() != undefined && player().room != null && roomIds.includes(player().room)) {
@@ -1260,12 +1252,19 @@ function serializeWorld(skipFonts) {
 			}
 			worldStr += "\n";
 		}
-		if (room[id].items.length > 0) {
-			/* ITEMS */
-			for (j in room[id].items) {
-				var itm = room[id].items[j];
-				worldStr += "ITM " + itm.id + " " + itm.x + "," + itm.y;
-				worldStr += "\n";
+		if (room[id].objectLocations.length > 0) {
+			/* OBJECTS */
+			for (j in room[id].objectLocations) {
+				var obj = room[id].objectLocations[j];
+				if (!object[obj.id].isUnique || !object[obj.id].hasUniqueLocation) {
+					worldStr += object[obj.id].type + " " + obj.id + " " + obj.x + "," + obj.y;
+					worldStr += "\n";
+				}
+
+				// temporary field to ensure unique objects are only placed once! (necessary for the player)
+				if (object[obj.id].isUnique) {
+					object[obj.id].hasUniqueLocation = true;
+				}
 			}
 		}
 		if (room[id].exits.length > 0) {
@@ -1299,66 +1298,39 @@ function serializeWorld(skipFonts) {
 		}
 		worldStr += "\n";
 	}
-	/* TILES */
-	for (id in tile) {
-		worldStr += "TIL " + id + "\n";
-		worldStr += serializeDrawing( "TIL_" + id );
-		if (tile[id].name != null && tile[id].name != undefined) {
+	/* OBJECTS */
+	for (id in object) {
+		var type = object[id].type;
+		worldStr += type + " " + id + "\n";
+		worldStr += serializeDrawing(id);
+		if (object[id].name != null && object[id].name != undefined) {
 			/* NAME */
-			worldStr += "NAME " + tile[id].name + "\n";
+			worldStr += "NAME " + object[id].name + "\n";
 		}
-		if (tile[id].isWall != null && tile[id].isWall != undefined) {
-			/* WALL */
-			worldStr += "WAL " + tile[id].isWall + "\n";
-		}
-		if (tile[id].col != null && tile[id].col != undefined && tile[id].col != 1) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + tile[id].col + "\n";
-		}
-		worldStr += "\n";
-	}
-	/* SPRITES */
-	for (id in sprite) {
-		worldStr += "SPR " + id + "\n";
-		worldStr += serializeDrawing( "SPR_" + id );
-		if (sprite[id].name != null && sprite[id].name != undefined) {
-			/* NAME */
-			worldStr += "NAME " + sprite[id].name + "\n";
-		}
-		if (sprite[id].dlg != null) {
-			worldStr += "DLG " + sprite[id].dlg + "\n";
-		}
-		if (sprite[id].room != null) {
-			/* SPRITE POSITION */
-			worldStr += "POS " + sprite[id].room + " " + sprite[id].x + "," + sprite[id].y + "\n";
-		}
-		if (sprite[id].inventory != null) {
-			for(itemId in sprite[id].inventory) {
-				worldStr += "ITM " + itemId + " " + sprite[id].inventory[itemId] + "\n";
+		if (object[id].col != null && object[id].col != undefined) {
+			var defaultColor = type === "TIL" ? 1 : 2;
+			if (object[id].col != defaultColor) {
+				/* COLOR OVERRIDE */
+				worldStr += "COL " + object[id].col + "\n";
 			}
 		}
-		if (sprite[id].col != null && sprite[id].col != undefined && sprite[id].col != 2) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + sprite[id].col + "\n";
+		if (type === "TIL" && object[id].isWall != null && object[id].isWall != undefined) {
+			/* WALL */
+			worldStr += "WAL " + object[id].isWall + "\n";
 		}
+		if (type != "TIL" && object[id].dlg != null) {
+			worldStr += "DLG " + object[id].dlg + "\n";
+		}
+		if (type === "SPR" && id === "A" && object[id].inventory != null) {
+			for (itemId in object[id].inventory) {
+				worldStr += "ITM " + itemId + " " + object[id].inventory[itemId] + "\n";
+			}
+		}
+
 		worldStr += "\n";
-	}
-	/* ITEMS */
-	for (id in item) {
-		worldStr += "ITM " + id + "\n";
-		worldStr += serializeDrawing( "ITM_" + id );
-		if (item[id].name != null && item[id].name != undefined) {
-			/* NAME */
-			worldStr += "NAME " + item[id].name + "\n";
-		}
-		if (item[id].dlg != null) {
-			worldStr += "DLG " + item[id].dlg + "\n";
-		}
-		if (item[id].col != null && item[id].col != undefined && item[id].col != 2) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + item[id].col + "\n";
-		}
-		worldStr += "\n";
+
+		// remove temporary unique placement field
+		delete object[id].hasUniqueLocation;
 	}
 	/* DIALOG */
 	for (id in dialog) {
@@ -1409,18 +1381,6 @@ function isExitValid(e) {
 	return hasValidStartPos && hasDest && hasValidRoomDest;
 }
 
-function placeSprites() {
-	for (id in spriteStartLocations) {
-		//console.log(id);
-		//console.log( spriteStartLocations[id] );
-		//console.log(sprite[id]);
-		sprite[id].room = spriteStartLocations[id].room;
-		sprite[id].x = spriteStartLocations[id].x;
-		sprite[id].y = spriteStartLocations[id].y;
-		//console.log(sprite[id]);
-	}
-}
-
 /* ARGUMENT GETTERS */
 function getType(line) {
 	return getArg(line,0);
@@ -1456,7 +1416,9 @@ function parseRoom(lines, i, compatibilityFlags) {
 		walls : [],
 		exits : [],
 		endings : [],
-		items : [],
+		items : [], // TODO : remove
+		objectLocations : [],
+		objectInstances : [],
 		pal : null,
 		name : null
 	};
@@ -1491,56 +1453,27 @@ function parseRoom(lines, i, compatibilityFlags) {
 
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		// console.log(getType(lines[i]));
-		if (getType(lines[i]) === "SPR") {
-			/* NOTE SPRITE START LOCATIONS */
-			var sprId = getId(lines[i]);
-			if (sprId.indexOf(",") == -1 && lines[i].split(" ").length >= 3) { //second conditional checks for coords
-				/* PLACE A SINGLE SPRITE */
-				var sprCoord = lines[i].split(" ")[2].split(",");
-				spriteStartLocations[sprId] = {
-					room : id,
-					x : parseInt(sprCoord[0]),
-					y : parseInt(sprCoord[1])
-				};
-			}
-			else if ( flags.ROOM_FORMAT == 0 ) { // TODO: right now this shortcut only works w/ the old comma separate format
-				/* PLACE MULTIPLE SPRITES*/ 
-				//Does find and replace in the tilemap (may be hacky, but its convenient)
-				var sprList = sprId.split(",");
-				for (row in room[id].tilemap) {
-					for (s in sprList) {
-						var col = room[id].tilemap[row].indexOf( sprList[s] );
-						//if the sprite is in this row, replace it with the "null tile" and set its starting position
-						if (col != -1) {
-							room[id].tilemap[row][col] = "0";
-							spriteStartLocations[ sprList[s] ] = {
-								room : id,
-								x : parseInt(col),
-								y : parseInt(row)
-							};
-						}
-					}
-				}
-			}
-		}
-		else if (getType(lines[i]) === "ITM") {
-			var itmId = getId(lines[i]);
-			var itmCoord = lines[i].split(" ")[2].split(",");
-			var itm = {
-				id: itmId,
-				x : parseInt(itmCoord[0]),
-				y : parseInt(itmCoord[1])
+		if (getType(lines[i]) === "SPR" || getType(lines[i]) === "ITM") {
+			var objId = getId(lines[i]);
+			var objCoord = lines[i].split(" ")[2].split(",");
+			var obj = {
+				id: objId,
+				x : parseInt(objCoord[0]),
+				y : parseInt(objCoord[1]),
 			};
-			room[id].items.push( itm );
+			room[id].objectLocations.push(obj);
+
+			// TODO : do I need to support reading in the old "find and replace" sprite format for back compat?
 		}
 		else if (getType(lines[i]) === "WAL") {
 			/* DEFINE COLLISIONS (WALLS) */
+			// TODO : remove this deprecated feature at some point
 			room[id].walls = getId(lines[i]).split(",");
 		}
 		else if (getType(lines[i]) === "EXT") {
 			/* ADD EXIT */
 			var exitArgs = lines[i].split(" ");
-			//arg format: EXT 10,5 M 3,2 [AVA:7 LCK:a,9] [AVA 7 LCK a 9]
+			//arg format: EXT 10,5 M 3,2
 			var exitCoords = exitArgs[1].split(",");
 			var destName = exitArgs[2];
 			var destCoords = exitArgs[3].split(",");
@@ -1691,20 +1624,12 @@ function parseObject(lines, i, type) {
 			var roomId = posArgs[1];
 			var coordArgs = posArgs[2].split(",");
 
-			// TODO:
-			// if (isPlayer) {
-			// 	playerRoom = roomId;
-			// 	playerX = parseInt(coordArgs[0]);
-			// 	playerY = parseInt(coordArgs[1]);
-			// }
-			// else {
-			// 	// NOTE: assumes rooms have all been created!
-			// 	room[roomId].objectLocations.push({
-			// 		id: id,
-			// 		x : parseInt(coordArgs[0]),
-			// 		y : parseInt(coordArgs[1]),
-			// 	});
-			// }
+			// NOTE: assumes rooms have all been created!
+			room[roomId].objectLocations.push({
+				id: id,
+				x : parseInt(coordArgs[0]),
+				y : parseInt(coordArgs[1]),
+			});
 		}
 		else if (getType(lines[i]) === "ITM" && isPlayer) {
 			/* ITEM STARTING INVENTORY */
