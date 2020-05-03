@@ -7,6 +7,7 @@ var room = {};
 var tile = {};
 var sprite = {};
 var item = {};
+var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
 var palette = { //start off with a default palette
 		"default" : {
@@ -1016,7 +1017,7 @@ function getTile(x,y) {
 }
 
 function player() {
-	return sprite[playerId];
+	return object[playerId];
 }
 
 // Sort of a hack for legacy palette code (when it was just an array)
@@ -1085,17 +1086,8 @@ function parseWorld(file) {
 		else if (getType(curLine) === "ROOM" || getType(curLine) === "SET") { //SET for back compat
 			i = parseRoom(lines, i, compatibilityFlags);
 		}
-		else if (getType(curLine) === "TIL") {
-			i = parseTile(lines, i);
-		}
-		else if (getType(curLine) === "SPR") {
-			i = parseSprite(lines, i);
-		}
-		else if (getType(curLine) === "ITM") {
-			i = parseItem(lines, i);
-		}
-		else if (getType(curLine) === "DRW") {
-			i = parseDrawing(lines, i);
+		else if (getType(curLine) === "TIL" || getType(curLine) === "SPR" || getType(curLine) === "ITM") {
+			i = parseObject(lines, i, getType(curLine));
 		}
 		else if (getType(curLine) === "DLG") {
 			i = parseDialog(lines, i, compatibilityFlags);
@@ -1643,236 +1635,146 @@ function parsePalette(lines,i) { //todo this has to go first right now :(
 	return i;
 }
 
-function parseTile(lines, i) {
+function parseObject(lines, i, type) {
 	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
-
 	i++;
 
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
-	}
-	else {
-		// store tile source
-		drwId = "TIL_" + id;
-		i = parseDrawingCore( lines, i, drwId );
-	}
+	// parse drawing
+	var drwId = id;
+	i = parseDrawingCore(lines, i, drwId);
 
-	//other properties
-	var colorIndex = 1; // default palette color index is 1
-	var isWall = null; // null indicates it can vary from room to room (original version)
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			colorIndex = parseInt( getId(lines[i]) );
-		}
-		else if (getType(lines[i]) === "NAME") {
+	var isPlayer = type === "SPR" && id === "A";
+
+	// TODO : for now, only the player is unique, but there
+	// could be a setting to enable it for other sprites
+	var isUnique = isPlayer;
+
+	// default color for tiles is index 1, but for sprites & items it's index 2
+	var colorIndex = (type === "TIL" ? 1 : 2);
+
+	// wall property is only used by tiles
+	// null indicates it can vary from room to room (original version)
+	var isWall = null;
+
+	var name = null;
+	var dialogId = null;
+	var startingInventory = {};
+
+	// read all other properties
+	while (i < lines.length && lines[i].length > 0) { // stop at empty line
+		if (getType(lines[i]) === "NAME") {
 			/* NAME */
 			name = lines[i].split(/\s(.+)/)[1];
-			names.tile.set( name, id );
+			names.sprite.set(name, id);
 		}
-		else if (getType(lines[i]) === "WAL") {
-			var wallArg = getArg( lines[i], 1 );
-			if( wallArg === "true" ) {
+		else if (getType(lines[i]) === "COL") {
+			/* COLOR OFFSET INDEX */
+			colorIndex = parseInt(getId(lines[i]));
+		}
+		else if (getType(lines[i]) === "WAL" && type === "TIL") {
+			// only tiles set their initial collision mode
+			var wallArg = getArg(lines[i], 1);
+			if (wallArg === "true") {
 				isWall = true;
 			}
-			else if( wallArg === "false" ) {
+			else if (wallArg === "false") {
 				isWall = false;
 			}
 		}
-		i++;
-	}
-
-	//tile data
-	tile[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		animation : {
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
-		},
-		name : name,
-		isWall : isWall
-	};
-
-	return i;
-}
-
-function parseSprite(lines, i) {
-	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
-
-	i++;
-
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
-	}
-	else {
-		// store sprite source
-		drwId = "SPR_" + id;
-		i = parseDrawingCore( lines, i, drwId );
-	}
-
-	//other properties
-	var colorIndex = 2; //default palette color index is 2
-	var dialogId = null;
-	var startingInventory = {};
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			/* COLOR OFFSET INDEX */
-			colorIndex = parseInt( getId(lines[i]) );
+		else if (getType(lines[i]) === "DLG" && type != "TIL") {
+			dialogId = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "POS") {
+		else if (getType(lines[i]) === "POS" && type === "SPR") {
 			/* STARTING POSITION */
+			// NOTE: I still need this to read in old unique position data from sprites
 			var posArgs = lines[i].split(" ");
 			var roomId = posArgs[1];
 			var coordArgs = posArgs[2].split(",");
-			spriteStartLocations[id] = {
-				room : roomId,
-				x : parseInt(coordArgs[0]),
-				y : parseInt(coordArgs[1])
-			};
+
+			// TODO:
+			// if (isPlayer) {
+			// 	playerRoom = roomId;
+			// 	playerX = parseInt(coordArgs[0]);
+			// 	playerY = parseInt(coordArgs[1]);
+			// }
+			// else {
+			// 	// NOTE: assumes rooms have all been created!
+			// 	room[roomId].objectLocations.push({
+			// 		id: id,
+			// 		x : parseInt(coordArgs[0]),
+			// 		y : parseInt(coordArgs[1]),
+			// 	});
+			// }
 		}
-		else if(getType(lines[i]) === "DLG") {
-			dialogId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "NAME") {
-			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.sprite.set( name, id );
-		}
-		else if (getType(lines[i]) === "ITM") {
+		else if (getType(lines[i]) === "ITM" && isPlayer) {
 			/* ITEM STARTING INVENTORY */
+			// TODO: This is only used by the player avatar -- should I move it out of sprite data?
 			var itemId = getId(lines[i]);
-			var itemCount = parseFloat( getArg(lines[i], 2) );
+			var itemCount = parseFloat(getArg(lines[i], 2));
 			startingInventory[itemId] = itemCount;
 		}
+
 		i++;
 	}
 
-	//sprite data
-	sprite[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		dlg : dialogId,
-		room : null, //default location is "offstage"
-		x : -1,
-		y : -1,
-		animation : {
+	// object data
+	object[id] = {
+		id: id, // unique ID
+		type: type, // default behavior: is it a sprite, item, or tile?
+		name : name, // user-supplied name
+		drw: drwId, // drawing ID
+		col: colorIndex, // color index
+		animation : { // animation data // TODO: figure out how this works with instances
 			isAnimated : (renderer.GetFrameCount(drwId) > 1),
 			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
+			frameCount : renderer.GetFrameCount(drwId),
 		},
-		inventory : startingInventory,
-		name : name
+		dlg: dialogId, // dialog ID (NOTE: tiles don't use this)
+		inventory : startingInventory, // starting inventory (player only)
+		isWall : isWall, // wall tile? (tile only)
+		isUnique : isUnique,
 	};
-	return i;
-}
-
-function parseItem(lines, i) {
-	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
-
-	i++;
-
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
-	}
-	else {
-		// store item source
-		drwId = "ITM_" + id; // these prefixes are maybe a terrible way to differentiate drawing tyepes :/
-		i = parseDrawingCore( lines, i, drwId );
-	}
-
-	//other properties
-	var colorIndex = 2; //default palette color index is 2
-	var dialogId = null;
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			/* COLOR OFFSET INDEX */
-			colorIndex = parseInt( getArg( lines[i], 1 ) );
-		}
-		// else if (getType(lines[i]) === "POS") {
-		// 	/* STARTING POSITION */
-		// 	var posArgs = lines[i].split(" ");
-		// 	var roomId = posArgs[1];
-		// 	var coordArgs = posArgs[2].split(",");
-		// 	spriteStartLocations[id] = {
-		// 		room : roomId,
-		// 		x : parseInt(coordArgs[0]),
-		// 		y : parseInt(coordArgs[1])
-		// 	};
-		// }
-		else if(getType(lines[i]) === "DLG") {
-			dialogId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "NAME") {
-			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.item.set( name, id );
-		}
-		i++;
-	}
-
-	//item data
-	item[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		dlg : dialogId,
-		// room : null, //default location is "offstage"
-		// x : -1,
-		// y : -1,
-		animation : {
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
-		},
-		name : name
-	};
-
-	// console.log("ITM " + id);
-	// console.log(item[id]);
 
 	return i;
 }
 
 function parseDrawing(lines, i) {
 	// store drawing source
-	var drwId = getId( lines[i] );
-	return parseDrawingCore( lines, i, drwId );
+	var drwId = getId(lines[i]);
+	return parseDrawingCore(lines, i, drwId);
 }
 
 function parseDrawingCore(lines, i, drwId) {
 	var frameList = []; //init list of frames
-	frameList.push( [] ); //init first frame
+	frameList.push([]); //init first frame
+
 	var frameIndex = 0;
+
 	var y = 0;
-	while ( y < tilesize ) {
+
+	while (y < tilesize) {
 		var l = lines[i+y];
+
 		var row = [];
 		for (x = 0; x < tilesize; x++) {
-			row.push( parseInt( l.charAt(x) ) );
+			row.push(parseInt(l.charAt(x)));
 		}
-		frameList[frameIndex].push( row );
+
+		frameList[frameIndex].push(row);
+
 		y++;
 
 		if (y === tilesize) {
 			i = i + y;
-			if ( lines[i] != undefined && lines[i].charAt(0) === ">" ) {
+
+			if (lines[i] != undefined && lines[i].charAt(0) === ">") {
 				// start next frame!
-				frameList.push( [] );
+				frameList.push([]);
 				frameIndex++;
+
 				//start the count over again for the next frame
 				i++;
+
 				y = 0;
 			}
 		}
