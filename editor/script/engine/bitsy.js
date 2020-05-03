@@ -1701,6 +1701,14 @@ function parseObject(lines, i, type) {
 		isUnique : isUnique,
 	};
 
+	// TODO : idea -- replace with a "player instance" system
+	// the player should always have a global location, even if they are "off-screen"
+	if (isPlayer) {
+		object[id].room = null;
+		object[id].x = -1;
+		object[id].y = -1;
+	}
+
 	return i;
 }
 
