@@ -17,6 +17,13 @@ var palette = { //start off with a default palette
 	};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
+var playerInstance = {
+	id : playerId,
+	room : null,
+	x : -1,
+	y : -1,
+	inventory : {},
+};
 
 var titleDialogId = "title";
 function getTitle() {
@@ -181,6 +188,50 @@ function load_game(game_data, startWithTitle) {
 	scriptInterpreter.ResetEnvironment(); // ensures variables are reset -- is this the best way?
 
 	parseWorld(game_data);
+
+	// initialize player instance off-stage
+	playerInstance = {
+		id: playerId,
+		room: null,
+		x: -1,
+		y: -1,
+		inventory : {},
+	};
+
+	// copy initial inventory values
+	for (id in object[playerId].inventory) {
+		playerInstance.inventory[id] = object[playerId].inventory[id];
+	}
+
+	// try to find a room containing the player
+	for (id in room) {
+		var i = room[id].objectLocations.indexOf(playerId);
+		if (i != -1) {
+			playerInstance.room = id;
+			playerInstance.x = room.objectLocations[i].x;
+			playerInstance.y = room.objectLocations[i].y;
+		}
+	}
+
+	// set the first room
+	var roomIds = Object.keys(room);
+	if (player() != undefined && player().room != null && roomIds.includes(player().room)) {
+		// player has valid room
+		curRoom = player().room;
+	}
+	else if (roomIds.length > 0) {
+		// player not in any room! what the heck
+		curRoom = roomIds[0];
+	}
+	else {
+		// uh oh there are no rooms I guess???
+		curRoom = null;
+	}
+
+	// initialize the first room
+	if (curRoom != null) {
+		initRoom(curRoom);
+	}
 
 	if (!isPlayerEmbeddedInEditor) {
 		// hack to ensure default font is available
@@ -1013,7 +1064,7 @@ function getTile(x,y) {
 }
 
 function player() {
-	return object[playerId];
+	return playerInstance;
 }
 
 // Sort of a hack for legacy palette code (when it was just an array)
@@ -1110,25 +1161,7 @@ function parseWorld(file) {
 		}
 	}
 
-	var roomIds = Object.keys(room);
-	if (player() != undefined && player().room != null && roomIds.includes(player().room)) {
-		// player has valid room
-		curRoom = player().room;
-	}
-	else if (roomIds.length > 0) {
-		// player not in any room! what the heck
-		curRoom = roomIds[0];
-	}
-	else {
-		// uh oh there are no rooms I guess???
-		curRoom = null;
-	}
-
-	if (curRoom != null) {
-		initRoom(curRoom);
-	}
-
-	// find the player and clean up any excess unique objects
+	// clean up any excess unique objects (TODO : is this the best way to do this?)
 	var foundUniqueObject = {};
 	for (id in room) {
 		for (var i = room[id].objectLocations.length - 1; i >= 0; i--) {
@@ -1139,13 +1172,6 @@ function parseWorld(file) {
 			}
 			else if (object[objectId].isUnique) {
 				foundUniqueObject[objectId] = true;
-
-				// we need global access to the player location
-				if (objectId === playerId) {
-					player().room = id;
-					player().x = room[id].objectLocations[i].x;
-					player().y = room[id].objectLocations[i].y;
-				}
 			}
 		}
 	}
@@ -1701,14 +1727,6 @@ function parseObject(lines, i, type) {
 		isUnique : isUnique,
 	};
 
-	// TODO : idea -- replace with a "player instance" system
-	// the player should always have a global location, even if they are "off-screen"
-	if (isPlayer) {
-		object[id].room = null;
-		object[id].x = -1;
-		object[id].y = -1;
-	}
-
 	return i;
 }
 
@@ -1909,11 +1927,9 @@ function drawRoom(room,context,frameIndex) { // context & frameIndex are optiona
 	// draw objects (TODO : draw instances instead of starting locations!)
 	for (var i = 0; i < room.objectLocations.length; i++) {
 		var objectLocation = room.objectLocations[i];
-		if (objectLocation.id != playerId) { // TODO : all the special casing for the player is a little awkward
-			var objectDefinition = object[objectLocation.id];
-			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
-			drawObject(objectImage, objectLocation.x, objectLocation.y, context);
-		}
+		var objectDefinition = object[objectLocation.id];
+		var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+		drawObject(objectImage, objectLocation.x, objectLocation.y, context);
 	}
 
 	// draw player
