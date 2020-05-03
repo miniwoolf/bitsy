@@ -1803,20 +1803,12 @@ function parseFlag(lines, i) {
 	return i;
 }
 
-function drawTile(img,x,y,context) {
+function drawObject(img,x,y,context) {
 	if (!context) { //optional pass in context; otherwise, use default
 		context = ctx;
 	}
 	// NOTE: images are now canvases, instead of raw image data (for chrome performance reasons)
 	context.drawImage(img,x*tilesize*scale,y*tilesize*scale,tilesize*scale,tilesize*scale);
-}
-
-function drawSprite(img,x,y,context) { //this may differ later (or not haha)
-	drawTile(img,x,y,context);
-}
-
-function drawItem(img,x,y,context) {
-	drawTile(img,x,y,context); //TODO these methods are dumb and repetitive
 }
 
 // var debugLastRoomDrawn = "0";
@@ -1859,24 +1851,18 @@ function drawRoom(room,context,frameIndex) { // context & frameIndex are optiona
 				}
 				else {
 					// console.log(id);
-					drawTile( getTileImage(tile[id],paletteId,frameIndex), j, i, context );
+					drawObject(renderer.GetImage(object[id], paletteId, frameIndex), j, i, context);
 				}
 			}
 		}
 	}
 
-	//draw items
-	for (var i = 0; i < room.items.length; i++) {
-		var itm = room.items[i];
-		drawItem( getItemImage(item[itm.id],paletteId,frameIndex), itm.x, itm.y, context );
-	}
-
-	//draw sprites
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.room === room.id) {
-			drawSprite( getSpriteImage(spr,paletteId,frameIndex), spr.x, spr.y, context );
-		}
+	// draw objects (TODO : draw instances instead of starting locations!)
+	for (var i = 0; i < room.objectLocations.length; i++) {
+		var objectLocation = room.objectLocations[i];
+		var objectDefinition = object[objectLocation.id];
+		var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+		drawObject(objectImage, objectLocation.x, objectLocation.y, context);
 	}
 }
 
