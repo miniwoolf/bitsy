@@ -1128,6 +1128,28 @@ function parseWorld(file) {
 		initRoom(curRoom);
 	}
 
+	// find the player and clean up any excess unique objects
+	var foundUniqueObject = {};
+	for (id in room) {
+		for (var i = room[id].objectLocations.length - 1; i >= 0; i--) {
+			var objectId = room[id].objectLocations[i].id;
+			if (foundUniqueObject[objectId]) {
+				// this unique object already has a location!
+				room[id].objectLocations.splice(i, 1);
+			}
+			else if (object[objectId].isUnique) {
+				foundUniqueObject[objectId] = true;
+
+				// we need global access to the player location
+				if (objectId === playerId) {
+					player().room = id;
+					player().x = room[id].objectLocations[i].x;
+					player().y = room[id].objectLocations[i].y;
+				}
+			}
+		}
+	}
+
 	renderer.SetPalettes(palette);
 
 	scriptCompatibility(compatibilityFlags);
@@ -1321,7 +1343,7 @@ function serializeWorld(skipFonts) {
 		if (type != "TIL" && object[id].dlg != null) {
 			worldStr += "DLG " + object[id].dlg + "\n";
 		}
-		if (type === "SPR" && id === "A" && object[id].inventory != null) {
+		if (type === "SPR" && id === playerId && object[id].inventory != null) {
 			for (itemId in object[id].inventory) {
 				worldStr += "ITM " + itemId + " " + object[id].inventory[itemId] + "\n";
 			}
@@ -1576,7 +1598,7 @@ function parseObject(lines, i, type) {
 	var drwId = id;
 	i = parseDrawingCore(lines, i, drwId);
 
-	var isPlayer = type === "SPR" && id === "A";
+	var isPlayer = type === "SPR" && id === playerId;
 
 	// TODO : for now, only the player is unique, but there
 	// could be a setting to enable it for other sprites
@@ -1860,9 +1882,16 @@ function drawRoom(room,context,frameIndex) { // context & frameIndex are optiona
 	// draw objects (TODO : draw instances instead of starting locations!)
 	for (var i = 0; i < room.objectLocations.length; i++) {
 		var objectLocation = room.objectLocations[i];
-		var objectDefinition = object[objectLocation.id];
-		var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
-		drawObject(objectImage, objectLocation.x, objectLocation.y, context);
+		if (objectLocation.id != playerId) { // TODO : all the special casing for the player is a little awkward
+			var objectDefinition = object[objectLocation.id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, objectLocation.x, objectLocation.y, context);
+		}
+	}
+
+	// draw player
+	if (player().room === room.id) {
+		drawObject(renderer.GetImage(player(), paletteId, frameIndex), player().x, player().y, context);
 	}
 }
 
