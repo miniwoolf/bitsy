@@ -4,7 +4,6 @@ var context; // TODO : remove if safe?
 var ctx;
 
 var room = {};
-var tile = {}; // TODO : remove
 var sprite = {}; // TODO : remove
 var item = {}; // TODO : remove
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
@@ -87,7 +86,6 @@ var editorDevFlags = {
 
 function clearGameData() {
 	room = {};
-	tile = {};
 	sprite = {};
 	item = {};
 	dialog = {};
@@ -587,8 +585,7 @@ var animationTime = 400;
 function updateAnimation() {
 	animationCounter += deltaTime;
 
-	if ( animationCounter >= animationTime ) {
-
+	if (animationCounter >= animationTime) {
 		// animate sprites
 		for (id in sprite) {
 			var spr = sprite[id];
@@ -597,19 +594,19 @@ function updateAnimation() {
 			}
 		}
 
-		// animate tiles
-		for (id in tile) {
-			var til = tile[id];
-			if (til.animation.isAnimated) {
-				til.animation.frameIndex = ( til.animation.frameIndex + 1 ) % til.animation.frameCount;
-			}
-		}
-
 		// animate items
 		for (id in item) {
 			var itm = item[id];
 			if (itm.animation.isAnimated) {
 				itm.animation.frameIndex = ( itm.animation.frameIndex + 1 ) % itm.animation.frameCount;
+			}
+		}
+
+		for (id in object) {
+			var obj = object[id];
+			console.log(obj.animation.isAnimated);
+			if (obj.animation.isAnimated) {
+				obj.animation.frameIndex = (obj.animation.frameIndex + 1) % obj.animation.frameCount;
 			}
 		}
 
@@ -627,17 +624,17 @@ function resetAllAnimations() {
 		}
 	}
 
-	for (id in tile) {
-		var til = tile[id];
-		if (til.animation.isAnimated) {
-			til.animation.frameIndex = 0;
-		}
-	}
-
 	for (id in item) {
 		var itm = item[id];
 		if (itm.animation.isAnimated) {
 			itm.animation.frameIndex = 0;
+		}
+	}
+
+	for (id in object) {
+		var obj = object[id];
+		if (obj.animation.isAnimated) {
+			obj.animation.frameIndex = 0;
 		}
 	}
 }
@@ -1032,22 +1029,24 @@ function isWallDown() {
 }
 
 function isWall(x,y,roomId) {
-	if(roomId == undefined || roomId == null)
+	if (roomId == undefined || roomId == null) {
 		roomId = curRoom;
+	}
 
-	var tileId = getTile( x, y );
+	var tileId = getTile(x, y);
 
-	if( tileId === '0' )
+	if (tileId === '0') {
 		return false; // Blank spaces aren't walls, ya doofus
+	}
 
-	if( tile[tileId].isWall === undefined || tile[tileId].isWall === null ) {
+	if (object[tileId].isWall === undefined || object[tileId].isWall === null) {
 		// No wall-state defined: check room-specific walls
-		var i = room[roomId].walls.indexOf( getTile(x,y) );
+		var i = room[roomId].walls.indexOf(tileId);
 		return i > -1;
 	}
 
 	// Otherwise, use the tile's own wall-state
-	return tile[tileId].isWall;
+	return object[tileId].isWall;
 }
 
 function getItem(roomId,x,y) {
@@ -1293,7 +1292,7 @@ function serializeWorld(skipFonts) {
 			// old non-comma separated format
 			for (i in room[id].tilemap) {
 				for (j in room[id].tilemap[i]) {
-					worldStr += room[id].tilemap[i][j];	
+					worldStr += room[id].tilemap[i][j];
 				}
 				worldStr += "\n";
 			}
@@ -1908,7 +1907,7 @@ function drawRoom(room, options) {
 	}
 
 	context = getOptionOrDefault("context", ctx);
-	frameIndex = getOptionOrDefault("frameIndex", 0);
+	frameIndex = getOptionOrDefault("frameIndex", null);
 	drawObjectInstances = getOptionOrDefault("drawObjectInstances", true);
 
 	var paletteId = "default";
@@ -1933,7 +1932,7 @@ function drawRoom(room, options) {
 			var id = room.tilemap[i][j];
 			if (id != "0") {
 				//console.log(id);
-				if (tile[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
+				if (object[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
 					id = "0";
 					room.tilemap[i][j] = id;
 				}
