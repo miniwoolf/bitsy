@@ -968,6 +968,26 @@ function initRoom(roomId) {
 	for (var i = 0; i < room[roomId].endings.length; i++) {
 		room[roomId].endings[i].property = { locked:false };
 	}
+
+	// init objects
+	room[roomId].objectInstances = [];
+	for (var i = 0; i < room[roomId].objectLocations.length; i++) {
+		var objectLocation = room[roomId].objectLocations[i];
+		var objectDefinition = object[objectLocation.id];
+		if (objectDefinition.id != playerId) {
+			var objectInstance = createObjectInstance(objectDefinition, objectLocation.x, objectLocation.y);
+			room[roomId].objectInstances.push(objectInstance);
+		}
+	}
+}
+
+function createObjectInstance(definition, x, y) {
+	return {
+		id: definition.id,
+		drw: definition.drw,
+		x: x,
+		y: y,
+	};
 }
 
 function getItemIndex( roomId, x, y ) {
