@@ -17,13 +17,7 @@ var palette = { //start off with a default palette
 	};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
-var playerInstance = {
-	id : playerId,
-	room : null,
-	x : -1,
-	y : -1,
-	inventory : {},
-};
+var playerInstance = {};
 
 var titleDialogId = "title";
 function getTitle() {
@@ -189,29 +183,8 @@ function load_game(game_data, startWithTitle) {
 
 	parseWorld(game_data);
 
-	// initialize player instance off-stage
-	playerInstance = {
-		id: playerId,
-		room: null,
-		x: -1,
-		y: -1,
-		inventory : {},
-	};
-
-	// copy initial inventory values
-	for (id in object[playerId].inventory) {
-		playerInstance.inventory[id] = object[playerId].inventory[id];
-	}
-
-	// try to find a room containing the player
-	for (id in room) {
-		var i = room[id].objectLocations.indexOf(playerId);
-		if (i != -1) {
-			playerInstance.room = id;
-			playerInstance.x = room.objectLocations[i].x;
-			playerInstance.y = room.objectLocations[i].y;
-		}
-	}
+	playerInstance = createPlayerInstance(object[playerId]);
+	console.log(playerInstance);
 
 	// set the first room
 	var roomIds = Object.keys(room);
@@ -324,6 +297,36 @@ function setInitialVariables() {
 		scriptInterpreter.SetVariable(id,value);
 	}
 	scriptInterpreter.SetOnVariableChangeHandler( onVariableChanged );
+}
+
+function createPlayerInstance(playerDefinition) {
+	var instance = {
+		id: playerDefinition.id,
+		drw: playerDefinition.drw,
+		room: null,
+		x: -1,
+		y: -1,
+		inventory : {},
+	};
+
+	// copy initial inventory values
+	for (id in playerDefinition.inventory) {
+		instance.inventory[id] = playerDefinition.inventory[id];
+	}
+
+	// try to find a room containing the player
+	for (id in room) {
+		for (var i = 0; i < room[id].objectLocations.length; i++) {
+			var objectLocation = room[id].objectLocations[i];
+			if (objectLocation.id === playerId) {
+				instance.room = id;
+				instance.x = objectLocation.x;
+				instance.y = objectLocation.y;
+			}
+		}
+	}
+
+	return instance;
 }
 
 function getOffset(evt) {
@@ -484,7 +487,7 @@ function update() {
 	else {
 		if (!isNarrating && !isEnding) {
 			updateAnimation();
-			drawRoom( room[curRoom] ); // draw world if game has begun
+			drawRoom(room[curRoom]); // draw world if game has begun
 		}
 		else {
 			//make sure to still clear screen
@@ -1878,17 +1881,15 @@ function drawObject(img,x,y,context) {
 	context.drawImage(img,x*tilesize*scale,y*tilesize*scale,tilesize*scale,tilesize*scale);
 }
 
-// var debugLastRoomDrawn = "0";
-
-function drawRoom(room,context,frameIndex) { // context & frameIndex are optional
-	if (!context) { //optional pass in context; otherwise, use default (ok this is REAL hacky isn't it)
-		context = ctx;
+function drawRoom(room, options) {
+	function getOptionOrDefault(optionId, defaultValue) {
+		var doesOptionExist = (options != undefined && options != null) && (options[optionId] != undefined && options[optionId] != null);
+		return doesOptionExist ? options[optionId] : defaultValue;
 	}
 
-	// if (room.id != debugLastRoomDrawn) {
-	// 	debugLastRoomDrawn = room.id;
-	// 	console.log("DRAW ROOM " + debugLastRoomDrawn);
-	// }
+	context = getOptionOrDefault("context", ctx);
+	frameIndex = getOptionOrDefault("frameIndex", 0);
+	drawObjectInstances = getOptionOrDefault("drawObjectInstances", true);
 
 	var paletteId = "default";
 
@@ -1924,31 +1925,31 @@ function drawRoom(room,context,frameIndex) { // context & frameIndex are optiona
 		}
 	}
 
-	// draw objects (TODO : draw instances instead of starting locations!)
-	for (var i = 0; i < room.objectLocations.length; i++) {
-		var objectLocation = room.objectLocations[i];
-		var objectDefinition = object[objectLocation.id];
-		var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
-		drawObject(objectImage, objectLocation.x, objectLocation.y, context);
+	if (drawObjectInstances) {
+		// draw object instances
+		for (var i = 0; i < room.objectInstances.length; i++) {
+			var objectInstance = room.objectInstances[i];
+			var objectDefinition = object[objectInstance.id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, objectInstance.x, objectInstance.y, context);
+		}
+
+		// draw player instance
+		if (player().room === room.id) {
+			var objectDefinition = object[player().id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, player().x, player().y, context);
+		}
 	}
-
-	// draw player
-	if (player().room === room.id) {
-		drawObject(renderer.GetImage(player(), paletteId, frameIndex), player().x, player().y, context);
+	else {
+		// draw object initial locations
+		for (var i = 0; i < room.objectLocations.length; i++) {
+			var objectLocation = room.objectLocations[i];
+			var objectDefinition = object[objectLocation.id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, objectLocation.x, objectLocation.y, context);
+		}
 	}
-}
-
-// TODO : remove these get*Image methods
-function getTileImage(t,palId,frameIndex) {
-	return renderer.GetImage(t,palId,frameIndex);
-}
-
-function getSpriteImage(s,palId,frameIndex) {
-	return renderer.GetImage(s,palId,frameIndex);
-}
-
-function getItemImage(itm,palId,frameIndex) {
-	return renderer.GetImage(itm,palId,frameIndex);
 }
 
 function curPal() {

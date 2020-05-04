@@ -264,7 +264,7 @@ function RoomTool(canvas) {
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 
 		//draw map
-		drawRoom( room[curRoom] );
+		drawRoom(room[curRoom], { drawObjectInstances: false });
 
 		//draw grid
 		if (self.drawMapGrid) {

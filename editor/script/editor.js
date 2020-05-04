@@ -2565,10 +2565,10 @@ function takeSnapshotGif(e) {
 	gifCaptureCanvas.width = 512; // stop hardcoding 512?
 	gifCaptureCanvas.height = 512;
 
-	drawRoom( room[curRoom], gifCaptureCtx, 0 );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawObjectInstances: false, } );
 	var frame0 = gifCaptureCtx.getImageData(0,0,512,512);
 
-	drawRoom( room[curRoom], gifCaptureCtx, 1 );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawObjectInstances: false, } );
 	var frame1 = gifCaptureCtx.getImageData(0,0,512,512);
 
 	if(e.altKey) {
