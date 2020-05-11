@@ -4,7 +4,6 @@ var context; // TODO : remove if safe?
 var ctx;
 
 var room = {};
-var sprite = {}; // TODO : remove
 var item = {}; // TODO : remove
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
@@ -86,8 +85,8 @@ var editorDevFlags = {
 
 function clearGameData() {
 	room = {};
-	sprite = {};
 	item = {};
+	object = {};
 	dialog = {};
 	palette = { //start off with a default palette
 		"default" : {
@@ -456,15 +455,6 @@ function loadingAnimation() {
 	if (loading_anim_frame >= 5) loading_anim_frame = 0;
 }
 
-function updateLoadingScreen() {
-	// TODO : in progress
-	ctx.fillStyle = "rgb(0,0,0)";
-	ctx.fillRect(0,0,canvas.width,canvas.height);
-
-	loadingAnimation();
-	drawSprite( getSpriteImage(sprite["a"],"0",0), 8, 8, ctx );
-}
-
 function update() {
 	var curTime = Date.now();
 	deltaTime = curTime - prevTime;
@@ -586,14 +576,6 @@ function updateAnimation() {
 	animationCounter += deltaTime;
 
 	if (animationCounter >= animationTime) {
-		// animate sprites
-		for (id in sprite) {
-			var spr = sprite[id];
-			if (spr.animation.isAnimated) {
-				spr.animation.frameIndex = ( spr.animation.frameIndex + 1 ) % spr.animation.frameCount;
-			}
-		}
-
 		// animate items
 		for (id in item) {
 			var itm = item[id];
@@ -617,13 +599,6 @@ function updateAnimation() {
 }
 
 function resetAllAnimations() {
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.animation.isAnimated) {
-			spr.animation.frameIndex = 0;
-		}
-	}
-
 	for (id in item) {
 		var itm = item[id];
 		if (itm.animation.isAnimated) {
@@ -640,14 +615,15 @@ function resetAllAnimations() {
 }
 
 function getSpriteAt(x,y) {
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.room === curRoom) {
-			if (spr.x == x && spr.y == y) {
-				return id;
-			}
+	var objectInstances = room[curRoom].objectInstances;
+
+	for (var i = 0; i < objectInstances.length; i++) {
+		if (objectInstances[i].type === "SPR" &&
+			objectInstances[i].x === x && objectInstances[i].y === y) {
+			return objectInstances[i];
 		}
 	}
+
 	return null;
 }
 
@@ -914,7 +890,7 @@ function movePlayer(direction) {
 		movePlayerThroughExit(ext);
 	}
 	else if (spr) {
-		startSpriteDialog(spr /*spriteId*/);
+		startSpriteDialog(spr /*spriteInstance*/);
 	}
 }
 
@@ -981,7 +957,9 @@ function initRoom(roomId) {
 function createObjectInstance(definition, x, y) {
 	return {
 		id: definition.id,
+		type: definition.type,
 		drw: definition.drw,
+		dlg: definition.dlg,
 		x: x,
 		y: y,
 	};
@@ -1100,10 +1078,6 @@ function getPal(id) {
 
 function getRoom() {
 	return room[curRoom];
-}
-
-function isSpriteOffstage(id) {
-	return sprite[id].room == null;
 }
 
 function parseWorld(file) {
@@ -1811,9 +1785,9 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 	if (compatibilityFlags.convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
 		// connected by sharing sprite and dialog IDs in old versions
-		if (sprite[id]) {
-			if (sprite[id].dlg === undefined || sprite[id].dlg === null) {
-				sprite[id].dlg = id;
+		if (object[id] && object[id].type === "SPR") {
+			if (object[id].dlg === undefined || object[id].dlg === null) {
+				object[id].dlg = id;
 			}
 		}
 	}
@@ -2076,13 +2050,11 @@ function startItemDialog(itemId, dialogCallback) {
 	}
 }
 
-function startSpriteDialog(spriteId) {
-	var spr = sprite[spriteId];
-	var dialogId = spr.dlg;
-	// console.log("START SPRITE DIALOG " + dialogId);
+function startSpriteDialog(spriteInstance) {
+	var dialogId = spriteInstance.dlg;
 	if (dialog[dialogId]){
 		var dialogStr = dialog[dialogId].src;
-		startDialog(dialogStr,dialogId);
+		startDialog(dialogStr, dialogId);
 	}
 }
 
