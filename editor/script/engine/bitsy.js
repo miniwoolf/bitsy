@@ -4,7 +4,6 @@ var context; // TODO : remove if safe?
 var ctx;
 
 var room = {};
-var item = {}; // TODO : remove
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
 var palette = { //start off with a default palette
@@ -576,17 +575,8 @@ function updateAnimation() {
 	animationCounter += deltaTime;
 
 	if (animationCounter >= animationTime) {
-		// animate items
-		for (id in item) {
-			var itm = item[id];
-			if (itm.animation.isAnimated) {
-				itm.animation.frameIndex = ( itm.animation.frameIndex + 1 ) % itm.animation.frameCount;
-			}
-		}
-
 		for (id in object) {
 			var obj = object[id];
-			console.log(obj.animation.isAnimated);
 			if (obj.animation.isAnimated) {
 				obj.animation.frameIndex = (obj.animation.frameIndex + 1) % obj.animation.frameCount;
 			}
@@ -599,13 +589,6 @@ function updateAnimation() {
 }
 
 function resetAllAnimations() {
-	for (id in item) {
-		var itm = item[id];
-		if (itm.animation.isAnimated) {
-			itm.animation.frameIndex = 0;
-		}
-	}
-
 	for (id in object) {
 		var obj = object[id];
 		if (obj.animation.isAnimated) {
@@ -861,12 +844,13 @@ function movePlayer(direction) {
 
 	// do items first, because you can pick up an item AND go through a door
 	if (itmIndex > -1) {
-		var itm = room[player().room].items[itmIndex];
+		var itm = room[player().room].objectInstances[itmIndex];
 		var itemRoom = player().room;
 
-		startItemDialog(itm.id, function() {
+		startItemDialog(itm, function() {
 			// remove item from room
-			room[itemRoom].items.splice(itmIndex, 1);
+			room[itemRoom].objectInstances.splice(itmIndex, 1);
+			room[itemRoom].objectLocations[itm.instanceId].removed = true; // assumes instanceId === location index
 
 			// update player inventory
 			if (player().inventory[itm.id]) {
@@ -947,15 +931,16 @@ function initRoom(roomId) {
 	for (var i = 0; i < room[roomId].objectLocations.length; i++) {
 		var objectLocation = room[roomId].objectLocations[i];
 		var objectDefinition = object[objectLocation.id];
-		if (objectDefinition.id != playerId) {
-			var objectInstance = createObjectInstance(objectDefinition, objectLocation.x, objectLocation.y);
+		if (objectDefinition.id != playerId && !objectLocation.removed) {
+			var objectInstance = createObjectInstance(i, objectDefinition, objectLocation.x, objectLocation.y);
 			room[roomId].objectInstances.push(objectInstance);
 		}
 	}
 }
 
-function createObjectInstance(definition, x, y) {
+function createObjectInstance(instanceId, definition, x, y) {
 	return {
+		instanceId: instanceId, // currently equivalent to the index in the room list -- is it ok to remain that way?
 		id: definition.id,
 		type: definition.type,
 		drw: definition.drw,
@@ -965,12 +950,16 @@ function createObjectInstance(definition, x, y) {
 	};
 }
 
-function getItemIndex( roomId, x, y ) {
-	for( var i = 0; i < room[roomId].items.length; i++ ) {
-		var itm = room[roomId].items[i];
-		if ( itm.x == x && itm.y == y)
-			return i;
+function getItemIndex(roomId, x, y) {
+	for (var i = 0; i < room[roomId].objectInstances.length; i++ ) {
+		if (room[roomId].objectInstances[i].type === "ITM") {
+			var itm = room[roomId].objectInstances[i];
+			if (itm.x == x && itm.y == y) {
+				return i;
+			}
+		}
 	}
+
 	return -1;
 }
 
@@ -1027,13 +1016,16 @@ function isWall(x,y,roomId) {
 	return object[tileId].isWall;
 }
 
-function getItem(roomId,x,y) {
-	for (i in room[roomId].items) {
-		var item = room[roomId].items[i];
-		if (x == item.x && y == item.y) {
-			return item;
+function getItem(roomId, x, y) {
+	for (i in room[roomId].objectInstances) {
+		if (room[roomId].objectInstances[i].type === "ITM") {
+			var item = room[roomId].objectInstances[i];
+			if (x == item.x && y == item.y) {
+				return item;
+			}
 		}
 	}
+
 	return null;
 }
 
@@ -2038,9 +2030,8 @@ function startEndingDialog(ending) {
 		ending);
 }
 
-function startItemDialog(itemId, dialogCallback) {
-	var dialogId = item[itemId].dlg;
-	// console.log("START ITEM DIALOG " + dialogId);
+function startItemDialog(itemInstance, dialogCallback) {
+	var dialogId = itemInstance.dlg;
 	if (dialog[dialogId]) {
 		var dialogStr = dialog[dialogId].src;
 		startDialog(dialogStr, dialogId, dialogCallback);
