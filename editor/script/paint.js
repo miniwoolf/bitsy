@@ -117,9 +117,7 @@ function PaintTool(canvas, roomTool) {
 	this.curDrawingFrameIndex = 0; // TODO eventually this can be internal
 	this.drawPaintGrid = true;
 
-	console.log("NEW PAINT TOOL");
-	console.log(renderer);
-	this.drawing = new DrawingId( TileType.Avatar, "A" );
+	var drawingId = "A";
 
 	this.explorer = null; // TODO: hacky way to tie this to a paint explorer -- should use events instead
 
@@ -184,18 +182,16 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function onMouseUp(e) {
-		console.log("?????");
 		if (isPainting) {
 			isPainting = false;
-			updateDrawingData();
 			refreshGameData();
 			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
-			if(self.explorer != null) {
-				self.explorer.RenderThumbnail( self.drawing.id );
+			if (self.explorer != null) {
+				self.explorer.RenderThumbnail(drawingId);
 			}
-			if( self.isCurDrawingAnimated ) {
-				renderAnimationPreview( roomTool.drawing.id );
+			if (self.isCurDrawingAnimated) {
+				renderAnimationPreview(drawingId);
 			}
 		}
 	}
@@ -223,12 +219,9 @@ function PaintTool(canvas, roomTool) {
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 
 		//pixel color
-		if (self.drawing.type == TileType.Tile) {
-			ctx.fillStyle = "rgb("+getPal(curPal())[1][0]+","+getPal(curPal())[1][1]+","+getPal(curPal())[1][2]+")";
-		}
-		else if (self.drawing.type == TileType.Sprite || self.drawing.type == TileType.Avatar || self.drawing.type == TileType.Item) {
-			ctx.fillStyle = "rgb("+getPal(curPal())[2][0]+","+getPal(curPal())[2][1]+","+getPal(curPal())[2][2]+")";
-		}
+		var colorIndex = object[drawingId].col;
+		var color = getPal(curPal())[colorIndex];
+		ctx.fillStyle = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
 
 		//draw pixels
 		for (var x = 0; x < 8; x++) {
@@ -259,49 +252,50 @@ function PaintTool(canvas, roomTool) {
 		}
 	}
 
+	function getImageSource() {
+		return renderer.GetImageSource(object[drawingId].drw);
+	}
+
+	function getFrameData(frameIndex) {
+		return getImageSource()[frameIndex];
+	}
+
 	function curDrawingData() {
 		var frameIndex = (self.isCurDrawingAnimated ? self.curDrawingFrameIndex : 0);
-		return self.drawing.getFrameData(frameIndex);
+		return getFrameData(frameIndex);
 	}
 
 	// todo: assumes 2 frames
 	function curDrawingAltFrameData() {
 		var frameIndex = (self.curDrawingFrameIndex === 0 ? 1 : 0);
-		return self.drawing.getFrameData(frameIndex);
+		return getFrameData(frameIndex);
 	}
 
-	// TODO : rename?
-	function updateDrawingData() {
-		self.drawing.updateImageSource();
-	}
-
+	// TODO : refactor these so it doesn't require these weird external hookups!
 	// methods for updating the UI
 	this.onReloadTile = null;
 	this.onReloadSprite = null;
 	this.onReloadItem = null;
 	this.reloadDrawing = function() {
-		self.drawing.reloadImageSource();
-
-		if ( self.drawing.type === TileType.Tile) {
-			if(self.onReloadTile) {
+		if (object[drawingId].type === "TIL") {
+			if (self.onReloadTile) {
 				self.onReloadTile();
 			}
 		}
-		else if( self.drawing.type === TileType.Avatar || self.drawing.type === TileType.Sprite ) {
-			if(self.onReloadSprite) {
+		else if (object[drawingId].type === "SPR") {
+			if (self.onReloadSprite) {
 				self.onReloadSprite();
 			}
 		}
-		else if( self.drawing.type === TileType.Item ) {
-			if(self.onReloadItem) {
+		else if (object[drawingId].type === "ITM") {
+			if (self.onReloadItem) {
 				self.onReloadItem();
 			}
 		}
 	}
 
-	this.selectDrawing = function(drawingId) {
-		self.drawing.id = drawingId.id; // have to do this hack because I'm relying on aliasing (not good!)
-		self.drawing.type = drawingId.type;
+	this.selectDrawing = function(id) {
+		drawingId = id;
 		self.reloadDrawing();
 		self.updateCanvas();
 	}
