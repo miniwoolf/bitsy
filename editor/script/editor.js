@@ -682,7 +682,7 @@ var roomTool;
 var paintTool;
 
 /* CUR DRAWING */
-var drawing = new DrawingId(TileType.Avatar,"A");
+var drawing = "A";
 
 var tileIndex = 0;
 var spriteIndex = 0;
@@ -1967,10 +1967,13 @@ function paintExplorerFilterChange( e ) {
 	paintExplorer.Refresh( paintTool.drawing.type, true, e.target.value );
 }
 
+// TODO : move THIS into paint.js
 function editDrawingAtCoordinate(x,y) {
-	var spriteId = getSpriteAt(x,y); // todo: need more consistency with these methods
-	// console.log(spriteId);
-	if(spriteId) {
+	// todo: need more consistency with these methods
+	// TODO : also... need to make sure this works in edit mode now
+	var spriteId = getSpriteAt(x,y).id;
+
+	if (spriteId) {
 		if(spriteId === "A") {
 			on_paint_avatar_ui_update();
 		}
@@ -1978,37 +1981,37 @@ function editDrawingAtCoordinate(x,y) {
 			on_paint_sprite_ui_update();
 		}
 
-		var drawing = new DrawingId( spriteId === "A" ? TileType.Avatar : TileType.Sprite, spriteId );
-		paintTool.selectDrawing( drawing );
-		paintExplorer.RefreshAndChangeSelection( drawing );
+		paintTool.selectDrawing(spriteId);
+		paintExplorer.RefreshAndChangeSelection(spriteId);
+
 		return;
 	}
 
 	var item = getItem(curRoom,x,y);
-	// console.log(item);
-	if(item) {
-		on_paint_item_ui_update();
-		var drawing = new DrawingId( TileType.Item, item.id );
-		paintTool.selectDrawing( drawing );
-		paintExplorer.RefreshAndChangeSelection( drawing );
+	if (item) {
+		on_paint_item_ui_update(); // TODO : move these things into paint.js
+
+		paintTool.selectDrawing(item.id);
+		paintExplorer.RefreshAndChangeSelection(item.id);
+
 		return;
 	}
 
 	var tileId = getTile(x,y);
-	// console.log(tileId);
 	if(tileId != 0) {
-		on_paint_tile_ui_update(); // really wasteful probably
-		var drawing = new DrawingId( TileType.Tile, tileId );
-		paintTool.selectDrawing( drawing );
-		paintExplorer.RefreshAndChangeSelection( drawing );
+		on_paint_tile_ui_update();
+
+		paintTool.selectDrawing(tileId);
+		paintExplorer.RefreshAndChangeSelection(tileId);
+
 		return;
 	}
 }
 
+// TODO : move into paint.js
 var animationThumbnailRenderer = new ThumbnailRenderer();
-function renderAnimationThumbnail(imgId,id,frameIndex) {
-	var drawingId = new DrawingId(drawing.type,id); // HACK!!! - need consistency on how type + id should be coupled
-	animationThumbnailRenderer.Render(imgId,drawingId,frameIndex);
+function renderAnimationThumbnail(imgId, id, frameIndex) {
+	animationThumbnailRenderer.Render(imgId, id, frameIndex);
 }
 
 function renderAnimationPreview(id) {

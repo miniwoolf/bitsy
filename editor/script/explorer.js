@@ -374,7 +374,7 @@ function ThumbnailRenderer() {
 	var thumbnailRenderEncoders = {};
 	var cache = {};
 
-	function render(imgId,drawingId,frameIndex,imgElement) {
+	function render(imgId, drawingId, frameIndex, imgElement) {
 		var isAnimated = (frameIndex === undefined || frameIndex === null) ? true : false;
 
 		var hexPalette = []; // TODO this is a bit repetitive to do all the time, huh?
@@ -391,12 +391,12 @@ function ThumbnailRenderer() {
 
 		var drawingFrameData = [];
 
-		if( isAnimated || frameIndex == 0 ) {
-			drawingId.draw( drawingThumbnailCtx, 0, 0, palId, 0 /*frameIndex*/ );
+		if (isAnimated || frameIndex == 0) {
+			drawObject(renderer.GetImage(object[drawingId], palId, 0 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
 			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
 		}
-		if( isAnimated || frameIndex == 1 ) {
-			drawingId.draw( drawingThumbnailCtx, 0, 0, palId, 1 /*frameIndex*/ );
+		if (isAnimated || frameIndex == 1) {
+			drawObject(renderer.GetImage(object[drawingId], palId, 1 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
 			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
 		}
 
@@ -422,8 +422,9 @@ function ThumbnailRenderer() {
 		}
 		encoder.encode( gifData, createThumbnailRenderCallback(imgElement) );
 	}
-	this.Render = function(imgId,drawingId,frameIndex,imgElement) {
-		render(imgId,drawingId,frameIndex,imgElement);
+
+	this.Render = function(imgId, drawingId, frameIndex, imgElement) {
+		render(imgId, drawingId, frameIndex, imgElement);
 	};
 
 	function createThumbnailRenderCallback(img) {

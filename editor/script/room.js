@@ -16,7 +16,7 @@ what other methods do I need to move into this class? exit stuff??
 function RoomTool(canvas) {
 	var self = this; // feels a bit hacky
 
-	this.drawing = new DrawingId( TileType.Avatar, "A" );
+	this.drawing = "A";
 
 	// edit flags
 	var isDragAddingTiles = false;
@@ -78,10 +78,6 @@ function RoomTool(canvas) {
 			//add tiles/sprites to map
 			if (self.drawing.type == TileType.Tile) {
 				if ( room[curRoom].tilemap[y][x] === "0" ) {
-					console.log("ADD");
-					//add
-					//row = row.substr(0, x) + drawingId + row.substr(x+1);
-					console.log( room[curRoom].tilemap );
 					room[curRoom].tilemap[y][x] = self.drawing.id;
 					isDragAddingTiles = true;
 				}
@@ -179,8 +175,6 @@ function RoomTool(canvas) {
 		// var row = room[curRoom].tilemap[y];
 		if (isDragAddingTiles) {
 			if ( room[curRoom].tilemap[y][x] != self.drawing.id ) {
-				// row = row.substr(0, x) + drawingId + row.substr(x+1);
-				// room[curRoom].tilemap[y] = row;
 				room[curRoom].tilemap[y][x] = self.drawing.id;
 				refreshGameData();
 				self.drawEditMap();
