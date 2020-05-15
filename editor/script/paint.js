@@ -220,6 +220,7 @@ function PaintTool(canvas, roomTool) {
 
 	// TODO : who uses this?
 	this.getCurObject = function() {
+		console.log("GET OBJECT " + drawingId);
 		return object[drawingId];
 	}
 
@@ -379,7 +380,7 @@ function getDrawingTypeFromId(drawingId) {
 // TODO : make non-global
 function reloadDrawing() {
 	// animation UI
-	if (object[drawing] && object[drawing].animation.isAnimated) {
+	if (object[curDrawingId] && object[curDrawingId].animation.isAnimated) {
 		paintTool.isCurDrawingAnimated = true;
 		document.getElementById("animatedCheckbox").checked = true;
 
@@ -396,7 +397,7 @@ function reloadDrawing() {
 
 		document.getElementById("animation").setAttribute("style","display:block;");
 		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
-		renderAnimationPreview(drawing);
+		renderAnimationPreview(curDrawingId);
 	}
 	else {
 		paintTool.isCurDrawingAnimated = false;
@@ -406,12 +407,23 @@ function reloadDrawing() {
 	}
 
 	// wall UI
-	updateWallCheckboxOnCurrentTile();
+	if (object[curDrawingId].type === "TIL") {
+		document.getElementById("wall").setAttribute("style", "display:block;");
+		updateWallCheckboxOnCurrentTile();
+	}
+	else {
+		document.getElementById("wall").setAttribute("style", "display:none;");
+	}
 
-	// dialog UI
-	reloadDialogUI()
+	if (curDrawingId === "A" || object[curDrawingId].type === "TIL") {
+		document.getElementById("dialog").setAttribute("style", "display:none;");
+	}
+	else {
+		document.getElementById("dialog").setAttribute("style", "display:block;");
+		reloadDialogUI();
+	}
 
-	updateDrawingNameUI(drawing != "A");
+	updateDrawingNameUI(curDrawingId != "A");
 
 	// update paint canvas
 	paintTool.updateCanvas();
@@ -424,13 +436,13 @@ function updateAnimationUI() {
 function updateWallCheckboxOnCurrentTile() {
 	var isCurTileWall = false;
 
-	if (object[drawing].isWall == undefined || object[drawing].isWall == null ) {
+	if (object[curDrawingId].isWall == undefined || object[curDrawingId].isWall == null ) {
 		if (room[curRoom]) {
-			isCurTileWall = (room[curRoom].walls.indexOf(drawing) != -1);
+			isCurTileWall = (room[curRoom].walls.indexOf(curDrawingId) != -1);
 		}
 	}
 	else {
-		isCurTileWall = object[drawing].isWall;
+		isCurTileWall = object[curDrawingId].isWall;
 	}
 
 	if (isCurTileWall) {
@@ -444,9 +456,9 @@ function updateWallCheckboxOnCurrentTile() {
 }
 
 function updateDrawingNameUI() {
-	var obj = paintTool.getCurObject();
+	var obj = object[curDrawingId];
 
-	if (drawing.type == TileType.Avatar) { // hacky
+	if (obj.id === "A") { // hacky
 		document.getElementById("drawingName").value = "avatar"; // TODO: localize
 	}
 	else if (obj.name != null) {
@@ -456,18 +468,17 @@ function updateDrawingNameUI() {
 		document.getElementById("drawingName").value = "";
 	}
 
-	document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + drawing.id;
+	document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + obj.id;
 
-	document.getElementById("drawingName").readOnly = (drawing.type == TileType.Avatar);
+	document.getElementById("drawingName").readOnly = obj.id === "A";
 }
 
 function on_paint_avatar() {
-	drawing.type = TileType.Avatar;
-	drawing.id = "A";
-	paintTool.reloadDrawing();
+	curDrawingId = "A";
+	paintTool.selectDrawing(curDrawingId);
 	if(paintExplorer != null) { 
-		paintExplorer.Refresh( paintTool.drawing.type );
-		paintExplorer.ChangeSelection( paintTool.drawing.id );
+		paintExplorer.Refresh(TileType.Sprite);
+		paintExplorer.ChangeSelection(curDrawingId);
 	}
 
 	on_paint_avatar_ui_update();
@@ -717,4 +728,31 @@ function on_paint_frame1() {
 function on_paint_frame2() {
 	paintTool.curDrawingFrameIndex = 1;
 	paintTool.reloadDrawing();
+}
+
+/* PAINT NAVIGATION */
+function next() {
+	var ids = sortedDrawingIdList();
+
+	// TODO : is this global drawing index good?
+	curDrawingIndex = (curDrawingIndex + 1) % ids.length;
+	curDrawingId = ids[curDrawingIndex];
+
+	paintTool.curDrawingFrameIndex = 0;
+	paintTool.selectDrawing(curDrawingId);
+	paintExplorer.ChangeSelection(curDrawingId);
+}
+
+function prev() {
+	var ids = sortedDrawingIdList();
+
+	curDrawingIndex = (curDrawingIndex - 1) % ids.length;
+	if (curDrawingIndex < 0) {
+		curDrawingIndex = (ids.length-1); //loop
+	}
+	curDrawingId = ids[curDrawingIndex];
+
+	paintTool.curDrawingFrameIndex = 0;
+	paintTool.selectDrawing(curDrawingId);
+	paintExplorer.ChangeSelection(curDrawingId);
 }

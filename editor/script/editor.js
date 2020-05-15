@@ -55,18 +55,6 @@ function selectedColorPal() {
 
 /* UNIQUE ID METHODS */
 // TODO - lots of duplicated code around stuff (ex: all these things with IDs)
-function nextTileId() {
-	return nextObjectId( sortedTileIdList() );
-}
-
-function nextSpriteId() {
-	return nextObjectId( sortedSpriteIdList() );
-}
-
-function nextItemId() {
-	return nextObjectId( sortedItemIdList() );
-}
-
 function nextRoomId() {
 	return nextObjectId( sortedRoomIdList() );
 }
@@ -86,17 +74,11 @@ function nextObjectId(idList) {
 	return idInt.toString(36);
 }
 
-function sortedTileIdList() {
-	return sortedBase36IdList( tile );
+// TODO : continue using base 36???
+function sortedDrawingIdList() { // TODO : name?
+	return sortedBase36IdList(object);
 }
-
-function sortedSpriteIdList() {
-	return sortedBase36IdList( sprite );
-}
-
-function sortedItemIdList() {
-	return sortedBase36IdList( item );
-}
+// TODO : add nextDrawingId()
 
 function sortedRoomIdList() {
 	return sortedBase36IdList( room );
@@ -545,7 +527,7 @@ function reloadDialogUI() {
 	var dialogContent = document.getElementById("dialog");
 	dialogContent.innerHTML = "";
 
-	var obj = paintTool.getCurObject();
+	var obj = object[curDrawingId]; // paintTool.getCurObject();
 
 	// clean up previous widget
 	if (paintDialogWidget) {
@@ -682,11 +664,8 @@ var roomTool;
 var paintTool;
 
 /* CUR DRAWING */
-var drawing = "A";
-
-var tileIndex = 0;
-var spriteIndex = 0;
-var itemIndex = 0;
+var curDrawingId = "A";
+var curDrawingIndex = 0; // TODO : ensure "A" is always the first drawing!
 
 /* ROOM */
 var roomIndex = 0;
@@ -882,11 +861,11 @@ function start() {
 	//init tool controllers
 	roomTool = new RoomTool(canvas);
 	roomTool.listenEditEvents()
-	roomTool.drawing = drawing;
+	roomTool.drawing = curDrawingId;
 	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
 
 	paintTool = new PaintTool(document.getElementById("paint"),roomTool);
-	paintTool.drawing = drawing;
+	paintTool.drawing = curDrawingId;
 
 	markerTool = new RoomMarkerTool(document.getElementById("markerCanvas1"), document.getElementById("markerCanvas2") );
 	console.log("MARKER TOOL " + markerTool);
@@ -1055,23 +1034,6 @@ function start() {
 
 function newDrawing() {
 	paintTool.newDrawing();
-}
-
-function nextTile() {
-	var ids = sortedTileIdList();
-	tileIndex = (tileIndex + 1) % ids.length;
-	drawing.id = ids[tileIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-}
-
-function prevTile() {
-	var ids = sortedTileIdList();
-	tileIndex = (tileIndex - 1) % ids.length;
-	if (tileIndex < 0) tileIndex = (ids.length-1);
-	drawing.id = ids[tileIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
 }
 
 function updateRoomName() {
@@ -1381,67 +1343,6 @@ function deleteRoom() {
 	}
 }
 
-function nextItem() {
-	var ids = sortedItemIdList();
-	itemIndex = (itemIndex + 1) % ids.length;
-	drawing.id = ids[itemIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-}
-
-function prevItem() {
-	var ids = sortedItemIdList();
-	itemIndex = (itemIndex - 1) % ids.length;
-	if (itemIndex < 0) itemIndex = (ids.length-1); // loop
-	drawing.id = ids[itemIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-}
-
-function nextSprite() {
-	var ids = sortedSpriteIdList();
-	spriteIndex = (spriteIndex + 1) % ids.length;
-	if (spriteIndex === 0) spriteIndex = 1; //skip avatar
-	drawing.id = ids[spriteIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-}
-
-function prevSprite() {
-	var ids = sortedSpriteIdList();
-	spriteIndex = (spriteIndex - 1) % ids.length;
-	if (spriteIndex <= 0) spriteIndex = (ids.length-1); //loop and skip avatar
-	drawing.id = ids[spriteIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-}
-
-function next() {
-	if (drawing.type == TileType.Tile) {
-		nextTile();
-	}
-	else if( drawing.type == TileType.Avatar || drawing.type == TileType.Sprite ) {
-		nextSprite();
-	}
-	else if( drawing.type == TileType.Item ) {
-		nextItem();
-	}
-	paintExplorer.ChangeSelection( drawing.id );
-}
-
-function prev() {
-	if (drawing.type == TileType.Tile) {
-		prevTile();
-	}
-	else if( drawing.type == TileType.Avatar || drawing.type == TileType.Sprite ) {
-		prevSprite();
-	}
-	else if( drawing.type == TileType.Item ) {
-		prevItem();
-	}
-	paintExplorer.ChangeSelection( drawing.id );
-}
-
 function duplicateDrawing() {
 	paintTool.duplicateDrawing();
 }
@@ -1739,13 +1640,14 @@ function selectPaint() {
 }
 
 function getCurPaintModeStr() {
-	if(drawing.type == TileType.Sprite || drawing.type == TileType.Avatar) {
+	var drawingType = getDrawingTypeFromId(curDrawingId); // TODO : get from paint tool instead of global?
+	if (drawingType == TileType.Sprite || drawingType == TileType.Avatar) {
 		return localization.GetStringOrFallback("sprite_label", "sprite");
 	}
-	else if(drawing.type == TileType.Item) {
+	else if (drawingType == TileType.Item) {
 		return localization.GetStringOrFallback("item_label", "item");
 	}
-	else if(drawing.type == TileType.Tile) {
+	else if (drawingType == TileType.Tile) {
 		return localization.GetStringOrFallback("tile_label", "tile");
 	}
 }
@@ -1771,26 +1673,12 @@ function on_game_data_change_core() {
 	clearGameData();
 	var version = parseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data
 
-	var curPaintMode = drawing.type; //save current paint mode (hacky)
-
 	// TODO RENDERER : refresh images
 
 	roomTool.drawEditMap();
 
-	drawing.type = curPaintMode;
-	if (drawing.type == TileType.Tile) {
-		drawing.id = sortedTileIdList()[0];
-	}
-	else if (drawing.type === TileType.Item) {
-		drawing.id = sortedItemIdList()[0];
-	}
-	else if (drawing.type === TileType.Avatar) {
-		drawing.id = "A";
-	}
-	else if (drawing.type === TileType.Sprite) {
-		drawing.id = sortedSpriteIdList().filter(function (id) { return id != "A"; })[0];
-	}
-	paintTool.reloadDrawing();
+	curDrawingId = "A";
+	paintTool.selectDrawing(curDrawingId);
 
 	// if user pasted in a custom font into game data - update the stored custom font
 	if (defaultFonts.indexOf(fontName + fontManager.GetExtension()) == -1) {
