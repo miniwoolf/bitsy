@@ -79,7 +79,12 @@ function PaintTool(canvas, roomTool) {
 	function onMouseUp(e) {
 		if (isPainting) {
 			isPainting = false;
+
 			refreshGameData();
+
+			// hacky way to force drawing to re-render
+			renderer.SetImageSource(getRenderId(), getImageSource());
+
 			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
 			if (self.explorer != null) {
