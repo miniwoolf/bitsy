@@ -1443,7 +1443,7 @@ function prev() {
 }
 
 function duplicateDrawing() {
-    paintTool.duplicateDrawing();
+	paintTool.duplicateDrawing();
 }
 
 function removeAllItems( id ) {
