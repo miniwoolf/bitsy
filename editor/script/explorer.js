@@ -187,8 +187,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 
 			nameCaption.innerText = img.title;
 			var curPaintMode = drawingCategory;
-			var drawingId = new DrawingId( curPaintMode, id );
-			var obj = drawingId.getEngineObject();
+			var obj = object[id];
 			if( obj.name === undefined || obj.name === null ) {
 				// console.log("default name!!!!");
 				nameCaption.classList.add( "thumbnailDefaultName" );
@@ -242,7 +241,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 	function updateAndForceRenderThumbnail(id) {
 		updateThumbnail(id);
 		var imgId = getThumbnailId(id);
-		renderer.Render( imgId, new DrawingId(drawingCategory,id) );
+		renderer.Render(imgId, id);
 	}
 
 	this.RenderThumbnail = function(id) {
@@ -277,7 +276,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 
 			if (isInViewport && cacheEntry.outOfDate) {
 				x++;
-				renderer.Render( imgId, new DrawingId(drawingCategory,id) );
+				renderer.Render( imgId, id );
 			}
 		}
 

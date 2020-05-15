@@ -176,25 +176,8 @@ function PaintTool(canvas, roomTool) {
 
 	// TODO : refactor these so it doesn't require these weird external hookups!
 	// methods for updating the UI
-	this.onReloadTile = null;
-	this.onReloadSprite = null;
-	this.onReloadItem = null;
 	this.reloadDrawing = function() {
-		if (object[drawingId].type === "TIL") {
-			if (self.onReloadTile) {
-				self.onReloadTile();
-			}
-		}
-		else if (object[drawingId].type === "SPR") {
-			if (self.onReloadSprite) {
-				self.onReloadSprite();
-			}
-		}
-		else if (object[drawingId].type === "ITM") {
-			if (self.onReloadItem) {
-				self.onReloadItem();
-			}
-		}
+		reloadDrawing(); // TODO : refactor this global method...
 	}
 
 	this.selectDrawing = function(id) {
@@ -383,3 +366,219 @@ function getDrawingTypeFromId(drawingId) {
 	return null; // uh oh
 }
 
+/*
+ PAINT GLOBALS
+ TODO : refactor
+*/
+
+// TODO : make non-global
+function reloadDrawing() {
+	// animation UI
+	if (object[drawing] && object[drawing].animation.isAnimated) {
+		paintTool.isCurDrawingAnimated = true;
+		document.getElementById("animatedCheckbox").checked = true;
+
+		if (paintTool.curDrawingFrameIndex == 0)
+		{
+			document.getElementById("animationKeyframe1").className = "animationThumbnail left selected";
+			document.getElementById("animationKeyframe2").className = "animationThumbnail right unselected";
+		}
+		else if (paintTool.curDrawingFrameIndex == 1)
+		{
+			document.getElementById("animationKeyframe1").className = "animationThumbnail left unselected";
+			document.getElementById("animationKeyframe2").className = "animationThumbnail right selected";
+		}
+
+		document.getElementById("animation").setAttribute("style","display:block;");
+		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+		renderAnimationPreview(drawing);
+	}
+	else {
+		paintTool.isCurDrawingAnimated = false;
+		document.getElementById("animatedCheckbox").checked = false;
+		document.getElementById("animation").setAttribute("style","display:none;");
+		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+	}
+
+	// wall UI
+	updateWallCheckboxOnCurrentTile();
+
+	// dialog UI
+	reloadDialogUI()
+
+	updateDrawingNameUI(drawing != "A");
+
+	// update paint canvas
+	paintTool.updateCanvas();
+}
+
+function updateAnimationUI() {
+	//todo
+}
+
+function updateWallCheckboxOnCurrentTile() {
+	var isCurTileWall = false;
+
+	if (object[drawing].isWall == undefined || object[drawing].isWall == null ) {
+		if (room[curRoom]) {
+			isCurTileWall = (room[curRoom].walls.indexOf(drawing) != -1);
+		}
+	}
+	else {
+		isCurTileWall = object[drawing].isWall;
+	}
+
+	if (isCurTileWall) {
+		document.getElementById("wallCheckbox").checked = true;
+		document.getElementById("wallCheckboxIcon").innerHTML = "border_outer";
+	}
+	else {
+		document.getElementById("wallCheckbox").checked = false;
+		document.getElementById("wallCheckboxIcon").innerHTML = "border_clear";
+	}
+}
+
+function updateDrawingNameUI() {
+	var obj = paintTool.getCurObject();
+
+	if (drawing.type == TileType.Avatar) { // hacky
+		document.getElementById("drawingName").value = "avatar"; // TODO: localize
+	}
+	else if (obj.name != null) {
+		document.getElementById("drawingName").value = obj.name;
+	}
+	else {
+		document.getElementById("drawingName").value = "";
+	}
+
+	document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + drawing.id;
+
+	document.getElementById("drawingName").readOnly = (drawing.type == TileType.Avatar);
+}
+
+function on_paint_avatar() {
+	drawing.type = TileType.Avatar;
+	drawing.id = "A";
+	paintTool.reloadDrawing();
+	if(paintExplorer != null) { 
+		paintExplorer.Refresh( paintTool.drawing.type );
+		paintExplorer.ChangeSelection( paintTool.drawing.id );
+	}
+
+	on_paint_avatar_ui_update();
+}
+
+function on_paint_avatar_ui_update() {
+	document.getElementById("dialog").setAttribute("style","display:none;");
+	document.getElementById("wall").setAttribute("style","display:none;");
+	// TODO : make navigation commands un-clickable
+	document.getElementById("animationOuter").setAttribute("style","display:block;");
+	updateDrawingNameUI(false);
+	document.getElementById("paintOptionAvatar").checked = true;
+	document.getElementById("paintExplorerOptionAvatar").checked = true;
+	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+	document.getElementById("paintExplorerAdd").setAttribute("style","display:none;");
+	document.getElementById("paintExplorerFilterInput").value = "";
+
+	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+	for (var i = 0; i < disableForAvatarElements.length; i++) {
+		disableForAvatarElements[i].disabled = true;
+	}
+}
+
+function on_paint_tile() {
+	drawing.type = TileType.Tile;
+	tileIndex = 0;
+	drawing.id = sortedTileIdList()[tileIndex];
+	paintTool.reloadDrawing();
+	paintExplorer.Refresh( paintTool.drawing.type );
+	paintExplorer.ChangeSelection( paintTool.drawing.id );
+
+	on_paint_tile_ui_update();
+}
+
+function on_paint_tile_ui_update() {
+	document.getElementById("dialog").setAttribute("style","display:none;");
+	document.getElementById("wall").setAttribute("style","display:block;");
+	document.getElementById("animationOuter").setAttribute("style","display:block;");
+	updateDrawingNameUI(true);
+	//document.getElementById("animation").setAttribute("style","display:block;");
+	document.getElementById("paintOptionTile").checked = true;
+	document.getElementById("paintExplorerOptionTile").checked = true;
+	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
+	document.getElementById("paintExplorerFilterInput").value = "";
+
+	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+	for (var i = 0; i < disableForAvatarElements.length; i++) {
+		disableForAvatarElements[i].disabled = false;
+	}
+}
+
+function on_paint_sprite() {
+	drawing.type = TileType.Sprite;
+	if (sortedSpriteIdList().length > 1)
+	{
+		spriteIndex = 1;
+	}
+	else {
+		spriteIndex = 0; //fall back to avatar if no other sprites exist
+	}
+	drawing.id = sortedSpriteIdList()[spriteIndex];
+	paintTool.curDrawingFrameIndex = 0;
+	paintTool.reloadDrawing();
+	paintExplorer.Refresh( paintTool.drawing.type );
+	paintExplorer.ChangeSelection( paintTool.drawing.id );
+
+	on_paint_sprite_ui_update();
+}
+
+function on_paint_sprite_ui_update() {
+	document.getElementById("dialog").setAttribute("style","display:block;");
+	document.getElementById("wall").setAttribute("style","display:none;");
+	document.getElementById("animationOuter").setAttribute("style","display:block;");
+	updateDrawingNameUI(true);
+	//document.getElementById("animation").setAttribute("style","display:block;");
+	document.getElementById("paintOptionSprite").checked = true;
+	document.getElementById("paintExplorerOptionSprite").checked = true;
+	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
+	document.getElementById("paintExplorerFilterInput").value = "";
+
+	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+	for (var i = 0; i < disableForAvatarElements.length; i++) {
+		disableForAvatarElements[i].disabled = false;
+	}
+}
+
+function on_paint_item() {
+	console.log("PAINT ITEM");
+	drawing.type = TileType.Item;
+	itemIndex = 0;
+	drawing.id = sortedItemIdList()[itemIndex];
+	console.log(drawing.id);
+	paintTool.curDrawingFrameIndex = 0;
+	paintTool.reloadDrawing();
+	paintExplorer.Refresh( paintTool.drawing.type );
+	paintExplorer.ChangeSelection( paintTool.drawing.id );
+
+	on_paint_item_ui_update();
+}
+
+function on_paint_item_ui_update() {
+	document.getElementById("dialog").setAttribute("style","display:block;");
+	document.getElementById("wall").setAttribute("style","display:none;");
+	document.getElementById("animationOuter").setAttribute("style","display:block;");
+	updateDrawingNameUI(true);
+	//document.getElementById("animation").setAttribute("style","display:block;");
+	document.getElementById("paintOptionItem").checked = true;
+	document.getElementById("paintExplorerOptionItem").checked = true;
+	document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
+	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
+	document.getElementById("paintExplorerFilterInput").value = "";
+
+	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+	for (var i = 0; i < disableForAvatarElements.length; i++) {
+		disableForAvatarElements[i].disabled = false;
+	}
+}
