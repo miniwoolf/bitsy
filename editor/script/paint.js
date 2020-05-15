@@ -504,7 +504,7 @@ function on_paint_avatar_ui_update() {
 	// TODO : make navigation commands un-clickable
 	document.getElementById("animationOuter").setAttribute("style","display:block;");
 	updateDrawingNameUI(false);
-	document.getElementById("paintOptionAvatar").checked = true;
+	// document.getElementById("paintOptionAvatar").checked = true;
 	document.getElementById("paintExplorerOptionAvatar").checked = true;
 	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
 	document.getElementById("paintExplorerAdd").setAttribute("style","display:none;");
@@ -533,7 +533,7 @@ function on_paint_tile_ui_update() {
 	document.getElementById("animationOuter").setAttribute("style","display:block;");
 	updateDrawingNameUI(true);
 	//document.getElementById("animation").setAttribute("style","display:block;");
-	document.getElementById("paintOptionTile").checked = true;
+	// document.getElementById("paintOptionTile").checked = true;
 	document.getElementById("paintExplorerOptionTile").checked = true;
 	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
 	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
@@ -569,7 +569,7 @@ function on_paint_sprite_ui_update() {
 	document.getElementById("animationOuter").setAttribute("style","display:block;");
 	updateDrawingNameUI(true);
 	//document.getElementById("animation").setAttribute("style","display:block;");
-	document.getElementById("paintOptionSprite").checked = true;
+	// document.getElementById("paintOptionSprite").checked = true;
 	document.getElementById("paintExplorerOptionSprite").checked = true;
 	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
 	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
@@ -601,7 +601,7 @@ function on_paint_item_ui_update() {
 	document.getElementById("animationOuter").setAttribute("style","display:block;");
 	updateDrawingNameUI(true);
 	//document.getElementById("animation").setAttribute("style","display:block;");
-	document.getElementById("paintOptionItem").checked = true;
+	// document.getElementById("paintOptionItem").checked = true;
 	document.getElementById("paintExplorerOptionItem").checked = true;
 	document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
 	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
