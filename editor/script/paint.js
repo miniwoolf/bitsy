@@ -587,3 +587,134 @@ function on_paint_item_ui_update() {
 		disableForAvatarElements[i].disabled = false;
 	}
 }
+
+function copyDrawingData(sourceDrawingData) {
+	var copiedDrawingData = [];
+
+	for (frame in sourceDrawingData) {
+		copiedDrawingData.push([]);
+		for (y in sourceDrawingData[frame]) {
+			copiedDrawingData[frame].push([]);
+			for (x in sourceDrawingData[frame][y]) {
+				copiedDrawingData[frame][y].push(sourceDrawingData[frame][y][x]);
+			}
+		}
+	}
+
+	return copiedDrawingData;
+}
+
+/* ANIMATION EDITING*/
+// TODO: de-globalify!
+function on_toggle_animated() {
+	if (document.getElementById("animatedCheckbox").checked) {
+		addObjectAnimation(drawing);
+		document.getElementById("animation").setAttribute("style","display:block;");
+		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+		renderAnimationPreview(drawing.id);
+	}
+	else {
+		removeObjectAnimation(drawing);
+		document.getElementById("animation").setAttribute("style","display:none;");
+		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+	}
+	// renderPaintThumbnail(drawing);
+}
+
+// TODO : de-globalify this
+function addObjectAnimation(drawingId) {
+	//set editor mode
+	paintTool.isCurDrawingAnimated = true;
+	paintTool.curDrawingFrameIndex = 0;
+
+	//mark object as animated
+	object[drawingId].animation.isAnimated = true;
+	object[drawingId].animation.frameIndex = 0;
+	object[drawingId].animation.frameCount = 2;
+
+	//add blank frame to object (or restore removed animation)
+	if (object[drawingId].cachedAnimation != null) {
+		restoreDrawingAnimation(object[drawingId].drw, object[drawingId].cachedAnimation);
+	}
+	else {
+		addNewFrameToDrawing(object[drawingId].drw);
+	}
+
+	// TODO RENDERER : refresh images
+
+	//refresh data model
+	refreshGameData();
+	paintTool.reloadDrawing();
+
+	// reset animations
+	resetAllAnimations();
+}
+
+function removeObjectAnimation(drawingId) {
+	//set editor mode
+	paintTool.isCurDrawingAnimated = false;
+
+	//mark object as non-animated
+	object[drawingId].animation.isAnimated = false;
+	object[drawingId].animation.frameIndex = 0;
+	object[drawingId].animation.frameCount = 0;
+
+	//remove all but the first frame of the object
+	cacheDrawingAnimation(object[drawingId], object[drawingId].drw);
+	removeDrawingAnimation(object[drawingId].drw);
+
+	// TODO RENDERER : refresh images
+
+	//refresh data model
+	refreshGameData();
+	paintTool.reloadDrawing();
+
+	// reset animations
+	resetAllAnimations();
+}
+
+function addNewFrameToDrawing(drwId) {
+	// copy first frame data into new frame
+	var imageSource = renderer.GetImageSource(drwId);
+	var firstFrame = imageSource[0];
+	var newFrame = [];
+	for (var y = 0; y < tilesize; y++) {
+		newFrame.push([]);
+		for (var x = 0; x < tilesize; x++) {
+			newFrame[y].push( firstFrame[y][x] );
+		}
+	}
+	imageSource.push( newFrame );
+	renderer.SetImageSource(drwId, imageSource);
+}
+
+function removeDrawingAnimation(drwId) {
+	var imageSource = renderer.GetImageSource(drwId);
+	var oldImageData = imageSource.slice(0);
+	renderer.SetImageSource( drwId, [ oldImageData[0] ] );
+}
+
+// let's us restore the animation during the session if the user wants it back
+function cacheDrawingAnimation(drawing,sourceId) {
+	var imageSource = renderer.GetImageSource(sourceId);
+	var oldImageData = imageSource.slice(0);
+	drawing.cachedAnimation = [ oldImageData[1] ]; // ah the joys of javascript
+}
+
+function restoreDrawingAnimation(sourceId,cachedAnimation) {
+	var imageSource = renderer.GetImageSource(sourceId);
+	for (f in cachedAnimation) {
+		imageSource.push( cachedAnimation[f] );	
+	}
+	renderer.SetImageSource(sourceId, imageSource);
+}
+
+function on_paint_frame1() {
+	paintTool.curDrawingFrameIndex = 0;
+	paintTool.reloadDrawing();
+}
+
+function on_paint_frame2() {
+	paintTool.curDrawingFrameIndex = 1;
+	paintTool.reloadDrawing();
+}
