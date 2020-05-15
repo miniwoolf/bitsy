@@ -378,6 +378,7 @@ function getDrawingTypeFromId(drawingId) {
 */
 
 // TODO : make non-global
+// TODO : rename... this is now the whole UI update for drawings...
 function reloadDrawing() {
 	// animation UI
 	if (object[curDrawingId] && object[curDrawingId].animation.isAnimated) {
@@ -415,6 +416,7 @@ function reloadDrawing() {
 		document.getElementById("wall").setAttribute("style", "display:none;");
 	}
 
+	// dialog UI
 	if (curDrawingId === "A" || object[curDrawingId].type === "TIL") {
 		document.getElementById("dialog").setAttribute("style", "display:none;");
 	}
@@ -423,7 +425,19 @@ function reloadDrawing() {
 		reloadDialogUI();
 	}
 
+	if (object[curDrawingId].type === "ITM") {
+		document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
+	}
+	else {
+		document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+	}
+
 	updateDrawingNameUI(curDrawingId != "A");
+
+	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+	for (var i = 0; i < disableForAvatarElements.length; i++) {
+		disableForAvatarElements[i].disabled = curDrawingId === "A";
+	}
 
 	// update paint canvas
 	paintTool.updateCanvas();
@@ -619,13 +633,13 @@ function copyDrawingData(sourceDrawingData) {
 // TODO: de-globalify!
 function on_toggle_animated() {
 	if (document.getElementById("animatedCheckbox").checked) {
-		addObjectAnimation(drawing);
+		addObjectAnimation(curDrawingId);
 		document.getElementById("animation").setAttribute("style","display:block;");
 		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
-		renderAnimationPreview(drawing.id);
+		renderAnimationPreview(curDrawingId);
 	}
 	else {
-		removeObjectAnimation(drawing);
+		removeObjectAnimation(curDrawingId);
 		document.getElementById("animation").setAttribute("style","display:none;");
 		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
 	}
