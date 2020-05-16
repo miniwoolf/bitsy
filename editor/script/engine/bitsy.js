@@ -1623,54 +1623,113 @@ function parsePalette(lines,i) { //todo this has to go first right now :(
 	return i;
 }
 
+function copyDrawingData(sourceDrawingData) {
+	var copiedDrawingData = [];
+
+	for (frame in sourceDrawingData) {
+		copiedDrawingData.push([]);
+		for (y in sourceDrawingData[frame]) {
+			copiedDrawingData[frame].push([]);
+			for (x in sourceDrawingData[frame][y]) {
+				copiedDrawingData[frame][y].push(sourceDrawingData[frame][y][x]);
+			}
+		}
+	}
+
+	return copiedDrawingData;
+}
+
+function createDrawing(id, sourceDrawingData) {
+	var drawingData;
+
+	// if no image data is provided, initialize an empty initial frame
+	if (!sourceDrawingData) {
+		drawingData = [[]];
+
+		for (var i = 0; i < tilesize; i++) {
+			drawingData[0].push([])
+
+			for (var j = 0; j < tilesize; j++) {
+				drawingData[0][i].push(0);
+			}
+		}
+	}
+	else {
+		// TODO : provide option to not copy?
+		drawingData = copyDrawingData(sourceDrawingData);
+	}
+
+	renderer.SetImageSource(id, drawingData);
+}
+
+function createObject(id, type, options) {
+	var isPlayer = type === "SPR" && id === playerId;
+	var name = options.name ? options.name : null;
+	var drwId = id;
+	var col = options.col ? options.col : (type === "TIL" ? 1 : 2);
+	var dlg = options.dlg ? options.dlg : null;
+	var inventory = isPlayer && options.inventory ? options.inventory : null;
+	var isWall = type === "TIL" && options.isWall != undefined ? options.isWall : null;
+	var isUnique = isPlayer;
+
+	createDrawing(drwId, options.drawingData);
+
+	object[id] = {
+		id: id, // unique ID
+		type: type, // default behavior: is it a sprite, item, or tile?
+		name : name, // user-supplied name
+		drw: drwId, // drawing ID
+		col: col, // color index
+		animation : { // animation data // TODO: figure out how this works with instances
+			isAnimated : (renderer.GetFrameCount(drwId) > 1),
+			frameIndex : 0,
+			frameCount : renderer.GetFrameCount(drwId),
+		},
+		dlg: dlg, // dialog ID (NOTE: tiles don't use this)
+		inventory : inventory, // starting inventory (player only)
+		isWall : isWall, // wall tile? (tile only)
+		isUnique : isUnique,
+	};
+}
+
 function parseObject(lines, i, type) {
 	var id = getId(lines[i]);
 	i++;
 
+	var options = {};
+
 	// parse drawing
-	var drwId = id;
-	i = parseDrawingCore(lines, i, drwId);
+	var drawingResult = parseDrawing(lines, i);
+	i = drawingResult.i;
+	options.drawingData = drawingResult.drawingData;
 
 	var isPlayer = type === "SPR" && id === playerId;
-
-	// TODO : for now, only the player is unique, but there
-	// could be a setting to enable it for other sprites
-	var isUnique = isPlayer;
-
-	// default color for tiles is index 1, but for sprites & items it's index 2
-	var colorIndex = (type === "TIL" ? 1 : 2);
-
-	// wall property is only used by tiles
-	// null indicates it can vary from room to room (original version)
-	var isWall = null;
-
-	var name = null;
-	var dialogId = null;
-	var startingInventory = {};
+	if (isPlayer) {
+		options.inventory = {};
+	}
 
 	// read all other properties
 	while (i < lines.length && lines[i].length > 0) { // stop at empty line
 		if (getType(lines[i]) === "NAME") {
 			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.sprite.set(name, id);
+			options.name = lines[i].split(/\s(.+)/)[1];
 		}
 		else if (getType(lines[i]) === "COL") {
 			/* COLOR OFFSET INDEX */
-			colorIndex = parseInt(getId(lines[i]));
+			options.col = parseInt(getId(lines[i]));
 		}
 		else if (getType(lines[i]) === "WAL" && type === "TIL") {
 			// only tiles set their initial collision mode
 			var wallArg = getArg(lines[i], 1);
 			if (wallArg === "true") {
-				isWall = true;
+				options.isWall = true;
 			}
 			else if (wallArg === "false") {
-				isWall = false;
+				options.isWall = false;
 			}
 		}
 		else if (getType(lines[i]) === "DLG" && type != "TIL") {
-			dialogId = getId(lines[i]);
+			options.dlg = getId(lines[i]);
 		}
 		else if (getType(lines[i]) === "POS" && type === "SPR") {
 			/* STARTING POSITION */
@@ -1691,40 +1750,18 @@ function parseObject(lines, i, type) {
 			// TODO: This is only used by the player avatar -- should I move it out of sprite data?
 			var itemId = getId(lines[i]);
 			var itemCount = parseFloat(getArg(lines[i], 2));
-			startingInventory[itemId] = itemCount;
+			options.inventory[itemId] = itemCount;
 		}
 
 		i++;
 	}
 
-	// object data
-	object[id] = {
-		id: id, // unique ID
-		type: type, // default behavior: is it a sprite, item, or tile?
-		name : name, // user-supplied name
-		drw: drwId, // drawing ID
-		col: colorIndex, // color index
-		animation : { // animation data // TODO: figure out how this works with instances
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId),
-		},
-		dlg: dialogId, // dialog ID (NOTE: tiles don't use this)
-		inventory : startingInventory, // starting inventory (player only)
-		isWall : isWall, // wall tile? (tile only)
-		isUnique : isUnique,
-	};
+	createObject(id, type, options);
 
 	return i;
 }
 
 function parseDrawing(lines, i) {
-	// store drawing source
-	var drwId = getId(lines[i]);
-	return parseDrawingCore(lines, i, drwId);
-}
-
-function parseDrawingCore(lines, i, drwId) {
 	var frameList = []; //init list of frames
 	frameList.push([]); //init first frame
 
@@ -1760,9 +1797,7 @@ function parseDrawingCore(lines, i, drwId) {
 		}
 	}
 
-	renderer.SetImageSource(drwId, frameList);
-
-	return i;
+	return { i:i, drawingData:frameList };
 }
 
 function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {

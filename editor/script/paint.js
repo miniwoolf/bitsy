@@ -226,14 +226,19 @@ function PaintTool(canvas, roomTool) {
 
 	// TODO : replace with something that lets you pick the new type of drawing!
 	this.newDrawing = function(imageData) {
-		if (getDrawingType() == TileType.Tile) {
-			newTile(imageData);
-		}
-		else if (getDrawingType() == TileType.Avatar || getDrawingType() == TileType.Sprite) {
-			newSprite(imageData);
-		}
-		else if (getDrawingType() == TileType.Item) {
-			newItem(imageData);
+		var curType = object[drawingId].type;
+		drawingId = nextObjectId(object);
+		createObject(drawingId, curType, { drawingData:imageData });
+
+		// TODO : this global state reliance is bad!!!!
+		curDrawingId = drawingId; 
+
+		self.reloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
+		self.updateCanvas();
+		refreshGameData();
+
+		if (curType === "ITM") {
+			updateInventoryItemUI();
 		}
 
 		// update paint explorer
@@ -251,7 +256,6 @@ function PaintTool(canvas, roomTool) {
 
 	this.duplicateDrawing = function() {
 		var sourceImageData = renderer.GetImageSource(getRenderId());
-		var copiedImageData = copyDrawingData(sourceImageData);
 
 		// tiles have extra data to copy
 		var tileIsWall = false;
@@ -259,52 +263,15 @@ function PaintTool(canvas, roomTool) {
 			tileIsWall = object[drawingId].isWall;
 		}
 
-		this.newDrawing(copiedImageData);
+		this.newDrawing(sourceImageData);
 
+		// HACKY
 		// tiles have extra data to copy
 		if (getDrawingType() === TileType.Tile) {
 			object[drawingId].isWall = tileIsWall;
 			// make sure the wall toggle gets updated
 			self.reloadDrawing();
 		}
-	}
-
-	// TODO -- should these newDrawing methods be internal to PaintTool?
-	function newTile(imageData) {
-		drawingId = nextTileId(); // TODO : need only one "new id" method now
-
-		makeTile(drawingId, imageData);
-		self.reloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
-
-		self.updateCanvas();
-		refreshGameData();
-
-		tileIndex = Object.keys(tile).length - 1;
-	}
-
-	function newSprite(imageData) {
-		drawingId = nextSpriteId();
-
-		makeSprite(drawingId, imageData);
-		self.reloadDrawing(); //hack (order matters for animated tiles)
-
-		self.updateCanvas();
-		refreshGameData();
-
-		spriteIndex = Object.keys(sprite).length - 1;
-	}
-
-	function newItem(imageData) {
-		drawingId = nextItemId();
-
-		makeItem(drawingId, imageData);
-		self.reloadDrawing(); //hack (order matters for animated tiles)
-
-		self.updateCanvas();
-		updateInventoryItemUI();
-		refreshGameData();
-
-		itemIndex = Object.keys(item).length - 1;
 	}
 
 	// TODO - may need to extract this for different tools beyond the paint tool (put it in core.js?)
@@ -611,22 +578,6 @@ function on_paint_item_ui_update() {
 	for (var i = 0; i < disableForAvatarElements.length; i++) {
 		disableForAvatarElements[i].disabled = false;
 	}
-}
-
-function copyDrawingData(sourceDrawingData) {
-	var copiedDrawingData = [];
-
-	for (frame in sourceDrawingData) {
-		copiedDrawingData.push([]);
-		for (y in sourceDrawingData[frame]) {
-			copiedDrawingData[frame].push([]);
-			for (x in sourceDrawingData[frame][y]) {
-				copiedDrawingData[frame][y].push(sourceDrawingData[frame][y][x]);
-			}
-		}
-	}
-
-	return copiedDrawingData;
 }
 
 /* ANIMATION EDITING*/
