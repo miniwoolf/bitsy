@@ -290,9 +290,6 @@ function PaintTool(canvas, roomTool) {
 		drawingId = nextObjectId(object);
 		createObject(drawingId, curType, { drawingData:imageData });
 
-		// TODO : this global state reliance is bad!!!!
-		curDrawingId = drawingId; 
-
 		self.ReloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
 		self.UpdateCanvas();
 		refreshGameData();

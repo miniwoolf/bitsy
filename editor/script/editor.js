@@ -453,7 +453,7 @@ function reloadDialogUI() {
 	var dialogContent = document.getElementById("dialog");
 	dialogContent.innerHTML = "";
 
-	var obj = object[curDrawingId]; // paintTool.getCurObject();
+	var obj = paintTool.GetCurObject();
 
 	// clean up previous widget
 	if (paintDialogWidget) {
@@ -585,10 +585,6 @@ var editMode = EditMode.Edit; // TODO : move to core.js?
 /* TOOL CONTROLLERS */
 var roomTool;
 var paintTool;
-
-/* CUR DRAWING */
-var curDrawingId = "A";
-var curDrawingIndex = 0; // TODO : ensure "A" is always the first drawing!
 
 /* ROOM */
 var roomIndex = 0;
@@ -783,12 +779,10 @@ function start() {
 
 	//init tool controllers
 	roomTool = new RoomTool(canvas);
-	roomTool.listenEditEvents()
-	roomTool.drawing = curDrawingId;
+	roomTool.listenEditEvents();
 	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
 
 	paintTool = new PaintTool(document.getElementById("paint"),roomTool);
-	paintTool.drawing = curDrawingId;
 
 	markerTool = new RoomMarkerTool(document.getElementById("markerCanvas1"), document.getElementById("markerCanvas2") );
 	console.log("MARKER TOOL " + markerTool);
@@ -1479,9 +1473,7 @@ function on_game_data_change_core() {
 	// TODO RENDERER : refresh images
 
 	roomTool.drawEditMap();
-
-	curDrawingId = "A";
-	paintTool.SelectDrawing(curDrawingId);
+	paintTool.SelectDrawing("A");
 
 	// if user pasted in a custom font into game data - update the stored custom font
 	if (defaultFonts.indexOf(fontName + fontManager.GetExtension()) == -1) {
