@@ -539,10 +539,7 @@ function resetGameData() {
 	updateInventoryUI();
 	updateFontSelectUI(); // hmm is this really the place for this?
 
-	on_paint_avatar();
-	document.getElementById('paintOptionAvatar').checked = true;
-
-	paintTool.updateCanvas(); // hacky - assumes global paintTool and roomTool
+	paintTool.SelectDrawing("A");
 	markerTool.Clear(); // hacky -- should combine more of this stuff together
 	markerTool.SetRoom(curRoom);
 	markerTool.Refresh();
@@ -841,8 +838,7 @@ function start() {
 	}
 
 	//draw everything
-	on_paint_avatar();
-	paintTool.updateCanvas();
+	paintTool.SelectDrawing("A");
 	markerTool.Refresh();
 	roomTool.drawEditMap();
 
@@ -868,7 +864,6 @@ function start() {
 	paintExplorer = new PaintExplorer("paintExplorer",selectPaint);
 	paintExplorer.Refresh(TileType.Avatar);
 	paintExplorer.ChangeSelection("A");
-	paintTool.explorer = paintExplorer;
 	paintExplorer.SetDisplayCaptions( true );
 
 	//unsupported feature stuff
@@ -958,10 +953,6 @@ function start() {
 	initLanguageOptions();
 }
 
-function newDrawing() {
-	paintTool.newDrawing();
-}
-
 function updateRoomName() {
 	if (curRoom == null) { 
 		return;
@@ -993,80 +984,6 @@ function on_room_name_change() {
 	refreshGameData();
 }
 
-function on_drawing_name_change() {
-	var str = document.getElementById("drawingName").value;
-	var obj = paintTool.getCurObject();
-	var oldName = obj.name;
-	if(str.length > 0)
-		obj.name = str;
-	else
-		obj.name = null;
-
-	console.log("NEW NAME!");
-	console.log(obj);
-
-	updateNamesFromCurData()
-
-	// update display name for thumbnail
-	var displayName = obj.name ? obj.name : getCurPaintModeStr() + " " + drawing.id;
-	paintExplorer.ChangeThumbnailCaption(drawing.id, displayName);
-
-	// make sure items referenced in scripts update their names
-	if(drawing.type === TileType.Item) {
-		// console.log("SWAP ITEM NAMES");
-
-		var ItemNameSwapVisitor = function() {
-			var didSwap = false;
-			this.DidSwap = function() { return didSwap; };
-
-			this.Visit = function(node) {
-				// console.log("VISIT!");
-				// console.log(node);
-
-				if( node.type != "function" || node.name != "item" )
-					return; // not the right type of node
-				
-				if( node.arguments.length <= 0 || node.arguments[0].type != "literal" )
-					return; // no argument available
-
-				if( node.arguments[0].value === oldName ) { // do swap
-					node.arguments[0].value = newName;
-					didSwap = true;
-				}
-			};
-		};
-
-		var newName = obj.name;
-		if(newName === null || newName === undefined) newName = drawing.id;
-		if(oldName === null || oldName === undefined) oldName = drawing.id;
-
-		// console.log(oldName + " <-> " + newName);
-
-		if(newName != oldName) {
-			for(dlgId in dialog) {
-				// console.log("DLG " + dlgId);
-				var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
-				var visitor = new ItemNameSwapVisitor();
-				dialogScript.VisitAll(visitor);
-				if (visitor.DidSwap()) {
-					var newDialog = dialogScript.Serialize();
-					if (newDialog.indexOf("\n") > -1) {
-						newDialog = '"""\n' + newDialog + '\n"""';
-					}
-					dialog[dlgId].src = newDialog;
-				}
-			}
-		}
-
-		updateInventoryItemUI();
-
-		// renderPaintThumbnail( drawing.id ); // hacky way to update name
-	}
-
-	refreshGameData();
-	console.log(names);
-}
-
 function on_palette_name_change(event) {
 	paletteTool.ChangeSelectedPaletteName(event.target.value);
 }
@@ -1089,7 +1006,7 @@ function selectRoom(roomId) {
 		curRoom = ids[roomIndex];
 		markerTool.SetRoom(curRoom);
 		roomTool.drawEditMap();
-		paintTool.updateCanvas();
+		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
 		paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 
@@ -1107,7 +1024,7 @@ function nextRoom() {
 	curRoom = ids[roomIndex];
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
-	paintTool.updateCanvas();
+	paintTool.UpdateCanvas();
 	updateRoomPaletteSelect();
 	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 
@@ -1125,7 +1042,7 @@ function prevRoom() {
 	curRoom = ids[roomIndex];
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
-	paintTool.updateCanvas();
+	paintTool.UpdateCanvas();
 	updateRoomPaletteSelect();
 	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 
@@ -1173,7 +1090,7 @@ function duplicateRoom() {
 	//console.log(curRoom);
 	markerTool.SetRoom(curRoom); // hack to re-find all the markers
 	roomTool.drawEditMap();
-	paintTool.updateCanvas();
+	paintTool.UpdateCanvas();
 	updateRoomPaletteSelect();
 
 	updateRoomName();
@@ -1219,7 +1136,7 @@ function newRoom() {
 	//console.log(curRoom);
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
-	paintTool.updateCanvas();
+	paintTool.UpdateCanvas();
 	updateRoomPaletteSelect();
 
 	updateRoomName();
@@ -1261,16 +1178,12 @@ function deleteRoom() {
 		markerTool.Clear();
 		nextRoom();
 		roomTool.drawEditMap();
-		paintTool.updateCanvas();
+		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
 		markerTool.Refresh();
 		// updateExitOptionsFromGameData();
 		//recreate exit options
 	}
-}
-
-function duplicateDrawing() {
-	paintTool.duplicateDrawing();
 }
 
 function removeAllItems( id ) {
@@ -1289,10 +1202,6 @@ function removeAllItems( id ) {
 			i = getFirstItemIndex(roomId, id );
 		}
 	}
-}
-
-function deleteDrawing() {
-	paintTool.deleteDrawing();
 }
 
 function toggleToolBar(e) {
@@ -1383,12 +1292,6 @@ function updatePreviewDialogButton() {
 	var stopText = localization.GetStringOrFallback("stop_game", "stop");
 	var previewText = localization.GetStringOrFallback("dialog_start_preview", "preview");
 	document.getElementById("previewDialogText").innerHTML = isPreviewDialogMode ? stopText : previewText;
-}
-
-function togglePaintGrid(e) {
-	paintTool.drawPaintGrid = e.target.checked;
-	document.getElementById("paintGridIcon").innerHTML = paintTool.drawPaintGrid ? "visibility" : "visibility_off";
-	paintTool.updateCanvas();
 }
 
 function toggleMapGrid(e) {
@@ -1482,7 +1385,7 @@ function roomPaletteChange(event) {
 	refreshGameData();
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
-	paintTool.updateCanvas();
+	paintTool.UpdateCanvas();
 	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 }
 
@@ -1505,7 +1408,7 @@ function editDrawingAtCoordinate(x,y) {
 			on_paint_sprite_ui_update();
 		}
 
-		paintTool.selectDrawing(spriteId);
+		paintTool.SelectDrawing(spriteId);
 		paintExplorer.RefreshAndChangeSelection(spriteId);
 
 		return;
@@ -1515,7 +1418,7 @@ function editDrawingAtCoordinate(x,y) {
 	if (item) {
 		on_paint_item_ui_update(); // TODO : move these things into paint.js
 
-		paintTool.selectDrawing(item.id);
+		paintTool.SelectDrawing(item.id);
 		paintExplorer.RefreshAndChangeSelection(item.id);
 
 		return;
@@ -1525,24 +1428,11 @@ function editDrawingAtCoordinate(x,y) {
 	if(tileId != 0) {
 		on_paint_tile_ui_update();
 
-		paintTool.selectDrawing(tileId);
+		paintTool.SelectDrawing(tileId);
 		paintExplorer.RefreshAndChangeSelection(tileId);
 
 		return;
 	}
-}
-
-// TODO : move into paint.js
-var animationThumbnailRenderer = new ThumbnailRenderer();
-function renderAnimationThumbnail(imgId, id, frameIndex) {
-	animationThumbnailRenderer.Render(imgId, id, frameIndex);
-}
-
-function renderAnimationPreview(id) {
-	// console.log("RENDRE ANIM PREVIW");
-	renderAnimationThumbnail( "animationThumbnailPreview", id );
-	renderAnimationThumbnail( "animationThumbnailFrame1", id, 0 );
-	renderAnimationThumbnail( "animationThumbnailFrame2", id, 1 );
 }
 
 function selectPaint() {
@@ -1553,28 +1443,15 @@ function selectPaint() {
 	drawing.id = this.value;
 	if( drawing.type === TileType.Tile ) {
 		tileIndex = sortedTileIdList().indexOf( drawing.id );
-		paintTool.reloadDrawing();
+		paintTool.ReloadDrawing();
 	}
 	else if( drawing.type === TileType.Item ) {
 		itemIndex = sortedItemIdList().indexOf( drawing.id );
-		paintTool.reloadDrawing();
+		paintTool.ReloadDrawing();
 	}
 	else {
 		spriteIndex = sortedSpriteIdList().indexOf( drawing.id );
-		paintTool.reloadDrawing();
-	}
-}
-
-function getCurPaintModeStr() {
-	var drawingType = getDrawingTypeFromId(curDrawingId); // TODO : get from paint tool instead of global?
-	if (drawingType == TileType.Sprite || drawingType == TileType.Avatar) {
-		return localization.GetStringOrFallback("sprite_label", "sprite");
-	}
-	else if (drawingType == TileType.Item) {
-		return localization.GetStringOrFallback("item_label", "item");
-	}
-	else if (drawingType == TileType.Tile) {
-		return localization.GetStringOrFallback("tile_label", "tile");
+		paintTool.ReloadDrawing();
 	}
 }
 
@@ -1604,7 +1481,7 @@ function on_game_data_change_core() {
 	roomTool.drawEditMap();
 
 	curDrawingId = "A";
-	paintTool.selectDrawing(curDrawingId);
+	paintTool.SelectDrawing(curDrawingId);
 
 	// if user pasted in a custom font into game data - update the stored custom font
 	if (defaultFonts.indexOf(fontName + fontManager.GetExtension()) == -1) {
@@ -1663,10 +1540,6 @@ function updateFontDescriptionUI() {
 
 function updateExitOptionsFromGameData() {
 	// TODO ???
-}
-
-function on_toggle_wall(e) {
-	paintTool.toggleWall( e.target.checked );
 }
 
 function toggleWallUI(checked) {
@@ -2512,7 +2385,7 @@ function on_change_language_inner(language) {
 			src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"),
 			name: null,
 		};
-		paintTool.reloadDrawing();
+		paintTool.ReloadDrawing();
 	}
 
 	// update default item
@@ -2522,7 +2395,7 @@ function on_change_language_inner(language) {
 			src: localization.GetStringOrFallback("default_item_dlg", "You found a nice warm cup of tea"),
 			name: null,
 		};
-		paintTool.reloadDrawing(); // hacky to do this twice
+		paintTool.ReloadDrawing(); // hacky to do this twice
 	}
 
 	refreshGameData();

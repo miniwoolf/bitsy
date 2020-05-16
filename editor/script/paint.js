@@ -8,13 +8,10 @@ function PaintTool(canvas, roomTool) {
 	var paint_scale = 32;
 	var curPaintBrush = 0;
 	var isPainting = false;
-	this.isCurDrawingAnimated = false; // TODO eventually this can be internal
-	this.curDrawingFrameIndex = 0; // TODO eventually this can be internal
-	this.drawPaintGrid = true;
+	var drawPaintGrid = true;
 
 	var drawingId = "A";
-
-	this.explorer = null; // TODO: hacky way to tie this to a paint explorer -- should use events instead
+	var curDrawingFrameIndex = 0;
 
 	//paint canvas & context
 	canvas.width = tilesize * paint_scale;
@@ -59,7 +56,7 @@ function PaintTool(canvas, roomTool) {
 			curPaintBrush = 0;
 		}
 		curDrawingData()[y][x] = curPaintBrush;
-		self.updateCanvas();
+		self.UpdateCanvas();
 		isPainting = true;
 	}
 
@@ -72,7 +69,7 @@ function PaintTool(canvas, roomTool) {
 			var x = Math.floor(off.x);// / paint_scale);
 			var y = Math.floor(off.y);// / paint_scale);
 			curDrawingData()[y][x] = curPaintBrush;
-			self.updateCanvas();
+			self.UpdateCanvas();
 		}
 	}
 
@@ -87,10 +84,12 @@ function PaintTool(canvas, roomTool) {
 
 			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
-			if (self.explorer != null) {
-				self.explorer.RenderThumbnail(drawingId);
-			}
-			if (self.isCurDrawingAnimated) {
+			// TODO : add event
+			// if (self.explorer != null) {
+			// 	self.explorer.RenderThumbnail(drawingId);
+			// }
+
+			if (isCurDrawingAnimated()) {
 				renderAnimationPreview(drawingId);
 			}
 		}
@@ -113,7 +112,7 @@ function PaintTool(canvas, roomTool) {
 		onMouseUp();
 	}
 
-	this.updateCanvas = function() {
+	this.UpdateCanvas = function() {
 		//background
 		ctx.fillStyle = "rgb("+getPal(curPal())[0][0]+","+getPal(curPal())[0][1]+","+getPal(curPal())[0][2]+")";
 		ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -127,7 +126,7 @@ function PaintTool(canvas, roomTool) {
 		for (var x = 0; x < 8; x++) {
 			for (var y = 0; y < 8; y++) {
 				// draw alternate frame
-				if (self.isCurDrawingAnimated && curDrawingAltFrameData()[y][x] === 1) {
+				if (isCurDrawingAnimated() && curDrawingAltFrameData()[y][x] === 1) {
 					ctx.globalAlpha = 0.3;
 					ctx.fillRect(x*paint_scale,y*paint_scale,1*paint_scale,1*paint_scale);
 					ctx.globalAlpha = 1;
@@ -140,7 +139,7 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		//draw grid
-		if (self.drawPaintGrid) {
+		if (drawPaintGrid) {
 			ctx.fillStyle = getContrastingColor();
 
 			for (var x = 1; x < tilesize; x++) {
@@ -168,30 +167,91 @@ function PaintTool(canvas, roomTool) {
 		return getDrawingTypeFromId(drawingId);
 	}
 
+	function isCurDrawingAnimated() {
+		return object[drawingId].animation.isAnimated;
+	}
+
 	function curDrawingData() {
-		var frameIndex = (self.isCurDrawingAnimated ? self.curDrawingFrameIndex : 0);
+		var frameIndex = (isCurDrawingAnimated() ? curDrawingFrameIndex : 0);
 		return getFrameData(frameIndex);
 	}
 
 	// todo: assumes 2 frames
 	function curDrawingAltFrameData() {
-		var frameIndex = (self.curDrawingFrameIndex === 0 ? 1 : 0);
+		var frameIndex = (curDrawingFrameIndex === 0 ? 1 : 0);
 		return getFrameData(frameIndex);
 	}
 
-	// TODO : refactor these so it doesn't require these weird external hookups!
-	// methods for updating the UI
-	this.reloadDrawing = function() {
-		reloadDrawing(); // TODO : refactor this global method...
+	// TODO : rename!
+	this.ReloadDrawing = function() {
+		// animation UI
+		if (object[drawingId] && object[drawingId].animation.isAnimated) {
+			document.getElementById("animatedCheckbox").checked = true;
+
+			if (curDrawingFrameIndex == 0)
+			{
+				document.getElementById("animationKeyframe1").className = "animationThumbnail left selected";
+				document.getElementById("animationKeyframe2").className = "animationThumbnail right unselected";
+			}
+			else if (curDrawingFrameIndex == 1)
+			{
+				document.getElementById("animationKeyframe1").className = "animationThumbnail left unselected";
+				document.getElementById("animationKeyframe2").className = "animationThumbnail right selected";
+			}
+
+			document.getElementById("animation").setAttribute("style","display:block;");
+			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+			renderAnimationPreview(drawingId);
+		}
+		else {
+			document.getElementById("animatedCheckbox").checked = false;
+			document.getElementById("animation").setAttribute("style","display:none;");
+			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+		}
+
+		// wall UI
+		if (object[drawingId].type === "TIL") {
+			document.getElementById("wall").setAttribute("style", "display:block;");
+			updateWallCheckboxOnCurrentTile();
+		}
+		else {
+			document.getElementById("wall").setAttribute("style", "display:none;");
+		}
+
+		// dialog UI
+		if (drawingId === "A" || object[drawingId].type === "TIL") {
+			document.getElementById("dialog").setAttribute("style", "display:none;");
+		}
+		else {
+			document.getElementById("dialog").setAttribute("style", "display:block;");
+			reloadDialogUI();
+		}
+
+		if (object[drawingId].type === "ITM") {
+			document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
+		}
+		else {
+			document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+		}
+
+		updateDrawingNameUI(drawingId != "A");
+
+		var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
+		for (var i = 0; i < disableForAvatarElements.length; i++) {
+			disableForAvatarElements[i].disabled = drawingId === "A";
+		}
+
+		// update paint canvas
+		self.UpdateCanvas();
 	}
 
-	this.selectDrawing = function(id) {
+	this.SelectDrawing = function(id) {
 		drawingId = id;
-		self.reloadDrawing();
-		self.updateCanvas();
+		self.ReloadDrawing();
+		self.UpdateCanvas();
 	}
 
-	this.toggleWall = function(checked) {
+	this.ToggleWall = function(checked) {
 		if (getDrawingType() != TileType.Tile) {
 			return;
 		}
@@ -219,13 +279,13 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	// TODO : who uses this?
-	this.getCurObject = function() {
+	this.GetCurObject = function() {
 		console.log("GET OBJECT " + drawingId);
 		return object[drawingId];
 	}
 
 	// TODO : replace with something that lets you pick the new type of drawing!
-	this.newDrawing = function(imageData) {
+	this.NewDrawing = function(imageData) {
 		var curType = object[drawingId].type;
 		drawingId = nextObjectId(object);
 		createObject(drawingId, curType, { drawingData:imageData });
@@ -233,28 +293,27 @@ function PaintTool(canvas, roomTool) {
 		// TODO : this global state reliance is bad!!!!
 		curDrawingId = drawingId; 
 
-		self.reloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
-		self.updateCanvas();
+		self.ReloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
+		self.UpdateCanvas();
 		refreshGameData();
 
 		if (curType === "ITM") {
 			updateInventoryItemUI();
 		}
 
-		// update paint explorer
-		self.explorer.AddThumbnail(drawingId);
-		self.explorer.ChangeSelection(drawingId);
-		document.getElementById("paintExplorerFilterInput").value = ""; // super hacky
-
-		// this is a bit hacky feeling -- TODO : these direct connections could be replaced with events!
-		self.explorer.Refresh(
-			getDrawingType(),
-			true /*doKeepOldThumbnails*/,
-			document.getElementById("paintExplorerFilterInput").value /*filterString*/,
-			true /*skipRenderStep*/);
+		// TODO : add event
+		// // update paint explorer
+		// self.explorer.AddThumbnail(drawingId);
+		// self.explorer.ChangeSelection(drawingId);
+		// document.getElementById("paintExplorerFilterInput").value = "";
+		// self.explorer.Refresh(
+		// 	getDrawingType(),
+		// 	true /*doKeepOldThumbnails*/,
+		// 	document.getElementById("paintExplorerFilterInput").value /*filterString*/,
+		// 	true /*skipRenderStep*/);
 	}
 
-	this.duplicateDrawing = function() {
+	this.DuplicateDrawing = function() {
 		var sourceImageData = renderer.GetImageSource(getRenderId());
 
 		// tiles have extra data to copy
@@ -263,19 +322,19 @@ function PaintTool(canvas, roomTool) {
 			tileIsWall = object[drawingId].isWall;
 		}
 
-		this.newDrawing(sourceImageData);
+		this.NewDrawing(sourceImageData);
 
 		// HACKY
 		// tiles have extra data to copy
 		if (getDrawingType() === TileType.Tile) {
 			object[drawingId].isWall = tileIsWall;
 			// make sure the wall toggle gets updated
-			self.reloadDrawing();
+			self.ReloadDrawing();
 		}
 	}
 
 	// TODO - may need to extract this for different tools beyond the paint tool (put it in core.js?)
-	this.deleteDrawing = function() {
+	this.DeleteDrawing = function() {
 		if (getDrawingType() == TileType.Avatar) {
 			alert("You can't delete the player! :(");
 			return;
@@ -302,16 +361,228 @@ function PaintTool(canvas, roomTool) {
 			// TODO RENDERER : refresh images
 			roomTool.drawEditMap();
 			updateInventoryItemUI();
-			// nextItem(); // TODO : replace with "nextDrawing"
-			self.explorer.DeleteThumbnail(drawingId);
-			self.explorer.ChangeSelection(drawingId);
+
+			nextDrawing();
+
+			// TODO : add event
+			// self.explorer.DeleteThumbnail(drawingId);
+			// self.explorer.ChangeSelection(drawingId);
 		}
 	}
 
-	events.Listen("palette_change", function(event) {
-		self.updateCanvas();
+	function updateWallCheckboxOnCurrentTile() {
+		var isCurTileWall = false;
 
-		if (self.isCurDrawingAnimated) {
+		if (object[drawingId].isWall == undefined || object[drawingId].isWall == null ) {
+			if (room[curRoom]) {
+				isCurTileWall = (room[curRoom].walls.indexOf(drawingId) != -1);
+			}
+		}
+		else {
+			isCurTileWall = object[drawingId].isWall;
+		}
+
+		if (isCurTileWall) {
+			document.getElementById("wallCheckbox").checked = true;
+			document.getElementById("wallCheckboxIcon").innerHTML = "border_outer";
+		}
+		else {
+			document.getElementById("wallCheckbox").checked = false;
+			document.getElementById("wallCheckboxIcon").innerHTML = "border_clear";
+		}
+	}
+
+	function getCurPaintModeStr() {
+		var drawingType = getDrawingType();
+		if (drawingType == TileType.Sprite || drawingType == TileType.Avatar) {
+			return localization.GetStringOrFallback("sprite_label", "sprite");
+		}
+		else if (drawingType == TileType.Item) {
+			return localization.GetStringOrFallback("item_label", "item");
+		}
+		else if (drawingType == TileType.Tile) {
+			return localization.GetStringOrFallback("tile_label", "tile");
+		}
+	}
+
+	function updateDrawingNameUI() {
+		var obj = object[drawingId];
+
+		if (obj.id === "A") { // hacky
+			document.getElementById("drawingName").value = "avatar"; // TODO: localize
+		}
+		else if (obj.name != null) {
+			document.getElementById("drawingName").value = obj.name;
+		}
+		else {
+			document.getElementById("drawingName").value = "";
+		}
+
+		document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + obj.id;
+
+		document.getElementById("drawingName").readOnly = obj.id === "A";
+	}
+
+	this.SetPaintGrid = function(isVisible) {
+		drawPaintGrid = isVisible;
+		document.getElementById("paintGridIcon").innerHTML = isVisible ? "visibility" : "visibility_off";
+		self.UpdateCanvas();
+	}
+
+	/* ANIMATION CONTROLS */
+	// todo : create new improved controls for this sometime (in seperate object?)
+	this.SetAnimated = function(isAnimated) {
+		if (isAnimated) {
+			addObjectAnimation();
+			document.getElementById("animation").setAttribute("style","display:block;");
+			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+			renderAnimationPreview(drawingId);
+		}
+		else {
+			removeObjectAnimation();
+			document.getElementById("animation").setAttribute("style","display:none;");
+			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+		}
+	}
+
+	this.SelectAnimationFrame = function(frameIndex) {
+		curDrawingFrameIndex = 0;
+		self.ReloadDrawing();
+	}
+
+	function addObjectAnimation() {
+		//set editor mode
+		curDrawingFrameIndex = 0;
+
+		//mark object as animated
+		object[drawingId].animation.isAnimated = true;
+		object[drawingId].animation.frameIndex = 0;
+		object[drawingId].animation.frameCount = 2;
+
+		//add blank frame to object (or restore removed animation)
+		if (object[drawingId].cachedAnimation != null) {
+			restoreDrawingAnimation(object[drawingId].drw, object[drawingId].cachedAnimation);
+		}
+		else {
+			addNewFrameToDrawing(object[drawingId].drw);
+		}
+
+		// TODO RENDERER : refresh images
+
+		//refresh data model
+		refreshGameData();
+		self.ReloadDrawing();
+
+		// reset animations
+		resetAllAnimations();
+	}
+
+	function removeObjectAnimation(drawingId) {
+		//mark object as non-animated
+		object[drawingId].animation.isAnimated = false;
+		object[drawingId].animation.frameIndex = 0;
+		object[drawingId].animation.frameCount = 0;
+
+		//remove all but the first frame of the object
+		cacheDrawingAnimation(object[drawingId], object[drawingId].drw);
+		removeDrawingAnimation(object[drawingId].drw);
+
+		// TODO RENDERER : refresh images
+
+		//refresh data model
+		refreshGameData();
+		self.ReloadDrawing();
+
+		// reset animations
+		resetAllAnimations();
+	}
+
+	function addNewFrameToDrawing(drwId) {
+		// copy first frame data into new frame
+		var imageSource = renderer.GetImageSource(drwId);
+		var firstFrame = imageSource[0];
+		var newFrame = [];
+		for (var y = 0; y < tilesize; y++) {
+			newFrame.push([]);
+			for (var x = 0; x < tilesize; x++) {
+				newFrame[y].push( firstFrame[y][x] );
+			}
+		}
+		imageSource.push( newFrame );
+		renderer.SetImageSource(drwId, imageSource);
+	}
+
+	function removeDrawingAnimation(drwId) {
+		var imageSource = renderer.GetImageSource(drwId);
+		var oldImageData = imageSource.slice(0);
+		renderer.SetImageSource( drwId, [ oldImageData[0] ] );
+	}
+
+	// let's us restore the animation during the session if the user wants it back
+	function cacheDrawingAnimation(drawing, sourceId) {
+		var imageSource = renderer.GetImageSource(sourceId);
+		var oldImageData = imageSource.slice(0);
+		drawing.cachedAnimation = [ oldImageData[1] ]; // ah the joys of javascript
+	}
+
+	function restoreDrawingAnimation(sourceId, cachedAnimation) {
+		var imageSource = renderer.GetImageSource(sourceId);
+		for (f in cachedAnimation) {
+			imageSource.push( cachedAnimation[f] );
+		}
+		renderer.SetImageSource(sourceId, imageSource);
+	}
+
+	var animationThumbnailRenderer = new ThumbnailRenderer();
+	function renderAnimationThumbnail(imgId, id, frameIndex) {
+		animationThumbnailRenderer.Render(imgId, id, frameIndex);
+	}
+
+	function renderAnimationPreview(id) {
+		// console.log("RENDRE ANIM PREVIW");
+		renderAnimationThumbnail("animationThumbnailPreview", id);
+		renderAnimationThumbnail("animationThumbnailFrame1", id, 0);
+		renderAnimationThumbnail("animationThumbnailFrame2", id, 1);
+	}
+
+	/* NAVIGATION */
+	function nextDrawing() {
+		var ids = sortedDrawingIdList();
+
+		var index = ids.indexOf(drawingId);
+		index = (index + 1) % ids.length;
+		drawingId = ids[index];
+
+		curDrawingFrameIndex = 0;
+		self.SelectDrawing(drawingId);
+
+		// TODO : add event
+		// paintExplorer.ChangeSelection(curDrawingId);
+	}
+	this.NextDrawing = nextDrawing;
+
+	function prevDrawing() {
+		var ids = sortedDrawingIdList();
+
+		var index = ids.indexOf(drawingId);
+		index = (index - 1) % ids.length;
+		if (index < 0) {
+			index = (ids.length - 1); // loop
+		}
+		drawingId = ids[index];
+
+		curDrawingFrameIndex = 0;
+		self.SelectDrawing(drawingId);
+
+		// TODO : add event
+		// paintExplorer.ChangeSelection(curDrawingId);
+	}
+	this.PrevDrawing = prevDrawing;
+
+	events.Listen("palette_change", function(event) {
+		self.UpdateCanvas();
+
+		if (isCurDrawingAnimated()) {
 			// TODO -- this animation stuff needs to be moved in here I think?
 			renderAnimationPreview(drawingId);
 		}
@@ -339,385 +610,121 @@ function getDrawingTypeFromId(drawingId) {
 	return null; // uh oh
 }
 
-/*
- PAINT GLOBALS
- TODO : refactor
+/* 
+ GLOBAL UI HOOKS
+ TODO : someday I'll get rid of these, right? who knows...
 */
 
-// TODO : make non-global
-// TODO : rename... this is now the whole UI update for drawings...
-function reloadDrawing() {
-	// animation UI
-	if (object[curDrawingId] && object[curDrawingId].animation.isAnimated) {
-		paintTool.isCurDrawingAnimated = true;
-		document.getElementById("animatedCheckbox").checked = true;
-
-		if (paintTool.curDrawingFrameIndex == 0)
-		{
-			document.getElementById("animationKeyframe1").className = "animationThumbnail left selected";
-			document.getElementById("animationKeyframe2").className = "animationThumbnail right unselected";
-		}
-		else if (paintTool.curDrawingFrameIndex == 1)
-		{
-			document.getElementById("animationKeyframe1").className = "animationThumbnail left unselected";
-			document.getElementById("animationKeyframe2").className = "animationThumbnail right selected";
-		}
-
-		document.getElementById("animation").setAttribute("style","display:block;");
-		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
-		renderAnimationPreview(curDrawingId);
-	}
-	else {
-		paintTool.isCurDrawingAnimated = false;
-		document.getElementById("animatedCheckbox").checked = false;
-		document.getElementById("animation").setAttribute("style","display:none;");
-		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
-	}
-
-	// wall UI
-	if (object[curDrawingId].type === "TIL") {
-		document.getElementById("wall").setAttribute("style", "display:block;");
-		updateWallCheckboxOnCurrentTile();
-	}
-	else {
-		document.getElementById("wall").setAttribute("style", "display:none;");
-	}
-
-	// dialog UI
-	if (curDrawingId === "A" || object[curDrawingId].type === "TIL") {
-		document.getElementById("dialog").setAttribute("style", "display:none;");
-	}
-	else {
-		document.getElementById("dialog").setAttribute("style", "display:block;");
-		reloadDialogUI();
-	}
-
-	if (object[curDrawingId].type === "ITM") {
-		document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
-	}
-	else {
-		document.getElementById("showInventoryButton").setAttribute("style","display:none;");
-	}
-
-	updateDrawingNameUI(curDrawingId != "A");
-
-	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
-	for (var i = 0; i < disableForAvatarElements.length; i++) {
-		disableForAvatarElements[i].disabled = curDrawingId === "A";
-	}
-
-	// update paint canvas
-	paintTool.updateCanvas();
-}
-
-function updateAnimationUI() {
-	//todo
-}
-
-function updateWallCheckboxOnCurrentTile() {
-	var isCurTileWall = false;
-
-	if (object[curDrawingId].isWall == undefined || object[curDrawingId].isWall == null ) {
-		if (room[curRoom]) {
-			isCurTileWall = (room[curRoom].walls.indexOf(curDrawingId) != -1);
-		}
-	}
-	else {
-		isCurTileWall = object[curDrawingId].isWall;
-	}
-
-	if (isCurTileWall) {
-		document.getElementById("wallCheckbox").checked = true;
-		document.getElementById("wallCheckboxIcon").innerHTML = "border_outer";
-	}
-	else {
-		document.getElementById("wallCheckbox").checked = false;
-		document.getElementById("wallCheckboxIcon").innerHTML = "border_clear";
-	}
-}
-
-function updateDrawingNameUI() {
-	var obj = object[curDrawingId];
-
-	if (obj.id === "A") { // hacky
-		document.getElementById("drawingName").value = "avatar"; // TODO: localize
-	}
-	else if (obj.name != null) {
-		document.getElementById("drawingName").value = obj.name;
-	}
-	else {
-		document.getElementById("drawingName").value = "";
-	}
-
-	document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + obj.id;
-
-	document.getElementById("drawingName").readOnly = obj.id === "A";
-}
-
-function on_paint_avatar() {
-	curDrawingId = "A";
-	paintTool.selectDrawing(curDrawingId);
-	if(paintExplorer != null) { 
-		paintExplorer.Refresh(TileType.Sprite);
-		paintExplorer.ChangeSelection(curDrawingId);
-	}
-
-	on_paint_avatar_ui_update();
-}
-
-function on_paint_avatar_ui_update() {
-	document.getElementById("dialog").setAttribute("style","display:none;");
-	document.getElementById("wall").setAttribute("style","display:none;");
-	// TODO : make navigation commands un-clickable
-	document.getElementById("animationOuter").setAttribute("style","display:block;");
-	updateDrawingNameUI(false);
-	// document.getElementById("paintOptionAvatar").checked = true;
-	document.getElementById("paintExplorerOptionAvatar").checked = true;
-	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
-	document.getElementById("paintExplorerAdd").setAttribute("style","display:none;");
-	document.getElementById("paintExplorerFilterInput").value = "";
-
-	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
-	for (var i = 0; i < disableForAvatarElements.length; i++) {
-		disableForAvatarElements[i].disabled = true;
-	}
-}
-
-function on_paint_tile() {
-	drawing.type = TileType.Tile;
-	tileIndex = 0;
-	drawing.id = sortedTileIdList()[tileIndex];
-	paintTool.reloadDrawing();
-	paintExplorer.Refresh( paintTool.drawing.type );
-	paintExplorer.ChangeSelection( paintTool.drawing.id );
-
-	on_paint_tile_ui_update();
-}
-
-function on_paint_tile_ui_update() {
-	document.getElementById("dialog").setAttribute("style","display:none;");
-	document.getElementById("wall").setAttribute("style","display:block;");
-	document.getElementById("animationOuter").setAttribute("style","display:block;");
-	updateDrawingNameUI(true);
-	//document.getElementById("animation").setAttribute("style","display:block;");
-	// document.getElementById("paintOptionTile").checked = true;
-	document.getElementById("paintExplorerOptionTile").checked = true;
-	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
-	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
-	document.getElementById("paintExplorerFilterInput").value = "";
-
-	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
-	for (var i = 0; i < disableForAvatarElements.length; i++) {
-		disableForAvatarElements[i].disabled = false;
-	}
-}
-
-function on_paint_sprite() {
-	drawing.type = TileType.Sprite;
-	if (sortedSpriteIdList().length > 1)
-	{
-		spriteIndex = 1;
-	}
-	else {
-		spriteIndex = 0; //fall back to avatar if no other sprites exist
-	}
-	drawing.id = sortedSpriteIdList()[spriteIndex];
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-	paintExplorer.Refresh( paintTool.drawing.type );
-	paintExplorer.ChangeSelection( paintTool.drawing.id );
-
-	on_paint_sprite_ui_update();
-}
-
-function on_paint_sprite_ui_update() {
-	document.getElementById("dialog").setAttribute("style","display:block;");
-	document.getElementById("wall").setAttribute("style","display:none;");
-	document.getElementById("animationOuter").setAttribute("style","display:block;");
-	updateDrawingNameUI(true);
-	//document.getElementById("animation").setAttribute("style","display:block;");
-	// document.getElementById("paintOptionSprite").checked = true;
-	document.getElementById("paintExplorerOptionSprite").checked = true;
-	document.getElementById("showInventoryButton").setAttribute("style","display:none;");
-	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
-	document.getElementById("paintExplorerFilterInput").value = "";
-
-	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
-	for (var i = 0; i < disableForAvatarElements.length; i++) {
-		disableForAvatarElements[i].disabled = false;
-	}
-}
-
-function on_paint_item() {
-	console.log("PAINT ITEM");
-	drawing.type = TileType.Item;
-	itemIndex = 0;
-	drawing.id = sortedItemIdList()[itemIndex];
-	console.log(drawing.id);
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
-	paintExplorer.Refresh( paintTool.drawing.type );
-	paintExplorer.ChangeSelection( paintTool.drawing.id );
-
-	on_paint_item_ui_update();
-}
-
-function on_paint_item_ui_update() {
-	document.getElementById("dialog").setAttribute("style","display:block;");
-	document.getElementById("wall").setAttribute("style","display:none;");
-	document.getElementById("animationOuter").setAttribute("style","display:block;");
-	updateDrawingNameUI(true);
-	//document.getElementById("animation").setAttribute("style","display:block;");
-	// document.getElementById("paintOptionItem").checked = true;
-	document.getElementById("paintExplorerOptionItem").checked = true;
-	document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
-	document.getElementById("paintExplorerAdd").setAttribute("style","display:inline-block;");
-	document.getElementById("paintExplorerFilterInput").value = "";
-
-	var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
-	for (var i = 0; i < disableForAvatarElements.length; i++) {
-		disableForAvatarElements[i].disabled = false;
-	}
-}
-
-/* ANIMATION EDITING*/
-// TODO: de-globalify!
 function on_toggle_animated() {
-	if (document.getElementById("animatedCheckbox").checked) {
-		addObjectAnimation(curDrawingId);
-		document.getElementById("animation").setAttribute("style","display:block;");
-		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
-		renderAnimationPreview(curDrawingId);
-	}
-	else {
-		removeObjectAnimation(curDrawingId);
-		document.getElementById("animation").setAttribute("style","display:none;");
-		document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
-	}
-	// renderPaintThumbnail(drawing);
-}
-
-// TODO : de-globalify this
-function addObjectAnimation(drawingId) {
-	//set editor mode
-	paintTool.isCurDrawingAnimated = true;
-	paintTool.curDrawingFrameIndex = 0;
-
-	//mark object as animated
-	object[drawingId].animation.isAnimated = true;
-	object[drawingId].animation.frameIndex = 0;
-	object[drawingId].animation.frameCount = 2;
-
-	//add blank frame to object (or restore removed animation)
-	if (object[drawingId].cachedAnimation != null) {
-		restoreDrawingAnimation(object[drawingId].drw, object[drawingId].cachedAnimation);
-	}
-	else {
-		addNewFrameToDrawing(object[drawingId].drw);
-	}
-
-	// TODO RENDERER : refresh images
-
-	//refresh data model
-	refreshGameData();
-	paintTool.reloadDrawing();
-
-	// reset animations
-	resetAllAnimations();
-}
-
-function removeObjectAnimation(drawingId) {
-	//set editor mode
-	paintTool.isCurDrawingAnimated = false;
-
-	//mark object as non-animated
-	object[drawingId].animation.isAnimated = false;
-	object[drawingId].animation.frameIndex = 0;
-	object[drawingId].animation.frameCount = 0;
-
-	//remove all but the first frame of the object
-	cacheDrawingAnimation(object[drawingId], object[drawingId].drw);
-	removeDrawingAnimation(object[drawingId].drw);
-
-	// TODO RENDERER : refresh images
-
-	//refresh data model
-	refreshGameData();
-	paintTool.reloadDrawing();
-
-	// reset animations
-	resetAllAnimations();
-}
-
-function addNewFrameToDrawing(drwId) {
-	// copy first frame data into new frame
-	var imageSource = renderer.GetImageSource(drwId);
-	var firstFrame = imageSource[0];
-	var newFrame = [];
-	for (var y = 0; y < tilesize; y++) {
-		newFrame.push([]);
-		for (var x = 0; x < tilesize; x++) {
-			newFrame[y].push( firstFrame[y][x] );
-		}
-	}
-	imageSource.push( newFrame );
-	renderer.SetImageSource(drwId, imageSource);
-}
-
-function removeDrawingAnimation(drwId) {
-	var imageSource = renderer.GetImageSource(drwId);
-	var oldImageData = imageSource.slice(0);
-	renderer.SetImageSource( drwId, [ oldImageData[0] ] );
-}
-
-// let's us restore the animation during the session if the user wants it back
-function cacheDrawingAnimation(drawing,sourceId) {
-	var imageSource = renderer.GetImageSource(sourceId);
-	var oldImageData = imageSource.slice(0);
-	drawing.cachedAnimation = [ oldImageData[1] ]; // ah the joys of javascript
-}
-
-function restoreDrawingAnimation(sourceId,cachedAnimation) {
-	var imageSource = renderer.GetImageSource(sourceId);
-	for (f in cachedAnimation) {
-		imageSource.push( cachedAnimation[f] );	
-	}
-	renderer.SetImageSource(sourceId, imageSource);
+	paintTool.SetAnimated(document.getElementById("animatedCheckbox").checked);
 }
 
 function on_paint_frame1() {
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.reloadDrawing();
+	paintTool.SelectAnimationFrame(0);
 }
 
 function on_paint_frame2() {
-	paintTool.curDrawingFrameIndex = 1;
-	paintTool.reloadDrawing();
+	paintTool.SelectAnimationFrame(1);
 }
 
-/* PAINT NAVIGATION */
 function next() {
-	var ids = sortedDrawingIdList();
-
-	// TODO : is this global drawing index good?
-	curDrawingIndex = (curDrawingIndex + 1) % ids.length;
-	curDrawingId = ids[curDrawingIndex];
-
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.selectDrawing(curDrawingId);
-	paintExplorer.ChangeSelection(curDrawingId);
+	paintTool.NextDrawing();
 }
 
 function prev() {
-	var ids = sortedDrawingIdList();
+	paintTool.PrevDrawing();
+}
 
-	curDrawingIndex = (curDrawingIndex - 1) % ids.length;
-	if (curDrawingIndex < 0) {
-		curDrawingIndex = (ids.length-1); //loop
+function on_toggle_wall(e) {
+	paintTool.ToggleWall(e.target.checked);
+}
+
+function newDrawing() {
+	paintTool.NewDrawing();
+}
+
+function duplicateDrawing() {
+	paintTool.DuplicateDrawing();
+}
+
+function deleteDrawing() {
+	paintTool.DeleteDrawing();
+}
+
+function togglePaintGrid(e) {
+	paintTool.SetPaintGrid(e.target.checked);
+}
+
+function on_drawing_name_change() {
+	var str = document.getElementById("drawingName").value;
+	var obj = paintTool.GetCurObject();
+	var oldName = obj.name;
+	if(str.length > 0)
+		obj.name = str;
+	else
+		obj.name = null;
+
+	console.log("NEW NAME!");
+	console.log(obj);
+
+	updateNamesFromCurData()
+
+	// update display name for thumbnail
+	var displayName = obj.name ? obj.name : getCurPaintModeStr() + " " + drawing.id;
+	paintExplorer.ChangeThumbnailCaption(drawing.id, displayName);
+
+	// make sure items referenced in scripts update their names
+	if(drawing.type === TileType.Item) {
+		// console.log("SWAP ITEM NAMES");
+
+		var ItemNameSwapVisitor = function() {
+			var didSwap = false;
+			this.DidSwap = function() { return didSwap; };
+
+			this.Visit = function(node) {
+				// console.log("VISIT!");
+				// console.log(node);
+
+				if( node.type != "function" || node.name != "item" )
+					return; // not the right type of node
+				
+				if( node.arguments.length <= 0 || node.arguments[0].type != "literal" )
+					return; // no argument available
+
+				if( node.arguments[0].value === oldName ) { // do swap
+					node.arguments[0].value = newName;
+					didSwap = true;
+				}
+			};
+		};
+
+		var newName = obj.name;
+		if(newName === null || newName === undefined) newName = drawing.id;
+		if(oldName === null || oldName === undefined) oldName = drawing.id;
+
+		// console.log(oldName + " <-> " + newName);
+
+		if(newName != oldName) {
+			for(dlgId in dialog) {
+				// console.log("DLG " + dlgId);
+				var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
+				var visitor = new ItemNameSwapVisitor();
+				dialogScript.VisitAll(visitor);
+				if (visitor.DidSwap()) {
+					var newDialog = dialogScript.Serialize();
+					if (newDialog.indexOf("\n") > -1) {
+						newDialog = '"""\n' + newDialog + '\n"""';
+					}
+					dialog[dlgId].src = newDialog;
+				}
+			}
+		}
+
+		updateInventoryItemUI();
+
+		// renderPaintThumbnail( drawing.id ); // hacky way to update name
 	}
-	curDrawingId = ids[curDrawingIndex];
 
-	paintTool.curDrawingFrameIndex = 0;
-	paintTool.selectDrawing(curDrawingId);
-	paintExplorer.ChangeSelection(curDrawingId);
+	refreshGameData();
+	console.log(names);
 }
