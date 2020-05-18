@@ -16,7 +16,7 @@ what other methods do I need to move into this class? exit stuff??
 function RoomTool(canvas) {
 	var self = this; // feels a bit hacky
 
-	this.drawing = "A";
+	var drawingId = "A";
 
 	// edit flags
 	var isDragAddingTiles = false;
@@ -36,6 +36,10 @@ function RoomTool(canvas) {
 	events.Listen("enable_room_tool", function() {
 		isDisabledExternally = false;
 	});
+
+	function getDrawingType() {
+		return getDrawingTypeFromId(drawingId);
+	}
 
 	function onMouseDown(e) {
 		e.preventDefault();
@@ -74,11 +78,11 @@ function RoomTool(canvas) {
 			}
 		}
 
-		if (!isEditingMarker && self.drawing.id != null) {
+		if (!isEditingMarker && drawingId != null) {
 			//add tiles/sprites to map
-			if (self.drawing.type == TileType.Tile) {
-				if ( room[curRoom].tilemap[y][x] === "0" ) {
-					room[curRoom].tilemap[y][x] = self.drawing.id;
+			if (getDrawingType() == TileType.Tile) {
+				if (room[curRoom].tilemap[y][x] === "0") {
+					room[curRoom].tilemap[y][x] = drawingId;
 					isDragAddingTiles = true;
 				}
 				else {
@@ -89,47 +93,22 @@ function RoomTool(canvas) {
 				}
 				//room[curRoom].tilemap[y] = row;
 			}
-			else if( self.drawing.type == TileType.Avatar || self.drawing.type == TileType.Sprite ) {
-				var otherSprite = getSpriteAt(x,y);
-				var isThisSpriteAlreadyHere = sprite[self.drawing.id].room === curRoom &&
-											sprite[self.drawing.id].x === x &&
-											sprite[self.drawing.id].y === y;
-
-				if (otherSprite) {
-					//remove other sprite from map
-					sprite[otherSprite].room = null;
-					sprite[otherSprite].x = -1;
-					sprite[otherSprite].y = -1;
-				}
-
-				if (!isThisSpriteAlreadyHere) {
-					//add sprite to map
-					sprite[self.drawing.id].room = curRoom;
-					sprite[self.drawing.id].x = x;
-					sprite[self.drawing.id].y = y;
-					//row = row.substr(0, x) + "0" + row.substr(x+1); //is this necessary? no
-				}
-				else {
-					//remove sprite from map
-					sprite[self.drawing.id].room = null;
-					sprite[self.drawing.id].x = -1;
-					sprite[self.drawing.id].y = -1;
-				}
-			}
-			else if(self.drawing.type == TileType.Item ) {
+			else {
 				// TODO : is this the final behavior I want?
 
-				var otherItem = getItem(curRoom,x,y);
-				var isThisItemAlreadyHere = otherItem != null && otherItem.id === self.drawing.id;
+				var otherObject = getObjectLocation(curRoom, x, y);
+				var isObjectAlreadyHere = otherObject != null && otherObject.id === drawingId;
 
-				if(otherItem) {
-					getRoom().items.splice( getRoom().items.indexOf(otherItem), 1 );
+				if (otherObject) {
+					var index = getRoom().objectLocations.indexOf(otherObject);
+					getRoom().objectLocations.splice(index, 1);
 				}
 
-				if(!isThisItemAlreadyHere) {
-					getRoom().items.push( {id:self.drawing.id, x:x, y:y} );
+				if (!isObjectAlreadyHere) {
+					getRoom().objectLocations.push(createObjectLocation(drawingId, x, y));
 				}
 			}
+
 			refreshGameData();
 			self.drawEditMap();
 		}
@@ -140,7 +119,7 @@ function RoomTool(canvas) {
 			return;
 		}
 
-		if( self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker() ) {
+		if (self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
 			// drag marker around
 			var off = getOffset(e);
 			off = mobileOffsetCorrection(off,e,(tilesize*mapsize*scale));
@@ -174,14 +153,14 @@ function RoomTool(canvas) {
 		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, mapsize - 1);
 		// var row = room[curRoom].tilemap[y];
 		if (isDragAddingTiles) {
-			if ( room[curRoom].tilemap[y][x] != self.drawing.id ) {
-				room[curRoom].tilemap[y][x] = self.drawing.id;
+			if ( room[curRoom].tilemap[y][x] != drawingId ) {
+				room[curRoom].tilemap[y][x] = drawingId;
 				refreshGameData();
 				self.drawEditMap();
 			}
 		}
 		else if (isDragDeletingTiles) {
-			if ( room[curRoom].tilemap[y][x] != "0" ) {
+			if (room[curRoom].tilemap[y][x] != "0") {
 				// row = row.substr(0, x) + "0" + row.substr(x+1);
 				// room[curRoom].tilemap[y] = row;
 				room[curRoom].tilemap[y][x] = "0";

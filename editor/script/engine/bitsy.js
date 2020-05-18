@@ -930,23 +930,32 @@ function initRoom(roomId) {
 	room[roomId].objectInstances = [];
 	for (var i = 0; i < room[roomId].objectLocations.length; i++) {
 		var objectLocation = room[roomId].objectLocations[i];
-		var objectDefinition = object[objectLocation.id];
-		if (objectDefinition.id != playerId && !objectLocation.removed) {
-			var objectInstance = createObjectInstance(i, objectDefinition, objectLocation.x, objectLocation.y);
+		if (objectLocation.id != playerId && !objectLocation.removed) {
+			var objectInstance = createObjectInstance(i, objectLocation);
 			room[roomId].objectInstances.push(objectInstance);
 		}
 	}
 }
 
-function createObjectInstance(instanceId, definition, x, y) {
+function createObjectLocation(id, x, y) {
+	return {
+		id: id,
+		x: x,
+		y: y,
+	};
+}
+
+function createObjectInstance(instanceId, objectLocation) {
+	var definition = object[objectLocation.id];
+
 	return {
 		instanceId: instanceId, // currently equivalent to the index in the room list -- is it ok to remain that way?
 		id: definition.id,
 		type: definition.type,
 		drw: definition.drw,
 		dlg: definition.dlg,
-		x: x,
-		y: y,
+		x: objectLocation.x,
+		y: objectLocation.y,
 	};
 }
 
@@ -1014,6 +1023,17 @@ function isWall(x,y,roomId) {
 
 	// Otherwise, use the tile's own wall-state
 	return object[tileId].isWall;
+}
+
+function getObjectLocation(roomId, x, y) {
+	for (i in room[roomId].objectLocations) {
+		var obj = room[roomId].objectLocations[i];
+		if (x == obj.x && y == obj.y) {
+			return obj;
+		}
+	}
+
+	return null;
 }
 
 function getItem(roomId, x, y) {
@@ -1511,11 +1531,7 @@ function parseRoom(lines, i, compatibilityFlags) {
 		if (getType(lines[i]) === "SPR" || getType(lines[i]) === "ITM") {
 			var objId = getId(lines[i]);
 			var objCoord = lines[i].split(" ")[2].split(",");
-			var obj = {
-				id: objId,
-				x : parseInt(objCoord[0]),
-				y : parseInt(objCoord[1]),
-			};
+			var obj = createObjectLocation(objId, parseInt(objCoord[0]), parseInt(objCoord[1]));
 			room[id].objectLocations.push(obj);
 
 			// TODO : do I need to support reading in the old "find and replace" sprite format for back compat?
