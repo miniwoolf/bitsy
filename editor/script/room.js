@@ -17,6 +17,9 @@ function RoomTool(canvas) {
 	var self = this; // feels a bit hacky
 
 	var drawingId = "A";
+	events.Listen("select_drawing", function(event) {
+		drawingId = event.id;
+	});
 
 	// edit flags
 	var isDragAddingTiles = false;
@@ -93,6 +96,33 @@ function RoomTool(canvas) {
 				}
 				//room[curRoom].tilemap[y] = row;
 			}
+			else if (getDrawingType() == TileType.Avatar) {
+				// TODO : bug -- doesn't erase other sprites!!
+				var isAvatarAlreadyHere = false;
+
+				for (roomId in room) {
+					var playerObj = null;
+					for (i in room[roomId].objectLocations) {
+						var obj = room[roomId].objectLocations[i];
+						if (obj.id === drawingId) {
+							playerObj = obj;
+						}
+					}
+
+					if (playerObj) {
+						if (roomId === curRoom && x == playerObj.x && y == playerObj.y) {
+							isAvatarAlreadyHere = true;
+						}
+
+						var index = room[roomId].objectLocations.indexOf(playerObj);
+						room[roomId].objectLocations.splice(index, 1);
+					}
+				}
+
+				if (!isAvatarAlreadyHere) {
+					room[curRoom].objectLocations.push(createObjectLocation(drawingId, x, y));
+				}
+			}
 			else {
 				// TODO : is this the final behavior I want?
 
@@ -100,12 +130,12 @@ function RoomTool(canvas) {
 				var isObjectAlreadyHere = otherObject != null && otherObject.id === drawingId;
 
 				if (otherObject) {
-					var index = getRoom().objectLocations.indexOf(otherObject);
-					getRoom().objectLocations.splice(index, 1);
+					var index = room[curRoom].objectLocations.indexOf(otherObject);
+					room[curRoom].objectLocations.splice(index, 1);
 				}
 
 				if (!isObjectAlreadyHere) {
-					getRoom().objectLocations.push(createObjectLocation(drawingId, x, y));
+					room[curRoom].objectLocations.push(createObjectLocation(drawingId, x, y));
 				}
 			}
 

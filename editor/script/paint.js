@@ -247,8 +247,11 @@ function PaintTool(canvas, roomTool) {
 
 	this.SelectDrawing = function(id) {
 		drawingId = id;
+		curDrawingFrameIndex = 0;
 		self.ReloadDrawing();
 		self.UpdateCanvas();
+
+		events.Raise("select_drawing", { id: drawingId });
 	}
 
 	this.ToggleWall = function(checked) {
@@ -286,14 +289,14 @@ function PaintTool(canvas, roomTool) {
 
 	// TODO : replace with something that lets you pick the new type of drawing!
 	this.NewDrawing = function(imageData) {
-		var curType = object[drawingId].type;
-		drawingId = nextObjectId(object);
-		createObject(drawingId, curType, { drawingData:imageData });
-
-		self.ReloadDrawing(); //hack for ui consistency (hack x 2: order matters for animated tiles)
-		self.UpdateCanvas();
+		var curType = object[drawingId].type; // TODO : replace this hack
+		var nextId = nextObjectId(object);
+		createObject(nextId, curType, { drawingData:imageData });
 		refreshGameData();
 
+		self.SelectDrawing(nextId);
+
+		// TODO : hack... replace with event hookup
 		if (curType === "ITM") {
 			updateInventoryItemUI();
 		}
@@ -548,10 +551,8 @@ function PaintTool(canvas, roomTool) {
 
 		var index = ids.indexOf(drawingId);
 		index = (index + 1) % ids.length;
-		drawingId = ids[index];
 
-		curDrawingFrameIndex = 0;
-		self.SelectDrawing(drawingId);
+		self.SelectDrawing(ids[index]);
 
 		// TODO : add event
 		// paintExplorer.ChangeSelection(curDrawingId);
@@ -566,10 +567,8 @@ function PaintTool(canvas, roomTool) {
 		if (index < 0) {
 			index = (ids.length - 1); // loop
 		}
-		drawingId = ids[index];
 
-		curDrawingFrameIndex = 0;
-		self.SelectDrawing(drawingId);
+		self.SelectDrawing(ids[index]);
 
 		// TODO : add event
 		// paintExplorer.ChangeSelection(curDrawingId);
