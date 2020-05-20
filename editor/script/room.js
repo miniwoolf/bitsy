@@ -311,7 +311,17 @@ function RoomTool(canvas) {
 	});
 } // RoomTool()
 
-/* METHODS */
+/* 
+	GLOBAL FUNCTIONS
+	TODO : move as much as possible into the tool object
+*/
+
+/* PLAYMODE TODO 
+- make a PlayModeController objec?
+- share:
+	- on_play_mode
+	- on_edit_mode
+*/
 function togglePlayMode(e) {
 	if (e.target.checked) {
 		on_play_mode();
@@ -322,9 +332,222 @@ function togglePlayMode(e) {
 
 	updatePlayModeButton();
 }
-/* TODO 
-- make a PlayModeController objec?
-- share:
-	- on_play_mode
-	- on_edit_mode
-*/
+
+function on_room_name_change() {
+	var str = document.getElementById("roomName").value;
+	if(str.length > 0) {
+		room[curRoom].name = str;
+	}
+	else {
+		room[curRoom].name = null;
+	}
+
+	updateNamesFromCurData()
+
+	refreshGameData();
+}
+
+function selectRoom(roomId) {
+	console.log("SELECT ROOM " + roomId);
+
+	// ok watch out this is gonna be hacky
+	var ids = sortedRoomIdList();
+
+	var nextRoomIndex = -1;
+	for (var i = 0; i < ids.length; i++) {
+		if (ids[i] === roomId) {
+			nextRoomIndex = i;
+		}
+	}
+
+	if (nextRoomIndex != -1) {
+		roomIndex = nextRoomIndex;
+		curRoom = ids[roomIndex];
+		markerTool.SetRoom(curRoom);
+		roomTool.drawEditMap();
+		paintTool.UpdateCanvas();
+		updateRoomPaletteSelect();
+		paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+		if (drawing.type === TileType.Tile) {
+			updateWallCheckboxOnCurrentTile();
+		}
+
+		updateRoomName();
+	}
+}
+
+function nextRoom() {
+	var ids = sortedRoomIdList();
+	roomIndex = (roomIndex + 1) % ids.length;
+	curRoom = ids[roomIndex];
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+	if (drawing.type === TileType.Tile) {
+		updateWallCheckboxOnCurrentTile();
+	}
+
+	updateRoomName();
+}
+
+function prevRoom() {
+	var ids = sortedRoomIdList();
+	roomIndex--;
+	if (roomIndex < 0) roomIndex = (ids.length-1);
+	curRoom = ids[roomIndex];
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+	if (drawing.type === TileType.Tile) {
+		updateWallCheckboxOnCurrentTile();
+	}
+
+	updateRoomName();
+}
+
+function duplicateRoom() {
+	var copyRoomId = sortedRoomIdList()[roomIndex];
+	var roomToCopy = room[ copyRoomId ];
+
+	roomIndex = Object.keys( room ).length;
+	var newRoomId = nextRoomId();
+
+	console.log(newRoomId);
+	var duplicateTilemap = [];
+	for (y in roomToCopy.tilemap) {
+		duplicateTilemap.push([]);
+		for (x in roomToCopy.tilemap[y]) {
+			duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
+		}
+	}
+
+	var duplicateExits = [];
+	for (i in roomToCopy.exits) {
+		var exit = roomToCopy.exits[i];
+		duplicateExits.push( duplicateExit( exit ) );
+	}
+
+	room[newRoomId] = {
+		id : newRoomId,
+		tilemap : duplicateTilemap,
+		walls : roomToCopy.walls.slice(0),
+		exits : duplicateExits,
+		endings : roomToCopy.endings.slice(0),
+		pal : roomToCopy.pal,
+		items : []
+	};
+	refreshGameData();
+
+	curRoom = newRoomId;
+	//console.log(curRoom);
+	markerTool.SetRoom(curRoom); // hack to re-find all the markers
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+
+	updateRoomName();
+
+	// add new exit destination option to exits panel
+	var select = document.getElementById("exitDestinationSelect");
+	var option = document.createElement("option");
+	var roomLabel = localization.GetStringOrFallback("room_label", "room");
+	option.text = roomLabel + " " + newRoomId;
+	option.value = newRoomId;
+	select.add(option);
+}
+
+function newRoom() {
+	roomIndex = Object.keys( room ).length;
+	var roomId = nextRoomId();
+
+	var palIdList = sortedPaletteIdList();
+	var palId = palIdList.length > 0 ? palIdList[0] : "default";
+
+	console.log(roomId);
+
+	// TODO : need a shared make
+	room[roomId] = createRoom(roomId, palId);
+	refreshGameData();
+
+	curRoom = roomId;
+	//console.log(curRoom);
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+
+	updateRoomName();
+
+	// add new exit destination option to exits panel
+	// var select = document.getElementById("exitDestinationSelect");
+	// var option = document.createElement("option");
+	// var roomLabel = localization.GetStringOrFallback("room_label", "room");
+	// option.text = roomLabel + " " + roomId;
+	// option.value = roomId;
+	// select.add(option);
+}
+
+function deleteRoom() {
+	if ( Object.keys(room).length <= 1 ) {
+		alert("You can't delete your only room!");
+	}
+	else if ( confirm("Are you sure you want to delete this room? You can't get it back.") ) {
+		var roomId = sortedRoomIdList()[roomIndex];
+
+		// delete exits in _other_ rooms that go to this room
+		for( r in room )
+		{
+			if( r != roomId) {
+				for( i in room[r].exits )
+				{
+					if( room[r].exits[i].dest.room === roomId )
+					{
+						room[r].exits.splice( i, 1 );
+					}
+				}
+			}
+		}
+
+		delete room[roomId];
+
+		refreshGameData();
+
+		markerTool.Clear();
+		nextRoom();
+		roomTool.drawEditMap();
+		paintTool.UpdateCanvas();
+		updateRoomPaletteSelect();
+		markerTool.Refresh();
+		// updateExitOptionsFromGameData();
+		//recreate exit options
+	}
+}
+
+function roomPaletteChange(event) {
+	var palId = event.target.value;
+	room[curRoom].pal = palId;
+	refreshGameData();
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+}
+
+function toggleMapGrid(e) {
+	roomTool.drawMapGrid = e.target.checked;
+	document.getElementById("roomGridIcon").innerHTML = roomTool.drawMapGrid ? "visibility" : "visibility_off";
+	roomTool.drawEditMap();
+}
+
+function toggleCollisionMap(e) {
+	roomTool.drawCollisionMap = e.target.checked;
+	document.getElementById("roomWallsIcon").innerHTML = roomTool.drawCollisionMap ? "visibility" : "visibility_off";
+	roomTool.drawEditMap();
+}

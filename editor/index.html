@@ -615,6 +615,21 @@
 					</div>
 					<div style="margin-bottom: 5px;">
 						<canvas id="paint"></canvas>
+						<div id="addDrawingOptions" class="controlBox" style="display: none; flex-direction: column; min-width: 256px; min-height: 256px;">
+							<button title="add two-way exit" onclick="newTile();">
+								<i class="material-icons">add</i> <span>tile</span> <!-- TODO :localize -->
+							</button>
+							<button title="add one-way exit" onclick="newSprite();">
+								<i class="material-icons">add</i> <span>sprite</span> <!-- TODO :localize -->
+							</button>
+							<button title="add ending" onclick="newItem();">
+								<i class="material-icons">add</i> <span>item</span> <!-- TODO :localize -->
+							</button>
+							<!-- TODO : need a general cancel button style -->
+							<button title="cancel" style="background: #6767b2; color: white;" onclick="cancelNewDrawing();">
+								<i class="material-icons">cancel</i> <span class="localize action_cancel">cancel</span>
+							</button>
+						</div>
 					</div>
 					<div id="paintEditMain">
 						<div class="buttonGroup" style="margin-bottom: 10px;">

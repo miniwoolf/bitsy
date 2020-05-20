@@ -290,7 +290,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : replace with something that lets you pick the new type of drawing!
 	this.NewDrawing = function(imageData) {
 		var curType = object[drawingId].type; // TODO : replace this hack
-		var nextId = nextObjectId(object);
+		var nextId = nextObjectId(sortedBase36IdList(object)); // TODO : helper function?
 		createObject(nextId, curType, { drawingData:imageData });
 		refreshGameData();
 
@@ -637,6 +637,22 @@ function on_toggle_wall(e) {
 
 function newDrawing() {
 	paintTool.NewDrawing();
+}
+
+function newTile() {
+	// TODO
+}
+
+function newSprite() {
+	// TODO
+}
+
+function newItem() {
+	// TODO
+}
+
+function cancelNewDrawing() {
+	// TODO
 }
 
 function duplicateDrawing() {
