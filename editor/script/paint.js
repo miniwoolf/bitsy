@@ -320,7 +320,7 @@ function PaintTool(canvas, roomTool) {
 	this.DuplicateDrawing = function() {
 		var sourceImageData = renderer.GetImageSource(getRenderId());
 
-		var type = object[drawingId];
+		var type = object[drawingId].type;
 
 		// tiles have extra data to copy
 		var tileIsWall = false;
