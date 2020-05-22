@@ -1020,6 +1020,9 @@ function createObjectInstance(instanceId, objectLocation) {
 		x: objectLocation.x,
 		y: objectLocation.y,
 		property: new PropertyHolder(),
+		// TODO : kind of hacky to copy these around since they don't vary from the definition -- revisit?
+		col: definition.col,
+		animation: definition.animation,
 	};
 
 	instance.property.Add(
@@ -1031,6 +1034,12 @@ function createObjectInstance(instanceId, objectLocation) {
 		"y",
 		function() { return instance.y; },
 		function(value) { instance.y = value; });
+
+	// TODO : name?
+	instance.property.Add(
+		"drawing",
+		function() { return instance.drw; },
+		function(value) { instance.drw = value; console.log(instance); });
 
 	return instance;
 }
@@ -2073,8 +2082,7 @@ function drawRoom(room, options) {
 		// draw object instances
 		for (var i = 0; i < objectInstances.length; i++) {
 			var objectInstance = objectInstances[i];
-			var objectDefinition = object[objectInstance.id];
-			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			var objectImage = renderer.GetImage(objectInstance, paletteId, frameIndex);
 			drawObject(objectImage, objectInstance.x, objectInstance.y, context);
 		}
 
