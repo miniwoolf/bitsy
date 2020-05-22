@@ -912,7 +912,7 @@ function movePlayerThroughExit(ext) {
 			dialog[ext.dlg].src,
 			ext.dlg,
 			function(result) {
-				var isLocked = ext.property && ext.property.locked === true;
+				var isLocked = ext.property && ext.property.Get("locked") === true;
 				if (!isLocked) {
 					GoToDest();
 				}
@@ -956,10 +956,62 @@ function createObjectLocation(id, x, y) {
 	};
 }
 
+function PropertyHolder() {
+	var accessors = {};
+
+	this.Add = function(propertyName, getFunction, setFunction) {
+		var propertyAccessor = {
+			getFunction: getFunction,
+			setFunction: setFunction,
+		}
+
+		accessors[propertyName] = propertyAccessor;
+	}
+
+	this.Has = function(propertyName) {
+		return accessors.hasOwnProperty(propertyName);
+	}
+
+	this.Get = function(propertyName) {
+		if (this.Has(propertyName)) {
+			return accessors[propertyName].getFunction();
+		}
+		else {
+			return null;
+		}
+	}
+
+	function createDefaultPropertyAccessor(value) {
+		var property = {
+			value: value,
+		};
+
+		property.getFunction = function() {
+			return property.value;
+		}
+
+		property.setFunction = function(value) {
+			property.value = value;
+		}
+
+		return property;
+	}
+
+	this.Set = function(propertyName, value) {
+		if (this.Has(propertyName)) {
+			accessors[propertyName].setFunction(value);
+		}
+		else {
+			// create new default property if none exists
+			accessors[propertyName] = createDefaultPropertyAccessor(value);
+		}
+	}
+}
+
 function createObjectInstance(instanceId, objectLocation) {
 	var definition = object[objectLocation.id];
 
-	return {
+	var instance = {
 		instanceId: instanceId, // currently equivalent to the index in the room list -- is it ok to remain that way?
 		id: definition.id,
 		type: definition.type,
@@ -967,11 +1019,24 @@ function createObjectInstance(instanceId, objectLocation) {
 		dlg: definition.dlg,
 		x: objectLocation.x,
 		y: objectLocation.y,
+		property: new PropertyHolder(),
 	};
+
+	instance.property.Add(
+		"x",
+		function() { return instance.x; },
+		function(value) { instance.x = value; });
+
+	instance.property.Add(
+		"y",
+		function() { return instance.y; },
+		function(value) { instance.y = value; });
+
+	return instance;
 }
 
 function createExitInstance(exitDefinition) {
-	return {
+	var instance = {
 		x: exitDefinition.x,
 		y: exitDefinition.y,
 		dest: {
@@ -981,21 +1046,25 @@ function createExitInstance(exitDefinition) {
 		},
 		transition_effect: exitDefinition.transition_effect,
 		dlg: exitDefinition.dlg,
-		property: {
-			locked: false,
-		},
+		property: new PropertyHolder(),
 	};
+
+	instance.property.Set("locked", false);
+
+	return instance;
 }
 
 function createEndingInstance(endingDefinition) {
-	return {
+	var instance = {
 		id: endingDefinition.id,
 		x: endingDefinition.x,
 		y: endingDefinition.y,
-		property: {
-			locked: false,
-		},
+		property: new PropertyHolder(),
 	};
+
+	instance.property.Set("locked", false);
+
+	return instance;
 }
 
 function getItemIndex(x, y) {
@@ -2112,7 +2181,7 @@ function startEndingDialog(ending) {
 		dialog[ending.id].src,
 		ending.id,
 		function() {
-			var isLocked = ending.property && ending.property.locked === true;
+			var isLocked = ending.property && ending.property.Get("locked") === true;
 			if (isLocked) {
 				isEnding = false;
 			}
@@ -2124,7 +2193,7 @@ function startItemDialog(itemInstance, dialogCallback) {
 	var dialogId = itemInstance.dlg;
 	if (dialog[dialogId]) {
 		var dialogStr = dialog[dialogId].src;
-		startDialog(dialogStr, dialogId, dialogCallback);
+		startDialog(dialogStr, dialogId, dialogCallback, itemInstance);
 	}
 	else {
 		dialogCallback();
@@ -2135,7 +2204,7 @@ function startSpriteDialog(spriteInstance) {
 	var dialogId = spriteInstance.dlg;
 	if (dialog[dialogId]){
 		var dialogStr = dialog[dialogId].src;
-		startDialog(dialogStr, dialogId);
+		startDialog(dialogStr, dialogId, null, spriteInstance);
 	}
 }
 
