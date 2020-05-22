@@ -102,8 +102,8 @@ function RoomTool(canvas) {
 
 				for (roomId in room) {
 					var playerObj = null;
-					for (i in room[roomId].objectLocations) {
-						var obj = room[roomId].objectLocations[i];
+					for (i in room[roomId].objects) {
+						var obj = room[roomId].objects[i];
 						if (obj.id === drawingId) {
 							playerObj = obj;
 						}
@@ -114,13 +114,13 @@ function RoomTool(canvas) {
 							isAvatarAlreadyHere = true;
 						}
 
-						var index = room[roomId].objectLocations.indexOf(playerObj);
-						room[roomId].objectLocations.splice(index, 1);
+						var index = room[roomId].objects.indexOf(playerObj);
+						room[roomId].objects.splice(index, 1);
 					}
 				}
 
 				if (!isAvatarAlreadyHere) {
-					room[curRoom].objectLocations.push(createObjectLocation(drawingId, x, y));
+					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
 				}
 			}
 			else {
@@ -130,12 +130,12 @@ function RoomTool(canvas) {
 				var isObjectAlreadyHere = otherObject != null && otherObject.id === drawingId;
 
 				if (otherObject) {
-					var index = room[curRoom].objectLocations.indexOf(otherObject);
-					room[curRoom].objectLocations.splice(index, 1);
+					var index = room[curRoom].objects.indexOf(otherObject);
+					room[curRoom].objects.splice(index, 1);
 				}
 
 				if (!isObjectAlreadyHere) {
-					room[curRoom].objectLocations.push(createObjectLocation(drawingId, x, y));
+					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
 				}
 			}
 

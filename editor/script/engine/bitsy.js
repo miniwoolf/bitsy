@@ -14,7 +14,16 @@ var palette = { //start off with a default palette
 	};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
+
+/*
+  Instance System
+  TODO
+  - should these be global, or associated with rooms?
+  - can the player instance be combined with the object instance holder?
+  - how do we manage instance IDs so they can be accessed from scripts?
+*/
 var playerInstance = {};
+var objectInstances = [];
 
 var titleDialogId = "title";
 function getTitle() {
@@ -312,8 +321,8 @@ function createPlayerInstance(playerDefinition) {
 
 	// try to find a room containing the player
 	for (id in room) {
-		for (var i = 0; i < room[id].objectLocations.length; i++) {
-			var objectLocation = room[id].objectLocations[i];
+		for (var i = 0; i < room[id].objects.length; i++) {
+			var objectLocation = room[id].objects[i];
 			if (objectLocation.id === playerId) {
 				instance.room = id;
 				instance.x = objectLocation.x;
@@ -598,8 +607,6 @@ function resetAllAnimations() {
 }
 
 function getSpriteAt(x,y) {
-	var objectInstances = room[curRoom].objectInstances;
-
 	for (var i = 0; i < objectInstances.length; i++) {
 		if (objectInstances[i].type === "SPR" &&
 			objectInstances[i].x === x && objectInstances[i].y === y) {
@@ -844,13 +851,13 @@ function movePlayer(direction) {
 
 	// do items first, because you can pick up an item AND go through a door
 	if (itmIndex > -1) {
-		var itm = room[player().room].objectInstances[itmIndex];
+		var itm = objectInstances[itmIndex];
 		var itemRoom = player().room;
 
 		startItemDialog(itm, function() {
 			// remove item from room
-			room[itemRoom].objectInstances.splice(itmIndex, 1);
-			room[itemRoom].objectLocations[itm.instanceId].removed = true; // assumes instanceId === location index
+			objectInstances.splice(itmIndex, 1);
+			room[itemRoom].objects[itm.instanceId].removed = true; // assumes instanceId === location index
 
 			// update player inventory
 			if (player().inventory[itm.id]) {
@@ -927,12 +934,12 @@ function initRoom(roomId) {
 	}
 
 	// init objects
-	room[roomId].objectInstances = [];
-	for (var i = 0; i < room[roomId].objectLocations.length; i++) {
-		var objectLocation = room[roomId].objectLocations[i];
+	objectInstances = [];
+	for (var i = 0; i < room[roomId].objects.length; i++) {
+		var objectLocation = room[roomId].objects[i];
 		if (objectLocation.id != playerId && !objectLocation.removed) {
 			var objectInstance = createObjectInstance(i, objectLocation);
-			room[roomId].objectInstances.push(objectInstance);
+			objectInstances.push(objectInstance);
 		}
 	}
 }
@@ -960,9 +967,9 @@ function createObjectInstance(instanceId, objectLocation) {
 }
 
 function getItemIndex(roomId, x, y) {
-	for (var i = 0; i < room[roomId].objectInstances.length; i++ ) {
-		if (room[roomId].objectInstances[i].type === "ITM") {
-			var itm = room[roomId].objectInstances[i];
+	for (var i = 0; i < objectInstances.length; i++ ) {
+		if (objectInstances[i].type === "ITM") {
+			var itm = objectInstances[i];
 			if (itm.x == x && itm.y == y) {
 				return i;
 			}
@@ -1026,8 +1033,8 @@ function isWall(x,y,roomId) {
 }
 
 function getObjectLocation(roomId, x, y) {
-	for (i in room[roomId].objectLocations) {
-		var obj = room[roomId].objectLocations[i];
+	for (i in room[roomId].objects) {
+		var obj = room[roomId].objects[i];
 		if (x == obj.x && y == obj.y) {
 			return obj;
 		}
@@ -1037,9 +1044,9 @@ function getObjectLocation(roomId, x, y) {
 }
 
 function getItem(roomId, x, y) {
-	for (i in room[roomId].objectInstances) {
-		if (room[roomId].objectInstances[i].type === "ITM") {
-			var item = room[roomId].objectInstances[i];
+	for (i in objectInstances) {
+		if (objectInstances[i].type === "ITM") {
+			var item = objectInstances[i];
 			if (x == item.x && y == item.y) {
 				return item;
 			}
@@ -1172,11 +1179,11 @@ function parseWorld(file) {
 	// clean up any excess unique objects (TODO : is this the best way to do this?)
 	var foundUniqueObject = {};
 	for (id in room) {
-		for (var i = room[id].objectLocations.length - 1; i >= 0; i--) {
-			var objectId = room[id].objectLocations[i].id;
+		for (var i = room[id].objects.length - 1; i >= 0; i--) {
+			var objectId = room[id].objects[i].id;
 			if (foundUniqueObject[objectId]) {
 				// this unique object already has a location!
-				room[id].objectLocations.splice(i, 1);
+				room[id].objects.splice(i, 1);
 			}
 			else if (object[objectId].isUnique) {
 				foundUniqueObject[objectId] = true;
@@ -1308,10 +1315,10 @@ function serializeWorld(skipFonts) {
 			}
 			worldStr += "\n";
 		}
-		if (room[id].objectLocations.length > 0) {
+		if (room[id].objects.length > 0) {
 			/* OBJECTS */
-			for (j in room[id].objectLocations) {
-				var obj = room[id].objectLocations[j];
+			for (j in room[id].objects) {
+				var obj = room[id].objects[j];
 				if (!object[obj.id].isUnique || !object[obj.id].hasUniqueLocation) {
 					worldStr += object[obj.id].type + " " + obj.id + " " + obj.x + "," + obj.y;
 					worldStr += "\n";
@@ -1488,9 +1495,7 @@ function createRoom(id, palId) {
 		walls : [],
 		exits : [],
 		endings : [],
-		items : [], // TODO : remove
-		objectLocations : [],
-		objectInstances : [],
+		objects : [],
 		pal : palId,
 		name : null,
 	};
@@ -1532,7 +1537,7 @@ function parseRoom(lines, i, compatibilityFlags) {
 			var objId = getId(lines[i]);
 			var objCoord = lines[i].split(" ")[2].split(",");
 			var obj = createObjectLocation(objId, parseInt(objCoord[0]), parseInt(objCoord[1]));
-			room[id].objectLocations.push(obj);
+			room[id].objects.push(obj);
 
 			// TODO : do I need to support reading in the old "find and replace" sprite format for back compat?
 		}
@@ -1755,11 +1760,11 @@ function parseObject(lines, i, type) {
 			var coordArgs = posArgs[2].split(",");
 
 			// NOTE: assumes rooms have all been created!
-			room[roomId].objectLocations.push({
-				id: id,
-				x : parseInt(coordArgs[0]),
-				y : parseInt(coordArgs[1]),
-			});
+			room[roomId].objects.push(
+				createObjectLocation(
+					id,
+					parseInt(coordArgs[0]),
+					parseInt(coordArgs[1])));
 		}
 		else if (getType(lines[i]) === "ITM" && isPlayer) {
 			/* ITEM STARTING INVENTORY */
@@ -1963,8 +1968,8 @@ function drawRoom(room, options) {
 
 	if (drawObjectInstances) {
 		// draw object instances
-		for (var i = 0; i < room.objectInstances.length; i++) {
-			var objectInstance = room.objectInstances[i];
+		for (var i = 0; i < objectInstances.length; i++) {
+			var objectInstance = objectInstances[i];
 			var objectDefinition = object[objectInstance.id];
 			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
 			drawObject(objectImage, objectInstance.x, objectInstance.y, context);
@@ -1979,8 +1984,8 @@ function drawRoom(room, options) {
 	}
 	else {
 		// draw object initial locations
-		for (var i = 0; i < room.objectLocations.length; i++) {
-			var objectLocation = room.objectLocations[i];
+		for (var i = 0; i < room.objects.length; i++) {
+			var objectLocation = room.objects[i];
 			var objectDefinition = object[objectLocation.id];
 			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
 			drawObject(objectImage, objectLocation.x, objectLocation.y, context);
