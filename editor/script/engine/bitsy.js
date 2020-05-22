@@ -24,6 +24,8 @@ var playerId = "A";
 */
 var playerInstance = {};
 var objectInstances = [];
+var exitInstances = [];
+var endingInstances = [];
 
 var titleDialogId = "title";
 function getTitle() {
@@ -845,9 +847,9 @@ function movePlayer(direction) {
 		didPlayerMoveThisFrame = true;
 	}
 	
-	var ext = getExit( player().room, player().x, player().y );
-	var end = getEnding( player().room, player().x, player().y );
-	var itmIndex = getItemIndex( player().room, player().x, player().y );
+	var ext = getExit(player().x, player().y);
+	var end = getEnding(player().x, player().y);
+	var itmIndex = getItemIndex(player().x, player().y);
 
 	// do items first, because you can pick up an item AND go through a door
 	if (itmIndex > -1) {
@@ -923,14 +925,16 @@ function movePlayerThroughExit(ext) {
 }
 
 function initRoom(roomId) {
-	// init exit properties
+	// init exit instances
+	exitInstances = [];
 	for (var i = 0; i < room[roomId].exits.length; i++) {
-		room[roomId].exits[i].property = { locked:false };
+		exitInstances.push(createExitInstance(room[roomId].exits[i]));
 	}
 
-	// init ending properties
+	// init ending instances
+	endingInstances = [];
 	for (var i = 0; i < room[roomId].endings.length; i++) {
-		room[roomId].endings[i].property = { locked:false };
+		endingInstances.push(createEndingInstance(room[roomId].endings[i]));
 	}
 
 	// init objects
@@ -966,7 +970,35 @@ function createObjectInstance(instanceId, objectLocation) {
 	};
 }
 
-function getItemIndex(roomId, x, y) {
+function createExitInstance(exitDefinition) {
+	return {
+		x: exitDefinition.x,
+		y: exitDefinition.y,
+		dest: {
+			room: exitDefinition.dest.room,
+			x: exitDefinition.dest.x,
+			y: exitDefinition.dest.y,
+		},
+		transition_effect: exitDefinition.transition_effect,
+		dlg: exitDefinition.dlg,
+		property: {
+			locked: false,
+		},
+	};
+}
+
+function createEndingInstance(endingDefinition) {
+	return {
+		id: endingDefinition.id,
+		x: endingDefinition.x,
+		y: endingDefinition.y,
+		property: {
+			locked: false,
+		},
+	};
+}
+
+function getItemIndex(x, y) {
 	for (var i = 0; i < objectInstances.length; i++ ) {
 		if (objectInstances[i].type === "ITM") {
 			var itm = objectInstances[i];
@@ -1056,23 +1088,25 @@ function getItem(roomId, x, y) {
 	return null;
 }
 
-function getExit(roomId,x,y) {
-	for (i in room[roomId].exits) {
-		var e = room[roomId].exits[i];
+function getExit(x, y) {
+	for (i in exitInstances) {
+		var e = exitInstances[i];
 		if (x == e.x && y == e.y) {
 			return e;
 		}
 	}
+
 	return null;
 }
 
-function getEnding(roomId,x,y) {
-	for (i in room[roomId].endings) {
-		var e = room[roomId].endings[i];
+function getEnding(x, y) {
+	for (i in endingInstances) {
+		var e = endingInstances[i];
 		if (x == e.x && y == e.y) {
 			return e;
 		}
 	}
+
 	return null;
 }
 
