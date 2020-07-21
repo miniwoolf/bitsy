@@ -4,7 +4,7 @@
 <head>
 
 <script>
-var src = "{-> Hello {wvy}world{/wvy} what's\"   \"up? {cyc {-> \"test    a\"} {-> test b}}}"; //\n{test {what}again}"
+var src = "{-> Hello world {if false {-> branch 1} false {-> branch 2} {-> branch 3}}}"; //\n{test {what}again}"
 
 function start() {
 	console.log('hi!');
@@ -17,10 +17,10 @@ function start() {
 	console.log(list);
 
 	eval(list[0]);
-	testBuffer = "";
-	eval(list[0]);
-	testBuffer = "";
-	eval(list[0]);
+	// testBuffer = "";
+	// eval(list[0]);
+	// testBuffer = "";
+	// eval(list[0]);
 }
 
 function tokenize(script) {
@@ -91,7 +91,7 @@ function parse(tokens, list) {
 		if (token === "{") {
 			list.push({
 				type: "list",
-				value: parse(tokens),
+				list: parse(tokens),
 			});
 		}
 		else if (token === "}") {
@@ -108,65 +108,81 @@ function parse(tokens, list) {
 var testBuffer = "";
 
 var special = {
-	"->": function(input) {
-		for (var i = 1; i < input.length; i++) {
-			if (input[i].type === "string") {
-				console.log("add-text " + input[i].value);
-				testBuffer += input[i].value;
+	"->": function(expression) {
+		var result = null;
+
+		for (var i = 1; i < expression.list.length; i++) {
+			if (expression.list[i].type === "string") {
+				console.log("add-text " + expression.list[i].value);
+				testBuffer += expression.list[i].value;
+				result = null;
 			}
-			else if (input[i].type != "list") {
-				console.log("add-word " + input[i].value);
-				testBuffer += " " + input[i].value;
+			else if (expression.list[i].type != "list") {
+				console.log("add-word " + expression.list[i].value);
+				testBuffer += " " + expression.list[i].value;
+				result = null;
 			}
 			else {
-				eval(input[i]);
+				result = eval(expression.list[i]);
 			}
 		}
 
 		console.log(" --- buffer --- \n" + testBuffer);
+		return result;
 	},
-	"seq": function(input) {
-		if ("index" in input[0]) {
-			input[0].index++;
+	"seq": function(expression) {
+		if ("index" in expression) {
+			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
 		}
 		else {
-			input[0].index = 1;
+			expression.index = 1;
 		}
 
-		eval(input[Math.min(input.length - 1, input[0].index)]);
+		return eval(expression.list[expression.index]);
 	},
-	"cyc": function(input) {
-		if ("index" in input[0]) {
-			input[0].index++;
+	"cyc": function(expression) {
+		if ("index" in expression) {
+			expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
+		}
+		else {
+			expression.index = 1;
+		}
 
-			// ok this is kind of inelegant
-			if (input[0].index >= input.length) {
-				input[0].index = 1;
+		return eval(expression.list[expression.index]);
+	},
+	"if": function(expression) {
+		var result = null;
+
+		for (var i = 1; i < expression.list.length; i += 2) {
+			if (i + 1 >= expression.list.length) {
+				result = eval(expression.list[i]);
+				break;
+			}
+			else if (eval(expression.list[i])) {
+				result = eval(expression.list[i + 1]);
+				break;
 			}
 		}
-		else {
-			input[0].index = 1;
-		}
 
-		eval(input[input[0].index]);
+		return result;
 	},
 	// todo : shf
 }
 
 function eval(expression) {
-	if (expression.type === "literal") {
+	if (expression.type === "number" || expression.type === "string" || expression.type === "boolean") {
 		return expression.value;
 	}
 	else if (expression.type === "symbol") {
 		return expression.value; // TODO use environment
 	}
 	else if (expression.type === "list") {
-		if (expression.value[0].value in special) {
-			return special[expression.value[0].value](expression.value);
+		if (expression.list[0].value in special) {
+			return special[expression.list[0].value](expression);
 		}
 		else {
-			var funcName = eval(expression.value[0]);
-			var args = expression.value.slice(1).map(eval);
+			var funcName = eval(expression.list[0]);
+			var args = expression.list.slice(1).map(eval);
 			console.log(funcName);
 			console.log(args);
 			return "<<fn " + funcName + ">>";
