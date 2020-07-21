@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+
+<script>
+var src = "{test \"str str\n\t str\" true -1.2 {a 1 2} \"2\" 3}"; //\n{test {what}again}"
+
+function start() {
+	console.log('hi!');
+	console.log(src);
+
+	var tokens = tokenize(src);
+	console.log(tokens);
+
+	var list = parse(tokens);
+	console.log(list);
+
+	eval(list[0]);
+}
+
+function tokenize(script) {
+	// store string literals and replace them with special token
+	var stringPattern = /"[\s\S]*?"/g;
+	var stringLiterals = script.match(stringPattern);
+	script = script.replace(stringPattern, " __string_literal__ ");
+
+	// tokenize on whitespace
+	var tokens = script
+		.replace(/{/g, " { ")
+		.replace(/}/g, " } ")
+		.trim()
+		.split(/\s+/); // split on whitespace
+
+	// restore string literals
+	var stringIndex = 0;
+	for (var i = 0; i < tokens.length; i++) {
+		if (tokens[i] === "__string_literal__") {
+			tokens[i] = stringLiterals[stringIndex];
+			stringIndex++;
+		}
+	}
+
+	return tokens;
+}
+
+function parseAtom(token) {
+	if (!isNaN(parseFloat(token))) {
+		return {
+			type: "literal",
+			value: parseFloat(token),
+		};
+	}
+	else if (token[0] === "\"" && token[token.length - 1] === "\"") {
+		return {
+			type: "literal",
+			value: token.substring(1, token.length - 1),
+		};
+	}
+	else if (token === "true") {
+		return {
+			type: "literal",
+			value: true,
+		};
+	}
+	else if (token === "false") {
+		return {
+			type: "literal",
+			value: false,
+		};
+	}
+	else {
+		return {
+			type: "symbol",
+			value: token,
+		};
+	}
+}
+
+function parse(tokens, list) {
+	if (list === undefined || list === null) {
+		list = [];
+	}
+
+	while (tokens.length > 0) {
+		var token = tokens.shift();
+		if (token === "{") {
+			list.push({
+				type: "list",
+				value: parse(tokens),
+			});
+		}
+		else if (token === "}") {
+			break;
+		}
+		else {
+			list.push(parseAtom(token));
+		}
+	}
+
+	return list;
+}
+
+function eval(expression) {
+	if (expression.type === "literal") {
+		return expression.value;
+	}
+	else if (expression.type === "symbol") {
+		return expression.value; // TODO use environment
+	}
+	else if (expression.type === "list") {
+		var funcName = eval(expression.value[0]);
+		var args = expression.value.slice(1).map(eval);
+		console.log(funcName);
+		console.log(args);
+		return "<<fn " + funcName + ">>";
+	}
+}
+</script>
+
+</head>
+
+<body onload="start();">
+</body>
+
+</html>
