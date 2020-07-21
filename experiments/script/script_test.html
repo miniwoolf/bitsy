@@ -4,7 +4,7 @@
 <head>
 
 <script>
-var src = "{test \"str str\n\t str\" true -1.2 {a 1 2} \"2\" 3}"; //\n{test {what}again}"
+var src = "{-> Hello {wvy} world {/wvy} {seq {-> test a} {-> test b}}}"; //\n{test {what}again}"
 
 function start() {
 	console.log('hi!');
@@ -101,6 +101,24 @@ function parse(tokens, list) {
 	return list;
 }
 
+var testBuffer = "";
+
+var special = {
+	"->": function(input) {
+		for (var i = 1; i < input.length; i++) {
+			if (input[i].type != "list") {
+				console.log("add-word " + input[i].value);
+				testBuffer += " " + input[i].value;
+			}
+			else {
+				eval(input[i]);
+			}
+		}
+
+		console.log(" --- buffer --- \n" + testBuffer);
+	},
+}
+
 function eval(expression) {
 	if (expression.type === "literal") {
 		return expression.value;
@@ -109,11 +127,16 @@ function eval(expression) {
 		return expression.value; // TODO use environment
 	}
 	else if (expression.type === "list") {
-		var funcName = eval(expression.value[0]);
-		var args = expression.value.slice(1).map(eval);
-		console.log(funcName);
-		console.log(args);
-		return "<<fn " + funcName + ">>";
+		if (expression.value[0].value in special) {
+			return special[expression.value[0].value](expression.value);
+		}
+		else {
+			var funcName = eval(expression.value[0]);
+			var args = expression.value.slice(1).map(eval);
+			console.log(funcName);
+			console.log(args);
+			return "<<fn " + funcName + ">>";
+		}
 	}
 }
 </script>
