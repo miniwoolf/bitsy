@@ -4,7 +4,7 @@
 <head>
 
 <script>
-var src = "{-> Hello {wvy}world{/wvy} what's\"   \"up? {seq {-> test a} {-> test b}}}"; //\n{test {what}again}"
+var src = "{-> Hello {wvy}world{/wvy} what's\"   \"up? {cyc {-> \"test    a\"} {-> test b}}}"; //\n{test {what}again}"
 
 function start() {
 	console.log('hi!');
@@ -16,6 +16,10 @@ function start() {
 	var list = parse(tokens);
 	console.log(list);
 
+	eval(list[0]);
+	testBuffer = "";
+	eval(list[0]);
+	testBuffer = "";
 	eval(list[0]);
 }
 
@@ -121,6 +125,32 @@ var special = {
 
 		console.log(" --- buffer --- \n" + testBuffer);
 	},
+	"seq": function(input) {
+		if ("index" in input[0]) {
+			input[0].index++;
+		}
+		else {
+			input[0].index = 1;
+		}
+
+		eval(input[Math.min(input.length - 1, input[0].index)]);
+	},
+	"cyc": function(input) {
+		if ("index" in input[0]) {
+			input[0].index++;
+
+			// ok this is kind of inelegant
+			if (input[0].index >= input.length) {
+				input[0].index = 1;
+			}
+		}
+		else {
+			input[0].index = 1;
+		}
+
+		eval(input[input[0].index]);
+	},
+	// todo : shf
 }
 
 function eval(expression) {
