@@ -4,7 +4,7 @@
 <head>
 
 <script>
-var src = "{-> Hello world {if false {-> branch 1} false {-> branch 2} {-> branch 3}}}"; //\n{test {what}again}"
+var src = "{-> Hello world \" \" {say {+ 1 2}}}"; //\n{test {what}again}"
 
 function start() {
 	console.log('hi!');
@@ -16,7 +16,7 @@ function start() {
 	var list = parse(tokens);
 	console.log(list);
 
-	eval(list[0]);
+	eval(list[0], TestContext);
 	// testBuffer = "";
 	// eval(list[0]);
 	// testBuffer = "";
@@ -107,8 +107,32 @@ function parse(tokens, list) {
 
 var testBuffer = "";
 
+// TODO : make these more real
+var TestLibrary = {
+	"+": function(a, b) {
+		return a + b;
+	},
+	"<": function(a, b) {
+		return a < b;
+	},
+	"say": function(x) {
+		testBuffer += x;
+	},
+};
+
+var TestContext = {
+	get: function(identifier) {
+		if (identifier in TestLibrary) {
+			return TestLibrary[identifier];
+		}
+		else {
+			return null; // TODO : temporary error case
+		}
+	},
+};
+
 var special = {
-	"->": function(expression) {
+	"->": function(expression, context) {
 		var result = null;
 
 		for (var i = 1; i < expression.list.length; i++) {
@@ -123,14 +147,14 @@ var special = {
 				result = null;
 			}
 			else {
-				result = eval(expression.list[i]);
+				result = eval(expression.list[i], context);
 			}
 		}
 
 		console.log(" --- buffer --- \n" + testBuffer);
 		return result;
 	},
-	"seq": function(expression) {
+	"seq": function(expression, context) {
 		if ("index" in expression) {
 			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
 		}
@@ -138,9 +162,9 @@ var special = {
 			expression.index = 1;
 		}
 
-		return eval(expression.list[expression.index]);
+		return eval(expression.list[expression.index], context);
 	},
-	"cyc": function(expression) {
+	"cyc": function(expression, context) {
 		if ("index" in expression) {
 			expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
 		}
@@ -148,18 +172,18 @@ var special = {
 			expression.index = 1;
 		}
 
-		return eval(expression.list[expression.index]);
+		return eval(expression.list[expression.index], context);
 	},
-	"if": function(expression) {
+	"if": function(expression, context) {
 		var result = null;
 
 		for (var i = 1; i < expression.list.length; i += 2) {
 			if (i + 1 >= expression.list.length) {
-				result = eval(expression.list[i]);
+				result = eval(expression.list[i], context);
 				break;
 			}
 			else if (eval(expression.list[i])) {
-				result = eval(expression.list[i + 1]);
+				result = eval(expression.list[i + 1], context);
 				break;
 			}
 		}
@@ -169,23 +193,26 @@ var special = {
 	// todo : shf
 }
 
-function eval(expression) {
+function eval(expression, context) {
+	console.log(context);
 	if (expression.type === "number" || expression.type === "string" || expression.type === "boolean") {
 		return expression.value;
 	}
 	else if (expression.type === "symbol") {
-		return expression.value; // TODO use environment
+		return context.get(expression.value);
 	}
 	else if (expression.type === "list") {
 		if (expression.list[0].value in special) {
-			return special[expression.list[0].value](expression);
+			return special[expression.list[0].value](expression, context);
 		}
 		else {
-			var funcName = eval(expression.list[0]);
-			var args = expression.list.slice(1).map(eval);
-			console.log(funcName);
-			console.log(args);
-			return "<<fn " + funcName + ">>";
+			var listValues = expression.list.map(function (x) { return eval(x, context); });
+			if (listValues[0] instanceof Function) {
+				var result = listValues[0].apply(null, listValues.slice(1));
+				console.log("FUNCTION! " + result);
+				return result;
+			}
+			// else: then what??
 		}
 	}
 }
