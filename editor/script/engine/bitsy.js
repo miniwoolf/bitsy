@@ -1888,9 +1888,47 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 	id = backCompatPrefix + id;
 	i++;
 
-	var results = scriptUtils.ReadDialogScript(lines,i);
+	var script = "";
+	var startsWithDialogExpression = (lines[i].length >= 3) && (lines[i].indexOf("{->") === 0);
 
-	dialog[id] = { src:results.script, name:null };
+	if (startsWithDialogExpression) {
+		// multi-line dialog script
+		// TODO : handle strings inside quotes
+		script += lines[i][0];
+		var bracesCount = 1;
+		var charIndex = 1;
+
+		while (bracesCount > 0) {
+			if (charIndex >= lines[i].length) {
+				script += "\n";
+				i++;
+				charIndex = 0;
+			}
+			else {
+				script += lines[i][charIndex];
+
+				if (lines[i][charIndex] === "{") {
+					bracesCount++;
+				}
+				else if (lines[i][charIndex] === "}") {
+					bracesCount--;
+				}
+
+				charIndex++;
+			}
+		}
+	}
+	else {
+		// single line dialog script
+		script += lines[i];
+	}
+
+	i++;
+
+	dialog[id] = {
+		src: script,
+		name: null,
+	};
 
 	if (compatibilityFlags.convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
@@ -1901,8 +1939,6 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 			}
 		}
 	}
-
-	i = results.index;
 
 	return i;
 }
@@ -2215,14 +2251,16 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 
 
 	// SCRIPT NEXT TEST
-	// scriptNext.Run("{-> Hello world {seq {-> option a} {-> option b}}}");
-	// console.log(dialogStr);
-	var dialogStr = dialogStr.replace(/"""/g, ""); // hack to remove old root container
-	// console.log(dialogStr);
-	// scriptNext.Run(dialogStr);
+	if (dialogStr.indexOf("\n") < 0) {
+		// wrap one-line dialogs in a dialog expression
+		// TODO : is this still what I want?
+		dialogStr = "{-> " + dialogStr + "}";
+	}
+
 	if (!scriptNext.HasScript(scriptId)) {
 		scriptNext.Compile(scriptId, dialogStr);
 	}
+
 	scriptNext.Run(scriptId);
 }
 

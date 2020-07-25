@@ -5,6 +5,7 @@ X try hooking up to dialogue buffer
 - name of language / module?
 - missing functions
 - are the short names for sequences good or bad?
+- better multi-line dialog script parsing by handling strings inside quotes
 */
 
 function ScriptNext() {
