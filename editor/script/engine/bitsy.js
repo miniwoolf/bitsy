@@ -2202,17 +2202,28 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 		});
 	};
 
-	if (scriptId === undefined) { // TODO : what's this for again?
-		scriptInterpreter.Interpret(dialogStr, onScriptEnd);
-	}
-	else {
-		if (!scriptInterpreter.HasScript(scriptId)) {
-			scriptInterpreter.Compile(scriptId, dialogStr);
-		}
-		// scriptInterpreter.DebugVisualizeScript(scriptId);
-		scriptInterpreter.Run(scriptId, onScriptEnd, objectContext);
-	}
+	// if (scriptId === undefined) { // TODO : what's this for again?
+	// 	scriptInterpreter.Interpret(dialogStr, onScriptEnd);
+	// }
+	// else {
+	// 	if (!scriptInterpreter.HasScript(scriptId)) {
+	// 		scriptInterpreter.Compile(scriptId, dialogStr);
+	// 	}
+	// 	// scriptInterpreter.DebugVisualizeScript(scriptId);
+	// 	scriptInterpreter.Run(scriptId, onScriptEnd, objectContext);
+	// }
 
+
+	// SCRIPT NEXT TEST
+	// scriptNext.Run("{-> Hello world {seq {-> option a} {-> option b}}}");
+	// console.log(dialogStr);
+	var dialogStr = dialogStr.replace(/"""/g, ""); // hack to remove old root container
+	// console.log(dialogStr);
+	// scriptNext.Run(dialogStr);
+	if (!scriptNext.HasScript(scriptId)) {
+		scriptNext.Compile(scriptId, dialogStr);
+	}
+	scriptNext.Run(scriptId);
 }
 
 var isDialogPreview = false;
@@ -2245,3 +2256,6 @@ var scriptModule = new Script();
 var scriptInterpreter = scriptModule.CreateInterpreter();
 var scriptUtils = scriptModule.CreateUtils(); // TODO: move to editor.js?
 // scriptInterpreter.SetDialogBuffer( dialogBuffer );
+
+/* SCRIPT NEXT */
+var scriptNext = new ScriptNext();
