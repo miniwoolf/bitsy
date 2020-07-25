@@ -223,6 +223,12 @@ function Environment(dialogBuffer) {
 		"/rbw" : function() {
 			dialogBuffer.RemoveTextEffect("rbw");
 		},
+		"clr" : function(index) {
+			dialogBuffer.AddTextEffect("clr", [index]);
+		},
+		"/clr" : function(index) {
+			dialogBuffer.RemoveTextEffect("clr");
+		},
 	};
 
 	this.get = function(symbol) {

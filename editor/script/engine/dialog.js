@@ -421,9 +421,9 @@ var DialogBuffer = function() {
 		this.ApplyEffects = function(time) {
 			// console.log("APPLY EFFECTS! " + time);
 			for(var i = 0; i < this.effectList.length; i++) {
-				var effectName = this.effectList[i];
+				var effectName = this.effectList[i].name;
 				// console.log("FX " + effectName);
-				TextEffects[ effectName ].DoEffect( this, time );
+				TextEffects[effectName].DoEffect(this, time, this.effectList[i].parameters);
 			}
 		}
 
@@ -724,13 +724,31 @@ var DialogBuffer = function() {
 
 	/* new text effects */
 	this.HasTextEffect = function(name) {
-		return activeTextEffects.indexOf( name ) > -1;
+		var findFirstWithName = function (effect) {
+			return effect.name === name;
+		};
+
+		return activeTextEffects.findIndex(findFirstWithName) > -1;
 	}
-	this.AddTextEffect = function(name) {
-		activeTextEffects.push( name );
+
+	this.AddTextEffect = function(name, parameters) {
+		activeTextEffects.push({
+			name: name,
+			parameters: parameters,
+		});
 	}
+
 	this.RemoveTextEffect = function(name) {
-		activeTextEffects.splice( activeTextEffects.indexOf( name ), 1 );
+		var findFirstWithName = function (effect) {
+			return effect.name === name;
+		};
+
+		var index = activeTextEffects.slice().reverse().findIndex(findFirstWithName);
+
+		if (index > -1) {
+			index = (activeTextEffects.length - 1) - index;
+			activeTextEffects.splice(index, 1);
+		}
 	}
 
 	/* this is a hook for GIF rendering */
@@ -905,8 +923,8 @@ var ArabicHandler = function() {
 /* NEW TEXT EFFECTS */
 var TextEffects = new Map();
 
-var RainbowEffect = function() { // TODO - should it be an object or just a method?
-	this.DoEffect = function(char,time) {
+var RainbowEffect = function() {
+	this.DoEffect = function(char, time) {
 		// console.log("RAINBOW!!!");
 		// console.log(char);
 		// console.log(char.color);
@@ -922,34 +940,32 @@ var RainbowEffect = function() { // TODO - should it be an object or just a meth
 };
 TextEffects["rbw"] = new RainbowEffect();
 
-var ColorEffect = function(index) {
-	this.DoEffect = function(char) {
-		var pal = getPal( curPal() );
-		var color = pal[ parseInt( index ) ];
-		// console.log(color);
+var ColorEffect = function() {
+	this.DoEffect = function(char, time, parameters) {
+		var index = parameters[0];
+		var pal = getPal(curPal());
+		var color = pal[parseInt(index)];
 		char.color.r = color[0];
 		char.color.g = color[1];
 		char.color.b = color[2];
 		char.color.a = 255;
 	}
 };
-TextEffects["clr1"] = new ColorEffect(0);
-TextEffects["clr2"] = new ColorEffect(1); // TODO : should I use parameters instead of special names?
-TextEffects["clr3"] = new ColorEffect(2);
+TextEffects["clr"] = new ColorEffect();
 
 var WavyEffect = function() {
-	this.DoEffect = function(char,time) {
+	this.DoEffect = function(char, time) {
 		char.offset.y += Math.sin( (time / 250) - (char.col / 2) ) * 4;
 	}
 };
 TextEffects["wvy"] = new WavyEffect();
 
 var ShakyEffect = function() {
-	function disturb(func,time,offset,mult1,mult2) {
+	function disturb(func, time, offset, mult1, mult2) {
 		return func( (time * mult1) - (offset * mult2) );
 	}
 
-	this.DoEffect = function(char,time) {
+	this.DoEffect = function(char, time) {
 		char.offset.y += 3
 						* disturb(Math.sin,time,char.col,0.1,0.5)
 						* disturb(Math.cos,time,char.col,0.3,0.2)
