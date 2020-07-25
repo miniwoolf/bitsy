@@ -211,6 +211,18 @@ function Environment(dialogBuffer) {
 		"/wvy" : function() {
 			dialogBuffer.RemoveTextEffect("wvy");
 		},
+		"shk" : function() {
+			dialogBuffer.AddTextEffect("shk");
+		},
+		"/shk" : function() {
+			dialogBuffer.RemoveTextEffect("shk");
+		},
+		"rbw" : function() {
+			dialogBuffer.AddTextEffect("rbw");
+		},
+		"/rbw" : function() {
+			dialogBuffer.RemoveTextEffect("rbw");
+		},
 	};
 
 	this.get = function(symbol) {
