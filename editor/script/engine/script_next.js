@@ -26,9 +26,7 @@ this.Run = function(scriptId) {
 	// 	buffer: dialogBuffer,
 	// });
 
-	eval(compiledScripts[scriptId], {
-		buffer: dialogBuffer
-	});
+	eval(compiledScripts[scriptId], new Environment(dialogBuffer));
 }
 
 function tokenize(script) {
@@ -142,13 +140,15 @@ var special = {
 		for (var i = 1; i < expression.list.length; i++) {
 			if (expression.list[i].type === "string") {
 				console.log("add-text " + expression.list[i].value);
-				environment.buffer.AddText(expression.list[i].value);
+				// TODO : is using "say" the way to do this?
+				// or should I access the buffer directly?
+				environment.get("say")(expression.list[i].value);
 				result = null;
 			}
 			else if (expression.list[i].type != "list") {
 				console.log("add-word " + expression.list[i].value);
 				// hacky... need to expose AddWord
-				environment.buffer.AddText(" " + expression.list[i].value);
+				environment.get("say")(" " + expression.list[i].value);
 				result = null;
 			}
 			else {
@@ -195,6 +195,31 @@ var special = {
 		return result;
 	},
 	// todo : shf
+}
+
+// not sure yet how I want to design the environment
+// TODO : should I allow library methods to be overwritten by the user?
+// TODO : global vars vs local vars? need back compat with globals..
+function Environment(dialogBuffer) {
+	var library = {
+		"say" : function(str) { // todo : is this the right implementation of say?
+			dialogBuffer.AddText(str);
+		},
+		"wvy" : function() {
+			dialogBuffer.AddTextEffect("wvy");
+		},
+		"/wvy" : function() {
+			dialogBuffer.RemoveTextEffect("wvy");
+		},
+	};
+
+	this.get = function(symbol) {
+		// todo : what about other symbols that aren't in the library?
+		if (symbol in library) {
+			return library[symbol];
+		}
+		// else : then what?
+	}
 }
 
 } // ScriptNext
