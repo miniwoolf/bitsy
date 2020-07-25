@@ -2,7 +2,9 @@
 TODO
 X try hooking up to dialogue buffer
 - should the compile then run model remain the same?
-- name?
+- name of language / module?
+- missing functions
+- are the short names for sequences good or bad?
 */
 
 function ScriptNext() {
@@ -178,6 +180,23 @@ var special = {
 
 		return eval(expression.list[expression.index], environment);
 	},
+	"shf": function(expression, environment) {
+		if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
+			expression.index++;
+		}
+		else {
+			expression.index = 0;
+			expression.shuffle = [];
+
+			var unshuffled = Array(expression.list.length - 1).fill(1).map((x, y) => x + y);
+			while (unshuffled.length > 0) {
+				var i = Math.floor(Math.random() * unshuffled.length);
+				expression.shuffle.push(unshuffled.splice(i, 1)[0]);
+			}
+		}
+
+		return eval(expression.list[expression.shuffle[expression.index]], environment);
+	},
 	"if": function(expression, environment) {
 		var result = null;
 
@@ -194,7 +213,6 @@ var special = {
 
 		return result;
 	},
-	// todo : shf
 }
 
 // not sure yet how I want to design the environment
@@ -204,6 +222,13 @@ function Environment(dialogBuffer) {
 	var library = {
 		"say" : function(str) { // todo : is this the right implementation of say?
 			dialogBuffer.AddText(str);
+		},
+		"br" : function() {
+			dialogBuffer.AddLinebreak();
+		},
+		"pg" : function() {
+			// TODO : fix this method...
+			dialogBuffer.AddPagebreak();
 		},
 		"wvy" : function() {
 			dialogBuffer.AddTextEffect("wvy");
@@ -226,9 +251,18 @@ function Environment(dialogBuffer) {
 		"clr" : function(index) {
 			dialogBuffer.AddTextEffect("clr", [index]);
 		},
-		"/clr" : function(index) {
+		"/clr" : function() {
 			dialogBuffer.RemoveTextEffect("clr");
 		},
+		/* TODO
+			- end
+			- exit
+			- item
+			- printX
+			- property
+			- set (=)
+			- math operators
+		*/
 	};
 
 	this.get = function(symbol) {
