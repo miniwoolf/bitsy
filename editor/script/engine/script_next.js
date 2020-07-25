@@ -6,6 +6,9 @@ X try hooking up to dialogue buffer
 - missing functions
 - are the short names for sequences good or bad?
 - better multi-line dialog script parsing by handling strings inside quotes
+- what should the event ids be?
+	- three letter? STP, KEY, etc.
+	- or four letters? STEP, KEYD, etc.
 */
 
 function ScriptNext() {
@@ -23,12 +26,6 @@ this.Compile = function(scriptId, script) {
 }
 
 this.Run = function(scriptId) {
-	// var tokens = tokenize(script);
-	// var expressions = parse(tokens);
-	// eval(expressions[0], {
-	// 	buffer: dialogBuffer,
-	// });
-
 	eval(compiledScripts[scriptId], new Environment(dialogBuffer));
 }
 

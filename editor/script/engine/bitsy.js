@@ -463,6 +463,18 @@ function update() {
 				}
 			}
 		}
+
+		// trigger animation step scripts
+		// TODO : will have to be re-written after merging objects
+		if (!dialogBuffer.IsActive() && animationCounter === 0) {
+			for (id in sprite) {
+				var spr = sprite[id];
+				if (spr.stp != null) {
+					// TODO : provide object context
+					startDialog(dialog[spr.stp].src, spr.stp, function() {}, null);
+				}
+			}
+		}
 	}
 
 	prevTime = curTime;
@@ -1336,6 +1348,9 @@ function serializeWorld(skipFonts) {
 		if (sprite[id].dlg != null) {
 			worldStr += "DLG " + sprite[id].dlg + "\n";
 		}
+		if (sprite[id].stp != null) {
+			worldStr += "STP " + sprite[id].stp + "\n";
+		}
 		if (sprite[id].room != null) {
 			/* SPRITE POSITION */
 			worldStr += "POS " + sprite[id].room + " " + sprite[id].x + "," + sprite[id].y + "\n";
@@ -1721,6 +1736,7 @@ function parseSprite(lines, i) {
 	//other properties
 	var colorIndex = 2; //default palette color index is 2
 	var dialogId = null;
+	var stepScriptId = null;
 	var startingInventory = {};
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		if (getType(lines[i]) === "COL") {
@@ -1738,8 +1754,11 @@ function parseSprite(lines, i) {
 				y : parseInt(coordArgs[1])
 			};
 		}
-		else if(getType(lines[i]) === "DLG") {
+		else if (getType(lines[i]) === "DLG") {
 			dialogId = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "STP") {
+			stepScriptId = getId(lines[i]);
 		}
 		else if (getType(lines[i]) === "NAME") {
 			/* NAME */
@@ -1761,6 +1780,7 @@ function parseSprite(lines, i) {
 		drw : drwId, //drawing id
 		col : colorIndex,
 		dlg : dialogId,
+		stp : stepScriptId,
 		room : null, //default location is "offstage"
 		x : -1,
 		y : -1,
@@ -2217,6 +2237,7 @@ function startSpriteDialog(spriteId) {
 	}
 }
 
+// TODO : refactor so we don't have to pass in the script source and id separately
 function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 	// console.log("START DIALOG ");
 	if (dialogStr.length <= 0) {
