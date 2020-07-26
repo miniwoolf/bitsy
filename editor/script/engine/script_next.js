@@ -25,8 +25,9 @@ this.Compile = function(scriptId, script) {
 	compiledScripts[scriptId] = expressions[0];
 }
 
-this.Run = function(scriptId) {
-	eval(compiledScripts[scriptId], new Environment(dialogBuffer));
+// TODO : pass in dialog buffer instead of using a global reference?
+this.Run = function(scriptId, objectContext) {
+	eval(compiledScripts[scriptId], new Environment(dialogBuffer, objectContext));
 }
 
 function tokenize(script) {
@@ -216,7 +217,7 @@ var special = {
 // not sure yet how I want to design the environment
 // TODO : should I allow library methods to be overwritten by the user?
 // TODO : global vars vs local vars? need back compat with globals..
-function Environment(dialogBuffer) {
+function Environment(dialogBuffer, objectContext) {
 	var library = {
 		"say" : function(str) { // todo : is this the right implementation of say?
 			dialogBuffer.AddText(str);
@@ -252,7 +253,7 @@ function Environment(dialogBuffer) {
 		"/clr" : function() {
 			dialogBuffer.RemoveTextEffect("clr");
 		},
-		/* TODO
+		/* TODO: missing old functions
 			- end
 			- exit
 			- item
@@ -261,6 +262,32 @@ function Environment(dialogBuffer) {
 			- set (=)
 			- math operators
 		*/
+
+		// NEW FUNCTIONS (WIP)
+		"step" : function(spaces, direction) {
+			// TODO : check collisions!!
+			if (objectContext != null && objectContext != undefined) {
+				if (direction === "left") {
+					objectContext.x -= spaces;
+				}
+				else if (direction === "right") {
+					objectContext.x += spaces;
+				}
+				else if (direction === "up") {
+					objectContext.y -= spaces;
+				}
+				else if (direction === "down") {
+					objectContext.y += spaces;
+				}
+			}
+			// TODO : return true/false if successful
+		},
+		"destroy" : function() {
+			// TODO : actually remove from room (after object merge)
+			if (objectContext != null && objectContext != undefined) {
+				objectContext.room = null;
+			}
+		},
 	};
 
 	this.get = function(symbol) {

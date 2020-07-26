@@ -471,7 +471,7 @@ function update() {
 				var spr = sprite[id];
 				if (spr.stp != null) {
 					// TODO : provide object context
-					startDialog(dialog[spr.stp].src, spr.stp, function() {}, null);
+					startDialog(dialog[spr.stp].src, spr.stp, function() {}, spr);
 				}
 			}
 		}
@@ -2282,7 +2282,7 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 		scriptNext.Compile(scriptId, dialogStr);
 	}
 
-	scriptNext.Run(scriptId);
+	scriptNext.Run(scriptId, objectContext);
 }
 
 var isDialogPreview = false;
