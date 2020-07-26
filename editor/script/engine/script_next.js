@@ -27,7 +27,8 @@ this.Compile = function(scriptId, script) {
 
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(scriptId, objectContext) {
-	eval(compiledScripts[scriptId], new Environment(dialogBuffer, objectContext));
+	var lib = createLibrary(dialogBuffer, objectContext);
+	eval(compiledScripts[scriptId], new Environment(lib));
 }
 
 function tokenize(script) {
@@ -117,7 +118,7 @@ function eval(expression, environment) {
 		return expression.value;
 	}
 	else if (expression.type === "symbol") {
-		return environment.get(expression.value);
+		return environment.Get(expression.value);
 	}
 	else if (expression.type === "list") {
 		if (expression.list[0].value in special) {
@@ -134,6 +135,31 @@ function eval(expression, environment) {
 	}
 }
 
+// not sure yet how I want to design the environment
+// TODO : should I allow library methods to be overwritten by the user?
+// TODO : global vars vs local vars? need back compat with globals..
+function Environment(localEnvironment, parent) {
+	this.Has = function(symbol) {
+		return symbol in localEnvironment;
+	};
+
+	this.Get = function(symbol) {
+		if (symbol in localEnvironment) {
+			return localEnvironment[symbol];
+		}
+		else if (parent != undefined && parent != null && parent.Has(symbol)) {
+			return parent.Get(symbol);
+		}
+		else {
+			return null;
+		}
+	};
+
+	this.Set = function(symbol, value) {
+		localEnvironment[symbol] = value;
+	};
+}
+
 var special = {
 	"->": function(expression, environment) {
 		var result = null;
@@ -143,13 +169,13 @@ var special = {
 				console.log("add-text " + expression.list[i].value);
 				// TODO : is using "say" the way to do this?
 				// or should I access the buffer directly?
-				environment.get("say")(expression.list[i].value);
+				environment.Get("say")(expression.list[i].value);
 				result = null;
 			}
 			else if (expression.list[i].type != "list") {
 				console.log("add-word " + expression.list[i].value);
 				// hacky... need to expose AddWord
-				environment.get("say")(" " + expression.list[i].value);
+				environment.Get("say")(" " + expression.list[i].value);
 				result = null;
 			}
 			else {
@@ -212,45 +238,73 @@ var special = {
 
 		return result;
 	},
+	"fn": function(expression, environment) {
+		// initialize parameter names
+		var parameterNames = [];
+		if (expression.list.length >= 2 && expression.list[1].type === "list") {
+			var parameterList = expression.list[1];
+			for (var i = 0; i < parameterList.list.length; i++) {
+				if (parameterList.list[i].type === "symbol") {
+					parameterNames.push(parameterList.list[i].value);
+				}
+			}
+		}
+
+		return function() {
+			// create local function environment from input parameters
+			var parameters = {};
+			for (var i in arguments) {
+				if (i < parameterNames.length) {
+					parameters[parameterNames[i]] = arguments[i];
+				}
+			}
+			var fnEnvironment = new Environment(parameters, environment);
+
+			// every expression after the parameter list is a statement in the function
+			var result = null;
+			for (var i = 2; i < expression.list.length; i++) {
+				result = eval(expression.list[i], fnEnvironment);
+			}
+
+			return result;
+		};
+	},
 }
 
-// not sure yet how I want to design the environment
-// TODO : should I allow library methods to be overwritten by the user?
-// TODO : global vars vs local vars? need back compat with globals..
-function Environment(dialogBuffer, objectContext) {
+function createLibrary(dialogBuffer, objectContext) {
 	var library = {
-		"say" : function(str) { // todo : is this the right implementation of say?
+		"say": function(str) { // todo : is this the right implementation of say?
 			dialogBuffer.AddText(str);
 		},
-		"br" : function() {
+		"br": function() {
 			dialogBuffer.AddLinebreak();
 		},
-		"pg" : function() {
+		"pg": function() {
 			// TODO : fix this method...
 			dialogBuffer.AddPagebreak();
 		},
-		"wvy" : function() {
+		"wvy": function() {
 			dialogBuffer.AddTextEffect("wvy");
 		},
-		"/wvy" : function() {
+		"/wvy": function() {
 			dialogBuffer.RemoveTextEffect("wvy");
 		},
-		"shk" : function() {
+		"shk": function() {
 			dialogBuffer.AddTextEffect("shk");
 		},
-		"/shk" : function() {
+		"/shk": function() {
 			dialogBuffer.RemoveTextEffect("shk");
 		},
-		"rbw" : function() {
+		"rbw": function() {
 			dialogBuffer.AddTextEffect("rbw");
 		},
-		"/rbw" : function() {
+		"/rbw": function() {
 			dialogBuffer.RemoveTextEffect("rbw");
 		},
-		"clr" : function(index) {
+		"clr": function(index) {
 			dialogBuffer.AddTextEffect("clr", [index]);
 		},
-		"/clr" : function() {
+		"/clr": function() {
 			dialogBuffer.RemoveTextEffect("clr");
 		},
 		/* TODO: missing old functions
@@ -264,7 +318,7 @@ function Environment(dialogBuffer, objectContext) {
 		*/
 
 		// NEW FUNCTIONS (WIP)
-		"step" : function(spaces, direction) {
+		"step": function(spaces, direction) {
 			// TODO : check collisions!!
 			if (objectContext != null && objectContext != undefined) {
 				if (direction === "left") {
@@ -282,7 +336,7 @@ function Environment(dialogBuffer, objectContext) {
 			}
 			// TODO : return true/false if successful
 		},
-		"destroy" : function() {
+		"destroy": function() {
 			// TODO : actually remove from room (after object merge)
 			if (objectContext != null && objectContext != undefined) {
 				objectContext.room = null;
@@ -290,13 +344,7 @@ function Environment(dialogBuffer, objectContext) {
 		},
 	};
 
-	this.get = function(symbol) {
-		// todo : what about other symbols that aren't in the library?
-		if (symbol in library) {
-			return library[symbol];
-		}
-		// else : then what?
-	}
+	return library;
 }
 
 } // ScriptNext
