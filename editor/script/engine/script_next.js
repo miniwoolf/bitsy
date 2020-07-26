@@ -9,6 +9,8 @@ X try hooking up to dialogue buffer
 - what should the event ids be?
 	- three letter? STP, KEY, etc.
 	- or four letters? STEP, KEYD, etc.
+- should I re-implement infix operations for math?
+- what do I do about global vs local variables?
 */
 
 function ScriptNext() {
@@ -273,8 +275,11 @@ var special = {
 
 function createLibrary(dialogBuffer, objectContext) {
 	var library = {
-		"say": function(str) { // todo : is this the right implementation of say?
-			dialogBuffer.AddText(str);
+		/* dialogue functions */
+		"say": function(str) {
+			// todo : is this the right implementation of say?
+			// todo : hacky to force into a string with concatenation?
+			dialogBuffer.AddText("" + str);
 		},
 		"br": function() {
 			dialogBuffer.AddLinebreak();
@@ -307,6 +312,7 @@ function createLibrary(dialogBuffer, objectContext) {
 		"/clr": function() {
 			dialogBuffer.RemoveTextEffect("clr");
 		},
+
 		/* TODO: missing old functions
 			- end
 			- exit
@@ -316,6 +322,36 @@ function createLibrary(dialogBuffer, objectContext) {
 			- set (=)
 			- math operators
 		*/
+
+		/* math functions */
+		"==": function(a, b) {
+			return a == b;
+		},
+		">": function(a, b) {
+			return a > b;
+		},
+		"<": function(a, b) {
+			return a < b;
+		},
+		">=": function(a, b) {
+			return a >= b;
+		},
+		"<=": function(a, b) {
+			return a <= b;
+		},
+		// TODO : should these allow multiple arguments?
+		"*": function(a, b) {
+			return a * b;
+		},
+		"/": function(a, b) {
+			return a / b;
+		},
+		"+": function(a, b) {
+			return a + b;
+		},
+		"-": function(a, b) {
+			return a - b;
+		},
 
 		// NEW FUNCTIONS (WIP)
 		"step": function(spaces, direction) {
