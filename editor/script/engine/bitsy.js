@@ -470,7 +470,6 @@ function update() {
 			for (id in sprite) {
 				var spr = sprite[id];
 				if (spr.stp != null) {
-					// TODO : provide object context
 					startDialog(dialog[spr.stp].src, spr.stp, function() {}, spr);
 				}
 			}
@@ -539,6 +538,38 @@ function updateInput() {
 		if (curPlayerDirection != Direction.None && curPlayerDirection != prevPlayerDirection) {
 			movePlayer( curPlayerDirection );
 			playerHoldToMoveTimer = 500;
+
+			// SCRIPT NEXT : prototype of keydown scripts
+			var keyId = null;
+			switch(curPlayerDirection) {
+				case Direction.Left:
+					keyId = "left";
+					break;
+				case Direction.Right:
+					keyId = "right";
+					break;
+				case Direction.Up:
+					keyId = "up";
+					break;
+				case Direction.Down:
+					keyId = "down";
+					break;
+			}
+			// TODO : add "action" button input
+
+			// handle callbacks : TODO -- more general method for this?
+			var keydownHandler = function(result) {
+				if (result instanceof Function) {
+					result(keyId);
+				}
+			}
+
+			for (id in sprite) {
+				var spr = sprite[id];
+				if (spr.key != null && keyId != null) {
+					startDialog(dialog[spr.key].src, spr.key, keydownHandler, spr);
+				}
+			}
 		}
 	}
 }
@@ -1351,6 +1382,9 @@ function serializeWorld(skipFonts) {
 		if (sprite[id].stp != null) {
 			worldStr += "STP " + sprite[id].stp + "\n";
 		}
+		if (sprite[id].key != null) {
+			worldStr += "KEY " + sprite[id].key + "\n";
+		}
 		if (sprite[id].room != null) {
 			/* SPRITE POSITION */
 			worldStr += "POS " + sprite[id].room + " " + sprite[id].x + "," + sprite[id].y + "\n";
@@ -1737,6 +1771,7 @@ function parseSprite(lines, i) {
 	var colorIndex = 2; //default palette color index is 2
 	var dialogId = null;
 	var stepScriptId = null;
+	var keydownScriptId = null;
 	var startingInventory = {};
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		if (getType(lines[i]) === "COL") {
@@ -1760,6 +1795,9 @@ function parseSprite(lines, i) {
 		else if (getType(lines[i]) === "STP") {
 			stepScriptId = getId(lines[i]);
 		}
+		else if (getType(lines[i]) === "KEY") {
+			keydownScriptId = getId(lines[i]);
+		}
 		else if (getType(lines[i]) === "NAME") {
 			/* NAME */
 			name = lines[i].split(/\s(.+)/)[1];
@@ -1781,6 +1819,7 @@ function parseSprite(lines, i) {
 		col : colorIndex,
 		dlg : dialogId,
 		stp : stepScriptId,
+		key : keydownScriptId,
 		room : null, //default location is "offstage"
 		x : -1,
 		y : -1,
@@ -2282,7 +2321,8 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 		scriptNext.Compile(scriptId, dialogStr);
 	}
 
-	scriptNext.Run(scriptId, objectContext);
+	var result = scriptNext.Run(scriptId, objectContext);
+	dialogCallback(result); // TODO : need to handle delay from dialog completing
 }
 
 var isDialogPreview = false;

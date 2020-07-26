@@ -11,6 +11,9 @@ X try hooking up to dialogue buffer
 	- or four letters? STEP, KEYD, etc.
 - should I re-implement infix operations for math?
 - what do I do about global vs local variables?
+- need to handle delay in script execution from dialog running
+	- queue of update or keydown scripts
+	- need result callbacks
 */
 
 function ScriptNext() {
@@ -30,7 +33,8 @@ this.Compile = function(scriptId, script) {
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(scriptId, objectContext) {
 	var lib = createLibrary(dialogBuffer, objectContext);
-	eval(compiledScripts[scriptId], new Environment(lib));
+	var result = eval(compiledScripts[scriptId], new Environment(lib));
+	return result;
 }
 
 function tokenize(script) {
@@ -325,7 +329,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 		/* math functions */
 		"==": function(a, b) {
-			return a == b;
+			return a === b;
 		},
 		">": function(a, b) {
 			return a > b;
