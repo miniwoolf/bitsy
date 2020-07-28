@@ -22,7 +22,7 @@ function getTitle() {
 	return dialog[titleDialogId].src;
 }
 function setTitle(titleSrc) {
-	dialog[titleDialogId] = { src:titleSrc, name:null };
+	dialog[titleDialogId] = { id:titleDialogId, src:titleSrc, name:null };
 }
 
 var defaultFontName = "ascii_small";
@@ -470,7 +470,7 @@ function update() {
 			for (id in sprite) {
 				var spr = sprite[id];
 				if (spr.stp != null) {
-					startDialog(dialog[spr.stp].src, spr.stp, function() {}, spr);
+					startDialog(dialog[spr.stp], function() {}, spr);
 				}
 			}
 		}
@@ -567,7 +567,7 @@ function updateInput() {
 			for (id in sprite) {
 				var spr = sprite[id];
 				if (spr.key != null && keyId != null) {
-					startDialog(dialog[spr.key].src, spr.key, keydownHandler, spr);
+					startDialog(dialog[spr.key], keydownHandler, spr);
 				}
 			}
 		}
@@ -935,8 +935,7 @@ function movePlayerThroughExit(ext) {
 		// so I don't have to get the ID and the source str
 		// every time!
 		startDialog(
-			dialog[ext.dlg].src,
-			ext.dlg,
+			dialog[ext.dlg],
 			function(result) {
 				var isLocked = ext.property && ext.property.locked === true;
 				if (!isLocked) {
@@ -1985,6 +1984,7 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 	i++;
 
 	dialog[id] = {
+		id: id,
 		src: script,
 		name: null,
 	};
@@ -2235,7 +2235,7 @@ function startNarrating(dialogStr,end) {
 	isNarrating = true;
 	isEnding = end;
 
-	startDialog(dialogStr);
+	startDialog(dialog[titleDialogId]);
 }
 
 function startEndingDialog(ending) {
@@ -2243,8 +2243,7 @@ function startEndingDialog(ending) {
 	isEnding = true;
 
 	startDialog(
-		dialog[ending.id].src,
-		ending.id,
+		dialog[ending.id],
 		function() {
 			var isLocked = ending.property && ending.property.locked === true;
 			if (isLocked) {
@@ -2258,8 +2257,7 @@ function startItemDialog(itemId, dialogCallback) {
 	var dialogId = item[itemId].dlg;
 	// console.log("START ITEM DIALOG " + dialogId);
 	if (dialog[dialogId]) {
-		var dialogStr = dialog[dialogId].src;
-		startDialog(dialogStr, dialogId, dialogCallback);
+		startDialog(dialog[dialogId], dialogCallback);
 	}
 	else {
 		dialogCallback();
@@ -2271,13 +2269,15 @@ function startSpriteDialog(spriteId) {
 	var dialogId = spr.dlg;
 	// console.log("START SPRITE DIALOG " + dialogId);
 	if (dialog[dialogId]){
-		var dialogStr = dialog[dialogId].src;
-		startDialog(dialogStr,dialogId);
+		startDialog(dialog[dialogId], function() {}, spr);
 	}
 }
 
 // TODO : refactor so we don't have to pass in the script source and id separately
-function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
+function startDialog(dialog, dialogCallback, objectContext) {
+	var dialogStr = dialog.src;
+	var scriptId = dialog.id;
+
 	// console.log("START DIALOG ");
 	if (dialogStr.length <= 0) {
 		// console.log("ON EXIT DIALOG -- startDialog 1");
@@ -2322,7 +2322,9 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 	}
 
 	var result = scriptNext.Run(scriptId, objectContext);
-	dialogCallback(result); // TODO : need to handle delay from dialog completing
+	if (dialogCallback != undefined && dialogCallback != null) {
+		dialogCallback(result); // TODO : need to handle delay from dialog completing
+	}
 }
 
 var isDialogPreview = false;
