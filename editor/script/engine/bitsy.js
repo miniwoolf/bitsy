@@ -560,7 +560,7 @@ function updateInput() {
 			// handle callbacks : TODO -- more general method for this?
 			var keydownHandler = function(result) {
 				if (result instanceof Function) {
-					result(keyId);
+					result([keyId], null /*env*/, function() {});
 				}
 			}
 
@@ -2322,6 +2322,7 @@ function startDialog(dialog, dialogCallback, objectContext) {
 	}
 
 	var result = scriptNext.Run(scriptId, objectContext);
+
 	if (dialogCallback != undefined && dialogCallback != null) {
 		dialogCallback(result); // TODO : need to handle delay from dialog completing
 	}

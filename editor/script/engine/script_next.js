@@ -33,7 +33,8 @@ this.Compile = function(scriptId, script) {
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(scriptId, objectContext) {
 	var lib = createLibrary(dialogBuffer, objectContext);
-	var result = eval(compiledScripts[scriptId], new Environment(lib));
+	var result = null; // hack for now
+	eval(compiledScripts[scriptId], new Environment(lib), function(value) { result = value; });
 	return result;
 }
 
@@ -119,24 +120,79 @@ function parse(tokens, list) {
 	return list;
 }
 
-function eval(expression, environment) {
+// TODO : consider using this generalized method?
+// function evalList(expression, environment, startIndex, onIncrement, onNext, onLast) {
+// 	var i = startIndex;
+// 	var evalNext;
+//
+// 	evalNext = function() {
+// 		if (i >= expression.list.length) {
+// 			onLast();
+// 		}
+// 		else {
+// 			eval(expression.list[i], environment, function(value) {
+// 				onNext(value);
+// 				i = onIncrement(i);
+// 				evalNext();
+// 			});
+// 		}
+// 	}
+//
+// 	evalNext();
+// }
+//
+// TODO : example of how this would be used:
+// var values = [];
+// evalList(expression, environment,
+// 	0,
+// 	function(i) { return i + 1; },
+// 	function(value) { values.push(value); },
+// 	function() {
+// 		if (values[0] instanceof Function) {
+// 			values[0](values.slice(1), environment, onReturn);
+// 		}
+// 		// else: then what?
+// 	});
+//
+// TODO : it also would need a special case for the "->" operator
+
+function evalList(expression, environment, onReturn) {
+	var i = 0;
+	var values = [];
+	var evalNext;
+
+	evalNext = function() {
+		if (i >= expression.list.length) {
+			if (values[0] instanceof Function) {
+				values[0](values.slice(1), environment, onReturn);
+			}
+			// else: then what?
+		}
+		else {
+			eval(expression.list[i], environment, function(value) {
+				values.push(value);
+				i++;
+				evalNext();
+			});
+		}
+	}
+
+	evalNext();
+}
+
+function eval(expression, environment, onReturn) {
 	if (expression.type === "number" || expression.type === "string" || expression.type === "boolean") {
-		return expression.value;
+		onReturn(expression.value);
 	}
 	else if (expression.type === "symbol") {
-		return environment.Get(expression.value);
+		onReturn(environment.Get(expression.value));
 	}
 	else if (expression.type === "list") {
 		if (expression.list[0].value in special) {
-			return special[expression.list[0].value](expression, environment);
+			special[expression.list[0].value](expression, environment, onReturn);
 		}
 		else {
-			var listValues = expression.list.map(function (x) { return eval(x, environment); });
-			if (listValues[0] instanceof Function) {
-				var result = listValues[0].apply(null, listValues.slice(1));
-				return result;
-			}
-			// else: then what??
+			evalList(expression, environment, onReturn);
 		}
 	}
 }
@@ -167,31 +223,36 @@ function Environment(localEnvironment, parent) {
 }
 
 var special = {
-	"->": function(expression, environment) {
+	"->": function(expression, environment, onReturn) {
 		var result = null;
+		var i = 1;
+		var evalNext;
 
-		for (var i = 1; i < expression.list.length; i++) {
-			if (expression.list[i].type === "string") {
-				console.log("add-text " + expression.list[i].value);
-				// TODO : is using "say" the way to do this?
-				// or should I access the buffer directly?
-				environment.Get("say")(expression.list[i].value);
-				result = null;
-			}
-			else if (expression.list[i].type != "list") {
-				console.log("add-word " + expression.list[i].value);
-				// hacky... need to expose AddWord
-				environment.Get("say")(" " + expression.list[i].value);
-				result = null;
+		evalNext = function() {
+			if (i >= expression.list.length) {
+				onReturn(result);
 			}
 			else {
-				result = eval(expression.list[i], environment);
+				if (expression.list[i].type === "string") {
+					console.log("add-text " + expression.list[i].value);
+					// TODO : is using "say" the way to do this?
+					// or should I access the buffer directly?
+					environment.Get("say")([expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+				}
+				else if (expression.list[i].type != "list") {
+					console.log("add-word " + expression.list[i].value);
+					// hacky... need to expose AddWord
+					environment.Get("say")([" " + expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+				}
+				else {
+					eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
+				}
 			}
 		}
 
-		return result;
+		evalNext();
 	},
-	"seq": function(expression, environment) {
+	"seq": function(expression, environment, onReturn) {
 		if ("index" in expression) {
 			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
 		}
@@ -199,9 +260,9 @@ var special = {
 			expression.index = 1;
 		}
 
-		return eval(expression.list[expression.index], environment);
+		eval(expression.list[expression.index], environment, onReturn);
 	},
-	"cyc": function(expression, environment) {
+	"cyc": function(expression, environment, onReturn) {
 		if ("index" in expression) {
 			expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
 		}
@@ -209,9 +270,9 @@ var special = {
 			expression.index = 1;
 		}
 
-		return eval(expression.list[expression.index], environment);
+		eval(expression.list[expression.index], environment, onReturn);
 	},
-	"shf": function(expression, environment) {
+	"shf": function(expression, environment, onReturn) {
 		if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
 			expression.index++;
 		}
@@ -226,25 +287,33 @@ var special = {
 			}
 		}
 
-		return eval(expression.list[expression.shuffle[expression.index]], environment);
+		eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
 	},
-	"if": function(expression, environment) {
+	"if": function(expression, environment, onReturn) {
 		var result = null;
+		var i = 1;
+		var evalNext;
 
-		for (var i = 1; i < expression.list.length; i += 2) {
+		evalNext = function() {
 			if (i + 1 >= expression.list.length) {
-				result = eval(expression.list[i], environment);
-				break;
+				eval(expression.list[i], environment, onReturn);
 			}
-			else if (eval(expression.list[i])) {
-				result = eval(expression.list[i + 1], environment);
-				break;
+			else {
+				eval(expression.list[i], environment, function(value) {
+					if (value === true) {
+						eval(expression.list[i + 1], environment, onReturn);
+					}
+					else {
+						i += 2;
+						evalNext();
+					}
+				});
 			}
 		}
 
-		return result;
+		evalNext();
 	},
-	"fn": function(expression, environment) {
+	"fn": function(expression, environment, onReturn) {
 		// initialize parameter names
 		var parameterNames = [];
 		if (expression.list.length >= 2 && expression.list[1].type === "list") {
@@ -256,65 +325,91 @@ var special = {
 			}
 		}
 
-		return function() {
+		// TODO : do we really need to pass the environment into functions?
+		var result = function(parameters, hackDoWeReallyNeededEnvironment, onReturn) {
 			// create local function environment from input parameters
-			var parameters = {};
-			for (var i in arguments) {
+			var parameterMap = {};
+			for (var i = 0; i < parameters.length; i++) {
 				if (i < parameterNames.length) {
-					parameters[parameterNames[i]] = arguments[i];
+					parameterMap[parameterNames[i]] = parameters[i];
 				}
 			}
-			var fnEnvironment = new Environment(parameters, environment);
+			var fnEnvironment = new Environment(parameterMap, environment);
 
 			// every expression after the parameter list is a statement in the function
 			var result = null;
-			for (var i = 2; i < expression.list.length; i++) {
-				result = eval(expression.list[i], fnEnvironment);
+			var i = 2;
+			var evalNext;
+
+			evalNext = function() {
+				if (i >= expression.list.length) {
+					onReturn(result);
+				}
+				else {
+					eval(expression.list[i], fnEnvironment, function(value) {
+						result = value;
+						i++;
+						evalNext();
+					});
+				}
 			}
 
-			return result;
+			evalNext();
 		};
+
+		onReturn(result);
 	},
 }
 
 function createLibrary(dialogBuffer, objectContext) {
 	var library = {
 		/* dialogue functions */
-		"say": function(str) {
+		"say": function(parameters, environment, onReturn) {
 			// todo : is this the right implementation of say?
 			// todo : hacky to force into a string with concatenation?
-			dialogBuffer.AddText("" + str);
+			dialogBuffer.AddText("" + parameters[0]);
+			dialogBuffer.AddScriptReturn(onReturn);
 		},
-		"br": function() {
+		"br": function(parameters, environment, onReturn) {
 			dialogBuffer.AddLinebreak();
+			onReturn(null); // todo : add script return??
 		},
-		"pg": function() {
+		"pg": function(parameters, environment, onReturn) {
 			// TODO : fix this method...
 			dialogBuffer.AddPagebreak();
+			onReturn(null); // todo : add script return??
 		},
-		"wvy": function() {
+		"wvy": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("wvy");
+			onReturn(null);
 		},
-		"/wvy": function() {
+		"/wvy": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("wvy");
+			onReturn(null);
 		},
-		"shk": function() {
+		"shk": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("shk");
+			onReturn(null);
 		},
-		"/shk": function() {
+		"/shk": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("shk");
+			onReturn(null);
 		},
-		"rbw": function() {
+		"rbw": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("rbw");
+			onReturn(null);
 		},
-		"/rbw": function() {
+		"/rbw": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("rbw");
+			onReturn(null);
 		},
-		"clr": function(index) {
-			dialogBuffer.AddTextEffect("clr", [index]);
+		"clr": function(parameters, environment, onReturn) {
+			dialogBuffer.AddTextEffect("clr", parameters);
+			onReturn(null);
 		},
-		"/clr": function() {
+		"/clr": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("clr");
+			onReturn(null);
 		},
 
 		/* TODO: missing old functions
@@ -328,59 +423,63 @@ function createLibrary(dialogBuffer, objectContext) {
 		*/
 
 		/* math functions */
-		"==": function(a, b) {
-			return a === b;
+		"==": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] === parameters[1]);
 		},
-		">": function(a, b) {
-			return a > b;
+		">": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] > parameters[1]);
 		},
-		"<": function(a, b) {
-			return a < b;
+		"<": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] < parameters[1]);
 		},
-		">=": function(a, b) {
-			return a >= b;
+		">=": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] >= parameters[1]);
 		},
-		"<=": function(a, b) {
-			return a <= b;
+		"<=": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] <= parameters[1]);
 		},
 		// TODO : should these allow multiple arguments?
-		"*": function(a, b) {
-			return a * b;
+		"*": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] * parameters[1]);
 		},
-		"/": function(a, b) {
-			return a / b;
+		"/": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] / parameters[1]);
 		},
-		"+": function(a, b) {
-			return a + b;
+		"+": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] + parameters[1]);
 		},
-		"-": function(a, b) {
-			return a - b;
+		"-": function(parameters, environment, onReturn) {
+			onReturn(parameters[0] - parameters[1]);
 		},
 
 		// NEW FUNCTIONS (WIP)
-		"step": function(spaces, direction) {
+		"step": function(parameters, environment, onReturn) {
 			// TODO : check collisions!!
 			if (objectContext != null && objectContext != undefined) {
-				if (direction === "left") {
-					objectContext.x -= spaces;
+				if (parameters[1] === "left") {
+					objectContext.x -= parameters[0];
 				}
-				else if (direction === "right") {
-					objectContext.x += spaces;
+				else if (parameters[1] === "right") {
+					objectContext.x += parameters[0];
 				}
-				else if (direction === "up") {
-					objectContext.y -= spaces;
+				else if (parameters[1] === "up") {
+					objectContext.y -= parameters[0];
 				}
-				else if (direction === "down") {
-					objectContext.y += spaces;
+				else if (parameters[1] === "down") {
+					objectContext.y += parameters[0];
 				}
 			}
+
+			onReturn(null);
 			// TODO : return true/false if successful
 		},
-		"destroy": function() {
+		"destroy": function(parameters, environment, onReturn) {
 			// TODO : actually remove from room (after object merge)
 			if (objectContext != null && objectContext != undefined) {
 				objectContext.room = null;
 			}
+
+			onReturn(null);
 		},
 	};
 
