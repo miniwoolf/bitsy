@@ -372,12 +372,12 @@ function createLibrary(dialogBuffer, objectContext) {
 		},
 		"br": function(parameters, environment, onReturn) {
 			dialogBuffer.AddLinebreak();
-			onReturn(null); // todo : add script return??
+			dialogBuffer.AddScriptReturn(onReturn);
 		},
 		"pg": function(parameters, environment, onReturn) {
 			// TODO : fix this method...
 			dialogBuffer.AddPagebreak();
-			onReturn(null); // todo : add script return??
+			dialogBuffer.AddScriptReturn(onReturn);
 		},
 		"wvy": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("wvy");
