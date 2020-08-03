@@ -182,6 +182,7 @@ function load_game(game_data, startWithTitle) {
 
 	dialogBuffer.Reset();
 	scriptInterpreter.ResetEnvironment(); // ensures variables are reset -- is this the best way?
+	scriptNext.Reset();
 
 	parseWorld(game_data);
 

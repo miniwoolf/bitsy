@@ -1,6 +1,9 @@
 /*
 TODO
-X try hooking up to dialogue buffer
+- script queue
+- port in object merge
+
+NOTES
 - should the compile then run model remain the same?
 - name of language / module?
 - missing functions
@@ -36,6 +39,11 @@ this.Run = function(scriptId, objectContext) {
 	var result = null; // hack for now
 	eval(compiledScripts[scriptId], new Environment(lib), function(value) { result = value; });
 	return result;
+}
+
+// do I want a monolithic reset function like this?
+this.Reset = function() {
+	compiledScripts = {};
 }
 
 function tokenize(script) {
