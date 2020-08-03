@@ -423,59 +423,14 @@ function update() {
 
 	if (curRoom == null) {
 		// in the special case where there is no valid room, end the game
-		startNarrating( "", true /*isEnding*/ );
+		startNarrating("", true /*isEnding*/);
 	}
 
-	if (!transition.IsTransitionActive()) {
-		updateInput();
-	}
+	updateRender();
 
-	if (transition.IsTransitionActive()) {
-		// transition animation takes over everything!
-		transition.UpdateTransition(deltaTime);
-	}
-	else {
-		if (!isNarrating && !isEnding) {
-			updateAnimation();
-			drawRoom( room[curRoom] ); // draw world if game has begun
-		}
-		else {
-			//make sure to still clear screen
-			ctx.fillStyle = "rgb(" + getPal(curPal())[0][0] + "," + getPal(curPal())[0][1] + "," + getPal(curPal())[0][2] + ")";
-			ctx.fillRect(0,0,canvas.width,canvas.height);
-		}
+	updateInput();
 
-		// if (isDialogMode) { // dialog mode
-		if(dialogBuffer.IsActive()) {
-			dialogRenderer.Draw( dialogBuffer, deltaTime );
-			dialogBuffer.Update( deltaTime );
-		}
-
-		// keep moving avatar if player holds down button
-		if( !dialogBuffer.IsActive() && !isEnding )
-		{
-			if( curPlayerDirection != Direction.None ) {
-				playerHoldToMoveTimer -= deltaTime;
-
-				if( playerHoldToMoveTimer <= 0 )
-				{
-					movePlayer( curPlayerDirection );
-					playerHoldToMoveTimer = 150;
-				}
-			}
-		}
-
-		// trigger animation step scripts
-		// TODO : will have to be re-written after merging objects
-		if (!dialogBuffer.IsActive() && animationCounter === 0) {
-			for (id in sprite) {
-				var spr = sprite[id];
-				if (spr.stp != null) {
-					startDialog(dialog[spr.stp], function() {}, spr);
-				}
-			}
-		}
-	}
+	updateScriptQueue();
 
 	prevTime = curTime;
 
@@ -494,13 +449,38 @@ function update() {
 	input.resetTapReleased();
 }
 
+function updateRender() {
+	// clear the screen!
+	ctx.fillStyle = "rgb(" + getPal(curPal())[0][0] + "," + getPal(curPal())[0][1] + "," + getPal(curPal())[0][2] + ")";
+	ctx.fillRect(0,0,canvas.width,canvas.height);
+
+	if (transition.IsTransitionActive()) {
+		// transitions take over everything!
+		transition.UpdateTransition(deltaTime);
+	}
+	else {
+		if (!isNarrating && !isEnding) {
+			updateAnimation();
+			drawRoom(room[curRoom]);
+		}
+
+		if (dialogBuffer.IsActive()) {
+			dialogRenderer.Draw(dialogBuffer, deltaTime);
+			dialogBuffer.Update(deltaTime);
+		}
+	}
+}
+
 function updateInput() {
-	if( dialogBuffer.IsActive() ) {
+	if (transition.IsTransitionActive()) {
+		// do nothing
+	}
+	else if (dialogBuffer.IsActive()) {
 		if (input.anyKeyPressed() || input.isTapReleased()) {
 			/* CONTINUE DIALOG */
 			if (dialogBuffer.CanContinue()) {
 				var hasMoreDialog = dialogBuffer.Continue();
-				if(!hasMoreDialog) {
+				if (!hasMoreDialog) {
 					// ignore currently held keys UNTIL they are released (stops player from insta-moving)
 					input.ignoreHeldKeys();
 				}
@@ -510,7 +490,7 @@ function updateInput() {
 			}
 		}
 	}
-	else if ( isEnding ) {
+	else if (isEnding) {
 		if (input.anyKeyPressed() || input.isTapReleased()) {
 			/* RESTART GAME */
 			reset_cur_game();
@@ -520,55 +500,86 @@ function updateInput() {
 		/* WALK */
 		var prevPlayerDirection = curPlayerDirection;
 
-		if ( input.isKeyDown( key.left ) || input.isKeyDown( key.a ) || input.swipeLeft() ) {
+		if (input.isKeyDown(key.left) || input.isKeyDown(key.a) || input.swipeLeft()) {
 			curPlayerDirection = Direction.Left;
 		}
-		else if ( input.isKeyDown( key.right ) || input.isKeyDown( key.d ) || input.swipeRight() ) {
+		else if (input.isKeyDown(key.right) || input.isKeyDown(key.d) || input.swipeRight()) {
 			curPlayerDirection = Direction.Right;
 		}
-		else if ( input.isKeyDown( key.up ) || input.isKeyDown( key.w ) || input.swipeUp() ) {
+		else if (input.isKeyDown(key.up) || input.isKeyDown(key.w) || input.swipeUp()) {
 			curPlayerDirection = Direction.Up;
 		}
-		else if ( input.isKeyDown( key.down ) || input.isKeyDown( key.s ) || input.swipeDown() ) {
+		else if (input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
 			curPlayerDirection = Direction.Down;
 		}
 		else {
 			curPlayerDirection = Direction.None;
 		}
 
-		if (curPlayerDirection != Direction.None && curPlayerDirection != prevPlayerDirection) {
-			movePlayer( curPlayerDirection );
-			playerHoldToMoveTimer = 500;
-
-			// SCRIPT NEXT : prototype of keydown scripts
-			var keyId = null;
-			switch(curPlayerDirection) {
-				case Direction.Left:
-					keyId = "left";
-					break;
-				case Direction.Right:
-					keyId = "right";
-					break;
-				case Direction.Up:
-					keyId = "up";
-					break;
-				case Direction.Down:
-					keyId = "down";
-					break;
+		if (curPlayerDirection != Direction.None) {
+			if (curPlayerDirection != prevPlayerDirection) {
+				// new direction!
+				movePlayer(curPlayerDirection);
+				playerHoldToMoveTimer = 500;
 			}
-			// TODO : add "action" button input
+			else {
+				// held
+				playerHoldToMoveTimer -= deltaTime;
 
-			// handle callbacks : TODO -- more general method for this?
-			var keydownHandler = function(result) {
-				if (result instanceof Function) {
-					result([keyId], null /*env*/, function() {});
+				if (playerHoldToMoveTimer <= 0) {
+					movePlayer(curPlayerDirection);
+					playerHoldToMoveTimer = 150;
 				}
 			}
 
+			// SCRIPT NEXT : prototype of keydown scripts
+			// TODO : make this real! (and move it into movePlayer() probably)
+			// var keyId = null;
+			// switch(curPlayerDirection) {
+			// 	case Direction.Left:
+			// 		keyId = "left";
+			// 		break;
+			// 	case Direction.Right:
+			// 		keyId = "right";
+			// 		break;
+			// 	case Direction.Up:
+			// 		keyId = "up";
+			// 		break;
+			// 	case Direction.Down:
+			// 		keyId = "down";
+			// 		break;
+			// }
+			// // TODO : add "action" button input
+
+			// // handle callbacks : TODO -- more general method for this?
+			// var keydownHandler = function(result) {
+			// 	if (result instanceof Function) {
+			// 		result([keyId], null /*env*/, function() {});
+			// 	}
+			// }
+
+			// for (id in sprite) {
+			// 	var spr = sprite[id];
+			// 	if (spr.key != null && keyId != null) {
+			// 		startDialog(dialog[spr.key], keydownHandler, spr);
+			// 	}
+			// }
+		}
+	}
+}
+
+function updateScriptQueue() {
+	// SRIPT NEXT
+	// TODO : make this real!
+	// trigger animation step scripts
+	// TODO : will have to be re-written after merging objects
+	// TODO : instead of immediately triggering scripts, put them in a queue
+	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive()) {
+		if (animationCounter === 0) {
 			for (id in sprite) {
 				var spr = sprite[id];
-				if (spr.key != null && keyId != null) {
-					startDialog(dialog[spr.key], keydownHandler, spr);
+				if (spr.stp != null) {
+					startDialog(dialog[spr.stp], function() {}, spr);
 				}
 			}
 		}
