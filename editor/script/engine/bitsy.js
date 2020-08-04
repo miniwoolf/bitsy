@@ -257,8 +257,8 @@ function onready(startWithTitle) {
 
 	update_interval = setInterval(update,16);
 
-	if(startWithTitle) { // used by editor 
-		startNarrating(getTitle());
+	if (startWithTitle) { // used by editor 
+		startTitle();
 	}
 }
 
@@ -421,9 +421,9 @@ function update() {
 	var curTime = Date.now();
 	deltaTime = curTime - prevTime;
 
-	if (curRoom == null) {
+	if (curRoom == null && !dialogBuffer.IsActive()) {
 		// in the special case where there is no valid room, end the game
-		startNarrating("", true /*isEnding*/);
+		isEnding = true;
 	}
 
 	updateRender();
@@ -561,11 +561,18 @@ function updateInput() {
 			// for (id in sprite) {
 			// 	var spr = sprite[id];
 			// 	if (spr.key != null && keyId != null) {
-			// 		startDialog(dialog[spr.key], keydownHandler, spr);
+			// 		queueScript(dialog[spr.key], keydownHandler, spr);
 			// 	}
 			// }
 		}
 	}
+}
+
+// TODO : should any of this live inside the script module?
+var scriptQueue = [];
+var isScriptRunning = false;
+function isScriptQueueBusy() {
+	return isScriptRunning || scriptQueue.length > 0;
 }
 
 function updateScriptQueue() {
@@ -574,16 +581,43 @@ function updateScriptQueue() {
 	// trigger animation step scripts
 	// TODO : will have to be re-written after merging objects
 	// TODO : instead of immediately triggering scripts, put them in a queue
-	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive()) {
+	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
 		if (animationCounter === 0) {
 			for (id in sprite) {
 				var spr = sprite[id];
 				if (spr.stp != null) {
-					startDialog(dialog[spr.stp], function() {}, spr);
+					queueScript(spr.stp, spr, function() {});
 				}
 			}
 		}
 	}
+
+	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
+		isScriptRunning = true;
+
+		var scriptInfo = scriptQueue.shift();
+
+		dialogRenderer.Reset();
+		dialogBuffer.Reset();
+
+		// TODO : ending?
+
+		scriptNext.Run(dialog[scriptInfo.id], scriptInfo.objectContext, function(value) {
+			if (scriptInfo.callback) {
+				scriptInfo.callback(value);
+			}
+
+			isScriptRunning = false;
+		});
+	}
+}
+
+function queueScript(scriptId, objectContext, callback) {
+	scriptQueue.push({
+		id: scriptId,
+		objectContext: objectContext,
+		callback: callback,
+	});
 }
 
 var animationCounter = 0;
@@ -946,15 +980,15 @@ function movePlayerThroughExit(ext) {
 		// TODO : I need to simplify dialog code,
 		// so I don't have to get the ID and the source str
 		// every time!
-		startDialog(
+		queueScript(
 			dialog[ext.dlg],
+			ext,
 			function(result) {
 				var isLocked = ext.property && ext.property.locked === true;
 				if (!isLocked) {
 					GoToDest();
 				}
-			},
-			ext);
+			});
 	}
 	else {
 		GoToDest();
@@ -2200,7 +2234,6 @@ function getRoomPal(roomId) {
 	return defaultId;
 }
 
-var isDialogMode = false;
 var isNarrating = false;
 var isEnding = false;
 var dialogModule = new Dialog();
@@ -2208,68 +2241,36 @@ var dialogRenderer = dialogModule.CreateRenderer();
 var dialogBuffer = dialogModule.CreateBuffer();
 var fontManager = new FontManager();
 
-function onExitDialog(scriptResult, dialogCallback) {
-	console.log("EXIT DIALOG!");
-
-	isDialogMode = false;
-
-	if (isNarrating) {
-		isNarrating = false;
-	}
-
-	if (isDialogPreview) {
-		isDialogPreview = false;
-
-		if (onDialogPreviewEnd != null) {
-			onDialogPreviewEnd();
-		}
-	}
-
-	if (dialogCallback != undefined && dialogCallback != null) {
-		dialogCallback(scriptResult);
-	}
-}
-
-/*
-TODO
-- titles and endings should also take advantage of the script pre-compilation if possible??
-- could there be a namespace collision?
-- what about dialog NAMEs vs IDs?
-- what about a special script block separate from DLG?
-*/
-function startNarrating(dialogStr,end) {
-	console.log("NARRATE " + dialogStr);
-
-	if(end === undefined) {
-		end = false;
-	}
-
+function startTitle() {
 	isNarrating = true;
-	isEnding = end;
+	isEnding = false;
 
-	startDialog(dialog[titleDialogId]);
+	dialogRenderer.Reset();
+	dialogBuffer.Reset();
+
+	scriptNext.Run(dialog[titleDialogId], null, function() { isNarrating = false; });
 }
 
 function startEndingDialog(ending) {
 	isNarrating = true;
 	isEnding = true;
 
-	startDialog(
-		dialog[ending.id],
+	queueScript(
+		ending.id,
+		ending,
 		function() {
 			var isLocked = ending.property && ending.property.locked === true;
 			if (isLocked) {
 				isEnding = false;
 			}
-		},
-		ending);
+		});
 }
 
 function startItemDialog(itemId, dialogCallback) {
 	var dialogId = item[itemId].dlg;
 	// console.log("START ITEM DIALOG " + dialogId);
 	if (dialog[dialogId]) {
-		startDialog(dialog[dialogId], dialogCallback);
+		queueScript(dialogId, null, dialogCallback); // todo : add item context?
 	}
 	else {
 		dialogCallback();
@@ -2281,65 +2282,11 @@ function startSpriteDialog(spriteId) {
 	var dialogId = spr.dlg;
 	// console.log("START SPRITE DIALOG " + dialogId);
 	if (dialog[dialogId]){
-		startDialog(dialog[dialogId], function() {}, spr);
+		queueScript(dialogId, spr, function() {});
 	}
 }
 
-// TODO : refactor so we don't have to pass in the script source and id separately
-function startDialog(dialog, dialogCallback, objectContext) {
-	var dialogStr = dialog.src;
-	var scriptId = dialog.id;
-
-	// console.log("START DIALOG ");
-	if (dialogStr.length <= 0) {
-		// console.log("ON EXIT DIALOG -- startDialog 1");
-		onExitDialog(dialogCallback);
-		return;
-	}
-
-	isDialogMode = true;
-
-	dialogRenderer.Reset();
-	dialogRenderer.SetCentered(isNarrating /*centered*/);
-	dialogBuffer.Reset();
-	scriptInterpreter.SetDialogBuffer(dialogBuffer);
-
-	var onScriptEnd = function(scriptResult) {
-		dialogBuffer.OnDialogEnd(function() {
-			onExitDialog(scriptResult, dialogCallback);
-		});
-	};
-
-	// if (scriptId === undefined) { // TODO : what's this for again?
-	// 	scriptInterpreter.Interpret(dialogStr, onScriptEnd);
-	// }
-	// else {
-	// 	if (!scriptInterpreter.HasScript(scriptId)) {
-	// 		scriptInterpreter.Compile(scriptId, dialogStr);
-	// 	}
-	// 	// scriptInterpreter.DebugVisualizeScript(scriptId);
-	// 	scriptInterpreter.Run(scriptId, onScriptEnd, objectContext);
-	// }
-
-
-	// SCRIPT NEXT TEST
-	if (dialogStr.indexOf("\n") < 0) {
-		// wrap one-line dialogs in a dialog expression
-		// TODO : is this still what I want?
-		dialogStr = "{-> " + dialogStr + "}";
-	}
-
-	if (!scriptNext.HasScript(scriptId)) {
-		scriptNext.Compile(scriptId, dialogStr);
-	}
-
-	var result = scriptNext.Run(scriptId, objectContext);
-
-	if (dialogCallback != undefined && dialogCallback != null) {
-		dialogCallback(result); // TODO : need to handle delay from dialog completing
-	}
-}
-
+// TODO : re-implement
 var isDialogPreview = false;
 function startPreviewDialog(script, dialogCallback) {
 	isNarrating = true;

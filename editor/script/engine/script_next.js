@@ -23,22 +23,23 @@ function ScriptNext() {
 
 var compiledScripts = {};
 
-this.HasScript = function(scriptId) {
-	return (scriptId in compiledScripts);
-}
-
-this.Compile = function(scriptId, script) {
-	var tokens = tokenize(script);
-	var expressions = parse(tokens);
-	compiledScripts[scriptId] = expressions[0];
-}
-
 // TODO : pass in dialog buffer instead of using a global reference?
-this.Run = function(scriptId, objectContext) {
+this.Run = function(script, objectContext, callback) {
+	if (!(script.id in compiledScripts)) {
+		var scriptStr = script.src;
+		if (scriptStr.indexOf("\n") < 0) {
+			// wrap one-line dialogs in a dialog expression
+			// TODO : is this still what I want?
+			scriptStr = "{-> " + scriptStr + "}";
+		}
+
+		var tokens = tokenize(scriptStr);
+		var expressions = parse(tokens);
+		compiledScripts[script.id] = expressions[0];		
+	}
+
 	var lib = createLibrary(dialogBuffer, objectContext);
-	var result = null; // hack for now
-	eval(compiledScripts[scriptId], new Environment(lib), function(value) { result = value; });
-	return result;
+	eval(compiledScripts[script.id], new Environment(lib), callback);
 }
 
 // do I want a monolithic reset function like this?
