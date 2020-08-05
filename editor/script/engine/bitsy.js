@@ -592,7 +592,8 @@ function updateScriptQueue() {
 		}
 	}
 
-	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
+	// run as many scripts as we can this frame
+	while (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
 		isScriptRunning = true;
 
 		var scriptInfo = scriptQueue.shift();
@@ -2246,12 +2247,19 @@ function startTitle() {
 	isEnding = false;
 
 	dialogRenderer.Reset();
+	dialogRenderer.SetCentered(true);
 	dialogBuffer.Reset();
 
-	scriptNext.Run(dialog[titleDialogId], null, function() { isNarrating = false; });
+	scriptNext.Run(dialog[titleDialogId], null, function() {
+		// TODO : can we refactor this part? do script queue scripts need this?
+		dialogBuffer.OnDialogEnd(function() {
+			isNarrating = false;
+		});
+	});
 }
 
 function startEndingDialog(ending) {
+	// TODO : this won't work... needs to move into the queue logic
 	isNarrating = true;
 	isEnding = true;
 

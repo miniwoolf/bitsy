@@ -533,7 +533,7 @@ var DialogBuffer = function() {
 		}
 	}
 
-	function AddWord(wordCharArray, prependSpaceChar) {
+	function AddWordCharArray(wordCharArray, prependSpaceChar) {
 		if (prependSpaceChar === undefined || prependSpaceChar === null) {
 			prependSpaceChar = false;
 		}
@@ -574,14 +574,11 @@ var DialogBuffer = function() {
 			wordCharArray = prependSpaceChar ? spaceCharArray.concat(wordCharArray) : wordCharArray;
 			LastRow().chars = LastRow().chars.concat(wordCharArray);
 		}
-
-		console.log(buffer);
 	}
-	this.AddWord = AddWord;
 
 	this.AddDrawing = function(drawingId) {
 		var drawingChar = new DialogDrawingChar(drawingId, activeTextEffects);
-		AddWord([drawingChar]);
+		AddWordCharArray([drawingChar]);
 	}
 
 	this.AddText = function(textStr) {
@@ -599,9 +596,20 @@ var DialogBuffer = function() {
 			var wordCharArray = CreateCharArray(word, activeTextEffects);
 			var prependSpaceChar = i != 0;
 
-			AddWord(wordCharArray, prependSpaceChar);
+			AddWordCharArray(wordCharArray, prependSpaceChar);
 		}
 	};
+
+	// todo... share stuff with AddText?
+	this.AddWord = function(wordStr) {
+		if (arabicHandler.ContainsArabicCharacters(wordStr)) {
+			wordStr = arabicHandler.ShapeArabicCharacters(wordStr);
+		}
+
+		var wordCharArray = CreateCharArray(wordStr, activeTextEffects);
+
+		AddWordCharArray(wordCharArray, true);		
+	}
 
 	this.AddLinebreak = function() {
 		// TODO : decide if this is the right behavior

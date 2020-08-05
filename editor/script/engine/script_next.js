@@ -1,6 +1,6 @@
 /*
 TODO
-- script queue
+X script queue
 - port in object merge
 
 NOTES
@@ -246,12 +246,17 @@ var special = {
 					console.log("add-text " + expression.list[i].value);
 					// TODO : is using "say" the way to do this?
 					// or should I access the buffer directly?
-					environment.Get("say")([expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+					// environment.Get("say")([expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+					// TODO : I'd like to access the dialog buffer via the environment to decrease globals..
+					dialogBuffer.AddText(expression.list[i].value);
+					dialogBuffer.AddScriptReturn(function(value) { result = null; i++; evalNext(); });
 				}
 				else if (expression.list[i].type != "list") {
 					console.log("add-word " + expression.list[i].value);
 					// hacky... need to expose AddWord
-					environment.Get("say")([" " + expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+					// environment.Get("say")([" " + expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
+					dialogBuffer.AddWord(expression.list[i].value);
+					dialogBuffer.AddScriptReturn(function(value) { result = null; i++; evalNext(); });
 				}
 				else {
 					eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
