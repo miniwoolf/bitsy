@@ -495,6 +495,22 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(null);
 		},
+
+		// todo : how do I want to handle lists?
+		"list" : function(parameters, environment, onReturn) {
+			onReturn(parameters);
+		},
+
+		// prototype of custom text effects
+		//todo: is "tfx" the acronym I want to use?
+		"tfx": function(parameters, environment, onReturn) {
+			dialogBuffer.AddTextEffect("tfx", parameters);
+			onReturn(null);
+		},
+		"/tfx": function(parameters, environment, onReturn) {
+			dialogBuffer.RemoveTextEffect("tfx");
+			onReturn(null);
+		},
 	};
 
 	return library;

@@ -885,6 +885,34 @@ var ShakyEffect = function() {
 };
 TextEffects["shk"] = new ShakyEffect();
 
+// prototype of custom text effects
+/*
+  TODO
+  - the multiple layers of callbacks for handler based scripts is awkward
+  - need to figure out what this best way to return the results
+  - use input and output? or properties for char?
+  - need a special environment to avoid things like dialog and exits
+*/
+var CustomEffect = function() {
+	this.DoEffect = function(char, time, parameters) {
+		var dialogId = parameters[0];
+		if (dialogId in dialog) {
+			scriptNext.Run(dialog[dialogId], null, function(fnResult) {
+				if (fnResult instanceof Function) {
+					fnResult([char.color.r, char.color.g, char.color.b, char.offset.x, char.offset.y, time], null, function(result) {
+						char.color.r = result[0];
+						char.color.g = result[1];
+						char.color.b = result[2];
+						char.offset.x = result[3];
+						char.offset.y = result[4];
+					});
+				}
+			});
+		}
+	};
+};
+TextEffects["tfx"] = new CustomEffect();
+
 var DebugHighlightEffect = function() {
 	this.DoEffect = function(char) {
 		char.color.r = 255;
