@@ -531,39 +531,6 @@ function updateInput() {
 					playerHoldToMoveTimer = 150;
 				}
 			}
-
-			// SCRIPT NEXT : prototype of keydown scripts
-			// TODO : make this real! (and move it into movePlayer() probably)
-			// var keyId = null;
-			// switch(curPlayerDirection) {
-			// 	case Direction.Left:
-			// 		keyId = "left";
-			// 		break;
-			// 	case Direction.Right:
-			// 		keyId = "right";
-			// 		break;
-			// 	case Direction.Up:
-			// 		keyId = "up";
-			// 		break;
-			// 	case Direction.Down:
-			// 		keyId = "down";
-			// 		break;
-			// }
-			// // TODO : add "action" button input
-
-			// // handle callbacks : TODO -- more general method for this?
-			// var keydownHandler = function(result) {
-			// 	if (result instanceof Function) {
-			// 		result([keyId], null /*env*/, function() {});
-			// 	}
-			// }
-
-			// for (id in sprite) {
-			// 	var spr = sprite[id];
-			// 	if (spr.key != null && keyId != null) {
-			// 		queueScript(dialog[spr.key], keydownHandler, spr);
-			// 	}
-			// }
 		}
 	}
 }
@@ -603,21 +570,31 @@ function updateScriptQueue() {
 
 		// TODO : ending?
 
-		scriptNext.Run(dialog[scriptInfo.id], scriptInfo.objectContext, function(value) {
+		var onScriptEnd = function(value) {
 			if (scriptInfo.callback) {
 				scriptInfo.callback(value);
 			}
 
 			isScriptRunning = false;
-		});
+		};
+
+		if (scriptInfo.parameters != undefined && scriptInfo.parameters != null) {
+			// TODO : should script info have a bool for this?
+			// should the run function have a bool?
+			scriptNext.RunCallback(dialog[scriptInfo.id], scriptInfo.objectContext, scriptInfo.parameters, onScriptEnd);			
+		}
+		else {
+			scriptNext.Run(dialog[scriptInfo.id], scriptInfo.objectContext, onScriptEnd);	
+		}
 	}
 }
 
-function queueScript(scriptId, objectContext, callback) {
+function queueScript(scriptId, objectContext, callback, parameters) {
 	scriptQueue.push({
 		id: scriptId,
 		objectContext: objectContext,
 		callback: callback,
+		parameters: parameters, // for scripts with callbacks: should I make that explicit?
 	});
 }
 
@@ -943,6 +920,16 @@ function movePlayer(direction) {
 	}
 	else if (spr) {
 		startSpriteDialog(spr /*spriteId*/);
+	}
+
+	// SCRIPT NEXT : prototype of keydown scripts
+	// TODO : make this real! (and move it into movePlayer() probably)
+	for (id in sprite) {
+		var spr = sprite[id];
+		if (spr.room === curRoom && spr.key != null && (spr.key in dialog)) {
+			console.log("sprite key script! " + directionToKeyName(direction));
+			queueScript(spr.key, spr, function() {}, [directionToKeyName(direction)]);
+		}
 	}
 }
 

@@ -332,7 +332,10 @@ var special = {
 		var evalNext;
 
 		evalNext = function() {
-			if (i + 1 >= expression.list.length) {
+			if (i >= expression.list.length) {
+				onReturn(null);
+			}
+			else if (i + 1 >= expression.list.length) {
 				eval(expression.list[i], environment, onReturn);
 			}
 			else {
