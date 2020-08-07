@@ -4,6 +4,8 @@ X script queue
 - port in object merge
 
 NOTES
+- what's the right id for collisions scripts? CLD? HIT? other?
+- BUG: when scripts take too long they interrupt player keypresses!
 - should the compile then run model remain the same?
 - name of language / module?
 - missing functions
@@ -39,8 +41,23 @@ this.Run = function(script, objectContext, callback) {
 	}
 
 	var lib = createLibrary(dialogBuffer, objectContext);
-	eval(compiledScripts[script.id], new Environment(lib), callback);
+	// todo : make this environment chaining less awkward?
+	var libEnv = new Environment(lib);
+	eval(compiledScripts[script.id], new Environment(variable, libEnv), callback);
 }
+
+var RunCallback = function(script, objectContext, inputParameters, callback) {
+	this.Run(script, objectContext, function(result) {
+		if (result instanceof Function) {
+			// TODO : pass in an environment?
+			result(inputParameters, null, callback);
+		}
+		else {
+			callback(result);
+		}
+	});
+}
+this.RunCallback = RunCallback;
 
 // do I want a monolithic reset function like this?
 this.Reset = function() {
@@ -211,7 +228,8 @@ function eval(expression, environment, onReturn) {
 // TODO : global vars vs local vars? need back compat with globals..
 function Environment(localEnvironment, parent) {
 	this.Has = function(symbol) {
-		return symbol in localEnvironment;
+		// todo : break up line?
+		return (symbol in localEnvironment) || (parent != undefined && parent != null && parent.Has(symbol));
 	};
 
 	this.Get = function(symbol) {
@@ -227,7 +245,12 @@ function Environment(localEnvironment, parent) {
 	};
 
 	this.Set = function(symbol, value) {
-		localEnvironment[symbol] = value;
+		if (!(symbol in localEnvironment) && parent != undefined && parent != null && parent.Has(symbol)) {
+			parent.Set(symbol, value);
+		}
+		else {
+			localEnvironment[symbol] = value;
+		}
 	};
 }
 
@@ -373,8 +396,17 @@ var special = {
 
 		onReturn(result);
 	},
+	// TODO : should this be in special, or core library?
+	"=": function(expression, environment, onReturn) {
+		// todo : assumes the right number of list elements, etc.
+		eval(expression.list[2], environment, function(value) {
+			environment.Set(expression.list[1].value, value);
+			onReturn(null);
+		});
+	},
 }
 
+// TODO : refactor to remove environment? doesn't seem like I'm using it...
 function createLibrary(dialogBuffer, objectContext) {
 	var library = {
 		/* dialogue functions */
@@ -468,24 +500,14 @@ function createLibrary(dialogBuffer, objectContext) {
 
 		// NEW FUNCTIONS (WIP)
 		"step": function(parameters, environment, onReturn) {
-			// TODO : check collisions!!
+			var result = false;
+
 			if (objectContext != null && objectContext != undefined) {
-				if (parameters[1] === "left") {
-					objectContext.x -= parameters[0];
-				}
-				else if (parameters[1] === "right") {
-					objectContext.x += parameters[0];
-				}
-				else if (parameters[1] === "up") {
-					objectContext.y -= parameters[0];
-				}
-				else if (parameters[1] === "down") {
-					objectContext.y += parameters[0];
-				}
+				// todo : make this line a little more readable
+				result = !move(objectContext, keyNameToDirection(parameters[0])).collision;
 			}
 
-			onReturn(null);
-			// TODO : return true/false if successful
+			onReturn(result);
 		},
 		"destroy": function(parameters, environment, onReturn) {
 			// TODO : actually remove from room (after object merge)

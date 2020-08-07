@@ -585,7 +585,7 @@ function updateScriptQueue() {
 		if (animationCounter === 0) {
 			for (id in sprite) {
 				var spr = sprite[id];
-				if (spr.stp != null) {
+				if (spr.room === curRoom && spr.stp != null) {
 					queueScript(spr.stp, spr, function() {});
 				}
 			}
@@ -902,24 +902,10 @@ function movePlayer(direction) {
 		return; // player room is missing or invalid.. can't move them!
 	}
 
-	var spr = null;
+	var result = move(player(), direction);
 
-	if ( curPlayerDirection == Direction.Left && !(spr = getSpriteLeft()) && !isWallLeft()) {
-		player().x -= 1;
-		didPlayerMoveThisFrame = true;
-	}
-	else if ( curPlayerDirection == Direction.Right && !(spr = getSpriteRight()) && !isWallRight()) {
-		player().x += 1;
-		didPlayerMoveThisFrame = true;
-	}
-	else if ( curPlayerDirection == Direction.Up && !(spr = getSpriteUp()) && !isWallUp()) {
-		player().y -= 1;
-		didPlayerMoveThisFrame = true;
-	}
-	else if ( curPlayerDirection == Direction.Down && !(spr = getSpriteDown()) && !isWallDown()) {
-		player().y += 1;
-		didPlayerMoveThisFrame = true;
-	}
+	var didPlayerMoveThisFrame = !result.collision;
+	var spr = result.collidedWith;
 	
 	var ext = getExit( player().room, player().x, player().y );
 	var end = getEnding( player().room, player().x, player().y );
@@ -957,6 +943,65 @@ function movePlayer(direction) {
 	}
 	else if (spr) {
 		startSpriteDialog(spr /*spriteId*/);
+	}
+}
+
+function move(object, direction) {
+	var x = object.x + (direction === Direction.Left ? -1 : 0) + (direction === Direction.Right ? 1 : 0);
+	var y = object.y + (direction === Direction.Up ? -1 : 0) + (direction === Direction.Down ? 1 : 0);
+
+	// TODO: handle collisions with things other than sprites?
+	var spr = null;
+
+	var collision = (spr = getSpriteAt(x, y)) || isWall(x, y);
+
+	if (collision) {
+		// queue collision scripts
+		// TODO : should these go at the back of the line or the front?
+		// TODO : add input describing collision
+		if (dialog[object.hit]) {
+			queueScript(object.hit, object, function() {});
+		}
+
+		if (spr != null && dialog[spr.hit]) {
+			queueScript(spr.hit, spr, function() {});	
+		}
+	}
+	else {
+		object.x = x;
+		object.y = y;
+	}
+
+	return { collision: collision, collidedWith: spr };
+}
+
+function keyNameToDirection(keyName) {
+	switch (keyName) {
+		case "left":
+			return Direction.Left;
+		case "right":
+			return Direction.Right;
+		case "up":
+			return Direction.Up;
+		case "down":
+			return Direction.Down;
+		default:
+			return Direction.None;
+	}
+}
+
+function directionToKeyName(direction) {
+	switch (direction) {
+		case Direction.Left:
+			return "left";
+		case Direction.Right:
+			return "right";
+		case Direction.Up:
+			return "up";
+		case Direction.Down:
+			return "down";
+		default:
+			return null; // todo : error -- how to handle?
 	}
 }
 
@@ -1431,6 +1476,9 @@ function serializeWorld(skipFonts) {
 		if (sprite[id].key != null) {
 			worldStr += "KEY " + sprite[id].key + "\n";
 		}
+		if (sprite[id].hit != null) {
+			worldStr += "HIT " + sprite[id].hit + "\n";			
+		}
 		if (sprite[id].room != null) {
 			/* SPRITE POSITION */
 			worldStr += "POS " + sprite[id].room + " " + sprite[id].x + "," + sprite[id].y + "\n";
@@ -1818,6 +1866,7 @@ function parseSprite(lines, i) {
 	var dialogId = null;
 	var stepScriptId = null;
 	var keydownScriptId = null;
+	var collideScriptId = null;
 	var startingInventory = {};
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		if (getType(lines[i]) === "COL") {
@@ -1844,6 +1893,9 @@ function parseSprite(lines, i) {
 		else if (getType(lines[i]) === "KEY") {
 			keydownScriptId = getId(lines[i]);
 		}
+		else if (getType(lines[i]) === "HIT") {
+			collideScriptId = getId(lines[i]);
+		}
 		else if (getType(lines[i]) === "NAME") {
 			/* NAME */
 			name = lines[i].split(/\s(.+)/)[1];
@@ -1866,6 +1918,7 @@ function parseSprite(lines, i) {
 		dlg : dialogId,
 		stp : stepScriptId,
 		key : keydownScriptId,
+		hit : collideScriptId,
 		room : null, //default location is "offstage"
 		x : -1,
 		y : -1,

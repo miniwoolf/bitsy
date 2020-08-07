@@ -897,17 +897,17 @@ var CustomEffect = function() {
 	this.DoEffect = function(char, time, parameters) {
 		var dialogId = parameters[0];
 		if (dialogId in dialog) {
-			scriptNext.Run(dialog[dialogId], null, function(fnResult) {
-				if (fnResult instanceof Function) {
-					fnResult([char.color.r, char.color.g, char.color.b, char.offset.x, char.offset.y, time], null, function(result) {
-						char.color.r = result[0];
-						char.color.g = result[1];
-						char.color.b = result[2];
-						char.offset.x = result[3];
-						char.offset.y = result[4];
-					});
-				}
-			});
+			scriptNext.RunCallback(
+				dialog[dialogId],
+				null,
+				[char.color.r, char.color.g, char.color.b, char.offset.x, char.offset.y, time],
+				function(result) {
+					char.color.r = result[0];
+					char.color.g = result[1];
+					char.color.b = result[2];
+					char.offset.x = result[3];
+					char.offset.y = result[4];					
+				});
 		}
 	};
 };
