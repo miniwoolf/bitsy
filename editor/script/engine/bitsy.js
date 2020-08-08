@@ -195,8 +195,6 @@ function load_game(game_data, startWithTitle) {
 	dialogBuffer.SetFont(font);
 	dialogRenderer.SetFont(font);
 
-	setInitialVariables();
-
 	// setInterval(updateLoadingScreen, 300); // hack test
 
 	onready(startWithTitle);
@@ -260,23 +258,6 @@ function onready(startWithTitle) {
 	if (startWithTitle) { // used by editor 
 		startTitle();
 	}
-}
-
-function setInitialVariables() {
-	for(id in variable) {
-		var value = variable[id]; // default to string
-		if(value === "true") {
-			value = true;
-		}
-		else if(value === "false") {
-			value = false;
-		}
-		else if(!isNaN(parseFloat(value))) {
-			value = parseFloat(value);
-		}
-		scriptInterpreter.SetVariable(id,value);
-	}
-	scriptInterpreter.SetOnVariableChangeHandler( onVariableChanged );
 }
 
 function getOffset(evt) {
@@ -2112,7 +2093,7 @@ function parseEnding(lines, i, compatibilityFlags) {
 function parseVariable(lines, i) {
 	var id = getId(lines[i]);
 	i++;
-	var value = lines[i];
+	var value = scriptNext.ParseValue(lines[i]);
 	i++;
 	variable[id] = value;
 	return i;

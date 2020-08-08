@@ -122,6 +122,9 @@ function parseAtom(token) {
 	}
 }
 
+// todo : hacky handling of strings here...
+this.ParseValue = function(valueStr) { return parseAtom(valueStr).value; }
+
 function parse(tokens, list) {
 	if (list === undefined || list === null) {
 		list = [];
@@ -278,7 +281,7 @@ var special = {
 					console.log("add-word " + expression.list[i].value);
 					// hacky... need to expose AddWord
 					// environment.Get("say")([" " + expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
-					dialogBuffer.AddWord(expression.list[i].value);
+					dialogBuffer.AddWord("" + expression.list[i].value);
 					dialogBuffer.AddScriptReturn(function(value) { result = null; i++; evalNext(); });
 				}
 				else {
@@ -406,6 +409,24 @@ var special = {
 			environment.Set(expression.list[1].value, value);
 			onReturn(null);
 		});
+	},
+	// todo : name?
+	"property": function(expression, environment, onReturn) {
+		if (expression.list.length >= 3) {
+			eval(expression.list[2], environment, function(value) {
+				var propertySetter = environment.Get(" _set_property_");
+				var propertyName = expression.list[1].value;
+				propertySetter([propertyName, value], null, onReturn);
+			});			
+		}
+		else if (expression.list.length >= 2) {
+			var propertyGetter = environment.Get(" _get_property_");
+			var propertyName = expression.list[1].value;
+			propertyGetter([propertyName], null, onReturn);
+		}
+		else {
+			onReturn(null); // error
+		}
 	},
 }
 
@@ -535,6 +556,19 @@ function createLibrary(dialogBuffer, objectContext) {
 		"/tfx": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("tfx");
 			onReturn(null);
+		},
+
+		// hacky? secret methods.. (hidden by the spaces)
+		" _get_property_": function(parameters, environment, onReturn) {
+			// TODO ... handle non-existent properties, etc.
+			var propertyName = parameters[0];
+			onReturn(objectContext[propertyName]);
+		},
+		" _set_property_": function(parameters, environment, onReturn) {
+			var propertyName = parameters[0];
+			var propertyValue = parameters[1];
+			objectContext[propertyName] = propertyValue;
+			onReturn(objectContext[propertyName]);
 		},
 	};
 
