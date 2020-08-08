@@ -1063,17 +1063,23 @@ function isWallDown() {
 }
 
 function isWall(x,y,roomId) {
-	if(roomId == undefined || roomId == null)
+	if (x < 0 || x >= mapsize || y < 0 || y >= mapsize) {
+		return true;
+	}
+
+	if (roomId == undefined || roomId == null) {
 		roomId = curRoom;
+	}
 
-	var tileId = getTile( x, y );
+	var tileId = getTile(x, y);
 
-	if( tileId === '0' )
+	if (tileId === '0') {
 		return false; // Blank spaces aren't walls, ya doofus
+	}
 
-	if( tile[tileId].isWall === undefined || tile[tileId].isWall === null ) {
+	if (tile[tileId].isWall === undefined || tile[tileId].isWall === null) {
 		// No wall-state defined: check room-specific walls
-		var i = room[roomId].walls.indexOf( getTile(x,y) );
+		var i = room[roomId].walls.indexOf(getTile(x,y));
 		return i > -1;
 	}
 
