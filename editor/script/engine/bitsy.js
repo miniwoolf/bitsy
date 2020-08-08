@@ -1030,39 +1030,7 @@ function getItemIndex( roomId, x, y ) {
 	return -1;
 }
 
-function getSpriteLeft() { //repetitive?
-	return getSpriteAt( player().x - 1, player().y );
-}
-
-function getSpriteRight() {
-	return getSpriteAt( player().x + 1, player().y );
-}
-
-function getSpriteUp() {
-	return getSpriteAt( player().x, player().y - 1 );
-}
-
-function getSpriteDown() {
-	return getSpriteAt( player().x, player().y + 1 );
-}
-
-function isWallLeft() {
-	return (player().x - 1 < 0) || isWall( player().x - 1, player().y );
-}
-
-function isWallRight() {
-	return (player().x + 1 >= 16) || isWall( player().x + 1, player().y );
-}
-
-function isWallUp() {
-	return (player().y - 1 < 0) || isWall( player().x, player().y - 1 );
-}
-
-function isWallDown() {
-	return (player().y + 1 >= 16) || isWall( player().x, player().y + 1 );
-}
-
-function isWall(x,y,roomId) {
+function isWall(x, y, roomId) {
 	if (x < 0 || x >= mapsize || y < 0 || y >= mapsize) {
 		return true;
 	}
