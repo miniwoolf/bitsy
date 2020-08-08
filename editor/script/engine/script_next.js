@@ -269,20 +269,17 @@ var special = {
 			}
 			else {
 				if (expression.list[i].type === "string") {
-					console.log("add-text " + expression.list[i].value);
-					// TODO : is using "say" the way to do this?
-					// or should I access the buffer directly?
-					// environment.Get("say")([expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
-					// TODO : I'd like to access the dialog buffer via the environment to decrease globals..
-					dialogBuffer.AddText(expression.list[i].value);
-					dialogBuffer.AddScriptReturn(function(value) { result = null; i++; evalNext(); });
+					// TODO : clean up... get rid of null environment? codify how to access "secret" environment methods
+					environment.Get(" _add_text_")(
+						[expression.list[i].value],
+						null,
+						function(value) { result = null; i++; evalNext(); });
 				}
 				else if (expression.list[i].type != "list") {
-					console.log("add-word " + expression.list[i].value);
-					// hacky... need to expose AddWord
-					// environment.Get("say")([" " + expression.list[i].value], environment, function(value) { result = value; i++; evalNext(); });
-					dialogBuffer.AddWord("" + expression.list[i].value);
-					dialogBuffer.AddScriptReturn(function(value) { result = null; i++; evalNext(); });
+					environment.Get(" _add_word_")(
+						["" + expression.list[i].value],
+						null,
+						function(value) { result = null; i++; evalNext(); });
 				}
 				else {
 					eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
@@ -569,6 +566,17 @@ function createLibrary(dialogBuffer, objectContext) {
 			var propertyValue = parameters[1];
 			objectContext[propertyName] = propertyValue;
 			onReturn(objectContext[propertyName]);
+		},
+
+		// secret dialog buffer methods (todo: maybe they shouldn't be secret?)
+		" _add_word_": function(parameters, environment, onReturn) {
+			dialogBuffer.AddWord(parameters[0]);
+			dialogBuffer.AddScriptReturn(onReturn);
+		},
+		// this one is kind of a duplicate of "say" isn't it?
+		" _add_text_": function(parameters, environment, onReturn) {
+			dialogBuffer.AddText(parameters[0]);
+			dialogBuffer.AddScriptReturn(onReturn);
 		},
 	};
 
