@@ -480,14 +480,17 @@ function createLibrary(dialogBuffer, objectContext) {
 		},
 
 		/* TODO: missing old functions
-			- end
 			- exit
 			- item
 			- printX
-			- property
-			- set (=)
-			- math operators
 		*/
+		"end": function(parameters, environment, onReturn) {
+			// todo very global / hacky?
+			isEnding = true;
+			isNarrating = true;
+			dialogRenderer.SetCentered(true);
+			onReturn(null);
+		},
 
 		/* math functions */
 		"==": function(parameters, environment, onReturn) {

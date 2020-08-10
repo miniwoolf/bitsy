@@ -529,7 +529,7 @@ function updateScriptQueue() {
 	// trigger animation step scripts
 	// TODO : will have to be re-written after merging objects
 	// TODO : instead of immediately triggering scripts, put them in a queue
-	if (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
+	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
 		if (animationCounter === 0) {
 			for (id in sprite) {
 				var spr = sprite[id];
@@ -541,7 +541,7 @@ function updateScriptQueue() {
 	}
 
 	// run as many scripts as we can this frame
-	while (!dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
+	while (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
 		isScriptRunning = true;
 
 		var scriptInfo = scriptQueue.shift();
