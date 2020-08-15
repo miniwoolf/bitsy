@@ -1247,52 +1247,33 @@ function DialogTool() {
 		var textEffectsPrintDrawingSelect = document.createElement("select");
 		textEffectsPrintDrawingDiv.appendChild(textEffectsPrintDrawingSelect);
 
-		// TODO : there needs to be a shared function for these dropdowns...
-		for (id in sprite) {
+		for (id in object) {
 			var option = document.createElement("option");
 
-			var spriteName = (id === "A" ?
-				localization.GetStringOrFallback("avatar_label", "avatar") :
-				localization.GetStringOrFallback("sprite_label", "sprite"))
-					+ " " + id;
+			var objectName = "";
+			if (object[id].name) {
+				objectName += object[id].name;
+			}
+			else if (getDrawingTypeFromId(id) == TileType.Avatar) {
+				objectName += localization.GetStringOrFallback("avatar_label", "avatar");
+			}
+			else {
+				if (getDrawingTypeFromId(id) == TileType.Sprite) {
+					objectName += localization.GetStringOrFallback("sprite_label", "sprite");
+				}
+				else if (getDrawingTypeFromId(id) == TileType.Tile) {
+					objectName += localization.GetStringOrFallback("tile_label", "tile");
+				}
+				else if (getDrawingTypeFromId(id) == TileType.Item) {
+					objectName += localization.GetStringOrFallback("item_label", "item");
+				}
 
-			if (sprite[id].name) {
-				spriteName = sprite[id].name;
+				objectName += " " + id;
 			}
 
-			option.innerText = spriteName;
+			option.innerText = objectName;
 
-			option.value = '{printSprite "' + id + '"}';
-
-			textEffectsPrintDrawingSelect.appendChild(option);
-		}
-
-		for (id in tile) {
-			var option = document.createElement("option");
-
-			var tileName = localization.GetStringOrFallback("tile_label", "tile") + " " + id;
-			if (tile[id].name) {
-				tileName = tile[id].name;
-			}
-
-			option.innerText = tileName;
-
-			option.value = '{printTile "' + id + '"}';
-
-			textEffectsPrintDrawingSelect.appendChild(option);
-		}
-
-		for (id in item) {
-			var option = document.createElement("option");
-
-			var itemName = localization.GetStringOrFallback("item_label", "item") + " " + id;
-			if (item[id].name) {
-				itemName = item[id].name;
-			}
-
-			option.innerText = itemName;
-
-			option.value = '{printItem "' + id + '"}';
+			option.value = '{printSprite "' + id + '"}'; // TODO : replace with "printDrawing"
 
 			textEffectsPrintDrawingSelect.appendChild(option);
 		}

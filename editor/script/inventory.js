@@ -19,14 +19,18 @@ function updateInventoryItemUI(){
 
 	function createOnItemValueChange(id) {
 		return function(event) {
-			if(event.target.value <= 0) {
-				delete player().inventory[id];
+			var playerEntry = isPlayMode ? player() : object[playerId];
+
+			if (event.target.value <= 0) {
+				delete playerEntry.inventory[id];
 			}
 			else {
-				player().inventory[id] = parseFloat( event.target.value );
+				playerEntry.inventory[id] = parseFloat(event.target.value);
 			}
-			if(!isPlayMode)
+
+			if (!isPlayMode) {
 				refreshGameData();
+			}
 		}
 	}
 
@@ -37,7 +41,7 @@ function updateInventoryItemUI(){
 		// console.log( id );
 		// console.log( player() );
 		// console.log( player().inventory );
-		var itemCount = player().inventory[id] != undefined ? parseFloat( player().inventory[id] ) : 0;
+		var itemCount = object[playerId].inventory[id] != undefined ? parseFloat(object[playerId].inventory[id]) : 0;
 
 		var itemDiv = document.createElement("div");
 		itemDiv.classList.add("controlBox");

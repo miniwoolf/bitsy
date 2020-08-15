@@ -1,12 +1,18 @@
+/*
+TODO
+- replace references to sprite storage object with "object" (confusing names === sad me)
+- test all tools / buttons
+- test if new scripts and callbacks work!!
+- test if shared object stuff works
+*/
+
 var xhr; // TODO : remove
 var canvas;
 var context; // TODO : remove if safe?
 var ctx;
 
 var room = {};
-var tile = {};
-var sprite = {};
-var item = {};
+var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
 var palette = { //start off with a default palette
 		"default" : {
@@ -16,6 +22,18 @@ var palette = { //start off with a default palette
 	};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
+
+/*
+  Instance System
+  TODO
+  - should these be global, or associated with rooms?
+  - can the player instance be combined with the object instance holder?
+  - how do we manage instance IDs so they can be accessed from scripts?
+*/
+var playerInstance = {};
+var objectInstances = [];
+var exitInstances = [];
+var endingInstances = [];
 
 var titleDialogId = "title";
 function getTitle() {
@@ -59,8 +77,6 @@ function updateNamesFromCurData() {
 	names.dialog = createNameMap(dialog);
 }
 
-var spriteStartLocations = {};
-
 /* VERSION */
 var version = {
 	major: 7, // major changes
@@ -87,9 +103,8 @@ var editorDevFlags = {
 
 function clearGameData() {
 	room = {};
-	tile = {};
-	sprite = {};
 	item = {};
+	object = {};
 	dialog = {};
 	palette = { //start off with a default palette
 		"default" : {
@@ -101,8 +116,6 @@ function clearGameData() {
 	variable = {};
 
 	// TODO RENDERER : clear data?
-
-	spriteStartLocations = {};
 
 	// hacky to have this multiple times...
 	names = {
@@ -180,6 +193,29 @@ function load_game(game_data, startWithTitle) {
 
 	parseWorld(game_data);
 
+	playerInstance = createPlayerInstance(object[playerId]);
+	console.log(playerInstance);
+
+	// set the first room
+	var roomIds = Object.keys(room);
+	if (player() != undefined && player().room != null && roomIds.includes(player().room)) {
+		// player has valid room
+		curRoom = player().room;
+	}
+	else if (roomIds.length > 0) {
+		// player not in any room! what the heck
+		curRoom = roomIds[0];
+	}
+	else {
+		// uh oh there are no rooms I guess???
+		curRoom = null;
+	}
+
+	// initialize the first room
+	if (curRoom != null) {
+		initRoom(curRoom);
+	}
+
 	if (!isPlayerEmbeddedInEditor) {
 		// hack to ensure default font is available
 		fontManager.AddResource(defaultFontName + fontManager.GetExtension(), document.getElementById(defaultFontName).text.slice(1));
@@ -252,6 +288,36 @@ function onready(startWithTitle) {
 	if (startWithTitle) { // used by editor 
 		startTitle();
 	}
+}
+
+function createPlayerInstance(playerDefinition) {
+	var instance = {
+		id: playerDefinition.id,
+		drw: playerDefinition.drw,
+		room: null,
+		x: -1,
+		y: -1,
+		inventory : {},
+	};
+
+	// copy initial inventory values
+	for (id in playerDefinition.inventory) {
+		instance.inventory[id] = playerDefinition.inventory[id];
+	}
+
+	// try to find a room containing the player
+	for (id in room) {
+		for (var i = 0; i < room[id].objects.length; i++) {
+			var objectLocation = room[id].objects[i];
+			if (objectLocation.id === playerId) {
+				instance.room = id;
+				instance.x = objectLocation.x;
+				instance.y = objectLocation.y;
+			}
+		}
+	}
+
+	return instance;
 }
 
 function getOffset(evt) {
@@ -381,15 +447,6 @@ function loadingAnimation() {
 	//update frame
 	loading_anim_frame++;
 	if (loading_anim_frame >= 5) loading_anim_frame = 0;
-}
-
-function updateLoadingScreen() {
-	// TODO : in progress
-	ctx.fillStyle = "rgb(0,0,0)";
-	ctx.fillRect(0,0,canvas.width,canvas.height);
-
-	loadingAnimation();
-	drawSprite( getSpriteImage(sprite["a"],"0",0), 8, 8, ctx );
 }
 
 function update() {
@@ -567,29 +624,11 @@ var animationTime = 400;
 function updateAnimation() {
 	animationCounter += deltaTime;
 
-	if ( animationCounter >= animationTime ) {
-
-		// animate sprites
-		for (id in sprite) {
-			var spr = sprite[id];
-			if (spr.animation.isAnimated) {
-				spr.animation.frameIndex = ( spr.animation.frameIndex + 1 ) % spr.animation.frameCount;
-			}
-		}
-
-		// animate tiles
-		for (id in tile) {
-			var til = tile[id];
-			if (til.animation.isAnimated) {
-				til.animation.frameIndex = ( til.animation.frameIndex + 1 ) % til.animation.frameCount;
-			}
-		}
-
-		// animate items
-		for (id in item) {
-			var itm = item[id];
-			if (itm.animation.isAnimated) {
-				itm.animation.frameIndex = ( itm.animation.frameIndex + 1 ) % itm.animation.frameCount;
+	if (animationCounter >= animationTime) {
+		for (id in object) {
+			var obj = object[id];
+			if (obj.animation.isAnimated) {
+				obj.animation.frameIndex = (obj.animation.frameIndex + 1) % obj.animation.frameCount;
 			}
 		}
 
@@ -600,37 +639,22 @@ function updateAnimation() {
 }
 
 function resetAllAnimations() {
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.animation.isAnimated) {
-			spr.animation.frameIndex = 0;
-		}
-	}
-
-	for (id in tile) {
-		var til = tile[id];
-		if (til.animation.isAnimated) {
-			til.animation.frameIndex = 0;
-		}
-	}
-
-	for (id in item) {
-		var itm = item[id];
-		if (itm.animation.isAnimated) {
-			itm.animation.frameIndex = 0;
+	for (id in object) {
+		var obj = object[id];
+		if (obj.animation.isAnimated) {
+			obj.animation.frameIndex = 0;
 		}
 	}
 }
 
 function getSpriteAt(x,y) {
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.room === curRoom) {
-			if (spr.x == x && spr.y == y) {
-				return id;
-			}
+	for (var i = 0; i < objectInstances.length; i++) {
+		if (objectInstances[i].type === "SPR" &&
+			objectInstances[i].x === x && objectInstances[i].y === y) {
+			return objectInstances[i];
 		}
 	}
+
 	return null;
 }
 
@@ -848,18 +872,19 @@ function movePlayer(direction) {
 	var didPlayerMoveThisFrame = !result.collision;
 	var spr = result.collidedWith;
 
-	var ext = getExit( player().room, player().x, player().y );
-	var end = getEnding( player().room, player().x, player().y );
-	var itmIndex = getItemIndex( player().room, player().x, player().y );
+	var ext = getExit(player().x, player().y);
+	var end = getEnding(player().x, player().y);
+	var itmIndex = getItemIndex(player().x, player().y);
 
 	// do items first, because you can pick up an item AND go through a door
 	if (itmIndex > -1) {
-		var itm = room[player().room].items[itmIndex];
+		var itm = objectInstances[itmIndex];
 		var itemRoom = player().room;
 
-		startItemDialog(itm.id, function() {
+		startItemDialog(itm, function() {
 			// remove item from room
-			room[itemRoom].items.splice(itmIndex, 1);
+			objectInstances.splice(itmIndex, 1);
+			room[itemRoom].objects[itm.instanceId].removed = true; // assumes instanceId === location index
 
 			// update player inventory
 			if (player().inventory[itm.id]) {
@@ -883,7 +908,7 @@ function movePlayer(direction) {
 		movePlayerThroughExit(ext);
 	}
 	else if (spr) {
-		startSpriteDialog(spr /*spriteId*/);
+		startSpriteDialog(spr /*spriteInstance*/);
 	}
 
 	// SCRIPT NEXT : prototype of keydown scripts
@@ -981,7 +1006,7 @@ function movePlayerThroughExit(ext) {
 			dialog[ext.dlg],
 			ext,
 			function(result) {
-				var isLocked = ext.property && ext.property.locked === true;
+				var isLocked = ext.property && ext.property.Get("locked") === true;
 				if (!isLocked) {
 					GoToDest();
 				}
@@ -993,23 +1018,167 @@ function movePlayerThroughExit(ext) {
 }
 
 function initRoom(roomId) {
-	// init exit properties
+	// init exit instances
+	exitInstances = [];
 	for (var i = 0; i < room[roomId].exits.length; i++) {
-		room[roomId].exits[i].property = { locked:false };
+		exitInstances.push(createExitInstance(room[roomId].exits[i]));
 	}
 
-	// init ending properties
+	// init ending instances
+	endingInstances = [];
 	for (var i = 0; i < room[roomId].endings.length; i++) {
-		room[roomId].endings[i].property = { locked:false };
+		endingInstances.push(createEndingInstance(room[roomId].endings[i]));
+	}
+
+	// init objects
+	objectInstances = [];
+	for (var i = 0; i < room[roomId].objects.length; i++) {
+		var objectLocation = room[roomId].objects[i];
+		if (objectLocation.id != playerId && !objectLocation.removed) {
+			var objectInstance = createObjectInstance(i, objectLocation);
+			objectInstances.push(objectInstance);
+		}
 	}
 }
 
-function getItemIndex( roomId, x, y ) {
-	for( var i = 0; i < room[roomId].items.length; i++ ) {
-		var itm = room[roomId].items[i];
-		if ( itm.x == x && itm.y == y)
-			return i;
+function createObjectLocation(id, x, y) {
+	return {
+		id: id,
+		x: x,
+		y: y,
+	};
+}
+
+function PropertyHolder() {
+	var accessors = {};
+
+	this.Add = function(propertyName, getFunction, setFunction) {
+		var propertyAccessor = {
+			getFunction: getFunction,
+			setFunction: setFunction,
+		}
+
+		accessors[propertyName] = propertyAccessor;
 	}
+
+	this.Has = function(propertyName) {
+		return accessors.hasOwnProperty(propertyName);
+	}
+
+	this.Get = function(propertyName) {
+		if (this.Has(propertyName)) {
+			return accessors[propertyName].getFunction();
+		}
+		else {
+			return null;
+		}
+	}
+
+	function createDefaultPropertyAccessor(value) {
+		var property = {
+			value: value,
+		};
+
+		property.getFunction = function() {
+			return property.value;
+		}
+
+		property.setFunction = function(value) {
+			property.value = value;
+		}
+
+		return property;
+	}
+
+	this.Set = function(propertyName, value) {
+		if (this.Has(propertyName)) {
+			accessors[propertyName].setFunction(value);
+		}
+		else {
+			// create new default property if none exists
+			accessors[propertyName] = createDefaultPropertyAccessor(value);
+		}
+	}
+}
+
+function createObjectInstance(instanceId, objectLocation) {
+	var definition = object[objectLocation.id];
+
+	var instance = {
+		instanceId: instanceId, // currently equivalent to the index in the room list -- is it ok to remain that way?
+		id: definition.id,
+		type: definition.type,
+		drw: definition.drw,
+		dlg: definition.dlg,
+		x: objectLocation.x,
+		y: objectLocation.y,
+		property: new PropertyHolder(),
+		// TODO : kind of hacky to copy these around since they don't vary from the definition -- revisit?
+		col: definition.col,
+		animation: definition.animation,
+	};
+
+	instance.property.Add(
+		"x",
+		function() { return instance.x; },
+		function(value) { instance.x = value; });
+
+	instance.property.Add(
+		"y",
+		function() { return instance.y; },
+		function(value) { instance.y = value; });
+
+	// TODO : name?
+	instance.property.Add(
+		"drawing",
+		function() { return instance.drw; },
+		function(value) { instance.drw = value; console.log(instance); });
+
+	return instance;
+}
+
+function createExitInstance(exitDefinition) {
+	var instance = {
+		x: exitDefinition.x,
+		y: exitDefinition.y,
+		dest: {
+			room: exitDefinition.dest.room,
+			x: exitDefinition.dest.x,
+			y: exitDefinition.dest.y,
+		},
+		transition_effect: exitDefinition.transition_effect,
+		dlg: exitDefinition.dlg,
+		property: new PropertyHolder(),
+	};
+
+	instance.property.Set("locked", false);
+
+	return instance;
+}
+
+function createEndingInstance(endingDefinition) {
+	var instance = {
+		id: endingDefinition.id,
+		x: endingDefinition.x,
+		y: endingDefinition.y,
+		property: new PropertyHolder(),
+	};
+
+	instance.property.Set("locked", false);
+
+	return instance;
+}
+
+function getItemIndex(x, y) {
+	for (var i = 0; i < objectInstances.length; i++ ) {
+		if (objectInstances[i].type === "ITM") {
+			var itm = objectInstances[i];
+			if (itm.x == x && itm.y == y) {
+				return i;
+			}
+		}
+	}
+
 	return -1;
 }
 
@@ -1028,43 +1197,59 @@ function isWall(x, y, roomId) {
 		return false; // Blank spaces aren't walls, ya doofus
 	}
 
-	if (tile[tileId].isWall === undefined || tile[tileId].isWall === null) {
+	if (object[tileId].isWall === undefined || object[tileId].isWall === null) {
 		// No wall-state defined: check room-specific walls
-		var i = room[roomId].walls.indexOf(getTile(x,y));
+		var i = room[roomId].walls.indexOf(tileId);
 		return i > -1;
 	}
 
 	// Otherwise, use the tile's own wall-state
-	return tile[tileId].isWall;
+	return object[tileId].isWall;
 }
 
-function getItem(roomId,x,y) {
-	for (i in room[roomId].items) {
-		var item = room[roomId].items[i];
-		if (x == item.x && y == item.y) {
-			return item;
+function getObjectLocation(roomId, x, y) {
+	for (i in room[roomId].objects) {
+		var obj = room[roomId].objects[i];
+		if (x == obj.x && y == obj.y) {
+			return obj;
 		}
 	}
+
 	return null;
 }
 
-function getExit(roomId,x,y) {
-	for (i in room[roomId].exits) {
-		var e = room[roomId].exits[i];
+function getItem(roomId, x, y) {
+	for (i in objectInstances) {
+		if (objectInstances[i].type === "ITM") {
+			var item = objectInstances[i];
+			if (x == item.x && y == item.y) {
+				return item;
+			}
+		}
+	}
+
+	return null;
+}
+
+function getExit(x, y) {
+	for (i in exitInstances) {
+		var e = exitInstances[i];
 		if (x == e.x && y == e.y) {
 			return e;
 		}
 	}
+
 	return null;
 }
 
-function getEnding(roomId,x,y) {
-	for (i in room[roomId].endings) {
-		var e = room[roomId].endings[i];
+function getEnding(x, y) {
+	for (i in endingInstances) {
+		var e = endingInstances[i];
 		if (x == e.x && y == e.y) {
 			return e;
 		}
 	}
+
 	return null;
 }
 
@@ -1075,7 +1260,7 @@ function getTile(x,y) {
 }
 
 function player() {
-	return sprite[playerId];
+	return playerInstance;
 }
 
 // Sort of a hack for legacy palette code (when it was just an array)
@@ -1091,13 +1276,7 @@ function getRoom() {
 	return room[curRoom];
 }
 
-function isSpriteOffstage(id) {
-	return sprite[id].room == null;
-}
-
 function parseWorld(file) {
-	spriteStartLocations = {};
-
 	resetFlags();
 
 	var versionNumber = 0;
@@ -1144,17 +1323,8 @@ function parseWorld(file) {
 		else if (getType(curLine) === "ROOM" || getType(curLine) === "SET") { //SET for back compat
 			i = parseRoom(lines, i, compatibilityFlags);
 		}
-		else if (getType(curLine) === "TIL") {
-			i = parseTile(lines, i);
-		}
-		else if (getType(curLine) === "SPR") {
-			i = parseSprite(lines, i);
-		}
-		else if (getType(curLine) === "ITM") {
-			i = parseItem(lines, i);
-		}
-		else if (getType(curLine) === "DRW") {
-			i = parseDrawing(lines, i);
+		else if (getType(curLine) === "TIL" || getType(curLine) === "SPR" || getType(curLine) === "ITM") {
+			i = parseObject(lines, i, getType(curLine));
 		}
 		else if (getType(curLine) === "DLG") {
 			i = parseDialog(lines, i, compatibilityFlags);
@@ -1183,24 +1353,19 @@ function parseWorld(file) {
 		}
 	}
 
-	placeSprites();
-
-	var roomIds = Object.keys(room);
-	if (player() != undefined && player().room != null && roomIds.includes(player().room)) {
-		// player has valid room
-		curRoom = player().room;
-	}
-	else if (roomIds.length > 0) {
-		// player not in any room! what the heck
-		curRoom = roomIds[0];
-	}
-	else {
-		// uh oh there are no rooms I guess???
-		curRoom = null;
-	}
-
-	if (curRoom != null) {
-		initRoom(curRoom);
+	// clean up any excess unique objects (TODO : is this the best way to do this?)
+	var foundUniqueObject = {};
+	for (id in room) {
+		for (var i = room[id].objects.length - 1; i >= 0; i--) {
+			var objectId = room[id].objects[i].id;
+			if (foundUniqueObject[objectId]) {
+				// this unique object already has a location!
+				room[id].objects.splice(i, 1);
+			}
+			else if (object[objectId].isUnique) {
+				foundUniqueObject[objectId] = true;
+			}
+		}
 	}
 
 	renderer.SetPalettes(palette);
@@ -1297,7 +1462,7 @@ function serializeWorld(skipFonts) {
 			// old non-comma separated format
 			for (i in room[id].tilemap) {
 				for (j in room[id].tilemap[i]) {
-					worldStr += room[id].tilemap[i][j];	
+					worldStr += room[id].tilemap[i][j];
 				}
 				worldStr += "\n";
 			}
@@ -1327,12 +1492,19 @@ function serializeWorld(skipFonts) {
 			}
 			worldStr += "\n";
 		}
-		if (room[id].items.length > 0) {
-			/* ITEMS */
-			for (j in room[id].items) {
-				var itm = room[id].items[j];
-				worldStr += "ITM " + itm.id + " " + itm.x + "," + itm.y;
-				worldStr += "\n";
+		if (room[id].objects.length > 0) {
+			/* OBJECTS */
+			for (j in room[id].objects) {
+				var obj = room[id].objects[j];
+				if (!object[obj.id].isUnique || !object[obj.id].hasUniqueLocation) {
+					worldStr += object[obj.id].type + " " + obj.id + " " + obj.x + "," + obj.y;
+					worldStr += "\n";
+				}
+
+				// temporary field to ensure unique objects are only placed once! (necessary for the player)
+				if (object[obj.id].isUnique) {
+					object[obj.id].hasUniqueLocation = true;
+				}
 			}
 		}
 		if (room[id].exits.length > 0) {
@@ -1366,75 +1538,48 @@ function serializeWorld(skipFonts) {
 		}
 		worldStr += "\n";
 	}
-	/* TILES */
-	for (id in tile) {
-		worldStr += "TIL " + id + "\n";
-		worldStr += serializeDrawing( "TIL_" + id );
-		if (tile[id].name != null && tile[id].name != undefined) {
+	/* OBJECTS */
+	for (id in object) {
+		var type = object[id].type;
+		worldStr += type + " " + id + "\n";
+		worldStr += serializeDrawing(id);
+		if (object[id].name != null && object[id].name != undefined) {
 			/* NAME */
-			worldStr += "NAME " + tile[id].name + "\n";
+			worldStr += "NAME " + object[id].name + "\n";
 		}
-		if (tile[id].isWall != null && tile[id].isWall != undefined) {
-			/* WALL */
-			worldStr += "WAL " + tile[id].isWall + "\n";
-		}
-		if (tile[id].col != null && tile[id].col != undefined && tile[id].col != 1) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + tile[id].col + "\n";
-		}
-		worldStr += "\n";
-	}
-	/* SPRITES */
-	for (id in sprite) {
-		worldStr += "SPR " + id + "\n";
-		worldStr += serializeDrawing( "SPR_" + id );
-		if (sprite[id].name != null && sprite[id].name != undefined) {
-			/* NAME */
-			worldStr += "NAME " + sprite[id].name + "\n";
-		}
-		if (sprite[id].dlg != null) {
-			worldStr += "DLG " + sprite[id].dlg + "\n";
-		}
-		if (sprite[id].stp != null) {
-			worldStr += "STP " + sprite[id].stp + "\n";
-		}
-		if (sprite[id].key != null) {
-			worldStr += "KEY " + sprite[id].key + "\n";
-		}
-		if (sprite[id].hit != null) {
-			worldStr += "HIT " + sprite[id].hit + "\n";			
-		}
-		if (sprite[id].room != null) {
-			/* SPRITE POSITION */
-			worldStr += "POS " + sprite[id].room + " " + sprite[id].x + "," + sprite[id].y + "\n";
-		}
-		if (sprite[id].inventory != null) {
-			for(itemId in sprite[id].inventory) {
-				worldStr += "ITM " + itemId + " " + sprite[id].inventory[itemId] + "\n";
+		if (object[id].col != null && object[id].col != undefined) {
+			var defaultColor = type === "TIL" ? 1 : 2;
+			if (object[id].col != defaultColor) {
+				/* COLOR OVERRIDE */
+				worldStr += "COL " + object[id].col + "\n";
 			}
 		}
-		if (sprite[id].col != null && sprite[id].col != undefined && sprite[id].col != 2) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + sprite[id].col + "\n";
+		if (type === "TIL" && object[id].isWall != null && object[id].isWall != undefined) {
+			/* WALL */
+			worldStr += "WAL " + object[id].isWall + "\n";
 		}
+		if (type != "TIL" && object[id].dlg != null) {
+			worldStr += "DLG " + object[id].dlg + "\n";
+		}
+		if (type != "TIL" && object[id].stp != null) {
+			worldStr += "STP " + object[id].stp + "\n";
+		}
+		if (type != "TIL" && object[id].key != null) {
+			worldStr += "KEY " + object[id].key + "\n";
+		}
+		if (type != "TIL" && object[id].hit != null) {
+			worldStr += "HIT " + object[id].hit + "\n";
+		}
+		if (type === "SPR" && id === playerId && object[id].inventory != null) {
+			for (itemId in object[id].inventory) {
+				worldStr += "ITM " + itemId + " " + object[id].inventory[itemId] + "\n";
+			}
+		}
+
 		worldStr += "\n";
-	}
-	/* ITEMS */
-	for (id in item) {
-		worldStr += "ITM " + id + "\n";
-		worldStr += serializeDrawing( "ITM_" + id );
-		if (item[id].name != null && item[id].name != undefined) {
-			/* NAME */
-			worldStr += "NAME " + item[id].name + "\n";
-		}
-		if (item[id].dlg != null) {
-			worldStr += "DLG " + item[id].dlg + "\n";
-		}
-		if (item[id].col != null && item[id].col != undefined && item[id].col != 2) {
-			/* COLOR OVERRIDE */
-			worldStr += "COL " + item[id].col + "\n";
-		}
-		worldStr += "\n";
+
+		// remove temporary unique placement field
+		delete object[id].hasUniqueLocation;
 	}
 	/* DIALOG */
 	for (id in dialog) {
@@ -1485,18 +1630,6 @@ function isExitValid(e) {
 	return hasValidStartPos && hasDest && hasValidRoomDest;
 }
 
-function placeSprites() {
-	for (id in spriteStartLocations) {
-		//console.log(id);
-		//console.log( spriteStartLocations[id] );
-		//console.log(sprite[id]);
-		sprite[id].room = spriteStartLocations[id].room;
-		sprite[id].x = spriteStartLocations[id].x;
-		sprite[id].y = spriteStartLocations[id].y;
-		//console.log(sprite[id]);
-	}
-}
-
 /* ARGUMENT GETTERS */
 function getType(line) {
 	return getArg(line,0);
@@ -1524,42 +1657,61 @@ function parseTitle(lines, i) {
 	return i;
 }
 
-function parseRoom(lines, i, compatibilityFlags) {
-	var id = getId(lines[i]);
-	room[id] = {
+function createRoom(id, palId) {
+	return {
 		id : id,
-		tilemap : [],
+		tilemap : [
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"]
+			],
 		walls : [],
 		exits : [],
 		endings : [],
-		items : [],
-		pal : null,
-		name : null
+		objects : [],
+		pal : palId,
+		name : null,
 	};
+}
+
+function parseRoom(lines, i, compatibilityFlags) {
+	var id = getId(lines[i]);
+	room[id] = createRoom(id);
 	i++;
 
 	// create tile map
-	if ( flags.ROOM_FORMAT == 0 ) {
+	if (flags.ROOM_FORMAT == 0) {
 		// old way: no commas, single char tile ids
 		var end = i + mapsize;
 		var y = 0;
-		for (; i<end; i++) {
-			room[id].tilemap.push( [] );
-			for (x = 0; x<mapsize; x++) {
-				room[id].tilemap[y].push( lines[i].charAt(x) );
+		for (; i < end; i++) {
+			for (x = 0; x < mapsize; x++) {
+				room[id].tilemap[y][x] = lines[i].charAt(x);
 			}
 			y++;
 		}
 	}
-	else if ( flags.ROOM_FORMAT == 1 ) {
+	else if (flags.ROOM_FORMAT == 1) {
 		// new way: comma separated, multiple char tile ids
 		var end = i + mapsize;
 		var y = 0;
-		for (; i<end; i++) {
-			room[id].tilemap.push( [] );
+		for (; i < end; i++) {
 			var lineSep = lines[i].split(",");
-			for (x = 0; x<mapsize; x++) {
-				room[id].tilemap[y].push( lineSep[x] );
+			for (x = 0; x < mapsize; x++) {
+				room[id].tilemap[y][x] = lineSep[x];
 			}
 			y++;
 		}
@@ -1567,56 +1719,23 @@ function parseRoom(lines, i, compatibilityFlags) {
 
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		// console.log(getType(lines[i]));
-		if (getType(lines[i]) === "SPR") {
-			/* NOTE SPRITE START LOCATIONS */
-			var sprId = getId(lines[i]);
-			if (sprId.indexOf(",") == -1 && lines[i].split(" ").length >= 3) { //second conditional checks for coords
-				/* PLACE A SINGLE SPRITE */
-				var sprCoord = lines[i].split(" ")[2].split(",");
-				spriteStartLocations[sprId] = {
-					room : id,
-					x : parseInt(sprCoord[0]),
-					y : parseInt(sprCoord[1])
-				};
-			}
-			else if ( flags.ROOM_FORMAT == 0 ) { // TODO: right now this shortcut only works w/ the old comma separate format
-				/* PLACE MULTIPLE SPRITES*/ 
-				//Does find and replace in the tilemap (may be hacky, but its convenient)
-				var sprList = sprId.split(",");
-				for (row in room[id].tilemap) {
-					for (s in sprList) {
-						var col = room[id].tilemap[row].indexOf( sprList[s] );
-						//if the sprite is in this row, replace it with the "null tile" and set its starting position
-						if (col != -1) {
-							room[id].tilemap[row][col] = "0";
-							spriteStartLocations[ sprList[s] ] = {
-								room : id,
-								x : parseInt(col),
-								y : parseInt(row)
-							};
-						}
-					}
-				}
-			}
-		}
-		else if (getType(lines[i]) === "ITM") {
-			var itmId = getId(lines[i]);
-			var itmCoord = lines[i].split(" ")[2].split(",");
-			var itm = {
-				id: itmId,
-				x : parseInt(itmCoord[0]),
-				y : parseInt(itmCoord[1])
-			};
-			room[id].items.push( itm );
+		if (getType(lines[i]) === "SPR" || getType(lines[i]) === "ITM") {
+			var objId = getId(lines[i]);
+			var objCoord = lines[i].split(" ")[2].split(",");
+			var obj = createObjectLocation(objId, parseInt(objCoord[0]), parseInt(objCoord[1]));
+			room[id].objects.push(obj);
+
+			// TODO : do I need to support reading in the old "find and replace" sprite format for back compat?
 		}
 		else if (getType(lines[i]) === "WAL") {
 			/* DEFINE COLLISIONS (WALLS) */
+			// TODO : remove this deprecated feature at some point
 			room[id].walls = getId(lines[i]).split(",");
 		}
 		else if (getType(lines[i]) === "EXT") {
 			/* ADD EXIT */
 			var exitArgs = lines[i].split(" ");
-			//arg format: EXT 10,5 M 3,2 [AVA:7 LCK:a,9] [AVA 7 LCK a 9]
+			//arg format: EXT 10,5 M 3,2
 			var exitCoords = exitArgs[1].split(",");
 			var destName = exitArgs[2];
 			var destCoords = exitArgs[3].split(",");
@@ -1711,259 +1830,196 @@ function parsePalette(lines,i) { //todo this has to go first right now :(
 	return i;
 }
 
-function parseTile(lines, i) {
-	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
+function copyDrawingData(sourceDrawingData) {
+	var copiedDrawingData = [];
 
-	i++;
-
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
-	}
-	else {
-		// store tile source
-		drwId = "TIL_" + id;
-		i = parseDrawingCore( lines, i, drwId );
-	}
-
-	//other properties
-	var colorIndex = 1; // default palette color index is 1
-	var isWall = null; // null indicates it can vary from room to room (original version)
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			colorIndex = parseInt( getId(lines[i]) );
-		}
-		else if (getType(lines[i]) === "NAME") {
-			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.tile.set( name, id );
-		}
-		else if (getType(lines[i]) === "WAL") {
-			var wallArg = getArg( lines[i], 1 );
-			if( wallArg === "true" ) {
-				isWall = true;
-			}
-			else if( wallArg === "false" ) {
-				isWall = false;
+	for (frame in sourceDrawingData) {
+		copiedDrawingData.push([]);
+		for (y in sourceDrawingData[frame]) {
+			copiedDrawingData[frame].push([]);
+			for (x in sourceDrawingData[frame][y]) {
+				copiedDrawingData[frame][y].push(sourceDrawingData[frame][y][x]);
 			}
 		}
-		i++;
 	}
 
-	//tile data
-	tile[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		animation : {
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
-		},
-		name : name,
-		isWall : isWall
-	};
-
-	return i;
+	return copiedDrawingData;
 }
 
-function parseSprite(lines, i) {
-	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
+function createDrawing(id, sourceDrawingData) {
+	var drawingData;
 
-	i++;
+	// if no image data is provided, initialize an empty initial frame
+	if (!sourceDrawingData) {
+		drawingData = [[]];
 
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
+		for (var i = 0; i < tilesize; i++) {
+			drawingData[0].push([])
+
+			for (var j = 0; j < tilesize; j++) {
+				drawingData[0][i].push(0);
+			}
+		}
 	}
 	else {
-		// store sprite source
-		drwId = "SPR_" + id;
-		i = parseDrawingCore( lines, i, drwId );
+		// TODO : provide option to not copy?
+		drawingData = copyDrawingData(sourceDrawingData);
 	}
 
-	//other properties
-	var colorIndex = 2; //default palette color index is 2
-	var dialogId = null;
-	var stepScriptId = null;
-	var keydownScriptId = null;
-	var collideScriptId = null;
-	var startingInventory = {};
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			/* COLOR OFFSET INDEX */
-			colorIndex = parseInt( getId(lines[i]) );
+	renderer.SetImageSource(id, drawingData);
+}
+
+function createObject(id, type, options) {
+	var isPlayer = type === "SPR" && id === playerId;
+	var name = options.name ? options.name : null;
+	var drwId = id;
+	var col = options.col ? options.col : (type === "TIL" ? 1 : 2);
+	var dlg = options.dlg ? options.dlg : null;
+	var stp = options.stp ? options.stp : null;
+	var key = options.key ? options.key : null;
+	var hit = options.hit ? options.hit : null;
+	var inventory = isPlayer && options.inventory ? options.inventory : null;
+	var isWall = type === "TIL" && options.isWall != undefined ? options.isWall : null;
+	var isUnique = isPlayer;
+
+	createDrawing(drwId, options.drawingData);
+
+	object[id] = {
+		id: id, // unique ID
+		type: type, // default behavior: is it a sprite, item, or tile?
+		name : name, // user-supplied name
+		drw: drwId, // drawing ID
+		col: col, // color index
+		animation : { // animation data // TODO: figure out how this works with instances
+			isAnimated : (renderer.GetFrameCount(drwId) > 1),
+			frameIndex : 0,
+			frameCount : renderer.GetFrameCount(drwId),
+		},
+		dlg: dlg, // dialog ID (NOTE: tiles don't use this)
+		stp: stp,
+		key: key,
+		hit: hit,
+		inventory : inventory, // starting inventory (player only)
+		isWall : isWall, // wall tile? (tile only)
+		isUnique : isUnique,
+	};
+}
+
+function parseObject(lines, i, type) {
+	var id = getId(lines[i]);
+	i++;
+
+	var options = {};
+
+	// parse drawing
+	var drawingResult = parseDrawing(lines, i);
+	i = drawingResult.i;
+	options.drawingData = drawingResult.drawingData;
+
+	var isPlayer = type === "SPR" && id === playerId;
+	if (isPlayer) {
+		options.inventory = {};
+	}
+
+	// read all other properties
+	while (i < lines.length && lines[i].length > 0) { // stop at empty line
+		if (getType(lines[i]) === "NAME") {
+			/* NAME */
+			options.name = lines[i].split(/\s(.+)/)[1];
 		}
-		else if (getType(lines[i]) === "POS") {
+		else if (getType(lines[i]) === "COL") {
+			/* COLOR OFFSET INDEX */
+			options.col = parseInt(getId(lines[i]));
+		}
+		else if (getType(lines[i]) === "WAL" && type === "TIL") {
+			// only tiles set their initial collision mode
+			var wallArg = getArg(lines[i], 1);
+			if (wallArg === "true") {
+				options.isWall = true;
+			}
+			else if (wallArg === "false") {
+				options.isWall = false;
+			}
+		}
+		else if (getType(lines[i]) === "DLG" && type != "TIL") {
+			options.dlg = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "STP" && type != "TIL") {
+			options.stp = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "KEY" && type != "TIL") {
+			options.key = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "HIT" && type != "TIL") {
+			options.hit = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "POS" && type === "SPR") {
 			/* STARTING POSITION */
+			// NOTE: I still need this to read in old unique position data from sprites
 			var posArgs = lines[i].split(" ");
 			var roomId = posArgs[1];
 			var coordArgs = posArgs[2].split(",");
-			spriteStartLocations[id] = {
-				room : roomId,
-				x : parseInt(coordArgs[0]),
-				y : parseInt(coordArgs[1])
-			};
+
+			// NOTE: assumes rooms have all been created!
+			room[roomId].objects.push(
+				createObjectLocation(
+					id,
+					parseInt(coordArgs[0]),
+					parseInt(coordArgs[1])));
 		}
-		else if (getType(lines[i]) === "DLG") {
-			dialogId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "STP") {
-			stepScriptId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "KEY") {
-			keydownScriptId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "HIT") {
-			collideScriptId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "NAME") {
-			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.sprite.set( name, id );
-		}
-		else if (getType(lines[i]) === "ITM") {
+		else if (getType(lines[i]) === "ITM" && isPlayer) {
 			/* ITEM STARTING INVENTORY */
+			// TODO: This is only used by the player avatar -- should I move it out of sprite data?
 			var itemId = getId(lines[i]);
-			var itemCount = parseFloat( getArg(lines[i], 2) );
-			startingInventory[itemId] = itemCount;
+			var itemCount = parseFloat(getArg(lines[i], 2));
+			options.inventory[itemId] = itemCount;
 		}
+
 		i++;
 	}
 
-	//sprite data
-	sprite[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		dlg : dialogId,
-		stp : stepScriptId,
-		key : keydownScriptId,
-		hit : collideScriptId,
-		room : null, //default location is "offstage"
-		x : -1,
-		y : -1,
-		animation : {
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
-		},
-		inventory : startingInventory,
-		name : name
-	};
-	return i;
-}
-
-function parseItem(lines, i) {
-	var id = getId(lines[i]);
-	var drwId = null;
-	var name = null;
-
-	i++;
-
-	if (getType(lines[i]) === "DRW") { //load existing drawing
-		drwId = getId(lines[i]);
-		i++;
-	}
-	else {
-		// store item source
-		drwId = "ITM_" + id; // these prefixes are maybe a terrible way to differentiate drawing tyepes :/
-		i = parseDrawingCore( lines, i, drwId );
-	}
-
-	//other properties
-	var colorIndex = 2; //default palette color index is 2
-	var dialogId = null;
-	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		if (getType(lines[i]) === "COL") {
-			/* COLOR OFFSET INDEX */
-			colorIndex = parseInt( getArg( lines[i], 1 ) );
-		}
-		// else if (getType(lines[i]) === "POS") {
-		// 	/* STARTING POSITION */
-		// 	var posArgs = lines[i].split(" ");
-		// 	var roomId = posArgs[1];
-		// 	var coordArgs = posArgs[2].split(",");
-		// 	spriteStartLocations[id] = {
-		// 		room : roomId,
-		// 		x : parseInt(coordArgs[0]),
-		// 		y : parseInt(coordArgs[1])
-		// 	};
-		// }
-		else if(getType(lines[i]) === "DLG") {
-			dialogId = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === "NAME") {
-			/* NAME */
-			name = lines[i].split(/\s(.+)/)[1];
-			names.item.set( name, id );
-		}
-		i++;
-	}
-
-	//item data
-	item[id] = {
-		id : id,
-		drw : drwId, //drawing id
-		col : colorIndex,
-		dlg : dialogId,
-		// room : null, //default location is "offstage"
-		// x : -1,
-		// y : -1,
-		animation : {
-			isAnimated : (renderer.GetFrameCount(drwId) > 1),
-			frameIndex : 0,
-			frameCount : renderer.GetFrameCount(drwId)
-		},
-		name : name
-	};
-
-	// console.log("ITM " + id);
-	// console.log(item[id]);
+	createObject(id, type, options);
 
 	return i;
 }
 
 function parseDrawing(lines, i) {
-	// store drawing source
-	var drwId = getId( lines[i] );
-	return parseDrawingCore( lines, i, drwId );
-}
-
-function parseDrawingCore(lines, i, drwId) {
 	var frameList = []; //init list of frames
-	frameList.push( [] ); //init first frame
+	frameList.push([]); //init first frame
+
 	var frameIndex = 0;
+
 	var y = 0;
-	while ( y < tilesize ) {
+
+	while (y < tilesize) {
 		var l = lines[i+y];
+
 		var row = [];
 		for (x = 0; x < tilesize; x++) {
-			row.push( parseInt( l.charAt(x) ) );
+			row.push(parseInt(l.charAt(x)));
 		}
-		frameList[frameIndex].push( row );
+
+		frameList[frameIndex].push(row);
+
 		y++;
 
 		if (y === tilesize) {
 			i = i + y;
-			if ( lines[i] != undefined && lines[i].charAt(0) === ">" ) {
+
+			if (lines[i] != undefined && lines[i].charAt(0) === ">") {
 				// start next frame!
-				frameList.push( [] );
+				frameList.push([]);
 				frameIndex++;
+
 				//start the count over again for the next frame
 				i++;
+
 				y = 0;
 			}
 		}
 	}
 
-	renderer.SetImageSource(drwId, frameList);
-
-	return i;
+	return { i:i, drawingData:frameList };
 }
 
 function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
@@ -2017,9 +2073,9 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 	if (compatibilityFlags.convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
 		// connected by sharing sprite and dialog IDs in old versions
-		if (sprite[id]) {
-			if (sprite[id].dlg === undefined || sprite[id].dlg === null) {
-				sprite[id].dlg = id;
+		if (object[id] && object[id].type === "SPR") {
+			if (object[id].dlg === undefined || object[id].dlg === null) {
+				object[id].dlg = id;
 			}
 		}
 	}
@@ -2096,7 +2152,7 @@ function parseFlag(lines, i) {
 	return i;
 }
 
-function drawTile(img,x,y,context) {
+function drawObject(img,x,y,context) {
 	if (!context) { //optional pass in context; otherwise, use default
 		context = ctx;
 	}
@@ -2104,25 +2160,15 @@ function drawTile(img,x,y,context) {
 	context.drawImage(img,x*tilesize*scale,y*tilesize*scale,tilesize*scale,tilesize*scale);
 }
 
-function drawSprite(img,x,y,context) { //this may differ later (or not haha)
-	drawTile(img,x,y,context);
-}
-
-function drawItem(img,x,y,context) {
-	drawTile(img,x,y,context); //TODO these methods are dumb and repetitive
-}
-
-// var debugLastRoomDrawn = "0";
-
-function drawRoom(room,context,frameIndex) { // context & frameIndex are optional
-	if (!context) { //optional pass in context; otherwise, use default (ok this is REAL hacky isn't it)
-		context = ctx;
+function drawRoom(room, options) {
+	function getOptionOrDefault(optionId, defaultValue) {
+		var doesOptionExist = (options != undefined && options != null) && (options[optionId] != undefined && options[optionId] != null);
+		return doesOptionExist ? options[optionId] : defaultValue;
 	}
 
-	// if (room.id != debugLastRoomDrawn) {
-	// 	debugLastRoomDrawn = room.id;
-	// 	console.log("DRAW ROOM " + debugLastRoomDrawn);
-	// }
+	context = getOptionOrDefault("context", ctx);
+	frameIndex = getOptionOrDefault("frameIndex", null);
+	drawObjectInstances = getOptionOrDefault("drawObjectInstances", true);
 
 	var paletteId = "default";
 
@@ -2146,44 +2192,42 @@ function drawRoom(room,context,frameIndex) { // context & frameIndex are optiona
 			var id = room.tilemap[i][j];
 			if (id != "0") {
 				//console.log(id);
-				if (tile[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
+				if (object[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
 					id = "0";
 					room.tilemap[i][j] = id;
 				}
 				else {
 					// console.log(id);
-					drawTile( getTileImage(tile[id],paletteId,frameIndex), j, i, context );
+					drawObject(renderer.GetImage(object[id], paletteId, frameIndex), j, i, context);
 				}
 			}
 		}
 	}
 
-	//draw items
-	for (var i = 0; i < room.items.length; i++) {
-		var itm = room.items[i];
-		drawItem( getItemImage(item[itm.id],paletteId,frameIndex), itm.x, itm.y, context );
-	}
+	if (drawObjectInstances) {
+		// draw object instances
+		for (var i = 0; i < objectInstances.length; i++) {
+			var objectInstance = objectInstances[i];
+			var objectImage = renderer.GetImage(objectInstance, paletteId, frameIndex);
+			drawObject(objectImage, objectInstance.x, objectInstance.y, context);
+		}
 
-	//draw sprites
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.room === room.id) {
-			drawSprite( getSpriteImage(spr,paletteId,frameIndex), spr.x, spr.y, context );
+		// draw player instance
+		if (player().room === room.id) {
+			var objectDefinition = object[player().id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, player().x, player().y, context);
 		}
 	}
-}
-
-// TODO : remove these get*Image methods
-function getTileImage(t,palId,frameIndex) {
-	return renderer.GetImage(t,palId,frameIndex);
-}
-
-function getSpriteImage(s,palId,frameIndex) {
-	return renderer.GetImage(s,palId,frameIndex);
-}
-
-function getItemImage(itm,palId,frameIndex) {
-	return renderer.GetImage(itm,palId,frameIndex);
+	else {
+		// draw object initial locations
+		for (var i = 0; i < room.objects.length; i++) {
+			var objectLocation = room.objects[i];
+			var objectDefinition = object[objectLocation.id];
+			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			drawObject(objectImage, objectLocation.x, objectLocation.y, context);
+		}
+	}
 }
 
 function curPal() {
@@ -2245,16 +2289,15 @@ function startEndingDialog(ending) {
 		ending.id,
 		ending,
 		function() {
-			var isLocked = ending.property && ending.property.locked === true;
+			var isLocked = ending.property && ending.property.Get("locked") === true;
 			if (isLocked) {
 				isEnding = false;
 			}
 		});
 }
 
-function startItemDialog(itemId, dialogCallback) {
-	var dialogId = item[itemId].dlg;
-	// console.log("START ITEM DIALOG " + dialogId);
+function startItemDialog(itemInstance, dialogCallback) {
+	var dialogId = itemInstance.dlg;
 	if (dialog[dialogId]) {
 		queueScript(dialogId, null, dialogCallback); // todo : add item context?
 	}
@@ -2263,11 +2306,9 @@ function startItemDialog(itemId, dialogCallback) {
 	}
 }
 
-function startSpriteDialog(spriteId) {
-	var spr = sprite[spriteId];
-	var dialogId = spr.dlg;
-	// console.log("START SPRITE DIALOG " + dialogId);
-	if (dialog[dialogId]){
+function startSpriteDialog(spriteInstance) {
+	var dialogId = spriteInstance.dlg;
+	if (dialog[dialogId]) {
 		queueScript(dialogId, spr, function() {});
 	}
 }

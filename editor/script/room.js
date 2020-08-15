@@ -16,7 +16,10 @@ what other methods do I need to move into this class? exit stuff??
 function RoomTool(canvas) {
 	var self = this; // feels a bit hacky
 
-	this.drawing = new DrawingId( TileType.Avatar, "A" );
+	var drawingId = "A";
+	events.Listen("select_drawing", function(event) {
+		drawingId = event.id;
+	});
 
 	// edit flags
 	var isDragAddingTiles = false;
@@ -36,6 +39,10 @@ function RoomTool(canvas) {
 	events.Listen("enable_room_tool", function() {
 		isDisabledExternally = false;
 	});
+
+	function getDrawingType() {
+		return getDrawingTypeFromId(drawingId);
+	}
 
 	function onMouseDown(e) {
 		e.preventDefault();
@@ -74,15 +81,11 @@ function RoomTool(canvas) {
 			}
 		}
 
-		if (!isEditingMarker && self.drawing.id != null) {
+		if (!isEditingMarker && drawingId != null) {
 			//add tiles/sprites to map
-			if (self.drawing.type == TileType.Tile) {
-				if ( room[curRoom].tilemap[y][x] === "0" ) {
-					console.log("ADD");
-					//add
-					//row = row.substr(0, x) + drawingId + row.substr(x+1);
-					console.log( room[curRoom].tilemap );
-					room[curRoom].tilemap[y][x] = self.drawing.id;
+			if (getDrawingType() == TileType.Tile) {
+				if (room[curRoom].tilemap[y][x] === "0") {
+					room[curRoom].tilemap[y][x] = drawingId;
 					isDragAddingTiles = true;
 				}
 				else {
@@ -93,47 +96,49 @@ function RoomTool(canvas) {
 				}
 				//room[curRoom].tilemap[y] = row;
 			}
-			else if( self.drawing.type == TileType.Avatar || self.drawing.type == TileType.Sprite ) {
-				var otherSprite = getSpriteAt(x,y);
-				var isThisSpriteAlreadyHere = sprite[self.drawing.id].room === curRoom &&
-											sprite[self.drawing.id].x === x &&
-											sprite[self.drawing.id].y === y;
+			else if (getDrawingType() == TileType.Avatar) {
+				// TODO : bug -- doesn't erase other sprites!!
+				var isAvatarAlreadyHere = false;
 
-				if (otherSprite) {
-					//remove other sprite from map
-					sprite[otherSprite].room = null;
-					sprite[otherSprite].x = -1;
-					sprite[otherSprite].y = -1;
+				for (roomId in room) {
+					var playerObj = null;
+					for (i in room[roomId].objects) {
+						var obj = room[roomId].objects[i];
+						if (obj.id === drawingId) {
+							playerObj = obj;
+						}
+					}
+
+					if (playerObj) {
+						if (roomId === curRoom && x == playerObj.x && y == playerObj.y) {
+							isAvatarAlreadyHere = true;
+						}
+
+						var index = room[roomId].objects.indexOf(playerObj);
+						room[roomId].objects.splice(index, 1);
+					}
 				}
 
-				if (!isThisSpriteAlreadyHere) {
-					//add sprite to map
-					sprite[self.drawing.id].room = curRoom;
-					sprite[self.drawing.id].x = x;
-					sprite[self.drawing.id].y = y;
-					//row = row.substr(0, x) + "0" + row.substr(x+1); //is this necessary? no
-				}
-				else {
-					//remove sprite from map
-					sprite[self.drawing.id].room = null;
-					sprite[self.drawing.id].x = -1;
-					sprite[self.drawing.id].y = -1;
+				if (!isAvatarAlreadyHere) {
+					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
 				}
 			}
-			else if(self.drawing.type == TileType.Item ) {
+			else {
 				// TODO : is this the final behavior I want?
 
-				var otherItem = getItem(curRoom,x,y);
-				var isThisItemAlreadyHere = otherItem != null && otherItem.id === self.drawing.id;
+				var otherObject = getObjectLocation(curRoom, x, y);
+				var isObjectAlreadyHere = otherObject != null && otherObject.id === drawingId;
 
-				if(otherItem) {
-					getRoom().items.splice( getRoom().items.indexOf(otherItem), 1 );
+				if (otherObject) {
+					var index = room[curRoom].objects.indexOf(otherObject);
+					room[curRoom].objects.splice(index, 1);
 				}
 
-				if(!isThisItemAlreadyHere) {
-					getRoom().items.push( {id:self.drawing.id, x:x, y:y} );
+				if (!isObjectAlreadyHere) {
+					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
 				}
 			}
+
 			refreshGameData();
 			self.drawEditMap();
 		}
@@ -144,7 +149,7 @@ function RoomTool(canvas) {
 			return;
 		}
 
-		if( self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker() ) {
+		if (self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
 			// drag marker around
 			var off = getOffset(e);
 			off = mobileOffsetCorrection(off,e,(tilesize*mapsize*scale));
@@ -178,16 +183,14 @@ function RoomTool(canvas) {
 		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, mapsize - 1);
 		// var row = room[curRoom].tilemap[y];
 		if (isDragAddingTiles) {
-			if ( room[curRoom].tilemap[y][x] != self.drawing.id ) {
-				// row = row.substr(0, x) + drawingId + row.substr(x+1);
-				// room[curRoom].tilemap[y] = row;
-				room[curRoom].tilemap[y][x] = self.drawing.id;
+			if ( room[curRoom].tilemap[y][x] != drawingId ) {
+				room[curRoom].tilemap[y][x] = drawingId;
 				refreshGameData();
 				self.drawEditMap();
 			}
 		}
 		else if (isDragDeletingTiles) {
-			if ( room[curRoom].tilemap[y][x] != "0" ) {
+			if (room[curRoom].tilemap[y][x] != "0") {
 				// row = row.substr(0, x) + "0" + row.substr(x+1);
 				// room[curRoom].tilemap[y] = row;
 				room[curRoom].tilemap[y][x] = "0";
@@ -264,7 +267,7 @@ function RoomTool(canvas) {
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 
 		//draw map
-		drawRoom( room[curRoom] );
+		drawRoom(room[curRoom], { drawObjectInstances: false });
 
 		//draw grid
 		if (self.drawMapGrid) {
@@ -308,7 +311,17 @@ function RoomTool(canvas) {
 	});
 } // RoomTool()
 
-/* METHODS */
+/* 
+	GLOBAL FUNCTIONS
+	TODO : move as much as possible into the tool object
+*/
+
+/* PLAYMODE TODO 
+- make a PlayModeController objec?
+- share:
+	- on_play_mode
+	- on_edit_mode
+*/
 function togglePlayMode(e) {
 	if (e.target.checked) {
 		on_play_mode();
@@ -319,9 +332,222 @@ function togglePlayMode(e) {
 
 	updatePlayModeButton();
 }
-/* TODO 
-- make a PlayModeController objec?
-- share:
-	- on_play_mode
-	- on_edit_mode
-*/
+
+function on_room_name_change() {
+	var str = document.getElementById("roomName").value;
+	if(str.length > 0) {
+		room[curRoom].name = str;
+	}
+	else {
+		room[curRoom].name = null;
+	}
+
+	updateNamesFromCurData()
+
+	refreshGameData();
+}
+
+function selectRoom(roomId) {
+	console.log("SELECT ROOM " + roomId);
+
+	// ok watch out this is gonna be hacky
+	var ids = sortedRoomIdList();
+
+	var nextRoomIndex = -1;
+	for (var i = 0; i < ids.length; i++) {
+		if (ids[i] === roomId) {
+			nextRoomIndex = i;
+		}
+	}
+
+	if (nextRoomIndex != -1) {
+		roomIndex = nextRoomIndex;
+		curRoom = ids[roomIndex];
+		markerTool.SetRoom(curRoom);
+		roomTool.drawEditMap();
+		paintTool.UpdateCanvas();
+		updateRoomPaletteSelect();
+		paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+		if (drawing.type === TileType.Tile) {
+			updateWallCheckboxOnCurrentTile();
+		}
+
+		updateRoomName();
+	}
+}
+
+function nextRoom() {
+	var ids = sortedRoomIdList();
+	roomIndex = (roomIndex + 1) % ids.length;
+	curRoom = ids[roomIndex];
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+	if (drawing.type === TileType.Tile) {
+		updateWallCheckboxOnCurrentTile();
+	}
+
+	updateRoomName();
+}
+
+function prevRoom() {
+	var ids = sortedRoomIdList();
+	roomIndex--;
+	if (roomIndex < 0) roomIndex = (ids.length-1);
+	curRoom = ids[roomIndex];
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+	if (drawing.type === TileType.Tile) {
+		updateWallCheckboxOnCurrentTile();
+	}
+
+	updateRoomName();
+}
+
+function duplicateRoom() {
+	var copyRoomId = sortedRoomIdList()[roomIndex];
+	var roomToCopy = room[ copyRoomId ];
+
+	roomIndex = Object.keys( room ).length;
+	var newRoomId = nextRoomId();
+
+	console.log(newRoomId);
+	var duplicateTilemap = [];
+	for (y in roomToCopy.tilemap) {
+		duplicateTilemap.push([]);
+		for (x in roomToCopy.tilemap[y]) {
+			duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
+		}
+	}
+
+	var duplicateExits = [];
+	for (i in roomToCopy.exits) {
+		var exit = roomToCopy.exits[i];
+		duplicateExits.push( duplicateExit( exit ) );
+	}
+
+	room[newRoomId] = {
+		id : newRoomId,
+		tilemap : duplicateTilemap,
+		walls : roomToCopy.walls.slice(0),
+		exits : duplicateExits,
+		endings : roomToCopy.endings.slice(0),
+		pal : roomToCopy.pal,
+		items : []
+	};
+	refreshGameData();
+
+	curRoom = newRoomId;
+	//console.log(curRoom);
+	markerTool.SetRoom(curRoom); // hack to re-find all the markers
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+
+	updateRoomName();
+
+	// add new exit destination option to exits panel
+	var select = document.getElementById("exitDestinationSelect");
+	var option = document.createElement("option");
+	var roomLabel = localization.GetStringOrFallback("room_label", "room");
+	option.text = roomLabel + " " + newRoomId;
+	option.value = newRoomId;
+	select.add(option);
+}
+
+function newRoom() {
+	roomIndex = Object.keys( room ).length;
+	var roomId = nextRoomId();
+
+	var palIdList = sortedPaletteIdList();
+	var palId = palIdList.length > 0 ? palIdList[0] : "default";
+
+	console.log(roomId);
+
+	// TODO : need a shared make
+	room[roomId] = createRoom(roomId, palId);
+	refreshGameData();
+
+	curRoom = roomId;
+	//console.log(curRoom);
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	updateRoomPaletteSelect();
+
+	updateRoomName();
+
+	// add new exit destination option to exits panel
+	// var select = document.getElementById("exitDestinationSelect");
+	// var option = document.createElement("option");
+	// var roomLabel = localization.GetStringOrFallback("room_label", "room");
+	// option.text = roomLabel + " " + roomId;
+	// option.value = roomId;
+	// select.add(option);
+}
+
+function deleteRoom() {
+	if ( Object.keys(room).length <= 1 ) {
+		alert("You can't delete your only room!");
+	}
+	else if ( confirm("Are you sure you want to delete this room? You can't get it back.") ) {
+		var roomId = sortedRoomIdList()[roomIndex];
+
+		// delete exits in _other_ rooms that go to this room
+		for( r in room )
+		{
+			if( r != roomId) {
+				for( i in room[r].exits )
+				{
+					if( room[r].exits[i].dest.room === roomId )
+					{
+						room[r].exits.splice( i, 1 );
+					}
+				}
+			}
+		}
+
+		delete room[roomId];
+
+		refreshGameData();
+
+		markerTool.Clear();
+		nextRoom();
+		roomTool.drawEditMap();
+		paintTool.UpdateCanvas();
+		updateRoomPaletteSelect();
+		markerTool.Refresh();
+		// updateExitOptionsFromGameData();
+		//recreate exit options
+	}
+}
+
+function roomPaletteChange(event) {
+	var palId = event.target.value;
+	room[curRoom].pal = palId;
+	refreshGameData();
+	markerTool.SetRoom(curRoom);
+	roomTool.drawEditMap();
+	paintTool.UpdateCanvas();
+	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+}
+
+function toggleMapGrid(e) {
+	roomTool.drawMapGrid = e.target.checked;
+	iconUtils.LoadIcon(document.getElementById("roomGridIcon"), roomTool.drawMapGrid ? "visibility" : "visibility_off");
+	roomTool.drawEditMap();
+}
+
+function toggleCollisionMap(e) {
+	roomTool.drawCollisionMap = e.target.checked;
+	iconUtils.LoadIcon(document.getElementById("roomWallsIcon"), roomTool.drawCollisionMap ? "visibility" : "visibility_off");
+	roomTool.drawEditMap();
+}

@@ -187,8 +187,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 
 			nameCaption.innerText = img.title;
 			var curPaintMode = drawingCategory;
-			var drawingId = new DrawingId( curPaintMode, id );
-			var obj = drawingId.getEngineObject();
+			var obj = object[id];
 			if( obj.name === undefined || obj.name === null ) {
 				// console.log("default name!!!!");
 				nameCaption.classList.add( "thumbnailDefaultName" );
@@ -242,7 +241,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 	function updateAndForceRenderThumbnail(id) {
 		updateThumbnail(id);
 		var imgId = getThumbnailId(id);
-		renderer.Render( imgId, new DrawingId(drawingCategory,id) );
+		renderer.Render(imgId, id);
 	}
 
 	this.RenderThumbnail = function(id) {
@@ -277,7 +276,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 
 			if (isInViewport && cacheEntry.outOfDate) {
 				x++;
-				renderer.Render( imgId, new DrawingId(drawingCategory,id) );
+				renderer.Render( imgId, id );
 			}
 		}
 
@@ -351,13 +350,15 @@ function PaintExplorer(idPrefix,selectCallback) {
 	}
 
 	events.Listen("palette_change", function(event) {
-		refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+		// TODO : redo
+		// refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 	});
 
 	events.Listen("game_data_change", function(event) {
+		// TODO : redo
 		// the code in the paint and find drawing tools is so messy it hurts :(
-		changeSelection( paintTool.drawing.id );
-		refresh( paintTool.drawing.type, false /*doKeepOldThumbnails*/ );
+		// changeSelection( paintTool.drawing.id );
+		// refresh( paintTool.drawing.type, false /*doKeepOldThumbnails*/ );
 	});
 } // PaintExplorer()
 
@@ -374,7 +375,7 @@ function ThumbnailRenderer() {
 	var thumbnailRenderEncoders = {};
 	var cache = {};
 
-	function render(imgId,drawingId,frameIndex,imgElement) {
+	function render(imgId, drawingId, frameIndex, imgElement) {
 		var isAnimated = (frameIndex === undefined || frameIndex === null) ? true : false;
 
 		var palId = getRoomPal(curRoom); // TODO : should NOT be hardcoded like this
@@ -390,12 +391,12 @@ function ThumbnailRenderer() {
 
 		var drawingFrameData = [];
 
-		if( isAnimated || frameIndex == 0 ) {
-			drawingId.draw( drawingThumbnailCtx, 0, 0, palId, 0 /*frameIndex*/ );
+		if (isAnimated || frameIndex == 0) {
+			drawObject(renderer.GetImage(object[drawingId], palId, 0 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
 			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
 		}
-		if( isAnimated || frameIndex == 1 ) {
-			drawingId.draw( drawingThumbnailCtx, 0, 0, palId, 1 /*frameIndex*/ );
+		if (isAnimated || frameIndex == 1) {
+			drawObject(renderer.GetImage(object[drawingId], palId, 1 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
 			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
 		}
 
@@ -421,8 +422,9 @@ function ThumbnailRenderer() {
 		}
 		encoder.encode( gifData, createThumbnailRenderCallback(imgElement) );
 	}
-	this.Render = function(imgId,drawingId,frameIndex,imgElement) {
-		render(imgId,drawingId,frameIndex,imgElement);
+
+	this.Render = function(imgId, drawingId, frameIndex, imgElement) {
+		render(imgId, drawingId, frameIndex, imgElement);
 	};
 
 	function createThumbnailRenderCallback(img) {

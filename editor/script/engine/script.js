@@ -670,7 +670,7 @@ var Environment = function() {
 	functionMap.set("property", propertyFunc);
 
 	this.HasFunction = function(name) { return functionMap.has(name); };
-	this.EvalFunction = function(name,parameters,onReturn,env) {
+	this.EvalFunction = function(name, parameters, onReturn, env) {
 		if (env == undefined || env == null) {
 			env = this;
 		}
@@ -713,8 +713,12 @@ var Environment = function() {
 	operatorMap.set("-", subExp);
 
 	this.HasOperator = function(sym) { return operatorMap.get(sym); };
-	this.EvalOperator = function(sym,left,right,onReturn) {
-		operatorMap.get( sym )( this, left, right, onReturn );
+	this.EvalOperator = function(sym, left, right, onReturn, env) {
+		if (env == undefined || env == null) {
+			env = this;
+		}
+
+		operatorMap.get(sym)(env, left, right, onReturn);
 	}
 
 	var scriptMap = new Map();
@@ -742,7 +746,7 @@ var LocalEnvironment = function(parentEnvironment) {
 			env = this;
 		}
 
-		parentEnvironment.EvalFunction(name,parameters,onReturn,env);
+		parentEnvironment.EvalFunction(name, parameters, onReturn, env);
 	}
 
 	this.HasVariable = function(name) { return parentEnvironment.HasVariable(name); };
@@ -751,12 +755,12 @@ var LocalEnvironment = function(parentEnvironment) {
 	// this.DeleteVariable // not needed in local environment?
 
 	this.HasOperator = function(sym) { return parentEnvironment.HasOperator(sym); };
-	this.EvalOperator = function(sym,left,right,onReturn,env) {
+	this.EvalOperator = function(sym, left, right, onReturn, env) {
 		if (env == undefined || env == null) {
 			env = this;
 		}
 
-		parentEnvironment.EvalOperator(sym,left,right,onReturn,env);
+		parentEnvironment.EvalOperator(sym, left, right, onReturn, env);
 	};
 
 	// TODO : I don't *think* any of this is required by the local environment
@@ -781,25 +785,24 @@ var LocalEnvironment = function(parentEnvironment) {
 
 	// accessors for properties of the object that's running the script
 	this.HasProperty = function(name) {
-		if (curObject && curObject.property && curObject.property.hasOwnProperty(name)) {
-			return true;
+		if (curObject && curObject.property) {
+			return curObject.property.Has(name);
 		}
 		else {
 			return false;
 		}
 	};
 	this.GetProperty = function(name) {
-		if (curObject && curObject.property && curObject.property.hasOwnProperty(name)) {
-			return curObject.property[name]; // TODO : should these be getters and setters instead?
+		if (curObject && curObject.property) {
+			return curObject.property.Get(name);
 		}
 		else {
 			return null;
 		}
 	};
 	this.SetProperty = function(name, value) {
-		// NOTE : for now, we need to gaurd against creating new properties
-		if (curObject && curObject.property && curObject.property.hasOwnProperty(name)) {
-			curObject.property[name] = value;
+		if (curObject && curObject.property) {
+			curObject.property.Set(name, value);
 		}
 	};
 }
@@ -1223,14 +1226,15 @@ var ExpNode = function(operator, left, right) {
 	this.left = left;
 	this.right = right;
 
-	this.Eval = function(environment,onReturn) {
+	this.Eval = function(environment, onReturn) {
+		console.log(environment);
 		// console.log("EVAL " + this.operator);
 		var self = this; // hack to deal with scope
-		environment.EvalOperator( this.operator, this.left, this.right, 
+		environment.EvalOperator(this.operator, this.left, this.right, 
 			function(val){
 				// console.log("EVAL EXP " + self.operator + " " + val);
 				onReturn(val);
-			} );
+			});
 		// NOTE : sadly this pushes a lot of complexity down onto the actual operator methods
 	}
 

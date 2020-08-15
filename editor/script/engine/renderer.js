@@ -157,7 +157,14 @@ function getImageFrame(drawing, paletteId, frameOverride) {
 		}
 	}
 
-	return getImageSet(drawing, paletteId)[frameIndex];
+	var imageSet = getImageSet(drawing, paletteId);
+
+	// TODO : *** HACK *** actually update animation to go with new drawing!!!
+	if (frameIndex >= imageSet.length) {
+		frameIndex = 0;
+	}
+
+	return imageSet[frameIndex];
 }
 
 function getOrRenderImage(drawing, paletteId, frameOverride) {
