@@ -542,12 +542,12 @@ function roomPaletteChange(event) {
 
 function toggleMapGrid(e) {
 	roomTool.drawMapGrid = e.target.checked;
-	document.getElementById("roomGridIcon").innerHTML = roomTool.drawMapGrid ? "visibility" : "visibility_off";
+	iconUtils.LoadIcon(document.getElementById("roomGridIcon"), roomTool.drawMapGrid ? "visibility" : "visibility_off");
 	roomTool.drawEditMap();
 }
 
 function toggleCollisionMap(e) {
 	roomTool.drawCollisionMap = e.target.checked;
-	document.getElementById("roomWallsIcon").innerHTML = roomTool.drawCollisionMap ? "visibility" : "visibility_off";
+	iconUtils.LoadIcon(document.getElementById("roomWallsIcon"), roomTool.drawCollisionMap ? "visibility" : "visibility_off");
 	roomTool.drawEditMap();
 }

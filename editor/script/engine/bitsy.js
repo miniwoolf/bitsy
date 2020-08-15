@@ -72,7 +72,7 @@ function updateNamesFromCurData() {
 /* VERSION */
 var version = {
 	major: 7, // major changes
-	minor: 0, // smaller changes
+	minor: 2, // smaller changes
 	devBuildPhase: "RELEASE",
 };
 function getEngineVersion() {
@@ -150,12 +150,6 @@ var key = {
 
 var prevTime = 0;
 var deltaTime = 0;
-
-//methods used to trigger gif recording
-var didPlayerMoveThisFrame = false;
-var onPlayerMoved = null;
-// var didDialogUpdateThisFrame = false;
-var onDialogUpdate = null;
 
 //inventory update UI handles
 var onInventoryChanged = null;
@@ -516,17 +510,6 @@ function update() {
 
 	prevTime = curTime;
 
-	//for gif recording
-	if (didPlayerMoveThisFrame && onPlayerMoved != null) {
-		onPlayerMoved();
-	}
-	didPlayerMoveThisFrame = false;
-
-	/* hacky replacement */
-	if (onDialogUpdate != null) {
-		dialogRenderer.SetPageFinishHandler( onDialogUpdate );
-	}
-
 	input.resetKeyPressed();
 	input.resetTapReleased();
 }
@@ -832,19 +815,15 @@ function movePlayer(direction) {
 
 	if ( curPlayerDirection == Direction.Left && !(spr = getSpriteLeft()) && !isWallLeft()) {
 		player().x -= 1;
-		didPlayerMoveThisFrame = true;
 	}
 	else if ( curPlayerDirection == Direction.Right && !(spr = getSpriteRight()) && !isWallRight()) {
 		player().x += 1;
-		didPlayerMoveThisFrame = true;
 	}
 	else if ( curPlayerDirection == Direction.Up && !(spr = getSpriteUp()) && !isWallUp()) {
 		player().y -= 1;
-		didPlayerMoveThisFrame = true;
 	}
 	else if ( curPlayerDirection == Direction.Down && !(spr = getSpriteDown()) && !isWallDown()) {
 		player().y += 1;
-		didPlayerMoveThisFrame = true;
 	}
 	
 	var ext = getExit(player().x, player().y);
@@ -2139,6 +2118,7 @@ var dialogRenderer = dialogModule.CreateRenderer();
 var dialogBuffer = dialogModule.CreateBuffer();
 var fontManager = new FontManager();
 
+// TODO : is this scriptResult thing being used anywhere???
 function onExitDialog(scriptResult, dialogCallback) {
 	console.log("EXIT DIALOG!");
 
@@ -2220,7 +2200,7 @@ function startDialog(dialogStr, scriptId, dialogCallback, objectContext) {
 	// console.log("START DIALOG ");
 	if (dialogStr.length <= 0) {
 		// console.log("ON EXIT DIALOG -- startDialog 1");
-		onExitDialog(dialogCallback);
+		onExitDialog(null, dialogCallback);
 		return;
 	}
 

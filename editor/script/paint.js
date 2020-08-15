@@ -200,13 +200,13 @@ function PaintTool(canvas, roomTool) {
 			}
 
 			document.getElementById("animation").setAttribute("style","display:block;");
-			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
 			renderAnimationPreview(drawingId);
 		}
 		else {
 			document.getElementById("animatedCheckbox").checked = false;
 			document.getElementById("animation").setAttribute("style","display:none;");
-			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
 		}
 
 		// wall UI
@@ -390,11 +390,11 @@ function PaintTool(canvas, roomTool) {
 
 		if (isCurTileWall) {
 			document.getElementById("wallCheckbox").checked = true;
-			document.getElementById("wallCheckboxIcon").innerHTML = "border_outer";
+			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_on");
 		}
 		else {
 			document.getElementById("wallCheckbox").checked = false;
-			document.getElementById("wallCheckboxIcon").innerHTML = "border_clear";
+			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_off");
 		}
 	}
 
@@ -431,7 +431,7 @@ function PaintTool(canvas, roomTool) {
 
 	this.SetPaintGrid = function(isVisible) {
 		drawPaintGrid = isVisible;
-		document.getElementById("paintGridIcon").innerHTML = isVisible ? "visibility" : "visibility_off";
+		iconUtils.LoadIcon(document.getElementById("paintGridIcon"), isVisible ? "visibility" : "visibility_off");
 		self.UpdateCanvas();
 	}
 
@@ -441,13 +441,13 @@ function PaintTool(canvas, roomTool) {
 		if (isAnimated) {
 			addObjectAnimation();
 			document.getElementById("animation").setAttribute("style","display:block;");
-			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_more";
+			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
 			renderAnimationPreview(drawingId);
 		}
 		else {
 			removeObjectAnimation();
 			document.getElementById("animation").setAttribute("style","display:none;");
-			document.getElementById("animatedCheckboxIcon").innerHTML = "expand_less";
+			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
 		}
 	}
 
