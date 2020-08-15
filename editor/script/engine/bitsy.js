@@ -64,7 +64,7 @@ var spriteStartLocations = {};
 /* VERSION */
 var version = {
 	major: 7, // major changes
-	minor: 1, // smaller changes
+	minor: 2, // smaller changes
 	devBuildPhase: "RELEASE",
 };
 function getEngineVersion() {
@@ -145,12 +145,6 @@ var key = {
 
 var prevTime = 0;
 var deltaTime = 0;
-
-//methods used to trigger gif recording
-var didPlayerMoveThisFrame = false;
-var onPlayerMoved = null;
-// var didDialogUpdateThisFrame = false;
-var onDialogUpdate = null;
 
 //inventory update UI handles
 var onInventoryChanged = null;
@@ -414,17 +408,6 @@ function update() {
 	updateScriptQueue();
 
 	prevTime = curTime;
-
-	//for gif recording
-	if (didPlayerMoveThisFrame && onPlayerMoved != null) {
-		onPlayerMoved();
-	}
-	didPlayerMoveThisFrame = false;
-
-	/* hacky replacement */
-	if (onDialogUpdate != null) {
-		dialogRenderer.SetPageFinishHandler( onDialogUpdate );
-	}
 
 	input.resetKeyPressed();
 	input.resetTapReleased();
@@ -864,7 +847,7 @@ function movePlayer(direction) {
 
 	var didPlayerMoveThisFrame = !result.collision;
 	var spr = result.collidedWith;
-	
+
 	var ext = getExit( player().room, player().x, player().y );
 	var end = getEnding( player().room, player().x, player().y );
 	var itmIndex = getItemIndex( player().room, player().x, player().y );
@@ -932,7 +915,7 @@ function move(object, direction) {
 		}
 
 		if (spr != null && dialog[spr.hit]) {
-			queueScript(spr.hit, spr, function() {});	
+			queueScript(spr.hit, spr, function() {});
 		}
 	}
 	else {
