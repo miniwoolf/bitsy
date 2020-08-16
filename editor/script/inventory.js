@@ -36,31 +36,33 @@ function updateInventoryItemUI(){
 
 	// console.log("UPDATE!!!!");
 	var itemLabel = localization.GetStringOrFallback("item_label", "item");
-	for(id in item) {
-		var itemName = item[id].name != null ? item[id].name : itemLabel + " " + id;
-		// console.log( id );
-		// console.log( player() );
-		// console.log( player().inventory );
-		var itemCount = object[playerId].inventory[id] != undefined ? parseFloat(object[playerId].inventory[id]) : 0;
+	for (id in object) {
+		var obj = object[id];
 
-		var itemDiv = document.createElement("div");
-		itemDiv.classList.add("controlBox");
-		itemDiv.id = "inventoryItem_" + id;
-		itemDiv.title = itemName;
-		viewport.appendChild(itemDiv);
+		if (obj.type === "ITM") {
+			var itemName = obj.name != null ? obj.name : itemLabel + " " + id;
+			var playerEntry = isPlayMode ? player() : object[playerId];
+			var itemCount = playerEntry.inventory[id] != undefined ? parseFloat(playerEntry.inventory[id]) : 0;
 
-		var itemNameSpan = document.createElement("span");
-		itemNameSpan.innerText = itemName + " : ";
-		itemDiv.appendChild( itemNameSpan );
+			var itemDiv = document.createElement("div");
+			itemDiv.classList.add("controlBox");
+			itemDiv.id = "inventoryItem_" + id;
+			itemDiv.title = itemName;
+			viewport.appendChild(itemDiv);
 
-		var itemValueInput = document.createElement("input");
-		itemValueInput.type = "number";
-		itemValueInput.min = 0;
-		itemValueInput.value = itemCount;
-		itemValueInput.style.fontSize = "100%";
-		itemValueInput.style.width = "30%";
-		itemValueInput.addEventListener('change', createOnItemValueChange(id));
-		itemDiv.appendChild( itemValueInput );
+			var itemNameSpan = document.createElement("span");
+			itemNameSpan.innerText = itemName + " : ";
+			itemDiv.appendChild(itemNameSpan);
+
+			var itemValueInput = document.createElement("input");
+			itemValueInput.type = "number";
+			itemValueInput.min = 0;
+			itemValueInput.value = itemCount;
+			itemValueInput.style.fontSize = "100%";
+			itemValueInput.style.width = "30%";
+			itemValueInput.addEventListener('change', createOnItemValueChange(id));
+			itemDiv.appendChild(itemValueInput);
+		}
 	}
 }
 

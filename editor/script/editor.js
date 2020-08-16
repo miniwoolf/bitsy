@@ -388,15 +388,9 @@ function deleteDialog() {
 		nextDialog();
 
 		// delete all references to deleted dialog (TODO : should this go in a wrapper function somewhere?)
-		for (id in sprite) {
-			if (sprite[id].dlg === tempDialogId) {
-				sprite[id].dlg = null;
-			}
-		}
-
-		for (id in item) {
-			if (item[id].dlg === tempDialogId) {
-				item[id].dlg = null;
+		for (id in object) {
+			if (object[id].dlg === tempDialogId) {
+				object[id].dlg = null;
 			}
 		}
 

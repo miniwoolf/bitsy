@@ -571,10 +571,10 @@ function updateScriptQueue() {
 	// TODO : instead of immediately triggering scripts, put them in a queue
 	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
 		if (animationCounter === 0) {
-			for (id in sprite) {
-				var spr = sprite[id];
-				if (spr.room === curRoom && spr.stp != null) {
-					queueScript(spr.stp, spr, function() {});
+			for (var i = 0; i < objectInstances.length; i++) {
+				var obj = objectInstances[i];
+				if (obj.stp != null) {
+					queueScript(obj.stp, obj, function() {});
 				}
 			}
 		}
@@ -602,10 +602,10 @@ function updateScriptQueue() {
 		if (scriptInfo.parameters != undefined && scriptInfo.parameters != null) {
 			// TODO : should script info have a bool for this?
 			// should the run function have a bool?
-			scriptNext.RunCallback(dialog[scriptInfo.id], scriptInfo.objectContext, scriptInfo.parameters, onScriptEnd);			
+			scriptNext.RunCallback(dialog[scriptInfo.id], scriptInfo.objectContext, scriptInfo.parameters, onScriptEnd);
 		}
 		else {
-			scriptNext.Run(dialog[scriptInfo.id], scriptInfo.objectContext, onScriptEnd);	
+			scriptNext.Run(dialog[scriptInfo.id], scriptInfo.objectContext, onScriptEnd);
 		}
 	}
 }
@@ -913,11 +913,11 @@ function movePlayer(direction) {
 
 	// SCRIPT NEXT : prototype of keydown scripts
 	// TODO : make this real! (and move it into movePlayer() probably)
-	for (id in sprite) {
-		var spr = sprite[id];
-		if (spr.room === curRoom && spr.key != null && (spr.key in dialog)) {
+	for (var i = 0; i < objectInstances.length; i++) {
+		var obj = objectInstances[i];
+		if (obj.key != null && (obj.key in dialog)) {
 			console.log("sprite key script! " + directionToKeyName(direction));
-			queueScript(spr.key, spr, function() {}, [directionToKeyName(direction)]);
+			queueScript(obj.key, obj, function() {}, [directionToKeyName(direction)]);
 		}
 	}
 }
@@ -1110,6 +1110,9 @@ function createObjectInstance(instanceId, objectLocation) {
 		type: definition.type,
 		drw: definition.drw,
 		dlg: definition.dlg,
+		stp: definition.stp,
+		key: definition.key,
+		hit: definition.hit,
 		x: objectLocation.x,
 		y: objectLocation.y,
 		property: new PropertyHolder(),
@@ -2309,7 +2312,7 @@ function startItemDialog(itemInstance, dialogCallback) {
 function startSpriteDialog(spriteInstance) {
 	var dialogId = spriteInstance.dlg;
 	if (dialog[dialogId]) {
-		queueScript(dialogId, spr, function() {});
+		queueScript(dialogId, spriteInstance, function() {});
 	}
 }
 

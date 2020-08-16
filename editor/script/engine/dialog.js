@@ -350,9 +350,6 @@ var DialogBuffer = function() {
 				charIndex = 0;
 			}
 		}
-
-		rowIndex = CurRowCount()-1;
-		charIndex = CurCharCount()-1;
 	};
 
 	this.Continue = function() {
