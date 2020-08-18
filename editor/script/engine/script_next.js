@@ -523,6 +523,7 @@ function createLibrary(dialogBuffer, objectContext) {
 		},
 
 		// NEW FUNCTIONS (WIP)
+		// todo : other names?
 		"step": function(parameters, environment, onReturn) {
 			var result = false;
 
@@ -532,6 +533,17 @@ function createLibrary(dialogBuffer, objectContext) {
 			}
 
 			onReturn(result);
+		},
+		"create": function(parameters, environment, onReturn) {
+			// TODO : allow user to specify coordinates
+			// TODO : what if there's no id? or user uses name instead?
+			if (objectContext != null && objectContext != undefined) {
+				var objLocation = { id: parameters[0], x: objectContext.x, y: objectContext.y };
+				var obj = createObjectInstance(objectInstances.length, objLocation);
+				objectInstances.push(obj);
+			}
+
+			onReturn(null);
 		},
 		"destroy": function(parameters, environment, onReturn) {
 			// TODO : actually remove from room (after object merge)
