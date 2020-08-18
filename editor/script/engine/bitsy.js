@@ -298,6 +298,9 @@ function createPlayerInstance(playerDefinition) {
 		x: -1,
 		y: -1,
 		inventory : {},
+		stp: playerDefinition.stp,
+		key: playerDefinition.key,
+		hit: playerDefinition.hit,
 	};
 
 	// copy initial inventory values
@@ -571,6 +574,11 @@ function updateScriptQueue() {
 	// TODO : instead of immediately triggering scripts, put them in a queue
 	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
 		if (animationCounter === 0) {
+			// TODO : ok it's awkward to have the player instance be so special... should it be included in the object list?
+			if (playerInstance.stp != null) {
+				queueScript(playerInstance.stp, playerInstance, function() {});
+			}
+
 			for (var i = 0; i < objectInstances.length; i++) {
 				var obj = objectInstances[i];
 				if (obj.stp != null) {
@@ -919,6 +927,11 @@ function movePlayer(direction) {
 			console.log("sprite key script! " + directionToKeyName(direction));
 			queueScript(obj.key, obj, function() {}, [directionToKeyName(direction)]);
 		}
+	}
+
+	// temp hack for player... TODO : hook this up so results determine if player moves!
+	if (playerInstance.key != null) {
+		queueScript(playerInstance.key, playerInstance, function() {}, [directionToKeyName(direction)]);
 	}
 }
 
