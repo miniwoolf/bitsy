@@ -32,6 +32,7 @@ var playerId = "A";
 */
 var playerInstance = {};
 var objectInstances = [];
+var nextObjectInstanceId = 0;
 var exitInstances = [];
 var endingInstances = [];
 
@@ -540,10 +541,29 @@ function updateInput() {
 			curPlayerDirection = Direction.None;
 		}
 
+		function tryMovePlayer(direction) {
+			if (playerInstance.key != null) {
+				queueScript(
+					playerInstance.key,
+					playerInstance,
+					function(result) {
+						if (result != false) {
+							movePlayer(direction);
+						}
+						queueKeyDownScripts(direction);
+					},
+					[directionToKeyName(direction)]);
+			}
+			else {
+				movePlayer(direction);
+				queueKeyDownScripts(direction);
+			}
+		}
+
 		if (curPlayerDirection != Direction.None) {
 			if (curPlayerDirection != prevPlayerDirection) {
 				// new direction!
-				movePlayer(curPlayerDirection);
+				tryMovePlayer(curPlayerDirection);
 				playerHoldToMoveTimer = 500;
 			}
 			else {
@@ -551,7 +571,7 @@ function updateInput() {
 				playerHoldToMoveTimer -= deltaTime;
 
 				if (playerHoldToMoveTimer <= 0) {
-					movePlayer(curPlayerDirection);
+					tryMovePlayer(curPlayerDirection);
 					playerHoldToMoveTimer = 150;
 				}
 			}
@@ -870,9 +890,10 @@ var InputManager = function() {
 }
 var input = null;
 
+// todo : the way the returns work here is awkward to me
 function movePlayer(direction) {
 	if (player().room == null || !Object.keys(room).includes(player().room)) {
-		return; // player room is missing or invalid.. can't move them!
+		return false; // player room is missing or invalid.. can't move them!
 	}
 
 	var result = move(player(), direction);
@@ -892,7 +913,12 @@ function movePlayer(direction) {
 		startItemDialog(itm, function() {
 			// remove item from room
 			objectInstances.splice(itmIndex, 1);
-			room[itemRoom].objects[itm.instanceId].removed = true; // assumes instanceId === location index
+
+			// mark item as removed permanently
+			// (assumes instanceId === location index)
+			if (room[itemRoom].objects[itm.instanceId]) {
+				room[itemRoom].objects[itm.instanceId].removed = true;
+			}
 
 			// update player inventory
 			if (player().inventory[itm.id]) {
@@ -919,19 +945,15 @@ function movePlayer(direction) {
 		startSpriteDialog(spr /*spriteInstance*/);
 	}
 
-	// SCRIPT NEXT : prototype of keydown scripts
-	// TODO : make this real! (and move it into movePlayer() probably)
+	return !result.collision;
+}
+
+function queueKeyDownScripts(direction) {
 	for (var i = 0; i < objectInstances.length; i++) {
 		var obj = objectInstances[i];
 		if (obj.key != null && (obj.key in dialog)) {
-			console.log("sprite key script! " + directionToKeyName(direction));
 			queueScript(obj.key, obj, function() {}, [directionToKeyName(direction)]);
 		}
-	}
-
-	// temp hack for player... TODO : hook this up so results determine if player moves!
-	if (playerInstance.key != null) {
-		queueScript(playerInstance.key, playerInstance, function() {}, [directionToKeyName(direction)]);
 	}
 }
 
@@ -1045,13 +1067,17 @@ function initRoom(roomId) {
 
 	// init objects
 	objectInstances = [];
+	nextObjectInstanceId = 0;
 	for (var i = 0; i < room[roomId].objects.length; i++) {
 		var objectLocation = room[roomId].objects[i];
+		nextObjectInstanceId = i;
 		if (objectLocation.id != playerId && !objectLocation.removed) {
-			var objectInstance = createObjectInstance(i, objectLocation);
+			var objectInstance = createObjectInstance(nextObjectInstanceId, objectLocation);
 			objectInstances.push(objectInstance);
 		}
 	}
+
+	nextObjectInstanceId++;
 }
 
 function createObjectLocation(id, x, y) {
@@ -2315,7 +2341,7 @@ function startEndingDialog(ending) {
 function startItemDialog(itemInstance, dialogCallback) {
 	var dialogId = itemInstance.dlg;
 	if (dialog[dialogId]) {
-		queueScript(dialogId, null, dialogCallback); // todo : add item context?
+		queueScript(dialogId, itemInstance, dialogCallback);
 	}
 	else {
 		dialogCallback();

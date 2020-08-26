@@ -414,7 +414,7 @@ var special = {
 				var propertySetter = environment.Get(" _set_property_");
 				var propertyName = expression.list[1].value;
 				propertySetter([propertyName, value], null, onReturn);
-			});			
+			});
 		}
 		else if (expression.list.length >= 2) {
 			var propertyGetter = environment.Get(" _get_property_");
@@ -529,7 +529,13 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			if (objectContext != null && objectContext != undefined) {
 				// todo : make this line a little more readable
-				result = !move(objectContext, keyNameToDirection(parameters[0])).collision;
+				// todo : player vs everything else is hacky?
+				if (objectContext.id === "A") {
+					result = movePlayer(keyNameToDirection(parameters[0]));
+				}
+				else {
+					result = !move(objectContext, keyNameToDirection(parameters[0])).collision;
+				}
 			}
 
 			onReturn(result);
@@ -539,16 +545,24 @@ function createLibrary(dialogBuffer, objectContext) {
 			// TODO : what if there's no id? or user uses name instead?
 			if (objectContext != null && objectContext != undefined) {
 				var objLocation = { id: parameters[0], x: objectContext.x, y: objectContext.y };
-				var obj = createObjectInstance(objectInstances.length, objLocation);
+
+				if (parameters.length >= 3) {
+					objLocation.x = parameters[1];
+					objLocation.y = parameters[2];
+				}
+
+				var obj = createObjectInstance(nextObjectInstanceId, objLocation);
+				nextObjectInstanceId++;
+
 				objectInstances.push(obj);
 			}
 
 			onReturn(null);
 		},
 		"destroy": function(parameters, environment, onReturn) {
-			// TODO : actually remove from room (after object merge)
 			if (objectContext != null && objectContext != undefined) {
-				objectContext.room = null;
+				var index = objectInstances.indexOf(objectContext);
+				objectInstances.splice(index, 1);
 			}
 
 			onReturn(null);
