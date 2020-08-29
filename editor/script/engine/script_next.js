@@ -37,13 +37,15 @@ this.Run = function(script, objectContext, callback) {
 
 		var tokens = tokenize(scriptStr);
 		var expressions = parse(tokens);
-		compiledScripts[script.id] = expressions[0];		
+		compiledScripts[script.id] = expressions[0];
 	}
 
-	var lib = createLibrary(dialogBuffer, objectContext);
+	var coreLibrary = createLibrary(dialogBuffer, objectContext);
 	// todo : make this environment chaining less awkward?
-	var libEnv = new Environment(lib);
-	eval(compiledScripts[script.id], new Environment(variable, libEnv), callback);
+	var libraryEnv = new Environment(coreLibrary);
+	var variableEnv = new Environment(variable, libraryEnv);
+	var objectEnv = new Environment({ this: objectContext }, variableEnv);
+	eval(compiledScripts[script.id], objectEnv, callback);
 }
 
 var RunCallback = function(script, objectContext, inputParameters, callback) {
@@ -407,23 +409,28 @@ var special = {
 			onReturn(null);
 		});
 	},
-	// todo : name?
-	"property": function(expression, environment, onReturn) {
-		if (expression.list.length >= 3) {
-			eval(expression.list[2], environment, function(value) {
-				var propertySetter = environment.Get(" _set_property_");
-				var propertyName = expression.list[1].value;
-				propertySetter([propertyName, value], null, onReturn);
-			});
+	".": function(expression, environment, onReturn) {
+		if (expression.list.length < 3) {
+			onReturn(null); // not enough arguments!
 		}
-		else if (expression.list.length >= 2) {
-			var propertyGetter = environment.Get(" _get_property_");
-			var propertyName = expression.list[1].value;
-			propertyGetter([propertyName], null, onReturn);
-		}
-		else {
-			onReturn(null); // error
-		}
+
+		var name = expression.list[2].value;
+
+		eval(expression.list[1], environment, function(obj) {
+			// todo : handle null / invalid objects
+			if (expression.list.length >= 4) {
+				eval(expression.list[3], environment, function(value) {
+					obj[name] = value;
+					onReturn(value);
+				});
+			}
+			else if (name in obj) {
+				onReturn(obj[name]);
+			}
+			else {
+				onReturn(null); // no property value!
+			}
+		});
 	},
 }
 
@@ -434,6 +441,7 @@ function createLibrary(dialogBuffer, objectContext) {
 		"say": function(parameters, environment, onReturn) {
 			// todo : is this the right implementation of say?
 			// todo : hacky to force into a string with concatenation?
+			// todo : nicer way to print objects
 			dialogBuffer.AddText("" + parameters[0]);
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
@@ -541,6 +549,8 @@ function createLibrary(dialogBuffer, objectContext) {
 			onReturn(result);
 		},
 		"create": function(parameters, environment, onReturn) {
+			var obj = null;
+
 			// TODO : allow user to specify coordinates
 			// TODO : what if there's no id? or user uses name instead?
 			if (objectContext != null && objectContext != undefined) {
@@ -551,18 +561,17 @@ function createLibrary(dialogBuffer, objectContext) {
 					objLocation.y = parameters[2];
 				}
 
-				var obj = createObjectInstance(nextObjectInstanceId, objLocation);
-				nextObjectInstanceId++;
+				obj = createObjectInstance(nextObjectInstanceId, objLocation);
+				objectInstances[nextObjectInstanceId] = obj;
 
-				objectInstances.push(obj);
+				nextObjectInstanceId++;
 			}
 
-			onReturn(null);
+			onReturn(obj);
 		},
 		"destroy": function(parameters, environment, onReturn) {
 			if (objectContext != null && objectContext != undefined) {
-				var index = objectInstances.indexOf(objectContext);
-				objectInstances.splice(index, 1);
+				delete objectInstances[objectContext.instanceId];
 			}
 
 			onReturn(null);
@@ -582,19 +591,6 @@ function createLibrary(dialogBuffer, objectContext) {
 		"/tfx": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("tfx");
 			onReturn(null);
-		},
-
-		// hacky? secret methods.. (hidden by the spaces)
-		" _get_property_": function(parameters, environment, onReturn) {
-			// TODO ... handle non-existent properties, etc.
-			var propertyName = parameters[0];
-			onReturn(objectContext[propertyName]);
-		},
-		" _set_property_": function(parameters, environment, onReturn) {
-			var propertyName = parameters[0];
-			var propertyValue = parameters[1];
-			objectContext[propertyName] = propertyValue;
-			onReturn(objectContext[propertyName]);
 		},
 
 		// secret dialog buffer methods (todo: maybe they shouldn't be secret?)

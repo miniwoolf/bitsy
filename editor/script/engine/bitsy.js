@@ -31,7 +31,7 @@ var playerId = "A";
   - how do we manage instance IDs so they can be accessed from scripts?
 */
 var playerInstance = {};
-var objectInstances = [];
+var objectInstances = {};
 var nextObjectInstanceId = 0;
 var exitInstances = [];
 var endingInstances = [];
@@ -599,7 +599,7 @@ function updateScriptQueue() {
 				queueScript(playerInstance.stp, playerInstance, function() {});
 			}
 
-			for (var i = 0; i < objectInstances.length; i++) {
+			for (var i in objectInstances) {
 				var obj = objectInstances[i];
 				if (obj.stp != null) {
 					queueScript(obj.stp, obj, function() {});
@@ -676,7 +676,7 @@ function resetAllAnimations() {
 }
 
 function getSpriteAt(x,y) {
-	for (var i = 0; i < objectInstances.length; i++) {
+	for (var i in objectInstances) {
 		if (objectInstances[i].type === "SPR" &&
 			objectInstances[i].x === x && objectInstances[i].y === y) {
 			return objectInstances[i];
@@ -912,7 +912,7 @@ function movePlayer(direction) {
 
 		startItemDialog(itm, function() {
 			// remove item from room
-			objectInstances.splice(itmIndex, 1);
+			delete objectInstances[itmIndex];
 
 			// mark item as removed permanently
 			// (assumes instanceId === location index)
@@ -949,7 +949,7 @@ function movePlayer(direction) {
 }
 
 function queueKeyDownScripts(direction) {
-	for (var i = 0; i < objectInstances.length; i++) {
+	for (var i in objectInstances) {
 		var obj = objectInstances[i];
 		if (obj.key != null && (obj.key in dialog)) {
 			queueScript(obj.key, obj, function() {}, [directionToKeyName(direction)]);
@@ -1066,14 +1066,14 @@ function initRoom(roomId) {
 	}
 
 	// init objects
-	objectInstances = [];
+	objectInstances = {};
 	nextObjectInstanceId = 0;
 	for (var i = 0; i < room[roomId].objects.length; i++) {
 		var objectLocation = room[roomId].objects[i];
 		nextObjectInstanceId = i;
 		if (objectLocation.id != playerId && !objectLocation.removed) {
 			var objectInstance = createObjectInstance(nextObjectInstanceId, objectLocation);
-			objectInstances.push(objectInstance);
+			objectInstances[nextObjectInstanceId] = objectInstance;
 		}
 	}
 
@@ -1212,7 +1212,7 @@ function createEndingInstance(endingDefinition) {
 }
 
 function getItemIndex(x, y) {
-	for (var i = 0; i < objectInstances.length; i++ ) {
+	for (var i in objectInstances) {
 		if (objectInstances[i].type === "ITM") {
 			var itm = objectInstances[i];
 			if (itm.x == x && itm.y == y) {
@@ -2248,7 +2248,7 @@ function drawRoom(room, options) {
 
 	if (drawObjectInstances) {
 		// draw object instances
-		for (var i = 0; i < objectInstances.length; i++) {
+		for (var i in objectInstances) {
 			var objectInstance = objectInstances[i];
 			var objectImage = renderer.GetImage(objectInstance, paletteId, frameIndex);
 			drawObject(objectImage, objectInstance.x, objectInstance.y, context);
