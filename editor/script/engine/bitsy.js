@@ -967,15 +967,18 @@ function move(object, direction) {
 	var collision = (spr = getSpriteAt(x, y)) || isWall(x, y);
 
 	if (collision) {
+		// todo : shoudl I provide more info about walls? what about the screen edges?
+		var other = spr ? spr : { type : "TIL" };
+
 		// queue collision scripts
 		// TODO : should these go at the back of the line or the front?
-		// TODO : add input describing collision
+
 		if (dialog[object.hit]) {
-			queueScript(object.hit, object, function() {});
+			queueScript(object.hit, object, function() {}, [other]);
 		}
 
 		if (spr != null && dialog[spr.hit]) {
-			queueScript(spr.hit, spr, function() {});
+			queueScript(spr.hit, spr, function() {}, [object]);
 		}
 	}
 	else {
