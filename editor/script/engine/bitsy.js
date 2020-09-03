@@ -10,6 +10,7 @@ TODO maps
 - other properties for maps?
 - is it ok to make room "0" invalid
 - what should the low id be for maps? 0? 1?
+- should avatar be able to enter neighboring room when moved via script???
 */
 
 var xhr; // TODO : remove
@@ -908,7 +909,7 @@ function movePlayer(direction) {
 		return false; // player room is missing or invalid.. can't move them!
 	}
 
-	var result = move(player(), direction);
+	var result = move(player(), direction, true);
 
 	var didPlayerMoveThisFrame = !result.collision;
 	var spr = result.collidedWith;
@@ -969,14 +970,14 @@ function queueKeyDownScripts(direction) {
 	}
 }
 
-function move(object, direction) {
+function move(object, direction, canEnterNeighborRoom) {
 	var x = object.x + (direction === Direction.Left ? -1 : 0) + (direction === Direction.Right ? 1 : 0);
 	var y = object.y + (direction === Direction.Up ? -1 : 0) + (direction === Direction.Down ? 1 : 0);
 
 	// TODO: handle collisions with things other than sprites?
 	var spr = null;
 
-	var collision = (spr = getSpriteAt(x, y)) || isWall(x, y);
+	var collision = (spr = getSpriteAt(x, y)) || isWall(x, y, curRoom, canEnterNeighborRoom);
 
 	if (collision) {
 		// todo : shoudl I provide more info about walls? what about the screen edges?
@@ -1236,13 +1237,21 @@ function getItemIndex(x, y) {
 	return -1;
 }
 
-function isWall(x, y, roomId) {
-	if (x < 0 || x >= roomsize || y < 0 || y >= roomsize) {
-		return true;
-	}
-
+function isWall(x, y, roomId, canEnterNeighborRoom) {
 	if (roomId == undefined || roomId == null) {
 		roomId = curRoom;
+	}
+
+	if (x < 0 || x >= roomsize || y < 0 || y >= roomsize) {
+		var mapLocation = room[roomId].mapLocation;
+		if (canEnterNeighborRoom && mapLocation.id != null) {
+			var mapX = mapLocation.x + (x < 0 ? -1 : 0) + (x >= roomsize ? 1 : 0);
+			var mapY = mapLocation.y + (y < 0 ? -1 : 0) + (y >= roomsize ? 1 : 0);
+			return mapX < 0 || mapX >= mapsize || mapY < 0 || mapY >= mapsize || map[mapLocation.id].map[mapY][mapX] === "0";
+		}
+		else {
+			return true;
+		}
 	}
 
 	var tileId = getTile(x, y);
