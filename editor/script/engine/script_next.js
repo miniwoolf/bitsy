@@ -37,6 +37,7 @@ this.Run = function(script, objectContext, callback) {
 	// todo : make this environment chaining less awkward?
 	var libraryEnv = new Environment(coreLibrary);
 	var variableEnv = new Environment(variable, libraryEnv);
+	// todo : avatar? or player? for global avatar access
 	var objectEnv = new Environment({ this: objectContext, avatar: player(), }, variableEnv);
 	eval(compiledScripts[script.id], objectEnv, callback);
 }
