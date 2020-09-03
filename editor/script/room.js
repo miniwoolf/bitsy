@@ -50,7 +50,7 @@ function RoomTool(canvas) {
 		var isDisabledTemp = isDisabledExternally; // hack to exit early if disabled at START of mouse down
 
 		var off = getOffset(e);
-		off = mobileOffsetCorrection(off,e,(tilesize*mapsize*scale));
+		off = mobileOffsetCorrection(off, e, (tilesize * roomsize *scale));
 		var x = Math.floor( off.x / (tilesize*scale) );
 		var y = Math.floor( off.y / (tilesize*scale) );
 		// console.log(x + " " + y);
@@ -152,7 +152,7 @@ function RoomTool(canvas) {
 		if (self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
 			// drag marker around
 			var off = getOffset(e);
-			off = mobileOffsetCorrection(off,e,(tilesize*mapsize*scale));
+			off = mobileOffsetCorrection(off, e, (tilesize * roomsize * scale));
 			var x = Math.floor(off.x / (tilesize*scale));
 			var y = Math.floor(off.y / (tilesize*scale));
 
@@ -178,9 +178,9 @@ function RoomTool(canvas) {
 
 	function editTilesOnDrag(e) {
 		var off = getOffset(e);
-		off = mobileOffsetCorrection(off,e,(tilesize*mapsize*scale));
-		var x = clamp(Math.floor(off.x / (tilesize*scale)), 0, mapsize - 1);
-		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, mapsize - 1);
+		off = mobileOffsetCorrection(off, e, (tilesize * roomsize * scale));
+		var x = clamp(Math.floor(off.x / (tilesize*scale)), 0, roomsize - 1);
+		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, roomsize - 1);
 		// var row = room[curRoom].tilemap[y];
 		if (isDragAddingTiles) {
 			if ( room[curRoom].tilemap[y][x] != drawingId ) {
@@ -272,11 +272,11 @@ function RoomTool(canvas) {
 		//draw grid
 		if (self.drawMapGrid) {
 			ctx.fillStyle = getContrastingColor();
-			for (var x = 1; x < mapsize; x++) {
-				ctx.fillRect(x*tilesize*scale,0*tilesize*scale,1,mapsize*tilesize*scale);
+			for (var x = 1; x < roomsize; x++) {
+				ctx.fillRect(x * tilesize * scale, 0 * tilesize * scale, 1, roomsize * tilesize * scale);
 			}
-			for (var y = 1; y < mapsize; y++) {
-				ctx.fillRect(0*tilesize*scale,y*tilesize*scale,mapsize*tilesize*scale,1);
+			for (var y = 1; y < roomsize; y++) {
+				ctx.fillRect(0 * tilesize * scale, y * tilesize * scale, roomsize * tilesize * scale, 1);
 			}
 		}
 
@@ -285,8 +285,8 @@ function RoomTool(canvas) {
 			ctx.fillStyle = getContrastingColor();
 			for (y in room[curRoom].tilemap) {
 				for (x in room[curRoom].tilemap[y]) {
-					if( isWall(x,y,curRoom) ) {
-						ctx.fillRect(x*tilesize*scale,y*tilesize*scale,tilesize*scale,tilesize*scale);
+					if (isWall(x, y, curRoom)) {
+						ctx.fillRect(x * tilesize * scale, y * tilesize * scale, tilesize * scale, tilesize * scale);
 					}
 				}
 			}

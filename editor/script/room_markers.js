@@ -899,8 +899,8 @@ function RoomMarkerTool(markerCanvas1, markerCanvas2) {
 	var dragMarker = null;
 
 	this.StartDrag = function(x,y) {
-		x = clamp(x, 0, mapsize - 1);
-		y = clamp(y, 0, mapsize - 1);
+		x = clamp(x, 0, roomsize - 1);
+		y = clamp(y, 0, roomsize - 1);
 
 		dragMarker = FindMarkerAtLocation(x,y);
 
@@ -910,8 +910,8 @@ function RoomMarkerTool(markerCanvas1, markerCanvas2) {
 	}
 
 	this.ContinueDrag = function(x,y) {
-		x = clamp(x, 0, mapsize - 1);
-		y = clamp(y, 0, mapsize - 1);
+		x = clamp(x, 0, roomsize - 1);
+		y = clamp(y, 0, roomsize - 1);
 
 		if (dragMarker == null) {
 			return;

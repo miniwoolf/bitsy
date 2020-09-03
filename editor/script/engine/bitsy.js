@@ -135,7 +135,7 @@ var width = 128;
 var height = 128;
 var scale = 4; //this is stupid but necessary
 var tilesize = 8;
-var mapsize = 16;
+var roomsize = 16;
 
 var curRoom = "0";
 
@@ -1229,7 +1229,7 @@ function getItemIndex(x, y) {
 }
 
 function isWall(x, y, roomId) {
-	if (x < 0 || x >= mapsize || y < 0 || y >= mapsize) {
+	if (x < 0 || x >= roomsize || y < 0 || y >= roomsize) {
 		return true;
 	}
 
@@ -1741,10 +1741,10 @@ function parseRoom(lines, i, compatibilityFlags) {
 	// create tile map
 	if (flags.ROOM_FORMAT == 0) {
 		// old way: no commas, single char tile ids
-		var end = i + mapsize;
+		var end = i + roomsize;
 		var y = 0;
 		for (; i < end; i++) {
-			for (x = 0; x < mapsize; x++) {
+			for (x = 0; x < roomsize; x++) {
 				room[id].tilemap[y][x] = lines[i].charAt(x);
 			}
 			y++;
@@ -1752,11 +1752,11 @@ function parseRoom(lines, i, compatibilityFlags) {
 	}
 	else if (flags.ROOM_FORMAT == 1) {
 		// new way: comma separated, multiple char tile ids
-		var end = i + mapsize;
+		var end = i + roomsize;
 		var y = 0;
 		for (; i < end; i++) {
 			var lineSep = lines[i].split(",");
-			for (x = 0; x < mapsize; x++) {
+			for (x = 0; x < roomsize; x++) {
 				room[id].tilemap[y][x] = lineSep[x];
 			}
 			y++;

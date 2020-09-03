@@ -75,7 +75,7 @@ var DialogRenderer = function() {
 		if (isCentered) {
 			context.putImageData(textboxInfo.img, textboxInfo.left*scale, ((height/2)-(textboxInfo.height/2))*scale);
 		}
-		else if (player().y < mapsize/2) {
+		else if (player().y < roomsize/2) {
 			//bottom
 			context.putImageData(textboxInfo.img, textboxInfo.left*scale, (height-textboxInfo.bottom-textboxInfo.height)*scale);
 		}
