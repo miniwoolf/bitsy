@@ -570,8 +570,9 @@ function createLibrary(dialogBuffer, objectContext) {
 			onReturn(obj);
 		},
 		"destroy": function(parameters, environment, onReturn) {
-			if (objectContext != null && objectContext != undefined) {
-				delete objectInstances[objectContext.instanceId];
+			// todo : what if the object passed in is no longer valid?
+			if (parameters.length >= 1 && "instanceId" in parameters[0]) {
+				delete objectInstances[parameters[0].instanceId];
 			}
 
 			onReturn(null);
