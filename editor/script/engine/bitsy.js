@@ -11,6 +11,7 @@ TODO maps
 - is it ok to make room "0" invalid
 - what should the low id be for maps? 0? 1?
 - should avatar be able to enter neighboring room when moved via script???
+- what should happen if you immediately land on an exit, ending, or item when entering a new room via the map??
 */
 
 var xhr; // TODO : remove
@@ -956,6 +957,42 @@ function movePlayer(direction) {
 	}
 	else if (spr) {
 		startSpriteDialog(spr /*spriteInstance*/);
+	}
+
+	// map navigation:
+	// todo : is the right order for this?
+	// todo : stop all the copy pasting?
+	if (player().x < 0) {
+		var curMapLocation = room[curRoom].mapLocation;
+		var nextRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x - 1];
+		player().room = nextRoom
+		player().x += roomsize;
+		curRoom = nextRoom;
+		initRoom(curRoom);
+	}
+	else if (player().x >= roomsize) {
+		var curMapLocation = room[curRoom].mapLocation;
+		var nextRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x + 1];
+		player().room = nextRoom
+		player().x -= roomsize;
+		curRoom = nextRoom;
+		initRoom(curRoom);
+	}
+	else if (player().y < 0) {
+		var curMapLocation = room[curRoom].mapLocation;
+		var nextRoom = map[curMapLocation.id].map[curMapLocation.y - 1][curMapLocation.x];
+		player().room = nextRoom
+		player().y += roomsize;
+		curRoom = nextRoom;
+		initRoom(curRoom);
+	}
+	else if (player().y >= roomsize) {
+		var curMapLocation = room[curRoom].mapLocation;
+		var nextRoom = map[curMapLocation.id].map[curMapLocation.y + 1][curMapLocation.x];
+		player().room = nextRoom
+		player().y -= roomsize;
+		curRoom = nextRoom;
+		initRoom(curRoom);
 	}
 
 	return !result.collision;
