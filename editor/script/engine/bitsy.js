@@ -291,6 +291,7 @@ function onready(startWithTitle) {
 	}
 }
 
+// TODO : merge with createObjectInstance
 function createPlayerInstance(playerDefinition) {
 	var instance = {
 		id: playerDefinition.id,
@@ -302,6 +303,9 @@ function createPlayerInstance(playerDefinition) {
 		stp: playerDefinition.stp,
 		key: playerDefinition.key,
 		hit: playerDefinition.hit,
+		// TODO : kind of hacky to copy these around since they don't vary from the definition -- revisit?
+		col: playerDefinition.col,
+		animation: playerDefinition.animation,
 	};
 
 	// copy initial inventory values
@@ -1037,11 +1041,8 @@ function movePlayerThroughExit(ext) {
 	};
 
 	if (ext.dlg != undefined && ext.dlg != null) {
-		// TODO : I need to simplify dialog code,
-		// so I don't have to get the ID and the source str
-		// every time!
 		queueScript(
-			dialog[ext.dlg],
+			ext.dlg,
 			ext,
 			function(result) {
 				var isLocked = ext.property && ext.property.Get("locked") === true;
@@ -2259,8 +2260,7 @@ function drawRoom(room, options) {
 
 		// draw player instance
 		if (player().room === room.id) {
-			var objectDefinition = object[player().id];
-			var objectImage = renderer.GetImage(objectDefinition, paletteId, frameIndex);
+			var objectImage = renderer.GetImage(player(), paletteId, frameIndex);
 			drawObject(objectImage, player().x, player().y, context);
 		}
 	}
