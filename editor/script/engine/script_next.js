@@ -1,8 +1,4 @@
 /*
-TODO
-X script queue
-- port in object merge
-
 NOTES
 - what's the right id for collisions scripts? CLD? HIT? other?
 - BUG: when scripts take too long they interrupt player keypresses!
@@ -16,9 +12,6 @@ NOTES
 	- or four letters? STEP, KEYD, etc.
 - should I re-implement infix operations for math?
 - what do I do about global vs local variables?
-- need to handle delay in script execution from dialog running
-	- queue of update or keydown scripts
-	- need result callbacks
 */
 
 function ScriptNext() {
