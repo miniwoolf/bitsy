@@ -1,9 +1,15 @@
 /*
-TODO
-- replace references to sprite storage object with "object" (confusing names === sad me)
+TODO general
 - test all tools / buttons
-- test if new scripts and callbacks work!!
-- test if shared object stuff works
+
+TODO script_next
+- rename object storage to sprite or tile?
+
+TODO maps
+- transitions?
+- other properties for maps?
+- is it ok to make room "0" invalid
+- what should the low id be for maps? 0? 1?
 */
 
 var xhr; // TODO : remove
@@ -11,6 +17,7 @@ var canvas;
 var context; // TODO : remove if safe?
 var ctx;
 
+var map = {};
 var room = {};
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
@@ -136,6 +143,7 @@ var height = 128;
 var scale = 4; //this is stupid but necessary
 var tilesize = 8;
 var roomsize = 16;
+var mapsize = 8;
 
 var curRoom = "0";
 
@@ -1369,6 +1377,9 @@ function parseWorld(file) {
 		else if (getType(curLine) === "ROOM" || getType(curLine) === "SET") { //SET for back compat
 			i = parseRoom(lines, i, compatibilityFlags);
 		}
+		else if (getType(curLine) === "MAP") {
+			i = parseMap(lines, i);
+		}
 		else if (getType(curLine) === "TIL" || getType(curLine) === "SPR" || getType(curLine) === "ITM") {
 			i = parseObject(lines, i, getType(curLine));
 		}
@@ -1584,6 +1595,20 @@ function serializeWorld(skipFonts) {
 		}
 		worldStr += "\n";
 	}
+	/* MAP */
+	for (id in map) {
+		worldStr += "MAP " + id + "\n";
+		for (i in map[id].map) {
+			for (j in map[id].map[i]) {
+				worldStr += map[id].map[i][j];
+				if (j < map[id].map[i].length - 1) {
+					worldStr += ",";
+				}
+			}
+			worldStr += "\n";
+		}
+		worldStr += "\n";
+	}
 	/* OBJECTS */
 	for (id in object) {
 		var type = object[id].type;
@@ -1703,6 +1728,53 @@ function parseTitle(lines, i) {
 	return i;
 }
 
+function createMap(id) {
+	var map = {
+		id : id,
+		map : [], // todo: name? room_map? world_map?
+	};
+
+	for (var i = 0; i < mapsize; i++) {
+		map.map.push([]);
+
+		for (var j = 0; j < mapsize; j++) {
+			map.map[i].push("0");
+		}
+	}
+
+	return map;
+}
+
+function parseMap(lines, i) {
+	var id = getId(lines[i]);
+	map[id] = createMap(id);
+	i++;
+
+	var end = i + mapsize;
+	var y = 0;
+	for (; i < end; i++) {
+		var lineSep = lines[i].split(",");
+
+		for (x = 0; x < mapsize; x++) {
+			var roomId = lineSep[x];
+			map[id].map[y][x] = roomId;
+
+			// NOTE: assumes rooms already exist!
+			// TODO : room "0" is no longer valid since 0 == empty map space...
+			if (roomId != "0") {
+				room[roomId].mapLocation.id = id;
+				room[roomId].mapLocation.x = x;
+				room[roomId].mapLocation.y = y;
+			}
+		}
+
+		y++;
+	}
+
+	return i;
+}
+
+// todo : stop hard coding the room size?
 function createRoom(id, palId) {
 	return {
 		id : id,
@@ -1730,6 +1802,7 @@ function createRoom(id, palId) {
 		objects : [],
 		pal : palId,
 		name : null,
+		mapLocation : { id: null, x:-1, y:-1 },
 	};
 }
 
