@@ -962,36 +962,73 @@ function movePlayer(direction) {
 	// map navigation:
 	// todo : is the right order for this?
 	// todo : stop all the copy pasting?
+	// todo : how should transition settings work for maps?
 	if (player().x < 0) {
 		var curMapLocation = room[curRoom].mapLocation;
-		var nextRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x - 1];
-		player().room = nextRoom
-		player().x += roomsize;
-		curRoom = nextRoom;
+
+		var destRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x - 1];
+		var destX = player().x + roomsize;
+		var destY = player().y;
+
+		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_l");
+		transition.UpdateTransition(0);
+
+		player().room = destRoom;
+		player().x = destX;
+		player().y = destY;
+
+		curRoom = destRoom;
 		initRoom(curRoom);
 	}
 	else if (player().x >= roomsize) {
 		var curMapLocation = room[curRoom].mapLocation;
-		var nextRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x + 1];
-		player().room = nextRoom
-		player().x -= roomsize;
-		curRoom = nextRoom;
+
+		var destRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x + 1];
+		var destX = player().x - roomsize;
+		var destY = player().y;
+
+		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_r");
+		transition.UpdateTransition(0);
+
+		player().room = destRoom;
+		player().x = destX;
+		player().y = destY;
+
+		curRoom = destRoom;
 		initRoom(curRoom);
 	}
 	else if (player().y < 0) {
 		var curMapLocation = room[curRoom].mapLocation;
-		var nextRoom = map[curMapLocation.id].map[curMapLocation.y - 1][curMapLocation.x];
-		player().room = nextRoom
-		player().y += roomsize;
-		curRoom = nextRoom;
+
+		var destRoom = map[curMapLocation.id].map[curMapLocation.y - 1][curMapLocation.x];
+		var destX = player().x;
+		var destY = player().y + roomsize;
+
+		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_u");
+		transition.UpdateTransition(0);
+
+		player().room = destRoom;
+		player().x = destX;
+		player().y = destY;
+
+		curRoom = destRoom;
 		initRoom(curRoom);
 	}
 	else if (player().y >= roomsize) {
 		var curMapLocation = room[curRoom].mapLocation;
-		var nextRoom = map[curMapLocation.id].map[curMapLocation.y + 1][curMapLocation.x];
-		player().room = nextRoom
-		player().y -= roomsize;
-		curRoom = nextRoom;
+
+		var destRoom = map[curMapLocation.id].map[curMapLocation.y + 1][curMapLocation.x];
+		var destX = player().x;
+		var destY = player().y - roomsize;
+
+		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_d");
+		transition.UpdateTransition(0);
+
+		player().room = destRoom;
+		player().x = destX;
+		player().y = destY;
+
+		curRoom = destRoom;
 		initRoom(curRoom);
 	}
 
