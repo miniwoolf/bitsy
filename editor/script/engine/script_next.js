@@ -403,6 +403,39 @@ var special = {
 			onReturn(null);
 		});
 	},
+	// TODO : name? object? struct? table? other?
+	"struct": function(expression, environment, onReturn) {
+		var struct = {};
+		var i = 1;
+		var evalNext;
+
+		evalNext = function() {
+			if (i >= expression.list.length) {
+				onReturn(struct);
+			}
+			else {
+				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === ".") {
+					var name = expression.list[i].value.slice(1);
+					i++;
+
+					// TODO : what if there's an out-of-index error?
+					eval(expression.list[i], environment, function(value) {
+						struct[name] = value;
+						i++;
+						evalNext();
+					});
+				}
+				else {
+					// for now, skip invalid syntax
+					// TODO : decide whether to allow a lua-like "list" form
+					i++;
+					evalNext();
+				}
+			}
+		}
+
+		evalNext();
+	},
 	".": function(expression, environment, onReturn) {
 		if (expression.list.length < 3) {
 			onReturn(null); // not enough arguments!
