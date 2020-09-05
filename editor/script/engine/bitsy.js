@@ -960,18 +960,16 @@ function movePlayer(direction) {
 	}
 
 	// map navigation:
-	// todo : is the right order for this?
-	// todo : stop all the copy pasting?
-	// todo : how should transition settings work for maps?
-	if (player().x < 0) {
-		var curMapLocation = room[curRoom].mapLocation;
+	// todo : is the right order for this? (will it ever happen at the same time as another effect from above?)
+	function moveToNeighborRoom(mapLocation, dx, dy, transition_effect) {
+		var destRoom = map[mapLocation.id].map[mapLocation.y + dy][mapLocation.x + dx];
+		var destX = player().x - (dx * roomsize);
+		var destY = player().y - (dy * roomsize);
 
-		var destRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x - 1];
-		var destX = player().x + roomsize;
-		var destY = player().y;
-
-		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_l");
-		transition.UpdateTransition(0);
+		if (transition_effect) {
+			transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, transition_effect);
+			transition.UpdateTransition(0);
+		}
 
 		player().room = destRoom;
 		player().x = destX;
@@ -979,57 +977,21 @@ function movePlayer(direction) {
 
 		curRoom = destRoom;
 		initRoom(curRoom);
+	}
+
+	var curMapLocation = room[curRoom].mapLocation;
+
+	if (player().x < 0) {
+		moveToNeighborRoom(curMapLocation, -1, 0, map[curMapLocation.id].transition_effect_left);
 	}
 	else if (player().x >= roomsize) {
-		var curMapLocation = room[curRoom].mapLocation;
-
-		var destRoom = map[curMapLocation.id].map[curMapLocation.y][curMapLocation.x + 1];
-		var destX = player().x - roomsize;
-		var destY = player().y;
-
-		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_r");
-		transition.UpdateTransition(0);
-
-		player().room = destRoom;
-		player().x = destX;
-		player().y = destY;
-
-		curRoom = destRoom;
-		initRoom(curRoom);
+		moveToNeighborRoom(curMapLocation, 1, 0, map[curMapLocation.id].transition_effect_right);
 	}
 	else if (player().y < 0) {
-		var curMapLocation = room[curRoom].mapLocation;
-
-		var destRoom = map[curMapLocation.id].map[curMapLocation.y - 1][curMapLocation.x];
-		var destX = player().x;
-		var destY = player().y + roomsize;
-
-		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_u");
-		transition.UpdateTransition(0);
-
-		player().room = destRoom;
-		player().x = destX;
-		player().y = destY;
-
-		curRoom = destRoom;
-		initRoom(curRoom);
+		moveToNeighborRoom(curMapLocation, 0, -1, map[curMapLocation.id].transition_effect_up);
 	}
 	else if (player().y >= roomsize) {
-		var curMapLocation = room[curRoom].mapLocation;
-
-		var destRoom = map[curMapLocation.id].map[curMapLocation.y + 1][curMapLocation.x];
-		var destX = player().x;
-		var destY = player().y - roomsize;
-
-		transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, "slide_d");
-		transition.UpdateTransition(0);
-
-		player().room = destRoom;
-		player().x = destX;
-		player().y = destY;
-
-		curRoom = destRoom;
-		initRoom(curRoom);
+		moveToNeighborRoom(curMapLocation, 0, 1, map[curMapLocation.id].transition_effect_down);
 	}
 
 	return !result.collision;
@@ -1690,6 +1652,20 @@ function serializeWorld(skipFonts) {
 			}
 			worldStr += "\n";
 		}
+
+		if (map[id].transition_effect_up) {
+			worldStr += "FXU " + map[id].transition_effect_up + "\n";
+		}
+		if (map[id].transition_effect_down) {
+			worldStr += "FXD " + map[id].transition_effect_down + "\n";
+		}
+		if (map[id].transition_effect_left) {
+			worldStr += "FXL " + map[id].transition_effect_left + "\n";
+		}
+		if (map[id].transition_effect_right) {
+			worldStr += "FXR " + map[id].transition_effect_right + "\n";
+		}
+
 		worldStr += "\n";
 	}
 	/* OBJECTS */
@@ -1815,6 +1791,10 @@ function createMap(id) {
 	var map = {
 		id : id,
 		map : [], // todo: name? room_map? world_map?
+		transition_effect_up : null,
+		transition_effect_down : null,
+		transition_effect_left : null,
+		transition_effect_right : null,
 	};
 
 	for (var i = 0; i < mapsize; i++) {
@@ -1852,6 +1832,23 @@ function parseMap(lines, i) {
 		}
 
 		y++;
+	}
+
+	while (i < lines.length && lines[i].length > 0) { // look for empty line
+		if (getType(lines[i]) === "FXU") {
+			map[id].transition_effect_up = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "FXD") {
+			map[id].transition_effect_down = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "FXL") {
+			map[id].transition_effect_left = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "FXR") {
+			map[id].transition_effect_right = getId(lines[i]);
+		}
+
+		i++;
 	}
 
 	return i;
