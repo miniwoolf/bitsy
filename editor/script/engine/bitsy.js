@@ -3,15 +3,36 @@ TODO general
 - test all tools / buttons
 
 TODO script_next
-- rename object storage to sprite or tile?
+- redo graphical editor
 
 TODO maps
-- transitions?
+X transitions?
 - other properties for maps?
 - is it ok to make room "0" invalid
+	- how do we handle back compat?
 - what should the low id be for maps? 0? 1?
 - should avatar be able to enter neighboring room when moved via script???
 - what should happen if you immediately land on an exit, ending, or item when entering a new room via the map??
+- tool to edit maps
+
+TODO new exits & endings (& portals?)
+- new locks
+- fix bug with ending dialog (doesn't start at correct time)
+- prototype portals?
+- figure out back compat:
+	- how do we deal with overlapping ids (END for dialog vs sprite) -- new one? detection? use SPR + TYP for everything?
+	- can differentiate via version number (before or after 8.0)
+
+TODO new object/sprite system
+- rename object storage to sprite or tile?
+- move player instance into global instance holder
+- remove exit and ending instances now that they are sprites?
+- replace all the literal type strings "EXT" etc with an enum?
+- do I want to retire the property handler?
+
+TODO choices
+- action button support in input system
+- allow text effects or not? what about other code?
 */
 
 var xhr; // TODO : remove
@@ -32,13 +53,7 @@ var palette = { //start off with a default palette
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
 
-/*
-  Instance System
-  TODO
-  - should these be global, or associated with rooms?
-  - can the player instance be combined with the object instance holder?
-  - how do we manage instance IDs so they can be accessed from scripts?
-*/
+// Instances
 var playerInstance = {};
 var objectInstances = {};
 var nextObjectInstanceId = 0;
@@ -1085,6 +1100,15 @@ function movePlayerThroughExit(ext) {
 		initRoom(curRoom);
 	};
 
+	// set initial lock state
+	// todo : update on item pick up, or here?
+	if ("lock" in ext) {
+		if (ext.lock.item != null) {
+			var itemCount = ext.lock.item in player().inventory ? player().inventory[ext.lock.item] : 0;
+			ext.property.Set("locked", itemCount <= 0);
+		}
+	}
+
 	if (ext.dlg != undefined && ext.dlg != null) {
 		queueScript(
 			ext.dlg,
@@ -1097,7 +1121,11 @@ function movePlayerThroughExit(ext) {
 			});
 	}
 	else {
-		GoToDest();
+		// todo : move this check inside of GoToDest?
+		var isLocked = ext.property && ext.property.Get("locked") === true;
+		if (!isLocked) {
+			GoToDest();
+		}
 	}
 }
 
@@ -1203,6 +1231,9 @@ function createObjectInstance(instanceId, objectLocation) {
 		hit: definition.hit,
 		x: objectLocation.x,
 		y: objectLocation.y,
+		transition_effect: definition.transition_effect, // exit only
+		dest: definition.dest, // exit only
+		lock: definition.lock, // exit & ending only
 		property: new PropertyHolder(),
 		// TODO : kind of hacky to copy these around since they don't vary from the definition -- revisit?
 		col: definition.col,
@@ -1224,6 +1255,11 @@ function createObjectInstance(instanceId, objectLocation) {
 		"drawing",
 		function() { return instance.drw; },
 		function(value) { instance.drw = value; console.log(instance); });
+
+	// for exits and endings
+	// todo: have this do something for items too?
+	// todo: do I really want to keep this special property handler? or just use the default js object?
+	instance.property.Set("locked", false);
 
 	return instance;
 }
@@ -1331,6 +1367,17 @@ function getItem(roomId, x, y) {
 }
 
 function getExit(x, y) {
+	// new exits
+	for (i in objectInstances) {
+		if (objectInstances[i].type === "EXT") {
+			var e = objectInstances[i];
+			if (x == e.x && y == e.y) {
+				return e;
+			}
+		}
+	}
+
+	// old exits
 	for (i in exitInstances) {
 		var e = exitInstances[i];
 		if (x == e.x && y == e.y) {
@@ -1342,6 +1389,17 @@ function getExit(x, y) {
 }
 
 function getEnding(x, y) {
+	// new endings
+	for (i in objectInstances) {
+		if (objectInstances[i].type === "END") {
+			var e = objectInstances[i];
+			if (x == e.x && y == e.y) {
+				return e;
+			}
+		}
+	}
+
+	// old endings
 	for (i in endingInstances) {
 		var e = endingInstances[i];
 		if (x == e.x && y == e.y) {
@@ -1425,7 +1483,8 @@ function parseWorld(file) {
 		else if (getType(curLine) === "MAP") {
 			i = parseMap(lines, i);
 		}
-		else if (getType(curLine) === "TIL" || getType(curLine) === "SPR" || getType(curLine) === "ITM") {
+		// TODO : do I need to do anything about detecting END-as-dialog vs END-as-object???
+		else if (["TIL", "SPR", "ITM", "EXT", "END"].indexOf(getType(curLine)) != -1) {
 			i = parseObject(lines, i, getType(curLine));
 		}
 		else if (getType(curLine) === "DLG") {
@@ -1599,7 +1658,10 @@ function serializeWorld(skipFonts) {
 			for (j in room[id].objects) {
 				var obj = room[id].objects[j];
 				if (!object[obj.id].isUnique || !object[obj.id].hasUniqueLocation) {
-					worldStr += object[obj.id].type + " " + obj.id + " " + obj.x + "," + obj.y;
+					// worldStr += object[obj.id].type + " " + obj.id + " " + obj.x + "," + obj.y;
+					// TODO : for now I'm just using SPR to avoid collisions with EXT and END legacy commands
+					// *but* is that the final format I want to use??
+					worldStr += "SPR " + obj.id + " " + obj.x + "," + obj.y;
 					worldStr += "\n";
 				}
 
@@ -1704,6 +1766,15 @@ function serializeWorld(skipFonts) {
 			for (itemId in object[id].inventory) {
 				worldStr += "ITM " + itemId + " " + object[id].inventory[itemId] + "\n";
 			}
+		}
+		if (type === "EXT" && object[id].dest.room != null) {
+			worldStr += "DEST " + object[id].dest.room + " " + object[id].dest.x + "," + object[id].dest.y + "\n";
+		}
+		if (type === "EXT" && object[id].transition_effect != null) {
+			worldStr += "FX " + object[id].transition_effect + "\n";
+		}
+		if ((type === "EXT" || type === "END") && object[id].lock.item != null) {
+			worldStr += "LCK " + object[id].lock.item + "\n";
 		}
 
 		worldStr += "\n";
@@ -2068,15 +2139,14 @@ function createDrawing(id, sourceDrawingData) {
 	renderer.SetImageSource(id, drawingData);
 }
 
+// TODO : refactor so this follows pattern of other create* methods?
 function createObject(id, type, options) {
+	function valueOrDefault(value, defaultValue) {
+		return value != undefined && value != null ? value : defaultValue;
+	}
+
 	var isPlayer = type === "SPR" && id === playerId;
-	var name = options.name ? options.name : null;
 	var drwId = id;
-	var col = options.col ? options.col : (type === "TIL" ? 1 : 2);
-	var dlg = options.dlg ? options.dlg : null;
-	var stp = options.stp ? options.stp : null;
-	var key = options.key ? options.key : null;
-	var hit = options.hit ? options.hit : null;
 	var inventory = isPlayer && options.inventory ? options.inventory : null;
 	var isWall = type === "TIL" && options.isWall != undefined ? options.isWall : null;
 	var isUnique = isPlayer;
@@ -2086,21 +2156,31 @@ function createObject(id, type, options) {
 	object[id] = {
 		id: id, // unique ID
 		type: type, // default behavior: is it a sprite, item, or tile?
-		name : name, // user-supplied name
+		name : valueOrDefault(options.name, null), // user-supplied name
 		drw: drwId, // drawing ID
-		col: col, // color index
+		col: valueOrDefault(options.col, (type === "TIL" ? 1 : 2)), // color index
 		animation : { // animation data // TODO: figure out how this works with instances
 			isAnimated : (renderer.GetFrameCount(drwId) > 1),
 			frameIndex : 0,
 			frameCount : renderer.GetFrameCount(drwId),
 		},
-		dlg: dlg, // dialog ID (NOTE: tiles don't use this)
-		stp: stp,
-		key: key,
-		hit: hit,
+		dlg: valueOrDefault(options.dlg, null), // dialog ID (NOTE: tiles don't use this)
+		stp: valueOrDefault(options.stp, null),
+		key: valueOrDefault(options.key, null),
+		hit: valueOrDefault(options.hit, null),
 		inventory : inventory, // starting inventory (player only)
 		isWall : isWall, // wall tile? (tile only)
-		isUnique : isUnique,
+		isUnique : isUnique, // only one instance allowed? (player only)
+		transition_effect : valueOrDefault(options.transition_effect, null), // exit only
+		dest : {
+			room : valueOrDefault(options.destRoom, null), // exit only
+			x : valueOrDefault(options.destX, null), // exit only
+			y : valueOrDefault(options.destY, null), // exit only
+		},
+		lock : {
+			item : valueOrDefault(options.lockId, null), // exit & ending only
+			// todo : other properties
+		},
 	};
 }
 
@@ -2172,6 +2252,22 @@ function parseObject(lines, i, type) {
 			var itemId = getId(lines[i]);
 			var itemCount = parseFloat(getArg(lines[i], 2));
 			options.inventory[itemId] = itemCount;
+		}
+		else if (getType(lines[i]) === "DEST" && type === "EXT") {
+			// TODO : right name for this? it's 4 characters right now...
+			// TODO : maintain the same format as before with the comma seperation?
+			options.destRoom = getId(lines[i]);
+
+			var coordArgs = getArg(lines[i], 2).split(",");
+			options.destX = parseInt(coordArgs[0]);
+			options.destY = parseInt(coordArgs[1]);
+		}
+		else if (getType(lines[i]) === "FX" && type === "EXT") {
+			options.transition_effect = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "LCK" && (type === "EXT" || type === "END")) {
+			options.lockId = getId(lines[i]);
+			// todo : add other options: cost, min # of items
 		}
 
 		i++;
@@ -2483,8 +2579,21 @@ function startEndingDialog(ending) {
 	isNarrating = true;
 	isEnding = true;
 
+	// TODO : remove back compat with old endings once I'm sure I want to use this...
+	var endingId = "dlg" in ending ? ending.dlg : ending.id;
+
+	// TODO : dupe of exit functionality.. share-able?
+	// TODO : test that this actually works after I fix endings
+	// set initial lock state
+	if ("lock" in ending) {
+		if (ending.lock.item != null) {
+			var itemCount = ending.lock.item in player().inventory ? player().inventory[ending.lock.item] : 0;
+			ending.property.Set("locked", itemCount <= 0);
+		}
+	}
+
 	queueScript(
-		ending.id,
+		endingId,
 		ending,
 		function() {
 			var isLocked = ending.property && ending.property.Get("locked") === true;
