@@ -107,6 +107,13 @@ var DialogRenderer = function() {
 		0,0,0,1,0,
 	];
 
+	this.DrawChoiceSelect = function() {
+		drawArrow(choiceArrowLeft, true);
+		drawArrow(choiceArrowRight, false);
+
+		// TODO : page select dots?
+	}
+
 	function drawArrow(arrowImgData, isLeftSide) {
 		var top = (textboxInfo.height - 5) * scale;
 		var left = isLeftSide ? (4 * scale) : ((textboxInfo.width - (5 + 4)) * scale);
@@ -177,7 +184,11 @@ var DialogRenderer = function() {
 
 		buffer.ForEachActiveChar(this.DrawChar);
 
-		if (buffer.CanContinue()) {
+		if (buffer.IsChoicePage()) {
+			console.log("DRAW CHOICE???");
+			this.DrawChoiceSelect();
+		}
+		else if (buffer.CanContinue()) {
 			this.DrawNextArrow();
 		}
 
@@ -201,6 +212,8 @@ var DialogBuffer = function() {
 	var pageIndex = 0;
 	var rowIndex = 0;
 	var charIndex = 0;
+
+	var choiceIndex = 0;
 
 	var nextCharTimer = 0;
 	var nextCharMaxTime = 50; // in milliseconds
@@ -237,12 +250,39 @@ var DialogBuffer = function() {
 		LastPage().rows.push(row);
 	}
 
+	function AddChoice() {
+		// todo : temp content
+		var choice = {
+			isChoice : true,
+			pages : [
+				{
+					rows : [{
+						chars : CreateCharArray("option 1", []),
+					}],
+				},
+				{
+					rows : [{
+						chars : CreateCharArray("option 2", []),
+					}],
+				},
+			],
+		};
+
+		buffer.push(choice);
+	}
+
 	this.SetFont = function(f) {
 		font = f;
 	}
 
 	function CurPage() {
-		return buffer[pageIndex];
+		// todo : is this the best way to differentiate betwen choice / non-choice pages?
+		if (buffer[pageIndex].isChoice) {
+			return buffer[pageIndex].pages[choiceIndex];
+		}
+		else {
+			return buffer[pageIndex];
+		}
 	};
 
 	function CurRow() {
@@ -274,7 +314,12 @@ var DialogBuffer = function() {
 	}
 
 	function LastPage() {
-		return buffer[buffer.length - 1];
+		if (buffer[buffer.length - 1]) {
+			return buffer[buffer.length - 1].pages[choiceIndex]; // TODO : will this be bugged? store choice index in choice?
+		}
+		else {
+			return buffer[buffer.length - 1];
+		}
 	}
 
 	function LastRow() {
@@ -320,6 +365,13 @@ var DialogBuffer = function() {
 		charIndex = 0;
 		activeTextEffects = [];
 		onDialogEndCallbacks = [];
+
+		choiceIndex = 0;
+
+		// hack test
+		if (font != null) {
+			AddChoice();
+		}
 	};
 
 	function DoNextChar() {
@@ -402,6 +454,10 @@ var DialogBuffer = function() {
 			onDialogEndCallbacks.push(callback);
 		}
 	}
+
+	this.IsChoicePage = function() {
+		return IsActive() && ("isChoice" in buffer[pageIndex]) && buffer[pageIndex].isChoice;
+	};
 
 	this.CanContinue = function() {
 		return charIndex >= CurCharCount() && rowIndex >= CurRowCount();
