@@ -541,7 +541,11 @@ function updateInput() {
 					|| input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
 					dialogBuffer.NextChoice();
 				}
-				// todo : select
+				else if (input.isKeyDown(key.enter) || input.isKeyDown(key.space) || input.isTapReleased()) {
+					// select choice!
+					dialogBuffer.Continue();
+				}
+				input.ignoreHeldKeys(); // I think we want to do this for all choice input?
 			}
 			else {
 				if (input.anyKeyPressed() || input.isTapReleased()) {

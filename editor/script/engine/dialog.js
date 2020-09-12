@@ -14,14 +14,14 @@ var DialogRenderer = function() {
 	var textboxInfo = {
 		img : null,
 		width : 104,
-		height : 8+4+2+5, //8 for text, 4 for top-bottom padding, 2 for line padding, 5 for arrow
+		height : 8+4+2+6, //8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
 		top : 12,
 		left : 12,
 		bottom : 12, //for drawing it from the bottom
 		font_scale : 0.5, // we draw font at half-size compared to everything else
 		padding_vert : 2,
 		padding_horz : 4,
-		arrow_height : 5,
+		arrow_height : 6,
 	};
 
 	var font = null;
@@ -184,12 +184,13 @@ var DialogRenderer = function() {
 
 		buffer.ForEachActiveChar(this.DrawChar);
 
-		if (buffer.IsChoicePage()) {
-			console.log("DRAW CHOICE???");
-			this.DrawChoiceSelect();
-		}
-		else if (buffer.CanContinue()) {
-			this.DrawNextArrow();
+		if (buffer.CanContinue()) {
+			if (buffer.IsChoicePage()) {
+				this.DrawChoiceSelect();
+			}
+			else {
+				this.DrawNextArrow();
+			}
 		}
 
 		this.DrawTextbox();
@@ -259,16 +260,25 @@ var DialogBuffer = function() {
 					rows : [{
 						chars : CreateCharArray("option 1", []),
 					}],
+					postPageScriptHandlers : [
+						{ ContinueScriptExecution: function() { console.log("choice 1!"); } }
+					],
 				},
 				{
 					rows : [{
 						chars : CreateCharArray("option 2", []),
 					}],
+					postPageScriptHandlers : [
+						{ ContinueScriptExecution: function() { console.log("choice 2!!"); } }
+					]
 				},
 				{
 					rows : [{
 						chars : CreateCharArray("option 3", []),
 					}],
+					postPageScriptHandlers : [
+						{ ContinueScriptExecution: function() { console.log("choice 3!!!"); } }
+					]
 				},
 			],
 		};
@@ -435,6 +445,7 @@ var DialogBuffer = function() {
 			rowIndex = 0;
 			charIndex = 0;
 			nextCharTimer = 0;
+			choiceIndex = 0;
 		}
 		else {
 			// end of dialog
