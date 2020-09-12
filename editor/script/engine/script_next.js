@@ -322,6 +322,10 @@ var special = {
 
 		eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
 	},
+	// TODO : correct name for choice selector?
+	"cho" : function(expression, environment, onReturn) {
+		environment.Get(" _add_choice_")([], environment, onReturn);
+	},
 	"if": function(expression, environment, onReturn) {
 		var result = null;
 		var i = 1;
@@ -630,6 +634,10 @@ function createLibrary(dialogBuffer, objectContext) {
 		" _add_text_": function(parameters, environment, onReturn) {
 			dialogBuffer.AddText(parameters[0]);
 			dialogBuffer.AddScriptReturn(onReturn);
+		},
+		" _add_choice_": function(parameters, environment, onReturn) {
+			dialogBuffer.AddChoice();
+			dialogBuffer.AddScriptReturn(onReturn); // todo : this is probably wrong...
 		},
 	};
 

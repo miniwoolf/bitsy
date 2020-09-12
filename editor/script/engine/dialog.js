@@ -271,7 +271,7 @@ var DialogBuffer = function() {
 		LastPage().rows.push(row);
 	}
 
-	function AddChoice() {
+	this.AddChoice = function() {
 		// todo : temp content
 		var choice = {
 			isChoice : true,
@@ -327,8 +327,7 @@ var DialogBuffer = function() {
 	}
 
 	function CurPage() {
-		// todo : is this the best way to differentiate betwen choice / non-choice pages?
-		if (buffer[pageIndex].isChoice) {
+		if (IsChoicePage()) {
 			return buffer[pageIndex].pages[choiceIndex];
 		}
 		else {
@@ -365,7 +364,7 @@ var DialogBuffer = function() {
 	}
 
 	function LastPage() {
-		if (buffer[buffer.length - 1]) {
+		if (IsChoicePage()) {
 			return buffer[buffer.length - 1].pages[choiceIndex]; // TODO : will this be bugged? store choice index in choice?
 		}
 		else {
@@ -412,17 +411,11 @@ var DialogBuffer = function() {
 	this.Reset = function() {
 		buffer = [];
 		pageIndex = 0;
+		choiceIndex = 0;
 		rowIndex = 0;
 		charIndex = 0;
 		activeTextEffects = [];
 		onDialogEndCallbacks = [];
-
-		choiceIndex = 0;
-
-		// hack test
-		if (font != null) {
-			AddChoice();
-		}
 	};
 
 	function DoNextChar() {
