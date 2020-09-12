@@ -107,21 +107,43 @@ var DialogRenderer = function() {
 		0,0,0,1,0,
 	];
 
-	this.DrawChoiceSelect = function() {
-		drawArrow(choiceArrowLeft, true);
-		drawArrow(choiceArrowRight, false);
+	var choiceDot = [
+		0,0,0,0,0,
+		0,0,1,0,0,
+		0,0,0,0,0,
+	];
 
-		// TODO : page select dots?
+	var choiceDotSelected = [
+		0,0,1,0,0,
+		0,1,1,1,0,
+		0,0,1,0,0,
+	];
+
+	this.DrawChoiceSelect = function(choiceIndex, choiceCount, areArrowsVisible) {
+		if (areArrowsVisible) {
+			drawArrow(choiceArrowLeft, true);
+			drawArrow(choiceArrowRight, false);
+		}
+
+		var top = (textboxInfo.height - 5);
+		var left = (textboxInfo.width / 2) - Math.floor((choiceCount * 5) / 2);
+		for (var i = 0; i < choiceCount; i++) {
+			drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top * scale, left * scale);
+			left += 5;
+		}
 	}
 
 	function drawArrow(arrowImgData, isLeftSide) {
 		var top = (textboxInfo.height - 5) * scale;
 		var left = isLeftSide ? (4 * scale) : ((textboxInfo.width - (5 + 4)) * scale);
+		drawTextboxIcon(arrowImgData, top, left);
+	}
 
+	function drawTextboxIcon(imgData, top, left) {
 		for (var y = 0; y < 3; y++) {
 			for (var x = 0; x < 5; x++) {
 				var i = (y * 5) + x;
-				if (arrowImgData[i] == 1) {
+				if (imgData[i] == 1) {
 					//scaling nonsense
 					for (var sy = 0; sy < scale; sy++) {
 						for (var sx = 0; sx < scale; sx++) {
@@ -184,13 +206,11 @@ var DialogRenderer = function() {
 
 		buffer.ForEachActiveChar(this.DrawChar);
 
-		if (buffer.CanContinue()) {
-			if (buffer.IsChoicePage()) {
-				this.DrawChoiceSelect();
-			}
-			else {
-				this.DrawNextArrow();
-			}
+		if (buffer.IsChoicePage()) {
+			this.DrawChoiceSelect(buffer.CurChoiceIndex(), buffer.CurChoiceCount(), buffer.CanContinue());
+		}
+		else if (buffer.CanContinue()) {
+			this.DrawNextArrow();
 		}
 
 		this.DrawTextbox();
@@ -278,6 +298,22 @@ var DialogBuffer = function() {
 					}],
 					postPageScriptHandlers : [
 						{ ContinueScriptExecution: function() { console.log("choice 3!!!"); } }
+					]
+				},
+				{
+					rows : [{
+						chars : CreateCharArray("option 4", []),
+					}],
+					postPageScriptHandlers : [
+						{ ContinueScriptExecution: function() { console.log("choice 4!!!"); } }
+					]
+				},
+				{
+					rows : [{
+						chars : CreateCharArray("option 5", []),
+					}],
+					postPageScriptHandlers : [
+						{ ContinueScriptExecution: function() { console.log("choice 4!!!"); } }
 					]
 				},
 			],
@@ -503,6 +539,14 @@ var DialogBuffer = function() {
 		return IsActive() && ("isChoice" in buffer[pageIndex]) && buffer[pageIndex].isChoice;
 	};
 	this.IsChoicePage = IsChoicePage;
+
+	this.CurChoiceIndex = function() {
+		return choiceIndex;
+	}
+
+	this.CurChoiceCount = function() {
+		return IsChoicePage() ? buffer[pageIndex].pages.length : 0;
+	}
 
 	this.CanContinue = function() {
 		return charIndex >= CurCharCount() && rowIndex >= CurRowCount();
