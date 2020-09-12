@@ -265,6 +265,11 @@ var DialogBuffer = function() {
 						chars : CreateCharArray("option 2", []),
 					}],
 				},
+				{
+					rows : [{
+						chars : CreateCharArray("option 3", []),
+					}],
+				},
 			],
 		};
 
@@ -331,7 +336,7 @@ var DialogBuffer = function() {
 	this.ForEachActiveChar = function(handler) {
 		var rowArray = CurPage().rows;
 
-		for (var i = 0; i < rowArray.length; i++) {
+		for (var i = 0; i < Math.min(rowIndex + 1, rowArray.length); i++) {
 			var row = rowArray[i];
 
 			var charCount = (i == rowIndex) ? (charIndex + 1) : row.chars.length;
@@ -441,6 +446,34 @@ var DialogBuffer = function() {
 		return IsActive(); // hasMoreDialog
 	};
 
+	this.NextChoice = function() {
+		if (IsChoicePage()) {
+			choiceIndex++;
+
+			if (choiceIndex >= buffer[pageIndex].pages.length) {
+				choiceIndex = 0;
+			}
+
+			rowIndex = 0;
+			charIndex = 0;
+			nextCharTimer = 0;
+		}
+	}
+
+	this.PrevChoice = function() {
+		if (IsChoicePage()) {
+			choiceIndex--;
+
+			if (choiceIndex < 0) {
+				choiceIndex = buffer[pageIndex].pages.length - 1;
+			}
+
+			rowIndex = 0;
+			charIndex = 0;
+			nextCharTimer = 0;
+		}
+	}
+
 	function IsActive() {
 		return pageIndex < CurPageCount();
 	}
@@ -455,9 +488,10 @@ var DialogBuffer = function() {
 		}
 	}
 
-	this.IsChoicePage = function() {
+	function IsChoicePage() {
 		return IsActive() && ("isChoice" in buffer[pageIndex]) && buffer[pageIndex].isChoice;
 	};
+	this.IsChoicePage = IsChoicePage;
 
 	this.CanContinue = function() {
 		return charIndex >= CurCharCount() && rowIndex >= CurRowCount();

@@ -530,17 +530,39 @@ function updateInput() {
 		// do nothing
 	}
 	else if (dialogBuffer.IsActive()) {
-		if (input.anyKeyPressed() || input.isTapReleased()) {
-			/* CONTINUE DIALOG */
+		// todo : can choice and non-choice input share anything?
+		if (dialogBuffer.IsChoicePage()) {
 			if (dialogBuffer.CanContinue()) {
-				var hasMoreDialog = dialogBuffer.Continue();
-				if (!hasMoreDialog) {
-					// ignore currently held keys UNTIL they are released (stops player from insta-moving)
+				if (input.isKeyDown(key.left) || input.isKeyDown(key.a) || input.swipeLeft()
+					|| input.isKeyDown(key.up) || input.isKeyDown(key.w) || input.swipeUp()) {
+					dialogBuffer.PrevChoice();
+				}
+				else if (input.isKeyDown(key.right) || input.isKeyDown(key.d) || input.swipeRight()
+					|| input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
+					dialogBuffer.NextChoice();
+				}
+				// todo : select
+			}
+			else {
+				if (input.anyKeyPressed() || input.isTapReleased()) {
+					dialogBuffer.Skip();
 					input.ignoreHeldKeys();
 				}
 			}
-			else {
-				dialogBuffer.Skip();
+		}
+		else {
+			if (input.anyKeyPressed() || input.isTapReleased()) {
+				/* CONTINUE DIALOG */
+				if (dialogBuffer.CanContinue()) {
+					var hasMoreDialog = dialogBuffer.Continue();
+					if (!hasMoreDialog) {
+						// ignore currently held keys UNTIL they are released (stops player from insta-moving)
+						input.ignoreHeldKeys();
+					}
+				}
+				else {
+					dialogBuffer.Skip();
+				}
 			}
 		}
 	}
