@@ -90,18 +90,31 @@ var DialogRenderer = function() {
 		0,1,1,1,0,
 		0,0,1,0,0
 	];
+
 	this.DrawNextArrow = function() {
-		// console.log("draw arrow!");
-		var top = (textboxInfo.height-5) * scale;
-		var left = (textboxInfo.width-(5+4)) * scale;
-		if (textDirection === TextDirection.RightToLeft) { // RTL hack
-			left = 4 * scale;
-		}
+		drawArrow(arrowdata, textDirection === TextDirection.RightToLeft);
+	};
+
+	var choiceArrowLeft = [
+		0,1,0,0,0,
+		1,1,0,0,0,
+		0,1,0,0,0,
+	];
+
+	var choiceArrowRight = [
+		0,0,0,1,0,
+		0,0,0,1,1,
+		0,0,0,1,0,
+	];
+
+	function drawArrow(arrowImgData, isLeftSide) {
+		var top = (textboxInfo.height - 5) * scale;
+		var left = isLeftSide ? (4 * scale) : ((textboxInfo.width - (5 + 4)) * scale);
 
 		for (var y = 0; y < 3; y++) {
 			for (var x = 0; x < 5; x++) {
 				var i = (y * 5) + x;
-				if (arrowdata[i] == 1) {
+				if (arrowImgData[i] == 1) {
 					//scaling nonsense
 					for (var sy = 0; sy < scale; sy++) {
 						for (var sx = 0; sx < scale; sx++) {
@@ -115,7 +128,7 @@ var DialogRenderer = function() {
 				}
 			}
 		}
-	};
+	}
 
 	var text_scale = 2; //using a different scaling factor for text feels like cheating... but it looks better
 	this.DrawChar = function(char, row, col, leftPos) {
