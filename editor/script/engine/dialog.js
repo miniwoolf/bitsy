@@ -271,55 +271,35 @@ var DialogBuffer = function() {
 		LastPage().rows.push(row);
 	}
 
-	this.AddChoice = function() {
-		// todo : temp content
+	function AddChoice() {
 		var choice = {
 			isChoice : true,
-			pages : [
-				{
-					rows : [{
-						chars : CreateCharArray("option 1", []),
-					}],
-					postPageScriptHandlers : [
-						{ ContinueScriptExecution: function() { console.log("choice 1!"); } }
-					],
-				},
-				{
-					rows : [{
-						chars : CreateCharArray("option 2", []),
-					}],
-					postPageScriptHandlers : [
-						{ ContinueScriptExecution: function() { console.log("choice 2!!"); } }
-					]
-				},
-				{
-					rows : [{
-						chars : CreateCharArray("option 3", []),
-					}],
-					postPageScriptHandlers : [
-						{ ContinueScriptExecution: function() { console.log("choice 3!!!"); } }
-					]
-				},
-				{
-					rows : [{
-						chars : CreateCharArray("option 4", []),
-					}],
-					postPageScriptHandlers : [
-						{ ContinueScriptExecution: function() { console.log("choice 4!!!"); } }
-					]
-				},
-				{
-					rows : [{
-						chars : CreateCharArray("option 5", []),
-					}],
-					postPageScriptHandlers : [
-						{ ContinueScriptExecution: function() { console.log("choice 4!!!"); } }
-					]
-				},
-			],
+			pages : [],
 		};
 
 		buffer.push(choice);
+	}
+
+	this.AddChoiceOption = function(onReturnHandler) {
+		if (!IsLastPageChoice()) {
+			AddChoice();
+		}
+
+		var controlChar = new DialogScriptControlChar();
+		controlChar.SetHandler(function() {
+			console.log("CHOICE -- RETURN TO SCRIPT EXECUTION!");
+			onReturnHandler();
+		});
+
+		var page = {
+			rows : [{
+				chars : CreateCharArray("option", []), // todo : temp content
+			}],
+			isFinished : false,
+			postPageScriptHandlers : [controlChar],
+		};
+
+		buffer[buffer.length - 1].pages.push(page);
 	}
 
 	this.SetFont = function(f) {
@@ -363,8 +343,12 @@ var DialogBuffer = function() {
 		return CurRow().chars.length;
 	}
 
+	function IsLastPageChoice() {
+		return buffer.length > 0 && ("isChoice" in buffer[buffer.length - 1]) && buffer[buffer.length - 1].isChoice;
+	}
+
 	function LastPage() {
-		if (IsChoicePage()) {
+		if (IsLastPageChoice()) {
 			return buffer[buffer.length - 1].pages[choiceIndex]; // TODO : will this be bugged? store choice index in choice?
 		}
 		else {
