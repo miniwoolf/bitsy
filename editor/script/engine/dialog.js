@@ -285,21 +285,24 @@ var DialogBuffer = function() {
 			AddChoice();
 		}
 
+		var page = {
+			rows : [],
+			isFinished : false,
+			postPageScriptHandlers : [],
+		};
+
 		var controlChar = new DialogScriptControlChar();
 		controlChar.SetHandler(function() {
 			console.log("CHOICE -- RETURN TO SCRIPT EXECUTION!");
+			LastPage().isFinished = true; // todo : any chance of bugs with this?
 			onReturnHandler();
 		});
 
-		var page = {
-			rows : [{
-				chars : CreateCharArray("option", []), // todo : temp content
-			}],
-			isFinished : false,
-			postPageScriptHandlers : [controlChar],
-		};
+		page.postPageScriptHandlers.push(controlChar);
 
 		buffer[buffer.length - 1].pages.push(page);
+
+		AddRow();
 	}
 
 	this.SetFont = function(f) {
@@ -349,7 +352,8 @@ var DialogBuffer = function() {
 
 	function LastPage() {
 		if (IsLastPageChoice()) {
-			return buffer[buffer.length - 1].pages[choiceIndex]; // TODO : will this be bugged? store choice index in choice?
+			var choicePage = buffer[buffer.length - 1];
+			return choicePage.pages[choicePage.pages.length - 1];
 		}
 		else {
 			return buffer[buffer.length - 1];
@@ -642,26 +646,31 @@ var DialogBuffer = function() {
 	}
 
 	this.AddScriptReturn = function(onReturnHandler) {
-		var controlChar = new DialogScriptControlChar();
-		controlChar.SetHandler(function() {
-			console.log("RETURN TO SCRIPT EXECUTION!");
-			onReturnHandler();
-		});
-
-		if (IsActive() && LastPage().isFinished) {
-			console.log("ADD SCRIPT RETURN -- post page");
-			// add script return after page ends
-			LastPage().postPageScriptHandlers.push(controlChar);
-		}
-		else if (IsActive()) {
-			console.log("ADD SCRIPT RETURN -- inline");
-			console.log(LastPage());
-			// add inline script return
-			LastRow().chars.push(controlChar);
+		if (IsLastPageChoice()) {
+			onReturnHandler(); // return immediately to create choice options!
 		}
 		else {
-			// TODO
-			console.log("OH NO NOTHING IS ACTIVE!!!");
+			var controlChar = new DialogScriptControlChar();
+			controlChar.SetHandler(function() {
+				console.log("RETURN TO SCRIPT EXECUTION!");
+				onReturnHandler();
+			});
+
+			if (IsActive() && LastPage().isFinished) {
+				console.log("ADD SCRIPT RETURN -- post page");
+				// add script return after page ends
+				LastPage().postPageScriptHandlers.push(controlChar);
+			}
+			else if (IsActive()) {
+				console.log("ADD SCRIPT RETURN -- inline");
+				console.log(LastPage());
+				// add inline script return
+				LastRow().chars.push(controlChar);
+			}
+			else {
+				// TODO
+				console.log("OH NO NOTHING IS ACTIVE!!!");
+			}
 		}
 	}
 
@@ -734,13 +743,15 @@ var DialogBuffer = function() {
 
 	// todo... share stuff with AddText?
 	this.AddWord = function(wordStr) {
+		console.log("ADD WORD TO BUFFER " + wordStr);
+
 		if (arabicHandler.ContainsArabicCharacters(wordStr)) {
 			wordStr = arabicHandler.ShapeArabicCharacters(wordStr);
 		}
 
 		var wordCharArray = CreateCharArray(wordStr, activeTextEffects);
 
-		AddWordCharArray(wordCharArray, true);		
+		AddWordCharArray(wordCharArray, true);
 	}
 
 	this.AddLinebreak = function() {

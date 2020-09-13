@@ -33,6 +33,9 @@ TODO new object/sprite system
 TODO choices
 - action button support in input system
 - allow text effects or not? what about other code?
+- edge cases:
+	- what if you put a choice block inside a choice option???
+	- what if you put long running stuff inside a choice option?
 */
 
 var xhr; // TODO : remove

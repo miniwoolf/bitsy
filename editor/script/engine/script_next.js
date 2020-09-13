@@ -324,9 +324,34 @@ var special = {
 	},
 	// TODO : correct name for choice selector?
 	"cho" : function(expression, environment, onReturn) {
-		for (var i = 1; i < expression.list.length; i++) {
-			environment.Get(" _add_choice_")([], environment, onReturn);
+		var i = 1;
+		var evalNext;
+
+		// use this to capture the current expression
+		function createReturnHandler(expression, environment, onReturn) {
+			return function() {
+				eval(expression, environment, onReturn);
+			}
 		}
+
+		evalNext = function() {
+			if (i + 1 < expression.list.length) {
+				// initialize choice that will evaluate the option result
+				var handler = createReturnHandler(expression.list[i + 1], environment, onReturn);
+				environment.Get(" _add_choice_")([], environment, handler);
+
+				// eval option (will create the choice text)
+				eval(expression.list[i], environment, function() {
+					i += 2;
+					evalNext();
+				});
+			}
+			else {
+				// todo : need to do anything here???
+			}
+		};
+
+		evalNext();
 	},
 	"if": function(expression, environment, onReturn) {
 		var result = null;
