@@ -281,7 +281,7 @@ var DialogBuffer = function() {
 	}
 
 	this.AddChoiceOption = function(onReturnHandler) {
-		if (!IsLastPageChoice()) {
+		if (!IsLastPageChoice() || LastPage().isFinished) {
 			AddChoice();
 		}
 
