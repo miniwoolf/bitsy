@@ -675,15 +675,20 @@ function updateScriptQueue() {
 		dialogRenderer.Reset();
 		dialogBuffer.Reset();
 
-		// TODO : ending?
-
 		var onScriptEnd = function(value) {
 			if (scriptInfo.callback) {
 				scriptInfo.callback(value);
 			}
 
+			// todo : will this break with callbacks that start dialog?
 			isScriptRunning = false;
 		};
+
+		if (scriptInfo.onStart != undefined && scriptInfo.onStart != null) {
+			scriptInfo.onStart();
+		}
+
+		dialogRenderer.SetCentered(isNarrating);
 
 		if (scriptInfo.parameters != undefined && scriptInfo.parameters != null) {
 			// TODO : should script info have a bool for this?
@@ -696,12 +701,13 @@ function updateScriptQueue() {
 	}
 }
 
-function queueScript(scriptId, objectContext, callback, parameters) {
+function queueScript(scriptId, objectContext, callback, parameters, onStart) {
 	scriptQueue.push({
 		id: scriptId,
 		objectContext: objectContext,
 		callback: callback,
 		parameters: parameters, // for scripts with callbacks: should I make that explicit?
+		onStart: onStart,
 	});
 }
 
@@ -2604,10 +2610,6 @@ function startTitle() {
 }
 
 function startEndingDialog(ending) {
-	// TODO : this won't work... needs to move into the queue logic
-	isNarrating = true;
-	isEnding = true;
-
 	// TODO : remove back compat with old endings once I'm sure I want to use this...
 	var endingId = "dlg" in ending ? ending.dlg : ending.id;
 
@@ -2625,10 +2627,20 @@ function startEndingDialog(ending) {
 		endingId,
 		ending,
 		function() {
-			var isLocked = ending.property && ending.property.Get("locked") === true;
-			if (isLocked) {
-				isEnding = false;
-			}
+			// todo : the nested callbacks are a bit much..
+			dialogBuffer.OnDialogEnd(function() {
+				isNarrating = false;
+
+				var isLocked = ending.property && ending.property.Get("locked") === true;
+				if (isLocked) {
+					isEnding = false;
+				}
+			});
+		},
+		null,
+		function() {
+			isNarrating = true;
+			isEnding = true;
 		});
 }
 
