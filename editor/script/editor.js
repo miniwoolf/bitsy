@@ -558,6 +558,7 @@ var editMode = EditMode.Edit; // TODO : move to core.js?
 /* TOOL CONTROLLERS */
 var roomTool;
 var paintTool;
+var mapTool;
 
 /* ROOM */
 var roomIndex = 0;
@@ -775,6 +776,10 @@ function start() {
 	console.log("MARKER TOOL " + markerTool);
 
 	roomTool.markers = markerTool;
+
+	mapTool = new MapTool({
+		canvas : document.getElementById("map"),
+	});
 
 	//
 	drawingThumbnailCanvas = document.createElement("canvas");

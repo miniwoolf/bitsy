@@ -37,6 +37,7 @@
 		<script src="script/paint.js"></script>
 		<script src="script/room.js"></script>
 		<script src="script/room_markers.js"></script>
+		<script src="script/map.js"></script>
 		<script src="script/explorer.js"></script>
 		<script src="script/localization.js"></script>
 		<script src="script/event_manager.js"></script>
@@ -925,6 +926,51 @@
 					<div id="dialogEditorNoContent" class="controlBox" style="display:none;">
 						<span class="localize dialog_no_selection">Select a sprite or item to edit its dialog.</span>
 					</div>
+				</div>
+
+				<div id="mapPanel" class="panel">
+					<div class="bar">
+						<button title="minimize map editing window" class="light panelBarClose" onclick="hidePanel('mapPanel');">
+							<span class="bitsy_icon">close</span>
+						</button>
+
+						<div title="map window" class="panelBarTitle" onmousedown="grabCard(event);">
+							<span class="bitsy_icon icon_large icon_space_right">room</span> <!-- TODO : NEW MAP ICON! -->
+							<span>map</span> <!-- TODO : LOCALIZE -->
+						</div>
+					</div>
+					
+					<div id="mapNav" class="navControl">
+						<input type="text" id="mapName" title="a name to refer to this map" class="textInputField" onchange="//TODO" size="10"></input>
+
+						<span class="spacer"></span>
+
+						<button title="previous map" class="color0" onclick="//TODO">
+							<span class="bitsy_icon">previous</span>
+						</button>
+						<button title="next map" class="color0" onclick="//TODO">
+							<span class="bitsy_icon">next</span>
+						</button>
+
+						<span class="spacer"></span>
+
+						<button title="add new map" class="color0" onclick="//TODO">
+							<span class="bitsy_icon">add</span>
+						</button>
+						<!-- TODO : you can't duplicate a map, can you? -->
+						<!-- <button title="duplicate map" class="color0" onclick="//TODO">
+							<span class="bitsy_icon">copy</span>
+						</button> -->
+						<button title="delete map" class="color0" onclick="//TODO">
+							<span class="bitsy_icon">delete</span>
+						</button>
+					</div>
+
+					<canvas id="map"></canvas>
+
+					<!-- TODO : settings? -->
+					<!-- <div class="controlBox">
+					</div> -->
 				</div>
 
 				<div id="inventoryPanel" class="panel color3">
