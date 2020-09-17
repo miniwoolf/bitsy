@@ -347,6 +347,13 @@ function on_room_name_change() {
 	refreshGameData();
 }
 
+// todo: should this global function be replaced with a global event? (ok really what's the difference tho?)
+function listenForRoomSelect() {
+	events.Listen("select_room", function(e) {
+		selectRoom(e.roomId);
+	});
+}
+
 function selectRoom(roomId) {
 	console.log("SELECT ROOM " + roomId);
 
@@ -379,37 +386,21 @@ function selectRoom(roomId) {
 
 function nextRoom() {
 	var ids = sortedRoomIdList();
-	roomIndex = (roomIndex + 1) % ids.length;
-	curRoom = ids[roomIndex];
-	markerTool.SetRoom(curRoom);
-	roomTool.drawEditMap();
-	paintTool.UpdateCanvas();
-	updateRoomPaletteSelect();
-	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+	var nextIndex = (roomIndex + 1) % ids.length;
+	var nextId = ids[roomIndex];
 
-	if (drawing.type === TileType.Tile) {
-		updateWallCheckboxOnCurrentTile();
-	}
-
-	updateRoomName();
+	events.Raise("select_room", { roomId: nextId });
 }
 
 function prevRoom() {
 	var ids = sortedRoomIdList();
-	roomIndex--;
-	if (roomIndex < 0) roomIndex = (ids.length-1);
-	curRoom = ids[roomIndex];
-	markerTool.SetRoom(curRoom);
-	roomTool.drawEditMap();
-	paintTool.UpdateCanvas();
-	updateRoomPaletteSelect();
-	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
-
-	if (drawing.type === TileType.Tile) {
-		updateWallCheckboxOnCurrentTile();
+	var prevIndex = roomIndex - 1;
+	if (prevIndex < 0) {
+		prevIndex = (ids.length - 1);
 	}
+	var prevId = ids[prevIndex];
 
-	updateRoomName();
+	events.Raise("select_room", { roomId: prevId });
 }
 
 function duplicateRoom() {

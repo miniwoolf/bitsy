@@ -781,6 +781,8 @@ function start() {
 		canvas : document.getElementById("map"),
 	});
 
+	listenForRoomSelect();
+
 	//
 	drawingThumbnailCanvas = document.createElement("canvas");
 	drawingThumbnailCanvas.width = 8 * scale;
@@ -937,6 +939,8 @@ function start() {
 	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked;
 
 	initLanguageOptions();
+
+	events.Raise("select_room", { roomId: curRoom });
 }
 
 function updateRoomName() {

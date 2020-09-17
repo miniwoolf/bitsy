@@ -8,6 +8,17 @@ function MapTool(controls) {
 	controls.canvas.width = canvasSize;
 	controls.canvas.height = canvasSize;
 
+	controls.canvas.addEventListener("mousedown", OnMouseDown);
+	// TODO : are these necessary?
+	// controls.canvas.addEventListener("mousemove", OnMouseMove);
+	// controls.canvas.addEventListener("mouseup", OnMouseUp);
+	// controls.canvas.addEventListener("mouseleave", OnMouseUp);
+
+	// TODO : touch controls
+	// controls.canvas.addEventListener("touchstart", onTouchStart);
+	// controls.canvas.addEventListener("touchmove", onTouchMove);
+	// controls.canvas.addEventListener("touchend", onTouchEnd);
+
 	var context = controls.canvas.getContext("2d");
 
 	var curMapId = "0"; // todo : start as null?
@@ -29,7 +40,7 @@ function MapTool(controls) {
 		}
 
 		// draw grid
-		context.fillStyle = "white";
+		context.fillStyle = "rgba(255, 255, 255, 0.5)";
 
 		for (var x = 1; x < mapsize; x++) {
 			context.fillRect(x * canvasRoomSize, 0, 1, canvasSize);
@@ -48,11 +59,8 @@ function MapTool(controls) {
 			return rgbToHex(colors[i][0], colors[i][1], colors[i][2])
 		}
 
-		var canvasRoomX = x * canvasRoomSize;
-		var canvasRoomY = y * canvasRoomSize;
-
 		context.fillStyle = hexFromPal(0);
-		context.fillRect(canvasRoomX, canvasRoomY, canvasRoomSize, canvasRoomSize);
+		context.fillRect(x * canvasRoomSize, y * canvasRoomSize, canvasRoomSize, canvasRoomSize);
 
 		for (var ry = 0; ry < roomsize; ry++) {
 			for (var rx = 0; rx < roomsize; rx++) {
@@ -67,13 +75,81 @@ function MapTool(controls) {
 
 				if (tileId != "0" && tileId in object) {
 					context.fillStyle = hexFromPal(parseInt(object[sprite.id].col));
-					context.fillRect(canvasRoomX + (rx * canvasTileSize), canvasRoomY + (ry * canvasTileSize), canvasTileSize, canvasTileSize);
+					DrawRoomTile(x, y, rx, ry);
 				}
 			}
 		}
+
+		// TODO : draw on top of the grid, animate?
+		// selected room
+		if (roomId === curRoomId) {
+			context.fillStyle = "white";
+
+			// top left
+			DrawRoomTile(x, y, -1, -1);
+			DrawRoomTile(x, y, 0, -1);
+			DrawRoomTile(x, y, -1, 0);
+
+			// top right
+			DrawRoomTile(x, y, roomsize, -1);
+			DrawRoomTile(x, y, roomsize - 1, -1);
+			DrawRoomTile(x, y, roomsize, 0);
+
+			// bottom left
+			DrawRoomTile(x, y, -1, roomsize);
+			DrawRoomTile(x, y, 0, roomsize);
+			DrawRoomTile(x, y, -1, roomsize - 1);
+
+			// bottom right
+			DrawRoomTile(x, y, roomsize, roomsize);
+			DrawRoomTile(x, y, roomsize - 1, roomsize);
+			DrawRoomTile(x, y, roomsize, roomsize - 1);
+		}
+	}
+
+	function DrawRoomTile(x, y, rx, ry) {
+		var canvasRoomX = x * canvasRoomSize;
+		var canvasRoomY = y * canvasRoomSize;
+
+		context.fillRect(
+			canvasRoomX + (rx * canvasTileSize),
+			canvasRoomY + (ry * canvasTileSize),
+			canvasTileSize,
+			canvasTileSize);
 	}
 
 	DrawMap();
 
 	this.Draw = DrawMap; // todo : hack
+
+	function OnMouseDown(e) {
+		e.preventDefault();
+
+		if (isPlayMode) {
+			return; // can't edit during play mode
+		}
+
+		var off = getOffset(e);
+
+		// todo : should "mobileOffsetCorrection" be renamed???
+		off = mobileOffsetCorrection(off, e, mapsize);
+
+		var x = Math.floor(off.x);
+		var y = Math.floor(off.y);
+
+		if (curMapId in map) {
+			var roomId = map[curMapId].map[y][x];
+
+			if (roomId != "0" && roomId in room) {
+				events.Raise("select_room", { roomId: roomId });
+			}
+		}
+	}
+
+	var curRoomId = null;
+
+	events.Listen("select_room", function(e) {
+		curRoomId = e.roomId;
+		DrawMap();
+	});
 }
