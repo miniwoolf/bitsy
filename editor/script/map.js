@@ -1,7 +1,7 @@
 function MapTool(controls) {
-	var canvasSize = 256;
-	var canvasRoomSize = canvasSize / mapsize;
-	var canvasTileSize = canvasRoomSize / roomsize;
+	var canvasTileSize = 3; // one "pixel"
+	var canvasRoomSize = canvasTileSize * roomsize;
+	var canvasSize = canvasRoomSize * mapsize
 
 	controls.canvas.style.width = canvasSize;
 	controls.canvas.style.height = canvasSize;
@@ -23,6 +23,8 @@ function MapTool(controls) {
 
 	var curMapId = "0"; // todo : start as null?
 
+	var selectedCornerOffset = 1;
+
 	function DrawMap() {
 		context.fillStyle = "black";
 		context.fillRect(0, 0, canvasSize, canvasSize);
@@ -40,7 +42,7 @@ function MapTool(controls) {
 		}
 
 		// draw grid
-		context.fillStyle = "rgba(255, 255, 255, 0.5)";
+		context.fillStyle = "gray";
 
 		for (var x = 1; x < mapsize; x++) {
 			context.fillRect(x * canvasRoomSize, 0, 1, canvasSize);
@@ -49,7 +51,24 @@ function MapTool(controls) {
 		for (var y = 1; y < mapsize; y++) {
 			context.fillRect(0, y * canvasRoomSize, canvasSize, 1);
 		}
+
+		// draw selection
+		if (curRoomId != null && room[curRoomId].mapLocation.id === curMapId) {
+			DrawSelection(room[curRoomId].mapLocation.x, room[curRoomId].mapLocation.y, selectedCornerOffset);
+		}
 	}
+
+	// animate selection
+	setInterval(function() {
+		if (selectedCornerOffset == 1) {
+			selectedCornerOffset = 2;
+		}
+		else {
+			selectedCornerOffset = 1;
+		}
+
+		DrawMap();
+	}, 400);
 
 	function DrawRoom(roomId, x, y) {
 		var palId = room[roomId].pal;
@@ -79,32 +98,6 @@ function MapTool(controls) {
 				}
 			}
 		}
-
-		// TODO : draw on top of the grid, animate?
-		// selected room
-		if (roomId === curRoomId) {
-			context.fillStyle = "white";
-
-			// top left
-			DrawRoomTile(x, y, -1, -1);
-			DrawRoomTile(x, y, 0, -1);
-			DrawRoomTile(x, y, -1, 0);
-
-			// top right
-			DrawRoomTile(x, y, roomsize, -1);
-			DrawRoomTile(x, y, roomsize - 1, -1);
-			DrawRoomTile(x, y, roomsize, 0);
-
-			// bottom left
-			DrawRoomTile(x, y, -1, roomsize);
-			DrawRoomTile(x, y, 0, roomsize);
-			DrawRoomTile(x, y, -1, roomsize - 1);
-
-			// bottom right
-			DrawRoomTile(x, y, roomsize, roomsize);
-			DrawRoomTile(x, y, roomsize - 1, roomsize);
-			DrawRoomTile(x, y, roomsize, roomsize - 1);
-		}
 	}
 
 	function DrawRoomTile(x, y, rx, ry) {
@@ -116,6 +109,33 @@ function MapTool(controls) {
 			canvasRoomY + (ry * canvasTileSize),
 			canvasTileSize,
 			canvasTileSize);
+	}
+
+	function DrawSelection(x, y, cornerOffset) {
+		context.fillStyle = "white";
+
+		var min = -cornerOffset;
+		var max = (roomsize - 1) + cornerOffset;
+
+		// top left
+		DrawRoomTile(x, y, min + 0, min + 0);
+		DrawRoomTile(x, y, min + 1, min + 0);
+		DrawRoomTile(x, y, min + 0, min + 1);
+
+		// top right
+		DrawRoomTile(x, y, max + 0, min + 0);
+		DrawRoomTile(x, y, max - 1, min + 0);
+		DrawRoomTile(x, y, max + 0, min + 1);
+
+		// bottom left
+		DrawRoomTile(x, y, min + 0, max + 0);
+		DrawRoomTile(x, y, min + 1, max + 0);
+		DrawRoomTile(x, y, min + 0, max - 1);
+
+		// bottom right
+		DrawRoomTile(x, y, max + 0, max + 0);
+		DrawRoomTile(x, y, max - 1, max + 0);
+		DrawRoomTile(x, y, max + 0, max - 1);
 	}
 
 	DrawMap();
