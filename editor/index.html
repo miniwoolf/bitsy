@@ -962,11 +962,22 @@
 						</button>
 					</div>
 
-					<canvas id="map"></canvas>
+					<div id="mapEditRoot" style="display: none;">
+						<canvas id="map"></canvas>
 
-					<div>
-						<button id="mapToolMove">add room</button>
-						<button id="mapToolSelect">select room</button>
+						<div>
+							<button id="mapToolMove">move room</button>
+							<button id="mapToolSelect">select room</button>
+						</div>
+					</div>
+
+					<div id="noMapMessage" class="controlBox" style="max-width: 374px; width: 374px;">
+						<div style="display: flex; flex-direction: row; margin-bottom: 10px;">
+							<span id="spacer" style="flex-grow: 1;"></span>
+							<img src="image/cat.svg" height="64px" width="64px" />
+							<span id="spacer" style="flex-grow: 1;"></span>
+						</div>
+						<span style="white-space: normal;">Your game has no maps! Try adding one? :)</span>
 					</div>
 				</div>
 

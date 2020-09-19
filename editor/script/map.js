@@ -203,6 +203,10 @@ function MapTool(controls) {
 	}
 
 	function NextMap() {
+		if (curMapId == null) {
+			return;
+		}
+
 		// TODO : should I really switch to hex ids? does it even matter if maps are limited to 4?
 		var idList = sortedHexIdList(map);
 		var idIndex = idList.indexOf(curMapId);
@@ -216,6 +220,10 @@ function MapTool(controls) {
 	}
 
 	function PrevMap() {
+		if (curMapId == null) {
+			return;
+		}
+
 		var idList = sortedHexIdList(map);
 		var idIndex = idList.indexOf(curMapId);
 
@@ -236,6 +244,10 @@ function MapTool(controls) {
 	}
 
 	function DeleteMap() {
+		if (curMapId == null) {
+			return;
+		}
+
 		// clear out map location for all rooms in map
 		for (var y = 0; y < mapsize; y++) {
 			for (var x = 0; x < mapsize; x++) {
@@ -258,9 +270,13 @@ function MapTool(controls) {
 
 		refreshGameData();
 
+		var nextId = null;
 		idList = sortedHexIdList(map);
+		if (idList.length > 0) {
+			nextId = idList[idIndex];
+		}
 
-		events.Raise("select_map", { mapId: idList[idIndex] });
+		events.Raise("select_map", { mapId: nextId });
 	}
 
 	var curRoomId = null;
@@ -273,10 +289,19 @@ function MapTool(controls) {
 	events.Listen("select_map", function(e) {
 		curMapId = e.mapId;
 
-		DrawMap();
+		if (sortedHexIdList(map).length > 0) {
+			controls.editRoot.style.display = "block";
+			controls.noMapMessage.style.display = "none";
 
-		controls.nameInput.value = map[curMapId].name;
-		controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
+			DrawMap();
+
+			controls.nameInput.value = map[curMapId].name;
+			controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
+		}
+		else {
+			controls.editRoot.style.display = "none";
+			controls.noMapMessage.style.display = "block";
+		}
 	});
 
 	controls.canvas.addEventListener("mousedown", OnMouseDown);

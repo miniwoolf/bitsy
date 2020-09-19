@@ -29,6 +29,8 @@ TODO new object/sprite system
 - remove exit and ending instances now that they are sprites?
 - replace all the literal type strings "EXT" etc with an enum?
 - do I want to retire the property handler?
+- fix room transitions: need to draw object instances for correct room on either side of transition
+	- also: add a "new / init" script event?
 
 TODO choices
 - action button support in input system

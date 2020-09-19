@@ -786,6 +786,8 @@ function start() {
 		nextButton : document.getElementById("mapNavNext"),
 		addButton : document.getElementById("mapControlAdd"),
 		deleteButton : document.getElementById("mapControlDelete"),
+		editRoot : document.getElementById("mapEditRoot"),
+		noMapMessage : document.getElementById("noMapMessage"),
 	});
 
 	listenForRoomSelect();
