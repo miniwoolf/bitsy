@@ -788,6 +788,10 @@ function start() {
 		deleteButton : document.getElementById("mapControlDelete"),
 		editRoot : document.getElementById("mapEditRoot"),
 		noMapMessage : document.getElementById("noMapMessage"),
+		transitionEffectUp : document.getElementById("mapTransitionEffectUpSelect"),
+		transitionEffectDown : document.getElementById("mapTransitionEffectDownSelect"),
+		transitionEffectLeft : document.getElementById("mapTransitionEffectLeftSelect"),
+		transitionEffectRight : document.getElementById("mapTransitionEffectRightSelect"),
 	});
 
 	listenForRoomSelect();

@@ -304,6 +304,18 @@ function MapTool(controls) {
 			controls.nameInput.readOnly = false;
 			controls.nameInput.value = map[curMapId].name;
 			controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
+
+			controls.transitionEffectUp.value =
+				map[curMapId].transition_effect_up ? map[curMapId].transition_effect_up : "none";
+
+			controls.transitionEffectDown.value =
+				map[curMapId].transition_effect_down ? map[curMapId].transition_effect_down : "none";
+
+			controls.transitionEffectLeft.value =
+				map[curMapId].transition_effect_left ? map[curMapId].transition_effect_left : "none";
+
+			controls.transitionEffectRight.value =
+				map[curMapId].transition_effect_right ? map[curMapId].transition_effect_right : "none";
 		}
 		else {
 			controls.nameInput.readOnly = true;
@@ -315,16 +327,55 @@ function MapTool(controls) {
 	});
 
 	controls.canvas.addEventListener("mousedown", OnMouseDown);
+
 	controls.nameInput.onchange = function() {
 		if (curMapId && curMapId in map) {
 			map[curMapId].name = controls.nameInput.value;
 			refreshGameData();
 		}
 	}
+
 	controls.selectButton.onclick = function() { curMode = Mode.Select; };
 	controls.moveButton.onclick = function() { curMode = Mode.Move; };
+
 	controls.prevButton.onclick = PrevMap;
 	controls.nextButton.onclick = NextMap;
 	controls.addButton.onclick = AddMap;
 	controls.deleteButton.onclick = DeleteMap;
+
+	controls.transitionEffectUp.onchange = function() {
+		if (curMapId && curMapId in map) {
+			map[curMapId].transition_effect_up =
+				controls.transitionEffectUp.value != "none" ? controls.transitionEffectUp.value : null;
+
+			refreshGameData();
+		}
+	}
+
+	controls.transitionEffectDown.onchange = function() {
+		if (curMapId && curMapId in map) {
+			map[curMapId].transition_effect_down =
+				controls.transitionEffectDown.value != "none" ? controls.transitionEffectDown.value : null;
+
+			refreshGameData();
+		}
+	}
+
+	controls.transitionEffectLeft.onchange = function() {
+		if (curMapId && curMapId in map) {
+			map[curMapId].transition_effect_left =
+				controls.transitionEffectLeft.value != "none" ? controls.transitionEffectLeft.value : null;
+
+			refreshGameData();
+		}
+	}
+
+	controls.transitionEffectRight.onchange = function() {
+		if (curMapId && curMapId in map) {
+			map[curMapId].transition_effect_right =
+				controls.transitionEffectRight.value != "none" ? controls.transitionEffectRight.value : null;
+
+			refreshGameData();
+		}
+	}
 }
