@@ -379,9 +379,7 @@ function MapTool(controls) {
 		}
 	}
 
-	var showOptions = false;
 	controls.showOptionsButton.onclick = function() {
-		showOptions = !showOptions;
-		controls.optionsRoot.style.display = showOptions ? "block" : "none";
+		controls.optionsRoot.style.display = controls.showOptionsButton.checked ? "block" : "none";
 	}
 }
