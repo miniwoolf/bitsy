@@ -779,6 +779,12 @@ function start() {
 
 	mapTool = new MapTool({
 		canvas : document.getElementById("map"),
+		selectButton : document.getElementById("mapToolSelect"),
+		moveButton : document.getElementById("mapToolMove"),
+		prevButton : document.getElementById("mapNavPrev"),
+		nextButton : document.getElementById("mapNavNext"),
+		addButton : document.getElementById("mapControlAdd"),
+		deleteButton : document.getElementById("mapControlDelete"),
 	});
 
 	listenForRoomSelect();

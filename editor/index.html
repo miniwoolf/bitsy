@@ -945,32 +945,33 @@
 
 						<span class="spacer"></span>
 
-						<button title="previous map" class="color0" onclick="//TODO">
+						<button title="previous map" class="color0" id="mapNavPrev">
 							<span class="bitsy_icon">previous</span>
 						</button>
-						<button title="next map" class="color0" onclick="//TODO">
+						<button title="next map" class="color0" id="mapNavNext">
 							<span class="bitsy_icon">next</span>
 						</button>
 
 						<span class="spacer"></span>
 
-						<button title="add new map" class="color0" onclick="//TODO">
+						<button title="add new map" class="color0" id="mapControlAdd">
 							<span class="bitsy_icon">add</span>
 						</button>
 						<!-- TODO : you can't duplicate a map, can you? -->
 						<!-- <button title="duplicate map" class="color0" onclick="//TODO">
 							<span class="bitsy_icon">copy</span>
 						</button> -->
-						<button title="delete map" class="color0" onclick="//TODO">
+						<button title="delete map" class="color0" id="mapControlDelete">
 							<span class="bitsy_icon">delete</span>
 						</button>
 					</div>
 
 					<canvas id="map"></canvas>
 
-					<!-- TODO : settings? -->
-					<!-- <div class="controlBox">
-					</div> -->
+					<div>
+						<button id="mapToolMove">add room</button>
+						<button id="mapToolSelect">select room</button>
+					</div>
 				</div>
 
 				<div id="inventoryPanel" class="panel color3">

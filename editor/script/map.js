@@ -25,6 +25,13 @@ function MapTool(controls) {
 
 	var selectedCornerOffset = 1;
 
+	var Mode = {
+		Select : 0,
+		Move : 1,
+	};
+
+	curMode = Mode.Move;
+
 	function DrawMap() {
 		context.fillStyle = "black";
 		context.fillRect(0, 0, canvasSize, canvasSize);
@@ -53,8 +60,9 @@ function MapTool(controls) {
 		}
 
 		// draw selection
-		if (curRoomId != null && room[curRoomId].mapLocation.id === curMapId) {
-			DrawSelection(room[curRoomId].mapLocation.x, room[curRoomId].mapLocation.y, selectedCornerOffset);
+		var selectionId = isPlayMode ? curRoom : curRoomId; // todo : is the global ok?
+		if (selectionId != null && room[selectionId].mapLocation.id === curMapId) {
+			DrawSelection(room[selectionId].mapLocation.x, room[selectionId].mapLocation.y, selectedCornerOffset);
 		}
 	}
 
@@ -83,7 +91,7 @@ function MapTool(controls) {
 
 		for (var ry = 0; ry < roomsize; ry++) {
 			for (var rx = 0; rx < roomsize; rx++) {
-				var tileId = room[roomId].tilemap[y][x];
+				var tileId = room[roomId].tilemap[ry][rx];
 
 				for (var i = 0; i < room[roomId].objects.length; i++) {
 					var sprite = room[roomId].objects[i];
@@ -93,7 +101,7 @@ function MapTool(controls) {
 				}
 
 				if (tileId != "0" && tileId in object) {
-					context.fillStyle = hexFromPal(parseInt(object[sprite.id].col));
+					context.fillStyle = hexFromPal(parseInt(object[tileId].col));
 					DrawRoomTile(x, y, rx, ry);
 				}
 			}
@@ -158,12 +166,109 @@ function MapTool(controls) {
 		var y = Math.floor(off.y);
 
 		if (curMapId in map) {
-			var roomId = map[curMapId].map[y][x];
+			if (curMode === Mode.Move) {
+				if (curRoomId != null && curRoomId != "0") {
+					var prevRoomId = map[curMapId].map[y][x];
+					if (prevRoomId != "0") {
+						RemoveRoomFromMaps(prevRoomId);
+					}
 
-			if (roomId != "0" && roomId in room) {
-				events.Raise("select_room", { roomId: roomId });
+					if (prevRoomId != curRoomId) {
+						RemoveRoomFromMaps(curRoomId);
+
+						map[curMapId].map[y][x] = curRoomId;
+						
+						if (curRoomId in room) {
+							room[curRoomId].mapLocation.id = curMapId;
+							room[curRoomId].mapLocation.x = x;
+							room[curRoomId].mapLocation.y = y;
+						}
+					}
+
+					DrawMap();
+					refreshGameData();
+				}
+			}
+			else if (curMode === Mode.Select) {
+				var roomId = map[curMapId].map[y][x];
+
+				if (roomId != "0" && roomId in room) {
+					events.Raise("select_room", { roomId: roomId });
+				}
 			}
 		}
+	}
+
+	function RemoveRoomFromMaps(roomId) {
+		for (id in map) {
+			for (var y = 0; y < mapsize; y++) {
+				for (var x = 0; x < mapsize; x++) {
+					if (map[id].map[y][x] === roomId) {
+						map[id].map[y][x] = "0";
+					}
+				}
+			}
+		}
+
+		if (roomId in room) {
+			room[roomId].mapLocation.id = null;
+			room[roomId].mapLocation.x = -1;
+			room[roomId].mapLocation.y = -1;
+		}
+	}
+
+	function NextMap() {
+		// TODO : should I really switch to hex ids? does it even matter if maps are limited to 4?
+		var idList = sortedHexIdList(map);
+		var idIndex = idList.indexOf(curMapId);
+
+		idIndex++;
+		if (idIndex >= idList.length) {
+			idIndex = 0;
+		}
+
+		curMapId = idList[idIndex];
+
+		DrawMap();
+	}
+
+	function PrevMap() {
+		var idList = sortedHexIdList(map);
+		var idIndex = idList.indexOf(curMapId);
+
+		idIndex--;
+		if (idIndex < 0) {
+			idIndex = idList.length - 1;
+		}
+
+		curMapId = idList[idIndex];
+
+		DrawMap();
+	}
+
+	function AddMap() {
+		var nextId = nextObjectHexId(sortedHexIdList(map));
+		map[nextId] = createMap(nextId);
+		curMapId = nextId;
+
+		DrawMap();
+		refreshGameData();
+	}
+
+	// todo : test -- is this working??
+	function DeleteMap() {
+		var idList = sortedHexIdList(map);
+		var idIndex = idList.indexOf(curMapId);
+		if (idIndex >= idList.length - 1) {
+			idIndex = 0;
+		}
+
+		delete map[curMapId];
+
+		curMapId = idList[idIndex];
+
+		DrawMap();
+		refreshGameData();
 	}
 
 	var curRoomId = null;
@@ -172,4 +277,11 @@ function MapTool(controls) {
 		curRoomId = e.roomId;
 		DrawMap();
 	});
+
+	controls.selectButton.onclick = function() { curMode = Mode.Select; };
+	controls.moveButton.onclick = function() { curMode = Mode.Move; };
+	controls.prevButton.onclick = PrevMap;
+	controls.nextButton.onclick = NextMap;
+	controls.addButton.onclick = AddMap;
+	controls.deleteButton.onclick = DeleteMap;
 }
