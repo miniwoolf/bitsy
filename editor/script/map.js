@@ -295,10 +295,14 @@ function MapTool(controls) {
 
 			DrawMap();
 
+			controls.nameInput.readOnly = false;
 			controls.nameInput.value = map[curMapId].name;
 			controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
 		}
 		else {
+			controls.nameInput.readOnly = true;
+			controls.nameInput.value = null;
+			controls.nameInput.placeholder = "";
 			controls.editRoot.style.display = "none";
 			controls.noMapMessage.style.display = "block";
 		}
