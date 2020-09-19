@@ -947,6 +947,11 @@ function start() {
 	initLanguageOptions();
 
 	events.Raise("select_room", { roomId: curRoom });
+
+	var mapIds = sortedHexIdList(map);
+	if (mapIds.length > 0) {
+		events.Raise("select_map", { mapId: mapIds[0] });
+	}
 }
 
 function updateRoomName() {

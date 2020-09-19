@@ -21,7 +21,7 @@ function MapTool(controls) {
 
 	var context = controls.canvas.getContext("2d");
 
-	var curMapId = "0"; // todo : start as null?
+	var curMapId = null;
 
 	var selectedCornerOffset = 1;
 
@@ -255,8 +255,19 @@ function MapTool(controls) {
 		refreshGameData();
 	}
 
-	// todo : test -- is this working??
 	function DeleteMap() {
+		// clear out map location for all rooms in map
+		for (var y = 0; y < mapsize; y++) {
+			for (var x = 0; x < mapsize; x++) {
+				var roomId = map[curMapId].map[y][x];
+				if (roomId != "0" && roomId in room) {
+					room[roomId].mapLocation.id = null;
+					room[roomId].mapLocation.x = -1;
+					room[roomId].mapLocation.y = -1;
+				}
+			}
+		}
+
 		var idList = sortedHexIdList(map);
 		var idIndex = idList.indexOf(curMapId);
 		if (idIndex >= idList.length - 1) {
@@ -265,6 +276,7 @@ function MapTool(controls) {
 
 		delete map[curMapId];
 
+		idList = sortedHexIdList(map);
 		curMapId = idList[idIndex];
 
 		DrawMap();
@@ -275,6 +287,11 @@ function MapTool(controls) {
 
 	events.Listen("select_room", function(e) {
 		curRoomId = e.roomId;
+		DrawMap();
+	});
+
+	events.Listen("select_map", function(e) {
+		curMapId = e.mapId;
 		DrawMap();
 	});
 

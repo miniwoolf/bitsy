@@ -355,8 +355,6 @@ function listenForRoomSelect() {
 }
 
 function selectRoom(roomId) {
-	console.log("SELECT ROOM " + roomId);
-
 	// ok watch out this is gonna be hacky
 	var ids = sortedRoomIdList();
 
@@ -374,11 +372,13 @@ function selectRoom(roomId) {
 		roomTool.drawEditMap();
 		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
-		paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
 
-		if (drawing.type === TileType.Tile) {
-			updateWallCheckboxOnCurrentTile();
-		}
+		// todo : new finder
+		// paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+		// if (drawing.type === TileType.Tile) {
+		// 	updateWallCheckboxOnCurrentTile();
+		// }
 
 		updateRoomName();
 	}
@@ -461,28 +461,10 @@ function newRoom() {
 	var palIdList = sortedPaletteIdList();
 	var palId = palIdList.length > 0 ? palIdList[0] : "default";
 
-	console.log(roomId);
-
-	// TODO : need a shared make
 	room[roomId] = createRoom(roomId, palId);
 	refreshGameData();
 
-	curRoom = roomId;
-	//console.log(curRoom);
-	markerTool.SetRoom(curRoom);
-	roomTool.drawEditMap();
-	paintTool.UpdateCanvas();
-	updateRoomPaletteSelect();
-
-	updateRoomName();
-
-	// add new exit destination option to exits panel
-	// var select = document.getElementById("exitDestinationSelect");
-	// var option = document.createElement("option");
-	// var roomLabel = localization.GetStringOrFallback("room_label", "room");
-	// option.text = roomLabel + " " + roomId;
-	// option.value = roomId;
-	// select.add(option);
+	events.Raise("select_room", { roomId: roomId });
 }
 
 function deleteRoom() {
