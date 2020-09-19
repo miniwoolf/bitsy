@@ -378,4 +378,10 @@ function MapTool(controls) {
 			refreshGameData();
 		}
 	}
+
+	var showOptions = false;
+	controls.showOptionsButton.onclick = function() {
+		showOptions = !showOptions;
+		controls.optionsRoot.style.display = showOptions ? "block" : "none";
+	}
 }

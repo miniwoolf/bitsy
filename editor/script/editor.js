@@ -788,6 +788,8 @@ function start() {
 		deleteButton : document.getElementById("mapControlDelete"),
 		editRoot : document.getElementById("mapEditRoot"),
 		noMapMessage : document.getElementById("noMapMessage"),
+		showOptionsButton : document.getElementById("mapShowOptions"),
+		optionsRoot : document.getElementById("mapOptions"),
 		transitionEffectUp : document.getElementById("mapTransitionEffectUpSelect"),
 		transitionEffectDown : document.getElementById("mapTransitionEffectDownSelect"),
 		transitionEffectLeft : document.getElementById("mapTransitionEffectLeftSelect"),
