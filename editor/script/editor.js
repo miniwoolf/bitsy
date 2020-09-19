@@ -779,6 +779,7 @@ function start() {
 
 	mapTool = new MapTool({
 		canvas : document.getElementById("map"),
+		nameInput : document.getElementById("mapName"),
 		selectButton : document.getElementById("mapToolSelect"),
 		moveButton : document.getElementById("mapToolMove"),
 		prevButton : document.getElementById("mapNavPrev"),

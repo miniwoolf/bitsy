@@ -8,17 +8,6 @@ function MapTool(controls) {
 	controls.canvas.width = canvasSize;
 	controls.canvas.height = canvasSize;
 
-	controls.canvas.addEventListener("mousedown", OnMouseDown);
-	// TODO : are these necessary?
-	// controls.canvas.addEventListener("mousemove", OnMouseMove);
-	// controls.canvas.addEventListener("mouseup", OnMouseUp);
-	// controls.canvas.addEventListener("mouseleave", OnMouseUp);
-
-	// TODO : touch controls
-	// controls.canvas.addEventListener("touchstart", onTouchStart);
-	// controls.canvas.addEventListener("touchmove", onTouchMove);
-	// controls.canvas.addEventListener("touchend", onTouchEnd);
-
 	var context = controls.canvas.getContext("2d");
 
 	var curMapId = null;
@@ -146,10 +135,6 @@ function MapTool(controls) {
 		DrawRoomTile(x, y, max + 0, max - 1);
 	}
 
-	DrawMap();
-
-	this.Draw = DrawMap; // todo : hack
-
 	function OnMouseDown(e) {
 		e.preventDefault();
 
@@ -227,9 +212,7 @@ function MapTool(controls) {
 			idIndex = 0;
 		}
 
-		curMapId = idList[idIndex];
-
-		DrawMap();
+		events.Raise("select_map", { mapId: idList[idIndex] });
 	}
 
 	function PrevMap() {
@@ -241,18 +224,15 @@ function MapTool(controls) {
 			idIndex = idList.length - 1;
 		}
 
-		curMapId = idList[idIndex];
-
-		DrawMap();
+		events.Raise("select_map", { mapId: idList[idIndex] });
 	}
 
 	function AddMap() {
 		var nextId = nextObjectHexId(sortedHexIdList(map));
 		map[nextId] = createMap(nextId);
-		curMapId = nextId;
-
-		DrawMap();
 		refreshGameData();
+
+		events.Raise("select_map", { mapId: nextId });
 	}
 
 	function DeleteMap() {
@@ -276,11 +256,11 @@ function MapTool(controls) {
 
 		delete map[curMapId];
 
-		idList = sortedHexIdList(map);
-		curMapId = idList[idIndex];
-
-		DrawMap();
 		refreshGameData();
+
+		idList = sortedHexIdList(map);
+
+		events.Raise("select_map", { mapId: idList[idIndex] });
 	}
 
 	var curRoomId = null;
@@ -292,9 +272,20 @@ function MapTool(controls) {
 
 	events.Listen("select_map", function(e) {
 		curMapId = e.mapId;
+
 		DrawMap();
+
+		controls.nameInput.value = map[curMapId].name;
+		controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
 	});
 
+	controls.canvas.addEventListener("mousedown", OnMouseDown);
+	controls.nameInput.onchange = function() {
+		if (curMapId && curMapId in map) {
+			map[curMapId].name = controls.nameInput.value;
+			refreshGameData();
+		}
+	}
 	controls.selectButton.onclick = function() { curMode = Mode.Select; };
 	controls.moveButton.onclick = function() { curMode = Mode.Move; };
 	controls.prevButton.onclick = PrevMap;

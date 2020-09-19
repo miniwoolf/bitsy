@@ -1750,6 +1750,10 @@ function serializeWorld(skipFonts) {
 			worldStr += "\n";
 		}
 
+		if (map[id].name) {
+			worldStr += "NAME " + map[id].name + "\n";
+		}
+
 		if (map[id].transition_effect_up) {
 			worldStr += "FXU " + map[id].transition_effect_up + "\n";
 		}
@@ -1896,6 +1900,7 @@ function parseTitle(lines, i) {
 function createMap(id) {
 	var map = {
 		id : id,
+		name : null,
 		map : [], // todo: name? room_map? world_map?
 		transition_effect_up : null,
 		transition_effect_down : null,
@@ -1952,6 +1957,11 @@ function parseMap(lines, i) {
 		}
 		else if (getType(lines[i]) === "FXR") {
 			map[id].transition_effect_right = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "NAME") {
+			var name = lines[i].split(/\s(.+)/)[1]; // todo : make helper function?
+			map[id].name = name;
+			// TODO : add to global name registry?			
 		}
 
 		i++;
