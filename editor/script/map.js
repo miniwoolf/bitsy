@@ -19,7 +19,7 @@ function MapTool(controls) {
 		Move : 1,
 	};
 
-	curMode = Mode.Move;
+	curMode = Mode.Select;
 
 	function DrawMap() {
 		context.fillStyle = "black";
@@ -335,6 +335,7 @@ function MapTool(controls) {
 		}
 	}
 
+	controls.selectButton.checked = true;
 	controls.selectButton.onclick = function() { curMode = Mode.Select; };
 	controls.moveButton.onclick = function() { curMode = Mode.Move; };
 
