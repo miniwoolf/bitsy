@@ -965,22 +965,32 @@
 					<div id="mapEditRoot" style="display: none;">
 						<canvas id="map"></canvas>
 
-						<div>
+						<div style="display: flex;">
 							<!-- TODO : localize -->
 							<!-- TODO : create icons -->
-							<button id="mapToolMove">
-								<span class="bitsy_icon">set_exit_location</span>
-								<span>move room</span>
-							</button>
-							<button id="mapToolSelect">
-								<span class="bitsy_icon">pagesize_full</span>
-								<span>select room</span>
-							</button>
+							<span>
+								<form>
+									<input type="radio" name="map tools" id="mapToolMove" checked>
+									<label title="move room tool" for="mapToolMove" class="left">
+										<span class="bitsy_icon">set_exit_location</span>
+										<span class="toolSelectText">move</span>
+									</label>
+									<input type="radio" name="map tools" id="mapToolSelect">
+									<label title="select room tool" for="mapToolSelect" class="right">
+										<span class="bitsy_icon">pagesize_full</span>
+										<span class="toolSelectText">select</span>
+									</label>
+								</form>
+							</span>
 
-							<input type="checkbox" id="mapShowOptions" />
-							<label title="show / hide map options" for="mapShowOptions">
-								<span class="bitsy_icon">settings</span>
-							</label>
+							<span class="spacer" style="flex-grow: 1;"></span>
+
+							<span>
+								<input type="checkbox" id="mapShowOptions" />
+								<label title="show / hide map options" for="mapShowOptions">
+									<span class="bitsy_icon">settings</span>
+								</label>
+							</span>
 						</div>
 
 						<div id="mapOptions" class="controlBox" style="margin-top: 5px; display: none;">

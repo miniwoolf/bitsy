@@ -84,6 +84,12 @@ input[type=radio] + label.left {
 input[type=radio] + label.right {
 	border-radius: 0px 2px 2px 0px;
 }
+input[type=radio] + label .toolSelectText {
+	display: none;
+}
+input[type=radio]:checked + label .toolSelectText {
+	display: inline;
+}
 
 #paintExplorerContent input[type=radio] + label {
 	padding: 0px;
