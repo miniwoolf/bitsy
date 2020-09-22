@@ -39,6 +39,7 @@
 		<script src="script/room_markers.js"></script>
 		<script src="script/map.js"></script>
 		<script src="script/explorer.js"></script>
+		<script src="script/find.js"></script>
 		<script src="script/localization.js"></script>
 		<script src="script/event_manager.js"></script>
 		<script src="script/palette.js"></script>
@@ -738,7 +739,8 @@
 						</div>
 					</div>
 
-					<form>
+					<!-- TODO : replace with checkboxes -->
+					<!-- <form>
 						<input type="radio" name="paint explorer mode" value="avatar" onclick="on_paint_avatar();" id="paintExplorerOptionAvatar" checked>
 						<label title="find the avatar: the player's character" for="paintExplorerOptionAvatar" class="left">
 							<span class="bitsy_icon">avatar</span>
@@ -762,20 +764,10 @@
 							<span class="bitsy_icon">item</span>
 							<span class="localize item_label">item</span>
 						</label>
-					</form>
+					</form> -->
 
 					<div id="paintExplorerViewport">
 						<div id="paintExplorerContent">
-
-							<form id="paintExplorerForm">
-								<span id="paintExplorerFormInner">
-								</span>
-								<div id="paintExplorerAdd">
-									<button title="add drawing" onclick="newDrawing(); return false;">
-										<span class="bitsy_icon">add</span>
-									</button>
-								</div>
-							</form>
 						</div>
 					</div>
 

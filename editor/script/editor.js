@@ -559,6 +559,7 @@ var editMode = EditMode.Edit; // TODO : move to core.js?
 var roomTool;
 var paintTool;
 var mapTool;
+var findTool;
 
 /* ROOM */
 var roomIndex = 0;
@@ -863,12 +864,6 @@ function start() {
 		updatePaletteOptionsFromGameData();
 	});
 
-	// init paint explorer
-	paintExplorer = new PaintExplorer("paintExplorer",selectPaint);
-	paintExplorer.Refresh(TileType.Avatar);
-	paintExplorer.ChangeSelection("A");
-	paintExplorer.SetDisplayCaptions( true );
-
 	//unsupported feature stuff
 	if (hasUnsupportedFeatures() && !isPortraitOrientation()) {
 		showUnsupportedFeatureWarning();
@@ -952,6 +947,11 @@ function start() {
 	// prepare dialog tool
 	openDialogTool(titleDialogId); // start with the title open
 	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked;
+
+	// create find tool
+	findTool = new FindTool({
+		contentRoot : document.getElementById("paintExplorerContent"),
+	});
 
 	initLanguageOptions();
 
@@ -1117,7 +1117,6 @@ function toggleFontDataVisibility(e) {
 /* PALETTE STUFF */
 var colorPicker = null;
 var paletteTool = null;
-var paintExplorer = null;
 
 function updateRoomPaletteSelect() {
 	var palOptions = document.getElementById("roomPaletteSelect").options;
@@ -1182,7 +1181,7 @@ function deletePalette() {
 
 function paintExplorerFilterChange( e ) {
 	console.log("paint explorer filter : " + e.target.value);
-	paintExplorer.Refresh( paintTool.drawing.type, true, e.target.value );
+	// paintExplorer.Refresh( paintTool.drawing.type, true, e.target.value );
 }
 
 // TODO : move THIS into paint.js
@@ -1200,7 +1199,7 @@ function editDrawingAtCoordinate(x,y) {
 		}
 
 		paintTool.SelectDrawing(spriteId);
-		paintExplorer.RefreshAndChangeSelection(spriteId);
+		// paintExplorer.RefreshAndChangeSelection(spriteId);
 
 		return;
 	}
@@ -1210,7 +1209,7 @@ function editDrawingAtCoordinate(x,y) {
 		on_paint_item_ui_update(); // TODO : move these things into paint.js
 
 		paintTool.SelectDrawing(item.id);
-		paintExplorer.RefreshAndChangeSelection(item.id);
+		// paintExplorer.RefreshAndChangeSelection(item.id);
 
 		return;
 	}
@@ -1220,7 +1219,7 @@ function editDrawingAtCoordinate(x,y) {
 		on_paint_tile_ui_update();
 
 		paintTool.SelectDrawing(tileId);
-		paintExplorer.RefreshAndChangeSelection(tileId);
+		// paintExplorer.RefreshAndChangeSelection(tileId);
 
 		return;
 	}
@@ -1228,7 +1227,7 @@ function editDrawingAtCoordinate(x,y) {
 
 function selectPaint() {
 	if (drawing.id === this.value) {
-		showPanel("paintPanel", "paintExplorerPanel");
+		// showPanel("paintPanel", "paintExplorerPanel");
 	}
 
 	drawing.id = this.value;
@@ -1859,7 +1858,7 @@ function importGameFromFile(e) {
 		document.getElementById("game_data").value = gameDataStr;
 		on_game_data_change();
 
-		paintExplorer.Refresh(drawing.type);
+		// paintExplorer.Refresh(drawing.type);
 	}
 }
 
@@ -2227,7 +2226,7 @@ function hackyUpdatePlaceholderText() {
 	}
 
 	var filterPlaceholder = localization.GetStringOrFallback("filter_placeholder", "filter drawings");
-	document.getElementById("paintExplorerFilterInput").placeholder = filterPlaceholder;
+	// document.getElementById("paintExplorerFilterInput").placeholder = filterPlaceholder;
 }
 
 var curEditorLanguageCode = "en";

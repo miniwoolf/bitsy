@@ -49,14 +49,20 @@ var map = {};
 var room = {};
 var object = {}; // TODO : name? (other options: drawing, entity, sprite)
 var dialog = {};
-var palette = { //start off with a default palette
-		"default" : {
-			name : "default",
-			colors : [[0,0,0],[255,255,255],[255,255,255]]
-		}
-	};
+var palette = {};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
+
+function initPalettes() {
+	palette = { //start off with a default palette
+		"default" : {
+			id : "default",
+			name : "default",
+			colors : [[0,0,0],[255,255,255],[255,255,255]],
+		},
+	};
+}
+initPalettes();
 
 // Instances
 var playerInstance = {};
@@ -136,14 +142,11 @@ function clearGameData() {
 	item = {};
 	object = {};
 	dialog = {};
-	palette = { //start off with a default palette
-		"default" : {
-			name : "default",
-			colors : [[0,0,0],[255,255,255],[255,255,255]]
-		}
-	};
+	palette = {};
 	isEnding = false; //todo - correct place for this?
 	variable = {};
+
+	initPalettes();
 
 	// TODO RENDERER : clear data?
 
