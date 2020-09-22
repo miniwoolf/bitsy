@@ -55,7 +55,24 @@ function FindTool(controls) {
 
 			return caption;
 		},
-		getIconId: function(obj) { return "tile"; }, // todo : specialize by type
+		getIconId: function(obj) {
+			var iconId = "tile";
+
+			if (obj.type === "SPR") {
+				iconId = obj.id === "A" ? "avatar" : "sprite";
+			}
+			else if (obj.type === "ITM") {
+				iconId = "item";
+			}
+			else if (obj.type === "EXT") {
+				iconId = "exit_one_way"; // todo : right icon for this?
+			}
+			else if (obj.type === "END") {
+				iconId = "ending";
+			}
+
+			return iconId;
+		},
 		createOnClick: function(id) {
 			return function() {
 				events.Raise("select_drawing", { id: id });
