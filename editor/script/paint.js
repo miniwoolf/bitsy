@@ -245,14 +245,17 @@ function PaintTool(canvas, roomTool) {
 		self.UpdateCanvas();
 	}
 
+	// TODO : remove this after moving everything to events
 	this.SelectDrawing = function(id) {
-		drawingId = id;
+		events.Raise("select_drawing", { id: id });
+	}
+
+	events.Listen("select_drawing", function(e) {
+		drawingId = e.id;
 		curDrawingFrameIndex = 0;
 		self.ReloadDrawing();
 		self.UpdateCanvas();
-
-		events.Raise("select_drawing", { id: drawingId });
-	}
+	});
 
 	this.ToggleWall = function(checked) {
 		if (getDrawingType() != TileType.Tile) {

@@ -95,9 +95,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			index = idList.length - 1;
 		}
 
-		curPaletteId = idList[index];
-
-		UpdatePaletteUI();
+		events.Raise("select_palette", { id: idList[index] });
 	}
 	this.SelectPrev = SelectPrev;
 
@@ -110,9 +108,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			index = 0;
 		}
 
-		curPaletteId = idList[index];
-
-		UpdatePaletteUI();
+		events.Raise("select_palette", { id: idList[index] });
 	}
 
 	this.AddNew = function() {
@@ -127,8 +123,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			hslToRgb(Math.random(), 1.0, 0.5) ]
 		};
 
-		curPaletteId = id;
-		UpdatePaletteUI();
+		events.Raise("select_palette", { id: id });
 
 		events.Raise("palette_list_change");
 	}
@@ -147,8 +142,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			palette[id].colors.push(curColors[i].slice());
 		}
 
-		curPaletteId = id;
-		UpdatePaletteUI();
+	events.Raise("select_palette", { id: id });
 
 		events.Raise("palette_list_change");
 	}
@@ -202,4 +196,9 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 
 	// init yourself
 	UpdatePaletteUI();
+
+	events.Listen("select_palette", function(e) {
+		curPaletteId = e.id;
+		UpdatePaletteUI();
+	});
 }

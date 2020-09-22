@@ -3,11 +3,21 @@ function FindTool(controls) {
 	AddCategory({
 		engineObjectStore: map,
 		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
+		createOnClick: function(id) {
+			return function() {
+				events.Raise("select_map", { mapId: id });
+			};
+		},
 	});
 
 	AddCategory({
 		engineObjectStore: room,
 		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
+		createOnClick: function(id) {
+			return function() {
+				events.Raise("select_room", { roomId: id });
+			};
+		},
 	});
 
 	AddCategory({
@@ -43,16 +53,32 @@ function FindTool(controls) {
 
 			return caption;
 		},
+		createOnClick: function(id) {
+			return function() {
+				events.Raise("select_drawing", { id: id });
+			};
+		},
 	});
 
 	AddCategory({
 		engineObjectStore: dialog,
 		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
+		createOnClick: function(id) {
+			return function() {
+				// todo : replace this global function with an event
+				openDialogTool(id);
+			};
+		},
 	});
 
 	AddCategory({
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
+		createOnClick: function(id) {
+			return function() {
+				events.Raise("select_palette", { id: id });
+			};
+		},
 	});
 
 	function AddCategory(categoryInfo) {
@@ -60,16 +86,18 @@ function FindTool(controls) {
 			var engineObject = categoryInfo.engineObjectStore[id];
 			AddThumbnail(
 				engineObject,
-				categoryInfo.getCaption(engineObject));
+				categoryInfo.getCaption(engineObject),
+				categoryInfo.createOnClick(id));
 		}
 	}
 
-	function AddThumbnail(engineObject, caption) {
+	function AddThumbnail(engineObject, caption, onClick) {
 		var div = document.createElement("div");
 		// div.style.width = "100px";
 		// div.style.display = "inline-block";
 
 		var img = document.createElement("img");
+		img.onclick = onClick;
 		// img.id = getThumbnailId(id); // todo
 
 		// todo : need per category way of getting name
