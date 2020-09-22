@@ -91,25 +91,6 @@ input[type=radio]:checked + label .toolSelectText {
 	display: inline;
 }
 
-#paintExplorerContent input[type=radio] + label {
-	padding: 0px;
-	background: none;
-	border: none;
-	text-decoration: none;
-}
-
-#paintExplorerContent input[type=radio]:checked + label img {
-	background: white;
-	padding: 2px;
-	border: solid 2px #6767b2;
-}
-
-#paintExplorerContent input[type=radio]:checked + label {
-	color: #6767b2; /* keep text the same color */
-	font-weight: bold;
-	/*text-decoration: underline;*/
-}
-
 #toolsPanel label {
 	margin-bottom: 5px;
 }

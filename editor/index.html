@@ -118,10 +118,10 @@
 					<span class="localize paint_tool_name">paint</span>
 				</label>
 				
-				<input type="checkbox" value="paintExplorerPanel" id="paintExplorerCheck" onclick="togglePanelAnimated(event);" />
-				<label title="show / hide find drawing window" for="paintExplorerCheck">
+				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" />
+				<label title="show / hide find window" for="findCheck">
 					<span class="bitsy_icon icon_space_right">search</span>
-					<span class="localize explorer_tool_name">find drawing</span>
+					<span>find</span> <!-- TODO : localize -->
 				</label>
 				
 				<input type="checkbox" value="colorsPanel" id="colorsCheck" onclick="togglePanelAnimated(event);"  checked/>
@@ -640,7 +640,8 @@
 
 						<span class="spacer"></span>
 
-						<button title="find drawing: browse list of all drawings" class="color0" onclick="showPanel('paintExplorerPanel', 'paintPanel');">
+						<!-- TODO : keep this with new panel? remove? extend to other tools? -->
+						<button title="find" class="color0" onclick="showPanel('findPanel', 'paintPanel');">
 							<span class="bitsy_icon">search</span>
 						</button>
 					</div>
@@ -726,56 +727,30 @@
 
 				</div>
 
-				<div id="paintExplorerPanel" class="panel color1">
+				<div id="findPanel" class="panel color1">
 					<div class="bar color1">
 
-						<button title="minimize find drawing window" class="light panelBarClose" onclick="hidePanel('paintExplorerPanel');">
+						<button title="minimize find drawing window" class="light panelBarClose" onclick="hidePanel('findPanel');">
 							<span class="bitsy_icon">close</span>
 						</button>
 
-						<div title="find drawing window" class="panelBarTitle" onmousedown="grabCard(event);">
+						<div title="find window" class="panelBarTitle" onmousedown="grabCard(event);">
 							<span class="bitsy_icon icon_large icon_space_right">search</span>
-							<span class="localize explorer_tool_name">find drawing</span>
+							<span>find</span> <!-- TODO : localize -->
 						</div>
 					</div>
 
-					<!-- TODO : replace with checkboxes -->
-					<!-- <form>
-						<input type="radio" name="paint explorer mode" value="avatar" onclick="on_paint_avatar();" id="paintExplorerOptionAvatar" checked>
-						<label title="find the avatar: the player's character" for="paintExplorerOptionAvatar" class="left">
-							<span class="bitsy_icon">avatar</span>
-							<span class="localize avatar_label">avatar</span>
-						</label>
-
-						<input type="radio" name="paint explorer mode" value="tile" onclick="on_paint_tile();" id="paintExplorerOptionTile">
-						<label title="find tiles: pieces of scenery" for="paintExplorerOptionTile" class="middle">
-							<span class="bitsy_icon">tile</span>
-							<span class="localize tile_label">tile</span>
-						</label>
-
-						<input type="radio" name="paint explorer mode" value="sprite" onclick="on_paint_sprite();" id="paintExplorerOptionSprite">
-						<label title="find sprites: non-player characters and interactive objects" for="paintExplorerOptionSprite" class="middle">
-							<span class="bitsy_icon">sprite</span>
-							<span class="localize sprite_label">sprite</span>
-						</label>
-
-						<input type="radio" name="paint explorer mode" value="item" onclick="on_paint_item();" id="paintExplorerOptionItem">
-						<label title="find items: things the player can pick up" for="paintExplorerOptionItem" class="right">
-							<span class="bitsy_icon">item</span>
-							<span class="localize item_label">item</span>
-						</label>
-					</form> -->
-
-					<div id="paintExplorerViewport">
-						<div id="paintExplorerContent">
+					<!-- TODO : add category filter checkboxes -->
+					<div id="findViewport">
+						<div id="findContent">
 						</div>
 					</div>
 
-					<div class="controlBox" id="paintExplorerFilter">
-						<span id="paintExplorerFilterIcon">
+					<div class="controlBox" id="findFilter">
+						<span id="findFilterIcon">
 							<span class="bitsy_icon icon_space_right">search</span>
 						</span>
-						<input id="paintExplorerFilterInput" type="text" onkeyup="paintExplorerFilterChange(event);" onchange="paintExplorerFilterChange(event);" placeholder="filter drawings" title="filter drawings by name" size="30">
+						<input id="findFilterInput" type="text" onkeyup="//TODO" onchange="//TODO" placeholder="search by name" title="search by name" size="30">
 					</div>
 				</div>
 

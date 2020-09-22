@@ -658,7 +658,7 @@ var defaultPanelPrefs = {
 		{ id:"gifPanel", 			visible:false, 	position:5  },
 		{ id:"dataPanel", 			visible:false, 	position:6  },
 		{ id:"exitsPanel", 			visible:false, 	position:7  },
-		{ id:"paintExplorerPanel",	visible:false,	position:9  },
+		{ id:"findPanel",			visible:false,	position:9  },
 		{ id:"dialogPanel",			visible:false,	position:10 },
 		{ id:"inventoryPanel",		visible:false,	position:11 },
 		{ id:"settingsPanel",		visible:false,	position:12 },
@@ -950,7 +950,7 @@ function start() {
 
 	// create find tool
 	findTool = new FindTool({
-		contentRoot : document.getElementById("paintExplorerContent"),
+		contentRoot : document.getElementById("findContent"),
 	});
 
 	initLanguageOptions();

@@ -259,7 +259,7 @@ span.controlBox {
 	border: solid 4px white;
 }
 
-#paintExplorerViewport {
+#findViewport {
 	/*padding:5px;*/
 	margin-top:5px;
 	padding: 12px;
@@ -274,16 +274,16 @@ span.controlBox {
 	resize: both;
 	width:224px;
 }
-#paintExplorerContent {
+#findContent {
 	/*width:224px;*/
 	margin:0px;
 }
 
-#paintExplorerContent div {
+#findContent div {
 	display: inline-block;
 }
 
-#paintExplorerContent img {
+#findContent img {
 	width:64px;
 	height:64px;
 	margin:0px;
@@ -295,7 +295,7 @@ span.controlBox {
 	/*border: none;*/
 }
 
-#paintExplorerContent figcaption {
+#findContent figcaption {
 	text-align: center;
 	padding-top: 5px;
 	min-height: 20px;
@@ -303,27 +303,6 @@ span.controlBox {
 	/*background: red;*/
 	overflow: hidden;
 	white-space: nowrap;
-}
-
-#paintExplorerAdd {
-	width:58px;
-	height:64px;
-	margin:0px;
-	margin-right:2px;
-	margin-bottom:-6px; /* should be unnecesarry really */
-	display:inline-block;
-	border: solid 4px white;
-	vertical-align: top;
-	/*background: red;*/
-}
-
-#paintExplorerAdd button { /* this style is a bit hacky but looks ok */
-	display:block;
-	margin:auto;
-	width: 40px;
-	height: 40px;
-	margin-top: 12px;
-	border: solid 1px #6767b2;
 }
 
 #animation img {
@@ -481,19 +460,19 @@ span.controlBox {
 	font-size: 125%;
 }
 
-#paintExplorerFilter {
+#findFilter {
 	margin-top: 5px;
 	padding: 5px;
 }
 
-#paintExplorerFilterIcon {
+#findFilterIcon {
 	float:left;
 }
-#paintExplorerFilterIcon .material-icons {
+#findFilterIcon .material-icons {
 	font-size: 110%;
 }
 
-#paintExplorerFilterInput {
+#findFilterInput {
 	width: 220px;
 	display: block;
 }
