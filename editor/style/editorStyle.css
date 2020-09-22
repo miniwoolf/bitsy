@@ -253,6 +253,12 @@ span.controlBox {
 	font-size: 110%;
 }
 
+.findToolThumbnail .bitsy_icon {
+	width: 64px;
+	margin-right: 2px;
+	border: solid 4px white;
+}
+
 #paintExplorerViewport {
 	/*padding:5px;*/
 	margin-top:5px;

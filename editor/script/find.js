@@ -3,6 +3,7 @@ function FindTool(controls) {
 	AddCategory({
 		engineObjectStore: map,
 		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "room"; }, // TODO : real icon
 		createOnClick: function(id) {
 			return function() {
 				events.Raise("select_map", { mapId: id });
@@ -13,6 +14,7 @@ function FindTool(controls) {
 	AddCategory({
 		engineObjectStore: room,
 		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "room"; },
 		createOnClick: function(id) {
 			return function() {
 				events.Raise("select_room", { roomId: id });
@@ -53,6 +55,7 @@ function FindTool(controls) {
 
 			return caption;
 		},
+		getIconId: function(obj) { return "tile"; }, // todo : specialize by type
 		createOnClick: function(id) {
 			return function() {
 				events.Raise("select_drawing", { id: id });
@@ -63,6 +66,7 @@ function FindTool(controls) {
 	AddCategory({
 		engineObjectStore: dialog,
 		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "dialog"; },
 		createOnClick: function(id) {
 			return function() {
 				// todo : replace this global function with an event
@@ -74,6 +78,7 @@ function FindTool(controls) {
 	AddCategory({
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "colors"; },
 		createOnClick: function(id) {
 			return function() {
 				events.Raise("select_palette", { id: id });
@@ -87,16 +92,20 @@ function FindTool(controls) {
 			AddThumbnail(
 				engineObject,
 				categoryInfo.getCaption(engineObject),
+				categoryInfo.getIconId(engineObject),
 				categoryInfo.createOnClick(id));
 		}
 	}
 
-	function AddThumbnail(engineObject, caption, onClick) {
+	function AddThumbnail(engineObject, caption, iconId, onClick) {
 		var div = document.createElement("div");
 		// div.style.width = "100px";
 		// div.style.display = "inline-block";
 
-		var img = document.createElement("img");
+		// var img = document.createElement("img");
+		var img = document.createElement("div");
+		img.classList.add("findToolThumbnail");
+		img.appendChild(iconUtils.CreateIcon(iconId));
 		img.onclick = onClick;
 		// img.id = getThumbnailId(id); // todo
 
@@ -113,8 +122,6 @@ function FindTool(controls) {
 		// else if( drawingCategory === TileType.Item ) {
 		// 	img.title = item[id].name ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id;
 		// }
-
-		img.classList.add("explorerThumbnail");
 
 		div.appendChild(img);
 
