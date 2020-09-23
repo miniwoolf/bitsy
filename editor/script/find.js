@@ -1,6 +1,21 @@
+/*
+TODO
+- respond to events: add/delete stuff, edit stuff, new game data, active palette changed, selection changed
+- animated thumbnails broken?
+- thumbnails for non-drawing stuff (rooms, maps, etc)
+- search
+- category select
+- test out performance for large games
+- hide default palette
+- selection for each category
+*/
+
 function FindTool(controls) {
+	var tileThumbnailRenderer = new ThumbnailRenderer();
+
 	// todo : how do I want to structure this?
 	AddCategory({
+		name: "map",
 		engineObjectStore: map,
 		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; }, // TODO : real icon
@@ -12,6 +27,7 @@ function FindTool(controls) {
 	});
 
 	AddCategory({
+		name: "room",
 		engineObjectStore: room,
 		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; },
@@ -23,6 +39,7 @@ function FindTool(controls) {
 	});
 
 	AddCategory({
+		name: "drawing",
 		engineObjectStore: object,
 		// todo : store in category object?
 		getCaption: function(obj) {
@@ -78,9 +95,18 @@ function FindTool(controls) {
 				events.Raise("select_drawing", { id: id });
 			};
 		},
+		onRender: function(id, thumbRoot, thumbImg) {
+			var onRenderFinish = function(uri) {
+				thumbImg.src = uri;
+				thumbRoot.classList.add("findToolThumbnailRendered");
+			}
+
+			tileThumbnailRenderer.Render(thumbImg.id, id, null, thumbImg, onRenderFinish);
+		},
 	});
 
 	AddCategory({
+		name: "dialog",
 		engineObjectStore: dialog,
 		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "dialog"; },
@@ -93,6 +119,7 @@ function FindTool(controls) {
 	});
 
 	AddCategory({
+		name: "palette",
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "colors"; },
@@ -107,40 +134,34 @@ function FindTool(controls) {
 		for (id in categoryInfo.engineObjectStore) {
 			var engineObject = categoryInfo.engineObjectStore[id];
 			AddThumbnail(
+				"find_" + categoryInfo.name + "_" + engineObject.id,
 				engineObject,
 				categoryInfo.getCaption(engineObject),
 				categoryInfo.getIconId(engineObject),
-				categoryInfo.createOnClick(id));
+				categoryInfo.createOnClick(id),
+				categoryInfo.onRender);
 		}
 	}
 
-	function AddThumbnail(engineObject, caption, iconId, onClick) {
+	function AddThumbnail(thumbId, engineObject, caption, iconId, onClick, onRender) {
 		var div = document.createElement("div");
 		// div.style.width = "100px";
 		// div.style.display = "inline-block";
 
 		// var img = document.createElement("img");
-		var img = document.createElement("div");
-		img.classList.add("findToolThumbnail");
-		img.appendChild(iconUtils.CreateIcon(iconId));
-		img.onclick = onClick;
-		// img.id = getThumbnailId(id); // todo
+		var thumbnail = document.createElement("div");
+		thumbnail.classList.add("findToolThumbnail");
+		thumbnail.appendChild(iconUtils.CreateIcon(iconId));
+		thumbnail.onclick = onClick;
 
-		// todo : need per category way of getting name
-		// if( drawingCategory === TileType.Tile ) {
-		// 	img.title = tile[id].name ? tile[id].name : localization.GetStringOrFallback("tile_label", "tile") + " " + id;
-		// }
-		// else if( drawingCategory === TileType.Sprite ) {
-		// 	img.title = sprite[id].name ? sprite[id].name : localization.GetStringOrFallback("sprite_label", "sprite") + " " + id;
-		// }
-		// else if( drawingCategory === TileType.Avatar ) {
-		// 	img.title = localization.GetStringOrFallback("avatar_label", "avatar");
-		// }
-		// else if( drawingCategory === TileType.Item ) {
-		// 	img.title = item[id].name ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id;
-		// }
+		if (onRender) {
+			var img = document.createElement("img");
+			thumbnail.appendChild(img);
+			img.id = thumbId + "_img";
+			onRender(engineObject.id, thumbnail, img);
+		}
 
-		div.appendChild(img);
+		div.appendChild(thumbnail);
 
 		var displayCaptions = true; // todo : why is this optional?
 		if (displayCaptions) {

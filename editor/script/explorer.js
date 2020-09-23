@@ -375,7 +375,7 @@ function ThumbnailRenderer() {
 	var thumbnailRenderEncoders = {};
 	var cache = {};
 
-	function render(imgId, drawingId, frameIndex, imgElement) {
+	function render(imgId, drawingId, frameIndex, imgElement, onRenderCallback) {
 		var isAnimated = (frameIndex === undefined || frameIndex === null) ? true : false;
 
 		var palId = getRoomPal(curRoom); // TODO : should NOT be hardcoded like this
@@ -420,11 +420,25 @@ function ThumbnailRenderer() {
 		if (imgElement === undefined || imgElement === null) {
 			imgElement = document.getElementById(imgId);
 		}
-		encoder.encode( gifData, createThumbnailRenderCallback(imgElement) );
+
+		// todo : there are so many options... need to clean this thing up
+		if (onRenderCallback === undefined || onRenderCallback === null) {
+			onRenderCallback = createThumbnailRenderCallback(imgElement);
+		}
+
+		encoder.encode( gifData, function(uri) {
+			// update cache
+			cache[imgId] = {
+				uri : uri,
+				outOfDate : false
+			};
+
+			onRenderCallback(uri);
+		});
 	}
 
-	this.Render = function(imgId, drawingId, frameIndex, imgElement) {
-		render(imgId, drawingId, frameIndex, imgElement);
+	this.Render = function(imgId, drawingId, frameIndex, imgElement, onRenderCallback) {
+		render(imgId, drawingId, frameIndex, imgElement, onRenderCallback);
 	};
 
 	function createThumbnailRenderCallback(img) {
@@ -432,12 +446,6 @@ function ThumbnailRenderer() {
 			// update image
 			img.src = uri;
 			img.style.background = "none";
-
-			// update cache
-			cache[img.id] = {
-				uri : uri,
-				outOfDate : false
-			};
 		};
 	}
 

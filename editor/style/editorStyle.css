@@ -257,6 +257,28 @@ span.controlBox {
 	width: 64px;
 	margin-right: 2px;
 	border: solid 4px white;
+	display: inline-block;
+}
+
+.findToolThumbnail img {
+	width:64px;
+	height:64px;
+	margin:0px;
+	margin-right:2px;
+	margin-bottom:-6px; /* should be unnecesarry really */
+	/*display:inline-block;*/
+	image-rendering: pixelated;
+	border: solid 4px white;
+	/*border: none;*/
+	display: none;
+}
+
+.findToolThumbnail.findToolThumbnailRendered img {
+	display: inline-block;
+}
+
+.findToolThumbnail.findToolThumbnailRendered .bitsy_icon {
+	display: none;
 }
 
 #findViewport {
@@ -281,18 +303,6 @@ span.controlBox {
 
 #findContent div {
 	display: inline-block;
-}
-
-#findContent img {
-	width:64px;
-	height:64px;
-	margin:0px;
-	margin-right:2px;
-	margin-bottom:-6px; /* should be unnecesarry really */
-	display:inline-block;
-	image-rendering: pixelated;
-	border: solid 4px white;
-	/*border: none;*/
 }
 
 #findContent figcaption {
