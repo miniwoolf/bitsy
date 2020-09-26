@@ -19,11 +19,10 @@ function FindTool(controls) {
 		engineObjectStore: map,
 		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; }, // TODO : real icon
-		createOnClick: function(id) {
-			return function() {
-				events.Raise("select_map", { mapId: id });
-			};
-		},
+		selectEventId: "select_map",
+		toolId: "mapPanel",
+		addEventId: "add_map",
+		deleteEventId: "delete_map",
 	});
 
 	AddCategory({
@@ -31,11 +30,10 @@ function FindTool(controls) {
 		engineObjectStore: room,
 		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; },
-		createOnClick: function(id) {
-			return function() {
-				events.Raise("select_room", { roomId: id });
-			};
-		},
+		selectEventId: "select_room",
+		toolId: "roomPanel",
+		addEventId: "add_room",
+		deleteEventId: "delete_room",
 	});
 
 	AddCategory({
@@ -45,7 +43,7 @@ function FindTool(controls) {
 		getCaption: function(obj) {
 			var caption = "";
 
-			if (obj.name) {
+			if (obj.name != null) {
 				caption = obj.name;
 			}
 			else {
@@ -58,7 +56,7 @@ function FindTool(controls) {
 				else if (obj.type === "SPR") {
 					caption = localization.GetStringOrFallback("sprite_label", "sprite") + " " + obj.id;
 				}
-				else if (obj.tpe === "ITM") {
+				else if (obj.type === "ITM") {
 					caption = localization.GetStringOrFallback("item_label", "item") + " " + obj.id;
 				}
 				// todo : localize
@@ -90,11 +88,7 @@ function FindTool(controls) {
 
 			return iconId;
 		},
-		createOnClick: function(id) {
-			return function() {
-				events.Raise("select_drawing", { id: id });
-			};
-		},
+		// todo : replace callback with renderer object?
 		onRender: function(id, thumbRoot, thumbImg) {
 			var onRenderFinish = function(uri) {
 				thumbImg.src = uri;
@@ -103,6 +97,11 @@ function FindTool(controls) {
 
 			tileThumbnailRenderer.Render(thumbImg.id, id, null, thumbImg, onRenderFinish);
 		},
+		selectEventId: "select_drawing",
+		toolId: "paintPanel",
+		addEventId: "add_drawing",
+		deleteEventId: "delete_drawing",
+		refreshThumbEventId: "change_drawing",
 	});
 
 	AddCategory({
@@ -110,12 +109,9 @@ function FindTool(controls) {
 		engineObjectStore: dialog,
 		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "dialog"; },
-		createOnClick: function(id) {
-			return function() {
-				// todo : replace this global function with an event
-				openDialogTool(id);
-			};
-		},
+		selectEventId: "select_dialog",
+		toolId: "dialogPanel",
+		// TODO : add & delete
 	});
 
 	AddCategory({
@@ -123,32 +119,107 @@ function FindTool(controls) {
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "colors"; },
-		createOnClick: function(id) {
-			return function() {
-				events.Raise("select_palette", { id: id });
-			};
-		},
+		selectEventId: "select_palette",
+		toolId: "colorsPanel",
+		addEventId: "add_palette",
+		deleteEventId: "delete_palette",
 	});
 
 	function AddCategory(categoryInfo) {
-		for (id in categoryInfo.engineObjectStore) {
+		var categoryDiv = document.createElement("div");
+		controls.contentRoot.appendChild(categoryDiv);
+
+		var thumbCache = {};
+
+		var selectedId = null;
+
+		function createOnClick(id) {
+			return function() {
+				if (id === selectedId) {
+					showPanel(categoryInfo.toolId, "findPanel");
+				}
+				else {
+					events.Raise(categoryInfo.selectEventId, { id: id });
+				}
+			};
+		};
+
+		function getThumbId(id) {
+			return "find_" + categoryInfo.name + "_" + id;
+		}
+
+		function addThumbToCategory(id) {
 			var engineObject = categoryInfo.engineObjectStore[id];
-			AddThumbnail(
-				"find_" + categoryInfo.name + "_" + engineObject.id,
+
+			var thumbDiv = CreateThumbnail(
+				getThumbId(engineObject.id),
 				engineObject,
 				categoryInfo.getCaption(engineObject),
 				categoryInfo.getIconId(engineObject),
-				categoryInfo.createOnClick(id),
+				createOnClick(id),
 				categoryInfo.onRender);
+
+			thumbCache[engineObject.id] = thumbDiv;
+
+			categoryDiv.appendChild(thumbDiv);
 		}
+
+		function removeThumbFromCategory(id) {
+			categoryDiv.removeChild(document.getElementById(getThumbId(id)));
+		}
+
+		function refreshThumbs() {
+			categoryDiv.innerHTML = "";
+
+			for (id in categoryInfo.engineObjectStore) {
+				addThumbToCategory(id);
+			}
+		}
+
+		events.Listen(categoryInfo.selectEventId, function(e) {
+			selectedId = e.id;
+
+			for (id in thumbCache) {
+				if (id === selectedId) {
+					thumbCache[id].classList.add("selected");
+				}
+				else {
+					thumbCache[id].classList.remove("selected");
+				}
+			}
+		});
+
+		if (categoryInfo.addEventId) {
+			events.Listen(categoryInfo.addEventId, function(e) {
+				addThumbToCategory(e.id);
+			});
+		}
+
+		if (categoryInfo.deleteEventId) {
+			events.Listen(categoryInfo.deleteEventId, function(e) {
+				removeThumbFromCategory(e.id);
+			});
+		}
+
+		if (categoryInfo.refreshThumbEventId) {
+			events.Listen(categoryInfo.refreshThumbEventId, function(e) {
+				// TODO
+			});
+		}
+
+		events.Listen("game_data_change", function() {
+			refreshThumbs();
+		});
+
+		// init category
+		refreshThumbs();
 	}
 
-	function AddThumbnail(thumbId, engineObject, caption, iconId, onClick, onRender) {
+	function CreateThumbnail(thumbId, engineObject, caption, iconId, onClick, onRender) {
 		var div = document.createElement("div");
-		// div.style.width = "100px";
-		// div.style.display = "inline-block";
+		div.id = thumbId;
+		div.classList.add("findToolItem");
 
-		// var img = document.createElement("img");
 		var thumbnail = document.createElement("div");
 		thumbnail.classList.add("findToolThumbnail");
 		thumbnail.appendChild(iconUtils.CreateIcon(iconId));
@@ -166,19 +237,19 @@ function FindTool(controls) {
 		var displayCaptions = true; // todo : why is this optional?
 		if (displayCaptions) {
 			var nameCaption = document.createElement("figcaption");
-			// nameCaption.id = idPrefix + "Caption_" + id;
 
-			nameCaption.innerText = caption; // img.title; // todo
+			nameCaption.appendChild(iconUtils.CreateIcon(iconId));
 
+			var nameText = document.createElement("span");
+			nameText.innerText = caption; // img.title; // todo
 			if (engineObject.name === undefined || engineObject.name === null) {
-				nameCaption.classList.add("thumbnailDefaultName");
+				nameText.classList.add("thumbnailDefaultName");
 			}
+			nameCaption.appendChild(nameText);
 
 			div.appendChild(nameCaption);
 		}
 
-		controls.contentRoot.appendChild(div);
-
-		// updateThumbnail( id ); // todo ?
+		return div;
 	}
 }

@@ -82,12 +82,9 @@ function PaintTool(canvas, roomTool) {
 			// hacky way to force drawing to re-render
 			renderer.SetImageSource(getRenderId(), getImageSource());
 
-			roomTool.drawEditMap(); // TODO : events instead of direct coupling
+			events.Raise("change_drawing", { id: drawingId });
 
-			// TODO : add event
-			// if (self.explorer != null) {
-			// 	self.explorer.RenderThumbnail(drawingId);
-			// }
+			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
 			if (isCurDrawingAnimated()) {
 				renderAnimationPreview(drawingId);
@@ -295,6 +292,7 @@ function PaintTool(canvas, roomTool) {
 		createObject(nextId, type, { drawingData:imageData });
 		refreshGameData();
 
+		events.Raise("add_drawing", { id: nextId });
 		self.SelectDrawing(nextId);
 
 		// TODO : hack... replace with event hookup
@@ -364,6 +362,8 @@ function PaintTool(canvas, roomTool) {
 			}
 
 			delete object[drawingId];
+
+			events.Raise("delete_drawing", { id: drawingId });
 
 			// TODO : replace these things with events!
 			refreshGameData();

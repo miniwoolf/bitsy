@@ -43,7 +43,7 @@ function DialogTool() {
 		openButton.title = "open title in dialog editor"; // todo : localize
 		openButton.appendChild(iconUtils.CreateIcon("open_tool"));
 		openButton.onclick = function() {
-			openDialogTool(titleDialogId);
+			events.Raise("select_dialog", { id: titleDialogId });
 			alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 		}
 		div.appendChild(openButton);
@@ -154,7 +154,7 @@ function DialogTool() {
 				events.Raise("new_dialog", {id:id});
 			}
 
-			openDialogTool(dialogId, parentPanelId);
+			events.Raise("select_dialog", { id: dialogId, insertNextToId: parentPanelId });
 
 			// hacky global state!
 			if (dialog[getCurDialogId()] && dialogId != getCurDialogId()) {
@@ -299,7 +299,7 @@ function DialogTool() {
 
 				// kind of a werid pattern to use
 				if (shouldOpenIfComplex != undefined && shouldOpenIfComplex != null && shouldOpenIfComplex == true) {
-					openDialogTool(dialogId, parentPanelId)
+					events.Raise("select_dialog", { id: dialogId, insertNextToId: parentPanelId });
 				}
 			}
 		}

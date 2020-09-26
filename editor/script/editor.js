@@ -222,6 +222,13 @@ function tileTypeToIdPrefix(type) {
 - hacky to make this all global
 - some of this should be folded into paint tool later
 */
+// another hacky global listener init
+function listenForDialogSelect() {
+	events.Listen("select_dialog", function(e) {
+		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
+	});
+}
+
 var dialogTool = new DialogTool();
 var curDialogEditorId = null; // can I wrap this all up somewhere? -- feels a bit hacky to have all these globals
 var curDialogEditor = null;
@@ -318,7 +325,7 @@ function nextDialog() {
 		}
 	}
 
-	openDialogTool(id);
+	events.Raise("select_dialog", { id: id });
 
 	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 }
@@ -349,7 +356,7 @@ function prevDialog() {
 
 	console.log("PREV DIALOG " + id);
 
-	openDialogTool(id);
+	events.Raise("select_dialog", { id: id });
 
 	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 }
@@ -360,7 +367,7 @@ function addNewDialog() {
 	dialog[id] = { src:" ", name:null };
 	refreshGameData();
 
-	openDialogTool(id);
+	events.Raise("select_dialog", { id: id });
 
 	events.Raise("new_dialog", { id:id });
 
@@ -373,7 +380,7 @@ function duplicateDialog() {
 		dialog[id] = { src:dialog[curDialogEditorId].slice(), name:null };
 		refreshGameData();
 
-		openDialogTool(id);
+		events.Raise("select_dialog", { id: id });
 
 		alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 	}
@@ -456,7 +463,7 @@ function reloadDialogUI() {
 	dialogContent.appendChild(paintDialogWidget.GetElement());
 
 	if (alwaysShowDrawingDialog && dialog[obj.dlg]) {
-		openDialogTool(obj.dlg, null, false);
+		events.Raise("select_dialog", { id: obj.dlg, insertNextToId: null, showIfHidden: false });
 	}
 }
 
@@ -731,7 +738,7 @@ function start() {
 		// on the other hand this is still sort of global thing that we don't want TOO much of
 
 		// force re-load the dialog tool
-		openDialogTool(titleDialogId);
+		events.Raise("select_dialog", { id: titleDialogId });
 	});
 
 	isPlayerEmbeddedInEditor = true; // flag for game player to make changes specific to editor
@@ -811,6 +818,9 @@ function start() {
 		fontManager.AddResource(fontStorage.name + ".bitsyfont", fontStorage.fontdata);
 	}
 	resetMissingCharacterWarning();
+
+	//
+	listenForDialogSelect();
 
 	//load last auto-save
 	if (localStorage.game_data) {
@@ -945,7 +955,7 @@ function start() {
 	}
 
 	// prepare dialog tool
-	openDialogTool(titleDialogId); // start with the title open
+	events.Raise("select_dialog", { id: titleDialogId }); // start with the title open
 	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked;
 
 	// create find tool
@@ -955,11 +965,11 @@ function start() {
 
 	initLanguageOptions();
 
-	events.Raise("select_room", { roomId: curRoom });
+	events.Raise("select_room", { id: curRoom });
 
 	var mapIds = sortedHexIdList(map);
 	if (mapIds.length > 0) {
-		events.Raise("select_map", { mapId: mapIds[0] });
+		events.Raise("select_map", { id: mapIds[0] });
 	}
 }
 
@@ -2117,7 +2127,7 @@ function toggleAlwaysShowDrawingDialog(e) {
 	if (alwaysShowDrawingDialog) {
 		var dlg = getCurDialogId();
 		if (dialog[dlg]) {
-			openDialogTool(dlg);
+			events.Raise("select_dialog", { id: dlg });
 		}
 	}
 }

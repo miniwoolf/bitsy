@@ -123,8 +123,8 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			hslToRgb(Math.random(), 1.0, 0.5) ]
 		};
 
+		events.Raise("add_palette", { id: id });
 		events.Raise("select_palette", { id: id });
-
 		events.Raise("palette_list_change");
 	}
 
@@ -142,8 +142,8 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 			palette[id].colors.push(curColors[i].slice());
 		}
 
-	events.Raise("select_palette", { id: id });
-
+		events.Raise("add_palette", { id: id });
+		events.Raise("select_palette", { id: id });
 		events.Raise("palette_list_change");
 	}
 
@@ -163,6 +163,8 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 					room[roomId].pal = replacementPalId;
 				}
 			}
+
+			events.Raise("delete_palette", { id: id });
 
 			SelectPrev();
 

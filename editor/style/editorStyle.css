@@ -253,66 +253,74 @@ span.controlBox {
 	font-size: 110%;
 }
 
+.findToolItem {
+	display: inline-block;
+	max-width: 72px;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+
+.findToolThumbnail {
+	border: solid 2px white;
+	padding: 2px;
+}
+
+.selected .findToolThumbnail {
+	border-color: #6767b2;
+}
+
 .findToolThumbnail .bitsy_icon {
 	width: 64px;
-	margin-right: 2px;
-	border: solid 4px white;
-	display: inline-block;
+	height: 64px;
+	display: block;
 }
 
 .findToolThumbnail img {
 	width:64px;
 	height:64px;
-	margin:0px;
-	margin-right:2px;
-	margin-bottom:-6px; /* should be unnecesarry really */
-	/*display:inline-block;*/
 	image-rendering: pixelated;
-	border: solid 4px white;
-	/*border: none;*/
 	display: none;
 }
 
 .findToolThumbnail.findToolThumbnailRendered img {
-	display: inline-block;
+	display: block;
 }
 
 .findToolThumbnail.findToolThumbnailRendered .bitsy_icon {
 	display: none;
 }
 
+.findToolItem figcaption {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: 5px;
+}
+
+.findToolItem figcaption .bitsy_icon {
+	min-width: 16px;
+	margin-right: 5px;
+}
+
+.findToolItem figcaption span {
+	white-space: nowrap;
+	overflow: hidden;
+}
+
 #findViewport {
-	/*padding:5px;*/
 	margin-top:5px;
 	padding: 12px;
 	padding-top: 10px;
 	padding-bottom: 10px;
-	height:338px;
 	overflow:scroll;
 	display:block;
 	white-space:normal;
 	border: solid 1px #ccccff;
 	border-radius: 2px;
 	resize: both;
-	width:224px;
-}
-#findContent {
-	/*width:224px;*/
-	margin:0px;
-}
-
-#findContent div {
-	display: inline-block;
-}
-
-#findContent figcaption {
-	text-align: center;
-	padding-top: 5px;
-	min-height: 20px;
-	max-width: 68px;
-	/*background: red;*/
-	overflow: hidden;
-	white-space: nowrap;
+	width: 350px;
+	height: 450px;
+	line-height: 100%;
 }
 
 #animation img {

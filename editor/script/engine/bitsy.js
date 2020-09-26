@@ -138,6 +138,7 @@ var editorDevFlags = {
 };
 
 function clearGameData() {
+	map = {};
 	room = {};
 	item = {};
 	object = {};

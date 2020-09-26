@@ -350,7 +350,7 @@ function on_room_name_change() {
 // todo: should this global function be replaced with a global event? (ok really what's the difference tho?)
 function listenForRoomSelect() {
 	events.Listen("select_room", function(e) {
-		selectRoom(e.roomId);
+		selectRoom(e.id);
 	});
 }
 
@@ -389,7 +389,7 @@ function nextRoom() {
 	var nextIndex = (roomIndex + 1) % ids.length;
 	var nextId = ids[roomIndex];
 
-	events.Raise("select_room", { roomId: nextId });
+	events.Raise("select_room", { id: nextId });
 }
 
 function prevRoom() {
@@ -400,7 +400,7 @@ function prevRoom() {
 	}
 	var prevId = ids[prevIndex];
 
-	events.Raise("select_room", { roomId: prevId });
+	events.Raise("select_room", { id: prevId });
 }
 
 function duplicateRoom() {
@@ -464,7 +464,8 @@ function newRoom() {
 	room[roomId] = createRoom(roomId, palId);
 	refreshGameData();
 
-	events.Raise("select_room", { roomId: roomId });
+	events.Raise("add_room", { id: roomId });
+	events.Raise("select_room", { id: roomId });
 }
 
 function deleteRoom() {
@@ -491,6 +492,8 @@ function deleteRoom() {
 		delete room[roomId];
 
 		refreshGameData();
+
+		events.Raise("delete_room", { id: roomId });
 
 		markerTool.Clear();
 		nextRoom();

@@ -178,7 +178,7 @@ function MapTool(controls) {
 				var roomId = map[curMapId].map[y][x];
 
 				if (roomId != "0" && roomId in room) {
-					events.Raise("select_room", { roomId: roomId });
+					events.Raise("select_room", { id: roomId });
 				}
 			}
 		}
@@ -216,7 +216,7 @@ function MapTool(controls) {
 			idIndex = 0;
 		}
 
-		events.Raise("select_map", { mapId: idList[idIndex] });
+		events.Raise("select_map", { id: idList[idIndex] });
 	}
 
 	function PrevMap() {
@@ -232,7 +232,7 @@ function MapTool(controls) {
 			idIndex = idList.length - 1;
 		}
 
-		events.Raise("select_map", { mapId: idList[idIndex] });
+		events.Raise("select_map", { id: idList[idIndex] });
 	}
 
 	function AddMap() {
@@ -246,7 +246,8 @@ function MapTool(controls) {
 
 		refreshGameData();
 
-		events.Raise("select_map", { mapId: nextId });
+		events.Raise("add_map", { id: nextId });
+		events.Raise("select_map", { id: nextId });
 	}
 
 	function DeleteMap() {
@@ -282,18 +283,19 @@ function MapTool(controls) {
 			nextId = idList[idIndex];
 		}
 
-		events.Raise("select_map", { mapId: nextId });
+		events.Raise("delete_map", { id: curMapId });
+		events.Raise("select_map", { id: nextId });
 	}
 
 	var curRoomId = null;
 
 	events.Listen("select_room", function(e) {
-		curRoomId = e.roomId;
+		curRoomId = e.id;
 		DrawMap();
 	});
 
 	events.Listen("select_map", function(e) {
-		curMapId = e.mapId;
+		curMapId = e.id;
 
 		if (sortedHexIdList(map).length > 0) {
 			controls.editRoot.style.display = "block";
