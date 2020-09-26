@@ -285,16 +285,18 @@ function FindTool(controls) {
 
 		div.appendChild(thumbnail);
 
-			var nameCaption = document.createElement("figcaption");
-
-			nameCaption.appendChild(iconUtils.CreateIcon(iconId));
+		// create caption
+		var nameCaption = document.createElement("figcaption");
+		nameCaption.appendChild(iconUtils.CreateIcon(iconId));
 
 		var nameText = document.createElement("span");
 		nameText.id = thumbNameTextId;
-		nameText.innerText = caption; // img.title; // todo
+		nameText.innerText = caption;
+
 		if (engineObject.name === undefined || engineObject.name === null) {
 			nameText.classList.add("thumbnailDefaultName");
 		}
+
 		nameCaption.appendChild(nameText);
 
 		div.appendChild(nameCaption);
