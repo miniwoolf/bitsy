@@ -21,6 +21,7 @@ function FindTool(controls) {
 		toolId: "mapPanel",
 		addEventId: "add_map",
 		deleteEventId: "delete_map",
+		changeNameEventId: "change_map_name",
 	});
 
 	AddCategory({
@@ -32,6 +33,7 @@ function FindTool(controls) {
 		toolId: "roomPanel",
 		addEventId: "add_room",
 		deleteEventId: "delete_room",
+		changeNameEventId: "change_room_name",
 	});
 
 	AddCategory({
@@ -104,6 +106,7 @@ function FindTool(controls) {
 		selectEventId: "select_dialog",
 		toolId: "dialogPanel",
 		// TODO : add & delete
+		changeNameEventId: "change_dialog_name",
 	});
 
 	AddCategory({
@@ -115,6 +118,7 @@ function FindTool(controls) {
 		toolId: "colorsPanel",
 		addEventId: "add_palette",
 		deleteEventId: "delete_palette",
+		changeNameEventId: "change_palette_name",
 	});
 
 	function AddCategory(categoryInfo) {

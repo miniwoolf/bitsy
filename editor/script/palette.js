@@ -193,6 +193,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 
 		updateNamesFromCurData() // TODO ... this should really be an event?
 
+		events.Raise("change_palette_name", { id: obj.id, name: obj.name });
 		events.Raise("palette_list_change");
 	}
 

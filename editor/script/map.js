@@ -334,6 +334,8 @@ function MapTool(controls) {
 		if (curMapId && curMapId in map) {
 			map[curMapId].name = controls.nameInput.value;
 			refreshGameData();
+
+			events.Raise("change_map_name", { id: curMapId, name: map[curMapId].name });
 		}
 	}
 

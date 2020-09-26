@@ -300,7 +300,10 @@ function onDialogNameChange(event) {
 	else {
 		dialog[curDialogEditorId].name = null;
 	}
+
 	refreshGameData();
+
+	events.Raise("change_dialog_name", { id: curDialogEditorId, name: dialog[curDialogEditorId].name });
 }
 
 function nextDialog() {

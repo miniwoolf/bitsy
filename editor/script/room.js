@@ -349,6 +349,8 @@ function on_room_name_change() {
 	updateNamesFromCurData()
 
 	refreshGameData();
+
+	events.Raise("change_room_name", { id: curRoom, name: room[curRoom].name });
 }
 
 // todo: should this global function be replaced with a global event? (ok really what's the difference tho?)
