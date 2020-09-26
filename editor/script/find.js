@@ -11,8 +11,6 @@ TODO
 */
 
 function FindTool(controls) {
-	var tileThumbnailRenderer = new ThumbnailRenderer();
-
 	// todo : how do I want to structure this?
 	AddCategory({
 		name: "map",
@@ -88,20 +86,12 @@ function FindTool(controls) {
 
 			return iconId;
 		},
-		// todo : replace callback with renderer object?
-		onRender: function(id, thumbRoot, thumbImg) {
-			var onRenderFinish = function(uri) {
-				thumbImg.src = uri;
-				thumbRoot.classList.add("findToolThumbnailRendered");
-			}
-
-			tileThumbnailRenderer.Render(thumbImg.id, id, null, thumbImg, onRenderFinish);
-		},
 		selectEventId: "select_drawing",
 		toolId: "paintPanel",
 		addEventId: "add_drawing",
 		deleteEventId: "delete_drawing",
 		refreshThumbEventId: "change_drawing",
+		thumbnailRenderer: new ThumbnailRenderer(),
 	});
 
 	AddCategory({
@@ -148,20 +138,27 @@ function FindTool(controls) {
 			return "find_" + categoryInfo.name + "_" + id;
 		}
 
+		function getThumbImgId(id) {
+			return getThumbId(id) + "_img";
+		}
+
 		function addThumbToCategory(id) {
 			var engineObject = categoryInfo.engineObjectStore[id];
 
 			var thumbDiv = CreateThumbnail(
-				getThumbId(engineObject.id),
+				getThumbId(id),
+				getThumbImgId(id),
 				engineObject,
 				categoryInfo.getCaption(engineObject),
 				categoryInfo.getIconId(engineObject),
 				createOnClick(id),
-				categoryInfo.onRender);
+				categoryInfo.thumbnailRenderer != undefined);
 
 			thumbCache[engineObject.id] = thumbDiv;
 
 			categoryDiv.appendChild(thumbDiv);
+
+			renderThumbnail(id);
 		}
 
 		function removeThumbFromCategory(id) {
@@ -173,6 +170,19 @@ function FindTool(controls) {
 
 			for (id in categoryInfo.engineObjectStore) {
 				addThumbToCategory(id);
+			}
+		}
+
+		function renderThumbnail(id) {
+			if (categoryInfo.thumbnailRenderer) {
+				var thumbImg = document.getElementById(getThumbImgId(id));
+
+				var onRenderFinish = function(uri) {
+					thumbImg.src = uri;
+					thumbImg.parentNode.classList.add("findToolThumbnailRendered");
+				}
+
+				categoryInfo.thumbnailRenderer.Render(thumbImg.id, id, null, thumbImg, onRenderFinish);
 			}
 		}
 
@@ -203,7 +213,7 @@ function FindTool(controls) {
 
 		if (categoryInfo.refreshThumbEventId) {
 			events.Listen(categoryInfo.refreshThumbEventId, function(e) {
-				// TODO
+				renderThumbnail(e.id);
 			});
 		}
 
@@ -215,7 +225,7 @@ function FindTool(controls) {
 		refreshThumbs();
 	}
 
-	function CreateThumbnail(thumbId, engineObject, caption, iconId, onClick, onRender) {
+	function CreateThumbnail(thumbId, thumbImgId, engineObject, caption, iconId, onClick, hasRenderer) {
 		var div = document.createElement("div");
 		div.id = thumbId;
 		div.classList.add("findToolItem");
@@ -225,11 +235,10 @@ function FindTool(controls) {
 		thumbnail.appendChild(iconUtils.CreateIcon(iconId));
 		thumbnail.onclick = onClick;
 
-		if (onRender) {
+		if (hasRenderer) {
 			var img = document.createElement("img");
+			img.id = thumbImgId;
 			thumbnail.appendChild(img);
-			img.id = thumbId + "_img";
-			onRender(engineObject.id, thumbnail, img);
 		}
 
 		div.appendChild(thumbnail);
