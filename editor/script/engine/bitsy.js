@@ -87,6 +87,7 @@ var TextDirection = {
 };
 var textDirection = TextDirection.LeftToRight;
 
+// should I keep this thing? seems kind unwieldy
 var names = {
 	room : new Map(),
 	tile : new Map(), // Note: Not currently enabled in the UI
@@ -107,9 +108,9 @@ function updateNamesFromCurData() {
 	}
 
 	names.room = createNameMap(room);
-	names.tile = createNameMap(tile);
-	names.sprite = createNameMap(sprite);
-	names.item = createNameMap(item);
+	names.tile = createNameMap(object); // rename back to tile?
+	// names.sprite = createNameMap(sprite);
+	// names.item = createNameMap(item);
 	names.dialog = createNameMap(dialog);
 }
 

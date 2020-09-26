@@ -299,17 +299,6 @@ function PaintTool(canvas, roomTool) {
 		if (type === "ITM") {
 			updateInventoryItemUI();
 		}
-
-		// TODO : add event
-		// // update paint explorer
-		// self.explorer.AddThumbnail(drawingId);
-		// self.explorer.ChangeSelection(drawingId);
-		// document.getElementById("paintExplorerFilterInput").value = "";
-		// self.explorer.Refresh(
-		// 	getDrawingType(),
-		// 	true /*doKeepOldThumbnails*/,
-		// 	document.getElementById("paintExplorerFilterInput").value /*filterString*/,
-		// 	true /*skipRenderStep*/);
 	}
 
 	// TODO : hacky global document stuff
@@ -562,9 +551,6 @@ function PaintTool(canvas, roomTool) {
 		index = (index + 1) % ids.length;
 
 		self.SelectDrawing(ids[index]);
-
-		// TODO : add event
-		// paintExplorer.ChangeSelection(curDrawingId);
 	}
 	this.NextDrawing = nextDrawing;
 
@@ -578,9 +564,6 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		self.SelectDrawing(ids[index]);
-
-		// TODO : add event
-		// paintExplorer.ChangeSelection(curDrawingId);
 	}
 	this.PrevDrawing = prevDrawing;
 
@@ -685,22 +668,18 @@ function on_drawing_name_change() {
 	var str = document.getElementById("drawingName").value;
 	var obj = paintTool.GetCurObject();
 	var oldName = obj.name;
-	if(str.length > 0)
-		obj.name = str;
-	else
-		obj.name = null;
 
-	console.log("NEW NAME!");
-	console.log(obj);
+	if (str.length > 0) {
+		obj.name = str;
+	}
+	else {
+		obj.name = null;
+	}
 
 	updateNamesFromCurData()
 
-	// update display name for thumbnail
-	var displayName = obj.name ? obj.name : getCurPaintModeStr() + " " + drawing.id;
-	paintExplorer.ChangeThumbnailCaption(drawing.id, displayName);
-
 	// make sure items referenced in scripts update their names
-	if(drawing.type === TileType.Item) {
+	if (obj.type === TileType.Item) {
 		// console.log("SWAP ITEM NAMES");
 
 		var ItemNameSwapVisitor = function() {
@@ -711,13 +690,15 @@ function on_drawing_name_change() {
 				// console.log("VISIT!");
 				// console.log(node);
 
-				if( node.type != "function" || node.name != "item" )
+				if (node.type != "function" || node.name != "item") {
 					return; // not the right type of node
+				}
 				
-				if( node.arguments.length <= 0 || node.arguments[0].type != "literal" )
+				if (node.arguments.length <= 0 || node.arguments[0].type != "literal") {
 					return; // no argument available
+				}
 
-				if( node.arguments[0].value === oldName ) { // do swap
+				if (node.arguments[0].value === oldName) { // do swap
 					node.arguments[0].value = newName;
 					didSwap = true;
 				}
@@ -725,32 +706,38 @@ function on_drawing_name_change() {
 		};
 
 		var newName = obj.name;
-		if(newName === null || newName === undefined) newName = drawing.id;
-		if(oldName === null || oldName === undefined) oldName = drawing.id;
 
-		// console.log(oldName + " <-> " + newName);
+		if (newName === null || newName === undefined) {
+			newName = obj.id;
+		}
 
-		if(newName != oldName) {
-			for(dlgId in dialog) {
-				// console.log("DLG " + dlgId);
+		if (oldName === null || oldName === undefined) {
+			oldName = obj.id;
+		}
+
+		if (newName != oldName) {
+			for (dlgId in dialog) {
 				var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
 				var visitor = new ItemNameSwapVisitor();
+
 				dialogScript.VisitAll(visitor);
+
 				if (visitor.DidSwap()) {
 					var newDialog = dialogScript.Serialize();
+
 					if (newDialog.indexOf("\n") > -1) {
 						newDialog = '"""\n' + newDialog + '\n"""';
 					}
+
 					dialog[dlgId].src = newDialog;
 				}
 			}
 		}
 
 		updateInventoryItemUI();
-
-		// renderPaintThumbnail( drawing.id ); // hacky way to update name
 	}
 
 	refreshGameData();
-	console.log(names);
+
+	events.Raise("change_drawing_name", { id: obj.id, name: obj.name });
 }

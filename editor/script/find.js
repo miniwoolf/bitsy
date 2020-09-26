@@ -92,6 +92,7 @@ function FindTool(controls) {
 		deleteEventId: "delete_drawing",
 		refreshThumbEventId: "change_drawing",
 		refreshAllThumbsEventIdList: ["change_room_palette", "select_room"],
+		changeNameEventId: "change_drawing_name",
 		thumbnailRenderer: new ThumbnailRenderer(),
 	});
 
@@ -143,12 +144,17 @@ function FindTool(controls) {
 			return getThumbId(id) + "_img";
 		}
 
+		function getThumbNameTextId(id) {
+			return getThumbId(id) + "_name";
+		}
+
 		function addThumbToCategory(id) {
 			var engineObject = categoryInfo.engineObjectStore[id];
 
 			var thumbDiv = CreateThumbnail(
 				getThumbId(id),
 				getThumbImgId(id),
+				getThumbNameTextId(id),
 				engineObject,
 				categoryInfo.getCaption(engineObject),
 				categoryInfo.getIconId(engineObject),
@@ -231,6 +237,24 @@ function FindTool(controls) {
 			}
 		}
 
+		if (categoryInfo.changeNameEventId) {
+			events.Listen(categoryInfo.changeNameEventId, function(e) {
+				// todo : kind of duplicative
+				var engineObject = categoryInfo.engineObjectStore[e.id];
+				var caption = categoryInfo.getCaption(engineObject);
+
+				var nameText = document.getElementById(getThumbNameTextId(e.id));
+				nameText.innerText = caption;
+
+				if (engineObject.name === undefined || engineObject.name === null) {
+					nameText.classList.add("thumbnailDefaultName");
+				}
+				else {
+					nameText.classList.remove("thumbnailDefaultName");
+				}
+			});
+		}
+
 		events.Listen("game_data_change", function() {
 			refreshThumbs();
 		});
@@ -239,7 +263,7 @@ function FindTool(controls) {
 		refreshThumbs();
 	}
 
-	function CreateThumbnail(thumbId, thumbImgId, engineObject, caption, iconId, onClick, hasRenderer) {
+	function CreateThumbnail(thumbId, thumbImgId, thumbNameTextId, engineObject, caption, iconId, onClick, hasRenderer) {
 		var div = document.createElement("div");
 		div.id = thumbId;
 		div.classList.add("findToolItem");
@@ -257,21 +281,19 @@ function FindTool(controls) {
 
 		div.appendChild(thumbnail);
 
-		var displayCaptions = true; // todo : why is this optional?
-		if (displayCaptions) {
 			var nameCaption = document.createElement("figcaption");
 
 			nameCaption.appendChild(iconUtils.CreateIcon(iconId));
 
-			var nameText = document.createElement("span");
-			nameText.innerText = caption; // img.title; // todo
-			if (engineObject.name === undefined || engineObject.name === null) {
-				nameText.classList.add("thumbnailDefaultName");
-			}
-			nameCaption.appendChild(nameText);
-
-			div.appendChild(nameCaption);
+		var nameText = document.createElement("span");
+		nameText.id = thumbNameTextId;
+		nameText.innerText = caption; // img.title; // todo
+		if (engineObject.name === undefined || engineObject.name === null) {
+			nameText.classList.add("thumbnailDefaultName");
 		}
+		nameCaption.appendChild(nameText);
+
+		div.appendChild(nameCaption);
 
 		return div;
 	}
