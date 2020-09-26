@@ -308,6 +308,10 @@ function RoomTool(canvas) {
 
 	events.Listen("palette_change", function(event) {
 		self.drawEditMap();
+
+		if (event.id === room[curRoom].pal) {
+			events.Raise("change_room_palette", { roomId: curRoom, palId: event.id });
+		}
 	});
 } // RoomTool()
 
@@ -513,7 +517,8 @@ function roomPaletteChange(event) {
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
 	paintTool.UpdateCanvas();
-	paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
+
+	events.Raise("change_room_palette", { roomId: curRoom, palId: palId });
 }
 
 function toggleMapGrid(e) {

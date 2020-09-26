@@ -91,6 +91,7 @@ function FindTool(controls) {
 		addEventId: "add_drawing",
 		deleteEventId: "delete_drawing",
 		refreshThumbEventId: "change_drawing",
+		refreshAllThumbsEventIdList: ["change_room_palette", "select_room"],
 		thumbnailRenderer: new ThumbnailRenderer(),
 	});
 
@@ -215,6 +216,19 @@ function FindTool(controls) {
 			events.Listen(categoryInfo.refreshThumbEventId, function(e) {
 				renderThumbnail(e.id);
 			});
+		}
+
+		if (categoryInfo.refreshAllThumbsEventIdList) {
+			var onRefreshAllThumbImages = function() {
+				for (id in categoryInfo.engineObjectStore) {
+					renderThumbnail(id);
+				}
+			}
+
+			for (var i = 0; i < categoryInfo.refreshAllThumbsEventIdList.length; i++) {
+				var eventId = categoryInfo.refreshAllThumbsEventIdList[i];
+				events.Listen(eventId, onRefreshAllThumbImages);
+			}
 		}
 
 		events.Listen("game_data_change", function() {

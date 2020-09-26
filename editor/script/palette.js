@@ -81,8 +81,8 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 
 		updateColorPickerLabel(colorPickerIndex, event.rgbColor.r, event.rgbColor.g, event.rgbColor.b );
 
-		if( event.isMouseUp && !events.IsEventActive("game_data_change") ) {
-			events.Raise("palette_change"); // TODO -- try including isMouseUp and see if we can update more stuff live
+		if (event.isMouseUp && !events.IsEventActive("game_data_change")) {
+			events.Raise("palette_change", { id: curPaletteId }); // TODO -- try including isMouseUp and see if we can update more stuff live
 		}
 	});
 
