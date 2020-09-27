@@ -971,6 +971,8 @@ function start() {
 		filterTileCheck : document.getElementById("findFilterTileCheck"),
 		filterSpriteCheck : document.getElementById("findFilterSpriteCheck"),
 		filterItemCheck : document.getElementById("findFilterItemCheck"),
+		filterExitCheck : document.getElementById("findFilterExitCheck"),
+		filterEndingCheck : document.getElementById("findFilterEndingCheck"),
 		filterRoomCheck : document.getElementById("findFilterRoomCheck"),
 		filterMapCheck : document.getElementById("findFilterMapCheck"),
 		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),

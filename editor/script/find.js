@@ -42,11 +42,12 @@ function FindTool(controls) {
 	CreateFilterToggleHandler("tile", controls.filterTileCheck);
 	CreateFilterToggleHandler("sprite", controls.filterSpriteCheck);
 	CreateFilterToggleHandler("item", controls.filterItemCheck);
+	CreateFilterToggleHandler("exit", controls.filterExitCheck);
+	CreateFilterToggleHandler("ending", controls.filterEndingCheck);
 	CreateFilterToggleHandler("room", controls.filterRoomCheck);
 	CreateFilterToggleHandler("map", controls.filterMapCheck);
 	CreateFilterToggleHandler("palette", controls.filterPaletteCheck);
 	CreateFilterToggleHandler("dialog", controls.filterDialogCheck);
-	// TODO : add exits and endings
 
 	CreateFilterToggleHandler("cur_room", controls.filterCurRoomCheck);
 	events.Listen("select_room", function() {
