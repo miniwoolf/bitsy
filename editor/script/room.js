@@ -314,7 +314,7 @@ function RoomTool(canvas) {
 		self.drawEditMap();
 
 		if (event.id === room[curRoom].pal) {
-			events.Raise("change_room_palette", { roomId: curRoom, palId: event.id });
+			events.Raise("change_room_palette", { id: curRoom, palId: event.id });
 		}
 	});
 } // RoomTool()

@@ -47,11 +47,14 @@ function FindTool(controls) {
 	CreateFilterToggleHandler("dialog", controls.filterDialogCheck);
 
 	CreateFilterToggleHandler("cur_room", controls.filterCurRoomCheck);
-	events.Listen("select_room", function() {
+	var onRoomChangeUpdateFilter = function() {
 		if (activeFilters.indexOf("cur_room") != -1) {
 			events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
 		}
-	});
+	};
+	events.Listen("select_room", onRoomChangeUpdateFilter);
+	events.Listen("change_room", onRoomChangeUpdateFilter);
+	events.Listen("change_room_palette", onRoomChangeUpdateFilter);
 
 	AddCategory({
 		name: "drawing",
@@ -226,6 +229,8 @@ function FindTool(controls) {
 		addEventId: "add_palette",
 		deleteEventId: "delete_palette",
 		changeNameEventId: "change_palette_name",
+		refreshThumbEventIdList: ["palette_change"],
+		thumbnailRenderer: CreatePaletteThumbnailRenderer(),
 	});
 
 	AddCategory({
@@ -556,7 +561,7 @@ function CreateRoomThumbnailRenderer() {
 	}
 
 	var getHexPalette = function(obj) {
-		var palId = getRoomPal(obj.pal);
+		var palId = obj.pal;
 
 		var hexPalette = [];
 		var roomColors = getPal(palId);
@@ -570,6 +575,45 @@ function CreateRoomThumbnailRenderer() {
 
 	var onRender = function(obj, ctx, options) {
 		mapTool.DrawMiniRoom(obj.id, 0, 0, 8 * scale, ctx);
+		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
+	}
+
+	return new ThumbnailRenderer(getRenderObject, getHexPalette, onRender);
+}
+
+function CreatePaletteThumbnailRenderer() {
+	var getRenderObject = function(id) {
+		return palette[id];
+	}
+
+	var getHexPalette = function(obj) {
+		var palId = obj.id;
+
+		var hexPalette = [];
+		var colors = getPal(palId);
+		for (i in colors) {
+			var hexStr = rgbToHex(colors[i][0], colors[i][1], colors[i][2]).slice(1);
+			hexPalette.push(hexStr);
+		}
+
+		return hexPalette;		
+	}
+
+	var onRender = function(obj, ctx, options) {
+		var hexPalette = getHexPalette(obj);
+
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, 8 * scale, 8 * scale);
+
+		ctx.fillStyle = "#" + hexPalette[0];
+		ctx.fillRect(1 * scale, 1 * scale, 2 * scale, 6 * scale);
+
+		ctx.fillStyle = "#" + hexPalette[1];
+		ctx.fillRect(3 * scale, 1 * scale, 2 * scale, 6 * scale);
+
+		ctx.fillStyle = "#" + hexPalette[2];
+		ctx.fillRect(5 * scale, 1 * scale, 2 * scale, 6 * scale);
+
 		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
 	}
 
