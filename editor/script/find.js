@@ -16,10 +16,8 @@ function FindTool(controls) {
 		events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
 	}
 
-
 	controls.filterRoot.style.display = controls.filterVisibleCheck.checked ? "block" : "none";
 	controls.filterVisibleCheck.onchange = function(e) {
-		console.log(e);
 		controls.filterRoot.style.display = e.target.checked ? "block" : "none";
 	}
 
