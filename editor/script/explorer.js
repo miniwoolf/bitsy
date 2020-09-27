@@ -363,9 +363,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 } // PaintExplorer()
 
 // TODO : should this really live in this file?
-function ThumbnailRenderer() {
-	console.log("NEW THUMB RENDERER");
-
+function ThumbnailRenderer(getRenderObject, getHexPalette, onRender) {
 	var drawingThumbnailCanvas, drawingThumbnailCtx;
 	drawingThumbnailCanvas = document.createElement("canvas");
 	drawingThumbnailCanvas.width = 8 * scale; // TODO: scale constants need to be contained somewhere
@@ -375,10 +373,60 @@ function ThumbnailRenderer() {
 	var thumbnailRenderEncoders = {};
 	var cache = {};
 
-	function render(imgId, drawingId, frameIndex, imgElement, onRenderCallback) {
-		var isAnimated = (frameIndex === undefined || frameIndex === null) ? true : false;
+	function render(id, callback, options) {
+		var renderObj = getRenderObject(id);
+		var hexPalette = getHexPalette(renderObj);
+		var drawingFrameData = onRender(renderObj, drawingThumbnailCtx, options);
 
-		var palId = getRoomPal(curRoom); // TODO : should NOT be hardcoded like this
+		// create encoder
+		var gifData = {
+			frames: drawingFrameData,
+			width: drawingThumbnailCanvas.width,
+			height: drawingThumbnailCanvas.height,
+			palette: hexPalette,
+			loops: 0,
+			delay: animationTime / 10, // TODO why divide by 10???
+		};
+		var encoder = new gif();
+
+		// cancel old encoder (if in progress already)
+		if (thumbnailRenderEncoders[id] != null) {
+			thumbnailRenderEncoders[id].cancel();
+		}
+		thumbnailRenderEncoders[id] = encoder;
+
+		// start encoding new GIF
+		encoder.encode(gifData, function(uri) {
+			// update cache
+			cache[id] = {
+				uri : uri,
+				outOfDate : false
+			};
+
+			callback(uri);
+		});
+	}
+	this.Render = render;
+
+	this.GetCacheEntry = function(id) {
+		if (!cache[id]) {
+			cache[id] = {
+				uri : null,
+				outOfDate : true
+			};
+		}
+
+		return cache[id];
+	}
+} // ThumbnailRenderer()
+
+function CreateDrawingThumbnailRenderer() {
+	var getRenderObject = function(id) {
+		return object[id];
+	}
+
+	var getHexPalette = function(obj) {
+		var palId = getRoomPal(curRoom);
 
 		var hexPalette = [];
 		var roomColors = getPal(palId);
@@ -387,75 +435,28 @@ function ThumbnailRenderer() {
 			hexPalette.push(hexStr);
 		}
 
-		// console.log(id);
+		return hexPalette;
+	}
 
+	var onRender = function(obj, ctx, options) {
+		console.log(obj);
+
+		var palId = getRoomPal(curRoom);
 		var drawingFrameData = [];
 
-		if (isAnimated || frameIndex == 0) {
-			drawObject(renderer.GetImage(object[drawingId], palId, 0 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
-			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
-		}
-		if (isAnimated || frameIndex == 1) {
-			drawObject(renderer.GetImage(object[drawingId], palId, 1 /*frameIndex*/), 0, 0, drawingThumbnailCtx);
-			drawingFrameData.push( drawingThumbnailCtx.getImageData(0,0,8*scale,8*scale).data );
+		// todo : more than two frames?
+		if (options.isAnimated || options.frameIndex == 0) {
+			drawObject(renderer.GetImage(obj, palId, 0 /*frameIndex*/), 0, 0, ctx);
+			drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
 		}
 
-		// create encoder
-		var gifData = {
-			frames: drawingFrameData,
-			width: 8*scale,
-			height: 8*scale,
-			palette: hexPalette,
-			loops: 0,
-			delay: animationTime / 10 // TODO why divide by 10???
-		};
-		var encoder = new gif();
-
-		// cancel old encoder (if in progress already)
-		if( thumbnailRenderEncoders[imgId] != null )
-			thumbnailRenderEncoders[imgId].cancel();
-		thumbnailRenderEncoders[imgId] = encoder;
-
-		// start encoding new GIF
-		if (imgElement === undefined || imgElement === null) {
-			imgElement = document.getElementById(imgId);
+		if (options.isAnimated || options.frameIndex == 1) {
+			drawObject(renderer.GetImage(obj, palId, 1 /*frameIndex*/), 0, 0, ctx);
+			drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
 		}
 
-		// todo : there are so many options... need to clean this thing up
-		if (onRenderCallback === undefined || onRenderCallback === null) {
-			onRenderCallback = createThumbnailRenderCallback(imgElement);
-		}
-
-		encoder.encode( gifData, function(uri) {
-			// update cache
-			cache[imgId] = {
-				uri : uri,
-				outOfDate : false
-			};
-
-			onRenderCallback(uri);
-		});
+		return drawingFrameData;
 	}
 
-	this.Render = function(imgId, drawingId, frameIndex, imgElement, onRenderCallback) {
-		render(imgId, drawingId, frameIndex, imgElement, onRenderCallback);
-	};
-
-	function createThumbnailRenderCallback(img) {
-		return function(uri) {
-			// update image
-			img.src = uri;
-			img.style.background = "none";
-		};
-	}
-
-	this.GetCacheEntry = function(imgId) {
-		if (!cache[imgId]) {
-			cache[imgId] = {
-				uri : null,
-				outOfDate : true
-			};
-		}
-		return cache[imgId];
-	}
-} // ThumbnailRenderer()
+	return new ThumbnailRenderer(getRenderObject, getHexPalette, onRender);
+}

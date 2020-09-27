@@ -531,9 +531,14 @@ function PaintTool(canvas, roomTool) {
 		renderer.SetImageSource(sourceId, imageSource);
 	}
 
-	var animationThumbnailRenderer = new ThumbnailRenderer();
+	var animationThumbnailRenderer = CreateDrawingThumbnailRenderer();
+
 	function renderAnimationThumbnail(imgId, id, frameIndex) {
-		animationThumbnailRenderer.Render(imgId, id, frameIndex);
+		function onRenderFinished(uri) {
+			document.getElementById(imgId).src = uri;
+		};
+
+		animationThumbnailRenderer.Render(id, onRenderFinished, { frameIndex: frameIndex });
 	}
 
 	function renderAnimationPreview(id) {

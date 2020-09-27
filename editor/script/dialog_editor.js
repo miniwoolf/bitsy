@@ -2692,7 +2692,7 @@ function DialogTool() {
 	}
 
 	// for rendering item thumbnails
-	var thumbnailRenderer = new ThumbnailRenderer();
+	var thumbnailRenderer = CreateDrawingThumbnailRenderer();
 
 	// TODO : put in shared location?
 	var transitionTypes = [
@@ -2788,7 +2788,7 @@ function DialogTool() {
 						itemThumbnail.id = "param_item_" + curValue;
 						itemThumbnail.style.width = "16px";
 						itemThumbnail.style.marginLeft = "4px";
-						thumbnailRenderer.Render(itemThumbnail.id, new DrawingId(TileType.Item, curValue), 0, itemThumbnail);
+						thumbnailRenderer.Render(curValue, function(uri) { itemThumbnail.src = uri; }, { isAnimated: false });
 					}
 				}
 				else if (type === "transition") {

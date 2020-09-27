@@ -163,7 +163,13 @@ function FindTool(controls) {
 		refreshThumbEventId: "change_drawing",
 		refreshAllThumbsEventIdList: ["change_room_palette", "select_room"],
 		changeNameEventId: "change_drawing_name",
-		thumbnailRenderer: new ThumbnailRenderer(),
+		thumbnailRenderer: CreateDrawingThumbnailRenderer(),
+		getRenderOptions: function(obj) {
+			return {
+				isAnimated : obj.animation.isAnimated,
+				frameIndex : 0,
+			};
+		},
 	});
 
 	AddCategory({
@@ -310,7 +316,12 @@ function FindTool(controls) {
 					thumbImg.parentNode.classList.add("findToolThumbnailRendered");
 				}
 
-				categoryInfo.thumbnailRenderer.Render(thumbImg.id, id, null, thumbImg, onRenderFinish);
+				var options = {};
+				if (categoryInfo.getRenderOptions) {
+					options = categoryInfo.getRenderOptions(categoryInfo.engineObjectStore[id]);
+				}
+
+				categoryInfo.thumbnailRenderer.Render(id, onRenderFinish, options);
 			}
 		}
 
