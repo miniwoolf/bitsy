@@ -31,7 +31,7 @@ function MapTool(controls) {
 				for (var x = 0; x < mapsize; x++) {
 					var roomId = map[curMapId].map[y][x];
 					if (roomId != "0" && roomId in room) {
-						DrawRoom(roomId, x, y);
+						DrawRoom(roomId, x, y, canvasRoomSize, context);
 					}
 				}
 			}
@@ -67,7 +67,7 @@ function MapTool(controls) {
 		DrawMap();
 	}, 400);
 
-	function DrawRoom(roomId, x, y) {
+	function DrawRoom(roomId, x, y, size, ctx) {
 		var palId = room[roomId].pal;
 		var colors = palette[palId].colors;
 
@@ -75,8 +75,8 @@ function MapTool(controls) {
 			return rgbToHex(colors[i][0], colors[i][1], colors[i][2])
 		}
 
-		context.fillStyle = hexFromPal(0);
-		context.fillRect(x * canvasRoomSize, y * canvasRoomSize, canvasRoomSize, canvasRoomSize);
+		ctx.fillStyle = hexFromPal(0);
+		ctx.fillRect(x * size, y * size, size, size);
 
 		for (var ry = 0; ry < roomsize; ry++) {
 			for (var rx = 0; rx < roomsize; rx++) {
@@ -90,22 +90,25 @@ function MapTool(controls) {
 				}
 
 				if (tileId != "0" && tileId in object) {
-					context.fillStyle = hexFromPal(parseInt(object[tileId].col));
-					DrawRoomTile(x, y, rx, ry);
+					ctx.fillStyle = hexFromPal(parseInt(object[tileId].col));
+					DrawRoomTile(x, y, rx, ry, size, ctx);
 				}
 			}
 		}
 	}
+	this.DrawMiniRoom = DrawRoom;
 
-	function DrawRoomTile(x, y, rx, ry) {
-		var canvasRoomX = x * canvasRoomSize;
-		var canvasRoomY = y * canvasRoomSize;
+	function DrawRoomTile(x, y, rx, ry, size, ctx) {
+		var tileSize = size / roomsize;
 
-		context.fillRect(
-			canvasRoomX + (rx * canvasTileSize),
-			canvasRoomY + (ry * canvasTileSize),
-			canvasTileSize,
-			canvasTileSize);
+		var canvasRoomX = x * size;
+		var canvasRoomY = y * size;
+
+		ctx.fillRect(
+			canvasRoomX + (rx * tileSize),
+			canvasRoomY + (ry * tileSize),
+			tileSize,
+			tileSize);
 	}
 
 	function DrawSelection(x, y, cornerOffset) {
@@ -115,24 +118,24 @@ function MapTool(controls) {
 		var max = (roomsize - 1) + cornerOffset;
 
 		// top left
-		DrawRoomTile(x, y, min + 0, min + 0);
-		DrawRoomTile(x, y, min + 1, min + 0);
-		DrawRoomTile(x, y, min + 0, min + 1);
+		DrawRoomTile(x, y, min + 0, min + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, min + 1, min + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, min + 0, min + 1, canvasRoomSize, context);
 
 		// top right
-		DrawRoomTile(x, y, max + 0, min + 0);
-		DrawRoomTile(x, y, max - 1, min + 0);
-		DrawRoomTile(x, y, max + 0, min + 1);
+		DrawRoomTile(x, y, max + 0, min + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, max - 1, min + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, max + 0, min + 1, canvasRoomSize, context);
 
 		// bottom left
-		DrawRoomTile(x, y, min + 0, max + 0);
-		DrawRoomTile(x, y, min + 1, max + 0);
-		DrawRoomTile(x, y, min + 0, max - 1);
+		DrawRoomTile(x, y, min + 0, max + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, min + 1, max + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, min + 0, max - 1, canvasRoomSize, context);
 
 		// bottom right
-		DrawRoomTile(x, y, max + 0, max + 0);
-		DrawRoomTile(x, y, max - 1, max + 0);
-		DrawRoomTile(x, y, max + 0, max - 1);
+		DrawRoomTile(x, y, max + 0, max + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, max - 1, max + 0, canvasRoomSize, context);
+		DrawRoomTile(x, y, max + 0, max - 1, canvasRoomSize, context);
 	}
 
 	function OnMouseDown(e) {

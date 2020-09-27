@@ -1,8 +1,5 @@
 /*
 TODO
-- respond to events: add/delete stuff, edit stuff, new game data, active palette changed, selection changed
-- animated thumbnails broken?
-- thumbnails for non-drawing stuff (rooms, maps, etc)
 - test out performance for large games
 - hide default palette
 */
@@ -160,7 +157,7 @@ function FindTool(controls) {
 		toolId: "paintPanel",
 		addEventId: "add_drawing",
 		deleteEventId: "delete_drawing",
-		refreshThumbEventId: "change_drawing",
+		refreshThumbEventIdList: ["change_drawing"],
 		refreshAllThumbsEventIdList: ["change_room_palette", "select_room"],
 		changeNameEventId: "change_drawing_name",
 		thumbnailRenderer: CreateDrawingThumbnailRenderer(),
@@ -191,6 +188,8 @@ function FindTool(controls) {
 		addEventId: "add_room",
 		deleteEventId: "delete_room",
 		changeNameEventId: "change_room_name",
+		refreshThumbEventIdList: ["change_room", "change_room_palette"],
+		thumbnailRenderer: CreateRoomThumbnailRenderer(),
 	});
 
 	AddCategory({
@@ -361,10 +360,15 @@ function FindTool(controls) {
 			});
 		}
 
-		if (categoryInfo.refreshThumbEventId) {
-			events.Listen(categoryInfo.refreshThumbEventId, function(e) {
+		if (categoryInfo.refreshThumbEventIdList) {
+			var onRefreshThumb = function(e) {
 				renderThumbnail(e.id);
-			});
+			}
+
+			for (var i = 0; i < categoryInfo.refreshThumbEventIdList.length; i++) {
+				var eventId = categoryInfo.refreshThumbEventIdList[i];
+				events.Listen(eventId, onRefreshThumb);
+			}
 		}
 
 		if (categoryInfo.refreshAllThumbsEventIdList) {
@@ -526,8 +530,6 @@ function CreateDrawingThumbnailRenderer() {
 	}
 
 	var onRender = function(obj, ctx, options) {
-		console.log(obj);
-
 		var palId = getRoomPal(curRoom);
 		var drawingFrameData = [];
 
@@ -543,6 +545,32 @@ function CreateDrawingThumbnailRenderer() {
 		}
 
 		return drawingFrameData;
+	}
+
+	return new ThumbnailRenderer(getRenderObject, getHexPalette, onRender);
+}
+
+function CreateRoomThumbnailRenderer() {
+	var getRenderObject = function(id) {
+		return room[id];
+	}
+
+	var getHexPalette = function(obj) {
+		var palId = getRoomPal(obj.pal);
+
+		var hexPalette = [];
+		var roomColors = getPal(palId);
+		for (i in roomColors) {
+			var hexStr = rgbToHex(roomColors[i][0], roomColors[i][1], roomColors[i][2]).slice(1);
+			hexPalette.push(hexStr);
+		}
+
+		return hexPalette;		
+	}
+
+	var onRender = function(obj, ctx, options) {
+		mapTool.DrawMiniRoom(obj.id, 0, 0, 8 * scale, ctx);
+		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
 	}
 
 	return new ThumbnailRenderer(getRenderObject, getHexPalette, onRender);

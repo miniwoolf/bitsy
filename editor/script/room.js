@@ -142,6 +142,8 @@ function RoomTool(canvas) {
 			refreshGameData();
 			self.drawEditMap();
 		}
+
+		events.Raise("change_room", { id: curRoom });
 	}
 
 	function onMouseMove(e) {
@@ -198,6 +200,8 @@ function RoomTool(canvas) {
 				self.drawEditMap();
 			}
 		}
+
+		events.Raise("change_room", { id: curRoom });
 	}
 
 	function onTouchStart(e) {
@@ -520,7 +524,7 @@ function roomPaletteChange(event) {
 	roomTool.drawEditMap();
 	paintTool.UpdateCanvas();
 
-	events.Raise("change_room_palette", { roomId: curRoom, palId: palId });
+	events.Raise("change_room_palette", { id: curRoom, palId: palId });
 }
 
 function toggleMapGrid(e) {
