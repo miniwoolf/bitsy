@@ -509,6 +509,13 @@ function colorTableSizeThatFitsPalette(colors) {
 	while (colors.length > Math.pow(2,size+1)) {
 		size++;
 	}
+
+	// seems like gifs with a color table with less than 4 colors
+	// TODO : investigate why?
+	if (size < 4) {
+		size = 4;
+	}
+
 	return size;
 }
 

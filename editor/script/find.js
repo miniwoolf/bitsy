@@ -191,6 +191,8 @@ function FindTool(controls) {
 		addEventId: "add_room",
 		deleteEventId: "delete_room",
 		changeNameEventId: "change_room_name",
+		// todo : this isn't working if the palette changes when you have a different room selected
+		// is there a smarter way to set this up??
 		refreshThumbEventIdList: ["change_room", "change_room_palette"],
 		thumbnailRenderer: CreateRoomThumbnailRenderer(),
 	});
@@ -208,6 +210,9 @@ function FindTool(controls) {
 		addEventId: "add_map",
 		deleteEventId: "delete_map",
 		changeNameEventId: "change_map_name",
+		// todo : this list might be overkill
+		refreshAllThumbsEventIdList: ["change_map", "change_room_palette", "palette_change"],
+		thumbnailRenderer: CreateMapThumbnailRenderer(),
 	});
 
 	AddCategory({
@@ -606,13 +611,69 @@ function CreatePaletteThumbnailRenderer() {
 		ctx.fillRect(0, 0, 8 * scale, 8 * scale);
 
 		ctx.fillStyle = "#" + hexPalette[0];
-		ctx.fillRect(1 * scale, 1 * scale, 2 * scale, 6 * scale);
+		ctx.fillRect(1 * scale, 1 * scale, 6 * scale, 2 * scale);
 
 		ctx.fillStyle = "#" + hexPalette[1];
-		ctx.fillRect(3 * scale, 1 * scale, 2 * scale, 6 * scale);
+		ctx.fillRect(1 * scale, 3 * scale, 6 * scale, 2 * scale);
 
 		ctx.fillStyle = "#" + hexPalette[2];
-		ctx.fillRect(5 * scale, 1 * scale, 2 * scale, 6 * scale);
+		ctx.fillRect(1 * scale, 5 * scale, 6 * scale, 2 * scale);
+
+		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
+	}
+
+	return new ThumbnailRenderer(getRenderObject, getHexPalette, onRender);
+}
+
+function CreateMapThumbnailRenderer() {
+	var getRenderObject = function(id) {
+		return map[id];
+	}
+
+	var hexColorMap;
+
+	// todo : probably bad practice to generate the hex color map as a side effect but oh well
+	var getHexPalette = function(obj) {
+		console.log(obj);
+
+		hexColorMap = {
+			"0" : "#000000",
+		};
+
+		for (var y = 0; y < mapsize; y++) {
+			for (var x = 0; x < mapsize; x++) {
+				var roomId = obj.map[y][x];
+				if (roomId != "0" && roomId in room) {
+					var palId = room[roomId].pal;
+					var palColors = getPal(palId);
+					var hexStr = rgbToHex(palColors[0][0], palColors[0][1], palColors[0][2]);
+					hexColorMap[roomId] = hexStr;
+				}
+			}
+		}
+
+		var hexPalette = [];
+		for (id in hexColorMap) {
+			hexPalette.push(hexColorMap[id].slice(1));
+		}
+
+		return hexPalette;
+	}
+
+	var onRender = function(obj, ctx, options) {
+		ctx.fillStyle = hexColorMap["0"];
+		ctx.fillRect(0, 0, 8 * scale, 8 * scale);
+
+		for (var y = 0; y < mapsize; y++) {
+			for (var x = 0; x < mapsize; x++) {
+				var roomId = obj.map[y][x];
+				if (roomId != "0" && roomId in room) {
+					var hexStr = hexColorMap[roomId];
+					ctx.fillStyle = hexStr;
+					ctx.fillRect(x * scale, y * scale, 1 * scale, 1 * scale);
+				}
+			}
+		}
 
 		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
 	}

@@ -175,6 +175,8 @@ function MapTool(controls) {
 
 					DrawMap();
 					refreshGameData();
+
+					events.Raise("change_map", { id: curMapId });
 				}
 			}
 			else if (curMode === Mode.Select) {
