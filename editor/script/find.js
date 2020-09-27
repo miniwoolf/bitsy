@@ -121,6 +121,10 @@ function FindTool(controls) {
 		changeNameEventId: "change_palette_name",
 	});
 
+	controls.searchInput.onchange = function() {
+		events.Raise("change_search", { searchText: controls.searchInput.value });
+	}
+
 	function AddCategory(categoryInfo) {
 		var categoryDiv = document.createElement("div");
 		controls.contentRoot.appendChild(categoryDiv);
@@ -261,6 +265,17 @@ function FindTool(controls) {
 
 		events.Listen("game_data_change", function() {
 			refreshThumbs();
+		});
+
+		events.Listen("change_search", function(e) {
+			console.log(e.searchText);
+			for (var id in categoryInfo.engineObjectStore) {
+				var engineObject = categoryInfo.engineObjectStore[id];
+				var caption = categoryInfo.getCaption(engineObject);
+				var isVisible = e.searchText === null || e.searchText.length <= 0 || caption.indexOf(e.searchText) != -1;
+				// todo : switch to use a style?
+				document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";
+			}
 		});
 
 		// init category

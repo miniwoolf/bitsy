@@ -964,6 +964,7 @@ function start() {
 	// create find tool
 	findTool = new FindTool({
 		contentRoot : document.getElementById("findContent"),
+		searchInput : document.getElementById("findSearchInput"),
 	});
 
 	initLanguageOptions();
