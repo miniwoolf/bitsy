@@ -965,6 +965,16 @@ function start() {
 	findTool = new FindTool({
 		contentRoot : document.getElementById("findContent"),
 		searchInput : document.getElementById("findSearchInput"),
+		filterVisibleCheck : document.getElementById("findFilterVisibleCheck"),
+		filterRoot : document.getElementById("findFilters"),
+		filterAvatarCheck : document.getElementById("findFilterAvatarCheck"),
+		filterTileCheck : document.getElementById("findFilterTileCheck"),
+		filterSpriteCheck : document.getElementById("findFilterSpriteCheck"),
+		filterItemCheck : document.getElementById("findFilterItemCheck"),
+		filterRoomCheck : document.getElementById("findFilterRoomCheck"),
+		filterMapCheck : document.getElementById("findFilterMapCheck"),
+		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),
+		filterDialogCheck : document.getElementById("findFilterDialogCheck"),
 	});
 
 	initLanguageOptions();

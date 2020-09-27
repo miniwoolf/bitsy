@@ -729,7 +729,6 @@
 
 				<div id="findPanel" class="panel color1">
 					<div class="bar color1">
-
 						<button title="minimize find drawing window" class="light panelBarClose" onclick="hidePanel('findPanel');">
 							<span class="bitsy_icon">close</span>
 						</button>
@@ -744,12 +743,74 @@
 						<span class="textInputFieldIcon">
 							<span class="bitsy_icon">search</span>
 						</span>
+
 						<input id="findSearchInput" type="text" class="textInputField withIcon" placeholder="search by name" title="search by name">
+
+						<input type="checkbox" id="findFilterVisibleCheck" />
+						<label for="findFilterVisibleCheck" title="show / hide filter options">
+							<!-- TODO : dedicated filter icon -->
+							<span class="bitsy_icon icon_space_right">settings</span>
+						</label>
 					</div>
 
-					<!-- TODO : add category filter checkboxes -->
-					<div id="findViewport">
-						<div id="findContent">
+					<div id="findResizeRoot">
+						<div id="findFilters">
+							<input type="checkbox" id="findFilterAvatarCheck" checked/>
+							<label for="findFilterAvatarCheck" title="show / hide avatar">
+								<span class="bitsy_icon icon_space_right">avatar</span>
+								<span class="localize avatar_label">avatar</span>
+							</label>
+
+							<input type="checkbox" id="findFilterTileCheck" checked/>
+							<label for="findFilterTileCheck" title="show / hide tiles">
+								<span class="bitsy_icon icon_space_right">tile</span>
+								<span class="localize tile_label">tile</span>
+							</label>
+
+							<input type="checkbox" id="findFilterSpriteCheck" checked/>
+							<label for="findFilterSpriteCheck" title="show / hide sprites">
+								<span class="bitsy_icon icon_space_right">sprite</span>
+								<span class="localize sprite_label">sprite</span>
+							</label>
+
+							<input type="checkbox" id="findFilterItemCheck" checked/>
+							<label for="findFilterItemCheck" title="show / hide items">
+								<span class="bitsy_icon icon_space_right">item</span>
+								<span class="localize item_label">item</span>
+							</label>
+
+							<!-- TODO EXITS AND ENDINGS -->
+
+							<input type="checkbox" id="findFilterRoomCheck" checked/>
+							<label for="findFilterRoomCheck" title="show / hide rooms">
+								<span class="bitsy_icon icon_space_right">room</span>
+								<span class="localize room_tool_name">room</span>
+							</label>
+
+							<input type="checkbox" id="findFilterMapCheck" checked/>
+							<label for="findFilterMapCheck" title="show / hide maps">
+								<!-- TODO : icon -->
+								<span class="bitsy_icon icon_space_right">room</span>
+								<!-- TODO : localize -->
+								<span>map</span>
+							</label>
+
+							<input type="checkbox" id="findFilterPaletteCheck" checked/>
+							<label for="findFilterPaletteCheck" title="show / hide color palettes">
+								<span class="bitsy_icon icon_space_right">colors</span>
+								<span class="localize colors_tool_name">colors</span>
+							</label>
+
+							<input type="checkbox" id="findFilterDialogCheck" checked/>
+							<label for="findFilterDialogCheck" title="show / hide dialogs">
+								<span class="bitsy_icon icon_space_right">dialog</span>
+								<span class="localize dialog_tool_name">dialog</span>
+							</label>
+						</div>
+
+						<div id="findViewport">
+							<div id="findContent">
+							</div>
 						</div>
 					</div>
 				</div>

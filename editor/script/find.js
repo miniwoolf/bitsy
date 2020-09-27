@@ -3,38 +3,52 @@ TODO
 - respond to events: add/delete stuff, edit stuff, new game data, active palette changed, selection changed
 - animated thumbnails broken?
 - thumbnails for non-drawing stuff (rooms, maps, etc)
-- search
-- category select
 - test out performance for large games
 - hide default palette
-- selection for each category
 */
 
 function FindTool(controls) {
-	// todo : how do I want to structure this?
-	AddCategory({
-		name: "map",
-		engineObjectStore: map,
-		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
-		getIconId: function(obj) { return "room"; }, // TODO : real icon
-		selectEventId: "select_map",
-		toolId: "mapPanel",
-		addEventId: "add_map",
-		deleteEventId: "delete_map",
-		changeNameEventId: "change_map_name",
-	});
+	var searchText = controls.searchInput.value;
+	var activeFilters = [];
 
-	AddCategory({
-		name: "room",
-		engineObjectStore: room,
-		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
-		getIconId: function(obj) { return "room"; },
-		selectEventId: "select_room",
-		toolId: "roomPanel",
-		addEventId: "add_room",
-		deleteEventId: "delete_room",
-		changeNameEventId: "change_room_name",
-	});
+	controls.searchInput.onchange = function(e) {
+		searchText = e.target.value;
+		events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
+	}
+
+
+	controls.filterRoot.style.display = controls.filterVisibleCheck.checked ? "block" : "none";
+	controls.filterVisibleCheck.onchange = function(e) {
+		console.log(e);
+		controls.filterRoot.style.display = e.target.checked ? "block" : "none";
+	}
+
+	function CreateFilterToggleHandler(filterId, filterCheck) {
+		if (filterCheck.checked) {
+			activeFilters.push(filterId);
+		}
+
+		filterCheck.onchange = function(e) {
+			if (e.target.checked) {
+				activeFilters.push(filterId);
+			}
+			else {
+				activeFilters.splice(activeFilters.indexOf(filterId), 1);
+			}
+
+			events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
+		}
+	}
+
+	CreateFilterToggleHandler("avatar", controls.filterAvatarCheck);
+	CreateFilterToggleHandler("tile", controls.filterTileCheck);
+	CreateFilterToggleHandler("sprite", controls.filterSpriteCheck);
+	CreateFilterToggleHandler("item", controls.filterItemCheck);
+	CreateFilterToggleHandler("room", controls.filterRoomCheck);
+	CreateFilterToggleHandler("map", controls.filterMapCheck);
+	CreateFilterToggleHandler("palette", controls.filterPaletteCheck);
+	CreateFilterToggleHandler("dialog", controls.filterDialogCheck);
+	// TODO : add exits and endings
 
 	AddCategory({
 		name: "drawing",
@@ -88,6 +102,27 @@ function FindTool(controls) {
 
 			return iconId;
 		},
+		includedInFilter: function(obj) {
+			var result = false;
+
+			if (obj.type === "SPR") {
+				result = activeFilters.indexOf(obj.id === "A" ? "avatar" : "sprite") != -1;
+			}
+			else if (obj.type === "TIL") {
+				result = activeFilters.indexOf("tile") != -1;
+			}
+			else if (obj.type === "ITM") {
+				result = activeFilters.indexOf("item") != -1;
+			}
+			else if (obj.type === "EXT") {
+				result = activeFilters.indexOf("exit") != -1;
+			}
+			else if (obj.type === "END") {
+				result = activeFilters.indexOf("ending") != -1;
+			}
+
+			return result;
+		},
 		selectEventId: "select_drawing",
 		toolId: "paintPanel",
 		addEventId: "add_drawing",
@@ -99,14 +134,29 @@ function FindTool(controls) {
 	});
 
 	AddCategory({
-		name: "dialog",
-		engineObjectStore: dialog,
-		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
-		getIconId: function(obj) { return "dialog"; },
-		selectEventId: "select_dialog",
-		toolId: "dialogPanel",
-		// TODO : add & delete
-		changeNameEventId: "change_dialog_name",
+		name: "room",
+		engineObjectStore: room,
+		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "room"; },
+		includedInFilter: function(obj) { return activeFilters.indexOf("room") != -1; },
+		selectEventId: "select_room",
+		toolId: "roomPanel",
+		addEventId: "add_room",
+		deleteEventId: "delete_room",
+		changeNameEventId: "change_room_name",
+	});
+
+	AddCategory({
+		name: "map",
+		engineObjectStore: map,
+		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "room"; }, // TODO : real icon
+		includedInFilter: function(obj) { return activeFilters.indexOf("map") != -1; },
+		selectEventId: "select_map",
+		toolId: "mapPanel",
+		addEventId: "add_map",
+		deleteEventId: "delete_map",
+		changeNameEventId: "change_map_name",
 	});
 
 	AddCategory({
@@ -114,6 +164,7 @@ function FindTool(controls) {
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "colors"; },
+		includedInFilter: function(obj) { return activeFilters.indexOf("palette") != -1; },
 		selectEventId: "select_palette",
 		toolId: "colorsPanel",
 		addEventId: "add_palette",
@@ -121,12 +172,21 @@ function FindTool(controls) {
 		changeNameEventId: "change_palette_name",
 	});
 
-	controls.searchInput.onchange = function() {
-		events.Raise("change_search", { searchText: controls.searchInput.value });
-	}
+	AddCategory({
+		name: "dialog",
+		engineObjectStore: dialog,
+		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
+		getIconId: function(obj) { return "dialog"; },
+		includedInFilter: function(obj) { return activeFilters.indexOf("dialog") != -1; },
+		selectEventId: "select_dialog",
+		toolId: "dialogPanel",
+		// TODO : add & delete
+		changeNameEventId: "change_dialog_name",
+	});
 
 	function AddCategory(categoryInfo) {
 		var categoryDiv = document.createElement("div");
+		categoryDiv.classList.add("findCategory");
 		controls.contentRoot.appendChild(categoryDiv);
 
 		var thumbCache = {};
@@ -201,6 +261,17 @@ function FindTool(controls) {
 			}
 		}
 
+		function updateVisibility() {
+			for (var id in categoryInfo.engineObjectStore) {
+				var engineObject = categoryInfo.engineObjectStore[id];
+				var caption = categoryInfo.getCaption(engineObject);
+				var includedInSearch = searchText === null || searchText.length <= 0 || caption.indexOf(searchText) != -1;
+				var isVisible = includedInSearch && categoryInfo.includedInFilter(engineObject);
+				// todo : switch to use a style?
+				document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";
+			}
+		}
+
 		events.Listen(categoryInfo.selectEventId, function(e) {
 			selectedId = e.id;
 
@@ -267,15 +338,8 @@ function FindTool(controls) {
 			refreshThumbs();
 		});
 
-		events.Listen("change_search", function(e) {
-			console.log(e.searchText);
-			for (var id in categoryInfo.engineObjectStore) {
-				var engineObject = categoryInfo.engineObjectStore[id];
-				var caption = categoryInfo.getCaption(engineObject);
-				var isVisible = e.searchText === null || e.searchText.length <= 0 || caption.indexOf(e.searchText) != -1;
-				// todo : switch to use a style?
-				document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";
-			}
+		events.Listen("change_find_filter", function() {
+			updateVisibility();
 		});
 
 		// init category
@@ -318,4 +382,6 @@ function FindTool(controls) {
 
 		return div;
 	}
+
+	events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
 }

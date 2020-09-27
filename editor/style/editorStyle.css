@@ -253,6 +253,24 @@ span.controlBox {
 	font-size: 110%;
 }
 
+#findFilterVisibleCheck + label {
+	margin-left: 5px;
+	margin-bottom: 0px;
+}
+
+#findFilters {
+	margin-top: 5px;
+	white-space: normal;
+}
+
+#findFilters label {
+	display: inline-block;
+}
+
+.findCategory {
+	display: inline;
+}
+
 .findToolItem {
 	display: inline-block;
 	max-width: 72px;
@@ -307,6 +325,15 @@ span.controlBox {
 	overflow: hidden;
 }
 
+#findResizeRoot {
+	resize: both;
+	width: 375px;
+	height: 450px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
 #findViewport {
 	margin-top:5px;
 	padding: 12px;
@@ -317,10 +344,8 @@ span.controlBox {
 	white-space:normal;
 	border: solid 1px #ccccff;
 	border-radius: 2px;
-	resize: both;
-	width: 350px;
-	height: 450px;
 	line-height: 100%;
+	flex-grow: 1;
 }
 
 #animation img {
