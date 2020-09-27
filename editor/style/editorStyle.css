@@ -483,16 +483,8 @@ span.controlBox {
 	padding: 5px;
 }
 
-#findFilterIcon {
-	float:left;
-}
-#findFilterIcon .material-icons {
-	font-size: 110%;
-}
-
-#findFilterInput {
-	width: 220px;
-	display: block;
+#findSearchBox {
+	display: flex;
 }
 
 .thumbnailDefaultName {
@@ -549,4 +541,21 @@ span.controlBox {
 	background: white;
 	border: solid 1px #ccc;
 	text-decoration: none;
+}
+
+.textInputField.withIcon {
+	border-top-left-radius: 0px;
+	border-bottom-left-radius: 0px;
+}
+
+.textInputFieldIcon {
+	background: #d9d9d9;
+	border-radius: 5px 0px 0px 5px;
+	line-height: 100%;
+}
+
+.textInputFieldIcon .bitsy_icon {
+	fill: #6f6f6f;
+	margin: 4px;
+	margin-right: 6px;
 }
