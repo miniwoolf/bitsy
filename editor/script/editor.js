@@ -975,6 +975,7 @@ function start() {
 		filterMapCheck : document.getElementById("findFilterMapCheck"),
 		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),
 		filterDialogCheck : document.getElementById("findFilterDialogCheck"),
+		filterCurRoomCheck : document.getElementById("findFilterCurRoomCheck"),
 	});
 
 	initLanguageOptions();

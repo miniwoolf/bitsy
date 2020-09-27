@@ -48,6 +48,13 @@ function FindTool(controls) {
 	CreateFilterToggleHandler("dialog", controls.filterDialogCheck);
 	// TODO : add exits and endings
 
+	CreateFilterToggleHandler("cur_room", controls.filterCurRoomCheck);
+	events.Listen("select_room", function() {
+		if (activeFilters.indexOf("cur_room") != -1) {
+			events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
+		}
+	});
+
 	AddCategory({
 		name: "drawing",
 		engineObjectStore: object,
@@ -119,6 +126,33 @@ function FindTool(controls) {
 				result = activeFilters.indexOf("ending") != -1;
 			}
 
+			if (result && activeFilters.indexOf("cur_room") != -1) {
+				if (obj.type === "TIL") {
+					var tileInRoom = false;
+
+					for (var y = 0; y < roomsize; y++) {
+						for (var x = 0; x < roomsize; x++) {
+							if (room[curRoom].tilemap[y][x] === obj.id) {
+								tileInRoom = true;
+							}
+						}
+					}
+
+					result = tileInRoom;
+				}
+				else {
+					var objInRoom = false;
+
+					for (var i = 0; i < room[curRoom].objects.length; i++) {
+						if (room[curRoom].objects[i].id === obj.id) {
+							objInRoom = true;
+						}
+					}
+
+					result = objInRoom;
+				}
+			}
+
 			return result;
 		},
 		selectEventId: "select_drawing",
@@ -136,7 +170,15 @@ function FindTool(controls) {
 		engineObjectStore: room,
 		getCaption: function(obj) { return obj.name ? obj.name : "room " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; },
-		includedInFilter: function(obj) { return activeFilters.indexOf("room") != -1; },
+		includedInFilter: function(obj) { 
+			var result = activeFilters.indexOf("room") != -1;
+
+			if (result && activeFilters.indexOf("cur_room") != -1) {
+				result = obj.id === curRoom;
+			}
+
+			return result;
+		},
 		selectEventId: "select_room",
 		toolId: "roomPanel",
 		addEventId: "add_room",
@@ -149,7 +191,9 @@ function FindTool(controls) {
 		engineObjectStore: map,
 		getCaption: function(obj) { return obj.name ? obj.name : "map " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "room"; }, // TODO : real icon
-		includedInFilter: function(obj) { return activeFilters.indexOf("map") != -1; },
+		includedInFilter: function(obj) {
+			return activeFilters.indexOf("cur_room") === -1 && activeFilters.indexOf("map") != -1;
+		},
 		selectEventId: "select_map",
 		toolId: "mapPanel",
 		addEventId: "add_map",
@@ -162,7 +206,15 @@ function FindTool(controls) {
 		engineObjectStore: palette,
 		getCaption: function(obj) { return obj.name ? obj.name : "palette " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "colors"; },
-		includedInFilter: function(obj) { return activeFilters.indexOf("palette") != -1; },
+		includedInFilter: function(obj) {
+			var result = activeFilters.indexOf("palette") != -1;
+
+			if (result && activeFilters.indexOf("cur_room") != -1) {
+				result = obj.id === room[curRoom].pal;
+			}
+
+			return result;
+		},
 		selectEventId: "select_palette",
 		toolId: "colorsPanel",
 		addEventId: "add_palette",
@@ -175,7 +227,9 @@ function FindTool(controls) {
 		engineObjectStore: dialog,
 		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
 		getIconId: function(obj) { return "dialog"; },
-		includedInFilter: function(obj) { return activeFilters.indexOf("dialog") != -1; },
+		includedInFilter: function(obj) {
+			return activeFilters.indexOf("cur_room") === -1 && activeFilters.indexOf("dialog") != -1;
+		},
 		selectEventId: "select_dialog",
 		toolId: "dialogPanel",
 		// TODO : add & delete
