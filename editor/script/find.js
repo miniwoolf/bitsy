@@ -236,12 +236,21 @@ function FindTool(controls) {
 		changeNameEventId: "change_palette_name",
 		refreshThumbEventIdList: ["palette_change"],
 		thumbnailRenderer: CreatePaletteThumbnailRenderer(),
+		idExclusionList: ["default"],
 	});
 
 	AddCategory({
 		name: "dialog",
 		engineObjectStore: dialog,
-		getCaption: function(obj) { return obj.name ? obj.name : "dialog " + obj.id; }, // TODO : localize
+		getCaption: function(obj) {
+			if (obj.id === titleDialogId) {
+				// todo : localize?
+				return titleDialogId;
+			}
+			else {
+				return obj.name ? obj.name : "dialog " + obj.id;
+			}
+		}, // TODO : localize
 		getIconId: function(obj) { return "dialog"; },
 		includedInFilter: function(obj) {
 			return activeFilters.indexOf("cur_room") === -1 && activeFilters.indexOf("dialog") != -1;
@@ -305,6 +314,8 @@ function FindTool(controls) {
 		}
 
 		function removeThumbFromCategory(id) {
+			console.log(id);
+			console.log(getThumbId(id));
 			categoryDiv.removeChild(document.getElementById(getThumbId(id)));
 		}
 
@@ -312,7 +323,11 @@ function FindTool(controls) {
 			categoryDiv.innerHTML = "";
 
 			for (id in categoryInfo.engineObjectStore) {
-				addThumbToCategory(id);
+				var isExcluded = categoryInfo.idExclusionList && categoryInfo.idExclusionList.indexOf(id) != -1;
+
+				if (!isExcluded) {
+					addThumbToCategory(id);
+				}
 			}
 		}
 
@@ -336,12 +351,17 @@ function FindTool(controls) {
 
 		function updateVisibility() {
 			for (var id in categoryInfo.engineObjectStore) {
-				var engineObject = categoryInfo.engineObjectStore[id];
-				var caption = categoryInfo.getCaption(engineObject);
-				var includedInSearch = searchText === null || searchText.length <= 0 || caption.indexOf(searchText) != -1;
-				var isVisible = includedInSearch && categoryInfo.includedInFilter(engineObject);
-				// todo : switch to use a style?
-				document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";
+				// todo : dupe
+				var isExcluded = categoryInfo.idExclusionList && categoryInfo.idExclusionList.indexOf(id) != -1;
+
+				if (!isExcluded) {
+					var engineObject = categoryInfo.engineObjectStore[id];
+					var caption = categoryInfo.getCaption(engineObject);
+					var includedInSearch = searchText === null || searchText.length <= 0 || caption.indexOf(searchText) != -1;
+					var isVisible = includedInSearch && categoryInfo.includedInFilter(engineObject);
+					// todo : switch to use a style?
+					document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";				
+				}
 			}
 		}
 
@@ -384,7 +404,12 @@ function FindTool(controls) {
 		if (categoryInfo.refreshAllThumbsEventIdList) {
 			var onRefreshAllThumbImages = function() {
 				for (id in categoryInfo.engineObjectStore) {
-					renderThumbnail(id);
+					// todo : dupe
+					var isExcluded = categoryInfo.idExclusionList && categoryInfo.idExclusionList.indexOf(id) != -1;
+
+					if (!isExcluded) {
+						renderThumbnail(id);
+					}
 				}
 			}
 

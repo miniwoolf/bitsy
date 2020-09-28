@@ -115,12 +115,14 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 		// create new palette and save the data
 		var id = nextPaletteId();
 
+		// todo : need a shared create method in the engine!
 		palette[ id ] = {
+			id: id,
 			name : null,
 			colors : [
 			hslToRgb(Math.random(), 1.0, 0.5),
 			hslToRgb(Math.random(), 1.0, 0.5),
-			hslToRgb(Math.random(), 1.0, 0.5) ]
+			hslToRgb(Math.random(), 1.0, 0.5) ],
 		};
 
 		events.Raise("add_palette", { id: id });
@@ -134,8 +136,9 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 
 		var id = nextPaletteId();
 		palette[ id ] = {
+			id: id,
 			name : null,
-			colors : []
+			colors : [],
 		};
 
 		for (var i = 0; i < curColors.length; i++) {
@@ -164,9 +167,9 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 				}
 			}
 
-			events.Raise("delete_palette", { id: id });
-
 			SelectPrev();
+
+			events.Raise("delete_palette", { id: id });
 
 			events.Raise("palette_list_change");
 		}
