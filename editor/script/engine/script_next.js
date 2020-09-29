@@ -18,19 +18,26 @@ function ScriptNext() {
 
 var compiledScripts = {};
 
+function Parse(script) {
+	var scriptStr = script.src;
+	if (scriptStr.indexOf("\n") < 0) {
+		// wrap one-line dialogs in a dialog expression
+		// TODO : is this still what I want?
+		scriptStr = "{-> " + scriptStr + "}";
+	}
+
+	var tokens = tokenize(scriptStr);
+	var expressions = parse(tokens);
+	compiledScripts[script.id] = expressions[0];
+
+	return compiledScripts[script.id];
+}
+this.Parse = Parse;
+
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(script, objectContext, callback) {
 	if (!(script.id in compiledScripts)) {
-		var scriptStr = script.src;
-		if (scriptStr.indexOf("\n") < 0) {
-			// wrap one-line dialogs in a dialog expression
-			// TODO : is this still what I want?
-			scriptStr = "{-> " + scriptStr + "}";
-		}
-
-		var tokens = tokenize(scriptStr);
-		var expressions = parse(tokens);
-		compiledScripts[script.id] = expressions[0];
+		Parse(script);
 	}
 
 	var coreLibrary = createLibrary(dialogBuffer, objectContext);

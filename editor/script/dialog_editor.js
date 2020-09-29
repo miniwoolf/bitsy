@@ -1,4 +1,10 @@
-// TODO : name?
+/*
+TODO dialog editor refactor:
+- start by getting functions working
+- need to support undescribed functions
+- rename this root tool class? rename file?
+*/
+
 function DialogTool() {
 	this.CreateEditor = function(dialogId) {
 		return new DialogScriptEditor(dialogId);
@@ -440,10 +446,8 @@ function DialogTool() {
 		var expressionBuilderDiv;
 
 		function RefreshEditorUI() {
-			var dialogStr = dialog[dialogId].src;
-
 			div.innerHTML = "";
-			scriptRootNode = scriptInterpreter.Parse(dialogStr, dialogId);
+			scriptRootNode = scriptNext.Parse(dialog[dialogId]);
 			rootEditor = new BlockEditor(scriptRootNode, self);
 
 			viewportDiv = document.createElement("div");
@@ -594,7 +598,8 @@ function DialogTool() {
 		}
 	}
 
-	function BlockEditor(blockNode, parentEditor) {
+	// todo : name? dialogBlock? dialogExpression? dialogExpressionBlock? dialogList? dialogListBlock?
+	function BlockEditor(dialogList, parentEditor) {
 		var self = this;
 
 		var div = document.createElement("div");
@@ -642,43 +647,58 @@ function DialogTool() {
 
 			var dialogNodeList = [];
 			function addText() {
-				if (dialogNodeList.length > 0) {
-					var editor = new DialogTextEditor(dialogNodeList, self);
-					childEditors.push(editor);
+				// TODO : re-implement
 
-					dialogNodeList = [];
-				}
+				// OLD
+				// if (dialogNodeList.length > 0) {
+				// 	var editor = new DialogTextEditor(dialogNodeList, self);
+				// 	childEditors.push(editor);
+
+				// 	dialogNodeList = [];
+				// }
 			}
 
-			for (var i = 0; i < blockNode.children.length; i++) {
-				var node = blockNode.children[i];
-				if (isIf(node)) {
-					addText();
+			for (var i = 0; i < dialogList.list.length; i++) {
+				var expression = dialogList.list[i];
 
-					var editor = new ConditionalEditor(node, self);
-					childEditors.push(editor);
-				}
-				else if (isSeq(node)) {
-					addText();
-
-					var editor = new SequenceEditor(node, self);
-					childEditors.push(editor);
-				}
-				else if (isDescribedFunction(node)) {
-					addText();
-
-					var editor = new FunctionEditor(node, self);
-					childEditors.push(editor);
-				}
-				else if (isExpression(node)) {
-					addText();
-
-					var editor = new ExpressionEditor(node, self);
-					childEditors.push(editor);
+				// for now.. only described functions work -- need to fix!
+				console.log("expression " + expression);
+				if (expression.type === "list" && expression.list[0].value in functionDescriptionMap) {			
+					var editor = new FunctionEditor(expression, self);
+					childEditors.push(editor);	
 				}
 				else {
-					dialogNodeList.push(node);
+					console.log("NOT SUPPORTED YET??");
 				}
+
+				// OLD
+				// if (isIf(node)) {
+				// 	addText();
+
+				// 	var editor = new ConditionalEditor(node, self);
+				// 	childEditors.push(editor);
+				// }
+				// else if (isSeq(node)) {
+				// 	addText();
+
+				// 	var editor = new SequenceEditor(node, self);
+				// 	childEditors.push(editor);
+				// }
+				// else if (isDescribedFunction(node)) {
+				// 	addText();
+
+				// 	var editor = new FunctionEditor(node, self);
+				// 	childEditors.push(editor);
+				// }
+				// else if (isExpression(node)) {
+				// 	addText();
+
+				// 	var editor = new ExpressionEditor(node, self);
+				// 	childEditors.push(editor);
+				// }
+				// else {
+				// 	dialogNodeList.push(node);
+				// }
 			}
 
 			addText();
@@ -2371,14 +2391,15 @@ function DialogTool() {
 
 	var isHelpTextOn = true;
 
-	function FunctionEditor(node, parentEditor, isInline) {
+	// TODO : support UNDESCRIBED functions! need a new editor?
+	function FunctionEditor(expression, parentEditor, isInline) {
 		if (isInline === undefined || isInline === null) {
 			isInline = false;
 		}
 
 		var self = this;
 
-		var functionNode = node.children[0];
+		var functionSymbol = expression.list[0].value;
 
 		var div = document.createElement(isInline ? "span" : "div");
 		div.classList.add("functionEditor");
@@ -2395,7 +2416,7 @@ function DialogTool() {
 		}
 
 		if (!isInline) {
-			var titleText = functionDescriptionMap[functionNode.name].GetName();
+			var titleText = functionDescriptionMap[functionSymbol].GetName();
 			var titleDiv = document.createElement("div");
 			titleDiv.classList.add("actionTitle");
 			titleDiv.innerText = titleText;
@@ -2443,7 +2464,7 @@ function DialogTool() {
 			helpTextContent.classList.add("helpTextContent");
 			helpTextDiv.appendChild(helpTextContent);
 
-			var helpTextFunc = functionDescriptionMap[functionNode.name].GetHelpText;
+			var helpTextFunc = functionDescriptionMap[functionSymbol].GetHelpText;
 			hasHelpText = helpTextFunc != undefined && helpTextFunc != null;
 			if (hasHelpText) {
 				helpTextContent.innerText = helpTextFunc();
@@ -2484,18 +2505,18 @@ function DialogTool() {
 				addParameterDiv.innerHTML = "";
 			}
 
-			var descriptionText = functionDescriptionMap[functionNode.name].GetDescription();
+			var descriptionText = functionDescriptionMap[functionSymbol].GetDescription();
 			var descriptionTextSplit = descriptionText.split("_");
 
-			function createGetArgFunc(functionNode, parameterIndex) {
+			function createGetArgFunc(expression, parameterIndex) {
 				return function() {
-					return functionNode.args[parameterIndex];
+					return expression.list[parameterIndex];
 				};
 			}
 
-			function createSetArgFunc(functionNode, parameterIndex, parentEditor) {
-				return function(argNode) {
-					functionNode.args.splice(parameterIndex, 1, argNode);
+			function createSetArgFunc(expression, parameterIndex, parentEditor) {
+				return function(newParam) {
+					expression.list.splice(parameterIndex, 1, newParam);
 					parentEditor.NotifyUpdate();
 				};
 			}
@@ -2508,14 +2529,14 @@ function DialogTool() {
 				if (text.indexOf("[") >= 0) { // optional parameter text start
 					var optionalTextStartSplit = text.split("[");
 					descriptionSpan.innerText = optionalTextStartSplit[0];
-					var nextParam = functionDescriptionMap[functionNode.name].parameters[i];
-					if (functionNode.args.length > nextParam.index && optionalTextStartSplit.length > 1) {
+					var nextParam = functionDescriptionMap[functionSymbol].parameters[i];
+					if (expression.list.length - 1 > nextParam.index && optionalTextStartSplit.length > 1) {
 						descriptionSpan.innerText += optionalTextStartSplit[1];
 					}
 				}
 				else if (text[text.length - 1] === "]") { // optional parameter text end
-					var prevParam = functionDescriptionMap[functionNode.name].parameters[i-1];
-					if (functionNode.args.length > prevParam.index) {
+					var prevParam = functionDescriptionMap[functionSymbol].parameters[i-1];
+					if (expression.list.length - 1 > prevParam.index) {
 						descriptionSpan.innerText = text.slice(0, text.length - 1);
 					}
 				}
@@ -2524,13 +2545,13 @@ function DialogTool() {
 				}
 
 				if (i < descriptionTextSplit.length - 1) {
-					var parameterInfo = functionDescriptionMap[functionNode.name].parameters[i];
+					var parameterInfo = functionDescriptionMap[functionSymbol].parameters[i];
 
-					if (functionNode.args.length > parameterInfo.index) {
+					if (expression.list.length - 1 > parameterInfo.index) {
 						var parameterEditor = new ParameterEditor(
 							parameterInfo.types.concat(["function", "expression"]),
-							createGetArgFunc(functionNode, parameterInfo.index),
-							createSetArgFunc(functionNode, parameterInfo.index, self),
+							createGetArgFunc(expression, parameterInfo.index),
+							createSetArgFunc(expression, parameterInfo.index, self),
 							isEditable && !(parameterInfo.doNotEdit),
 							!isInline && editParameterTypes,
 							function(expressionString, onAcceptHandler) {
@@ -2540,10 +2561,10 @@ function DialogTool() {
 						curParameterEditors.push(parameterEditor);
 						descriptionDiv.appendChild(parameterEditor.GetElement());
 					}
-					else if (!isInline && isEditable && functionNode.args.length == parameterInfo.index && parameterInfo.name) {
-						function createAddParameterHandler(functionNode, parameterInfo) {
+					else if (!isInline && isEditable && expression.list.length - 1 == parameterInfo.index && parameterInfo.name) {
+						function createAddParameterHandler(expression, parameterInfo) {
 							return function() {
-								functionNode.args.push(CreateDefaultArgNode(parameterInfo.types[0]));
+								expression.list.push(CreateDefaultArgNode(parameterInfo.types[0]));
 								CreateFunctionDescription(true);
 								parentEditor.NotifyUpdate();
 							}
@@ -2551,7 +2572,7 @@ function DialogTool() {
 
 						var addParameterButton = document.createElement('button');
 						addParameterButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + parameterInfo.name;
-						addParameterButton.onclick = createAddParameterHandler(functionNode, parameterInfo);
+						addParameterButton.onclick = createAddParameterHandler(expression, parameterInfo);
 						addParameterDiv.appendChild(addParameterButton);
 					}
 				}
@@ -2565,10 +2586,10 @@ function DialogTool() {
 				curCommandEditors = [];
 
 				// add custom edit commands
-				var commands = functionDescriptionMap[functionNode.name].commands;
+				var commands = functionDescriptionMap[functionSymbol].commands;
 				if (isEditable && commands) {
 					for (var i = 0; i < commands.length; i++) {
-						var commandEditor = new commands[i](functionNode, parentEditor, CreateFunctionDescription);
+						var commandEditor = new commands[i](expression, parentEditor, CreateFunctionDescription);
 						curCommandEditors.push(commandEditor);
 						customCommandsDiv.appendChild(commandEditor.GetElement());
 					}
