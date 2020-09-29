@@ -105,13 +105,13 @@ function parseAtom(token) {
 			value: token.substring(1, token.length - 1),
 		};
 	}
-	else if (token === "true") {
+	else if (token === "YES") {
 		return {
 			type: "boolean",
 			value: true,
 		};
 	}
-	else if (token === "false") {
+	else if (token === "NO") {
 		return {
 			type: "boolean",
 			value: false,
@@ -280,7 +280,7 @@ var special = {
 				}
 				else if (expression.list[i].type != "list") {
 					environment.Get(" _add_word_")(
-						["" + expression.list[i].value],
+						["" + expression.list[i].value], // todo : replace with some kind of ToString converter
 						null,
 						function(value) { result = null; i++; evalNext(); });
 				}
@@ -292,7 +292,7 @@ var special = {
 
 		evalNext();
 	},
-	"seq": function(expression, environment, onReturn) {
+	"SEQ": function(expression, environment, onReturn) {
 		if ("index" in expression) {
 			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
 		}
@@ -302,7 +302,7 @@ var special = {
 
 		eval(expression.list[expression.index], environment, onReturn);
 	},
-	"cyc": function(expression, environment, onReturn) {
+	"CYC": function(expression, environment, onReturn) {
 		if ("index" in expression) {
 			expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
 		}
@@ -312,7 +312,7 @@ var special = {
 
 		eval(expression.list[expression.index], environment, onReturn);
 	},
-	"shf": function(expression, environment, onReturn) {
+	"SHF": function(expression, environment, onReturn) {
 		if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
 			expression.index++;
 		}
@@ -329,8 +329,7 @@ var special = {
 
 		eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
 	},
-	// TODO : correct name for choice selector?
-	"cho" : function(expression, environment, onReturn) {
+	"PIK" : function(expression, environment, onReturn) {
 		var i = 1;
 		var evalNext;
 
@@ -360,7 +359,8 @@ var special = {
 
 		evalNext();
 	},
-	"if": function(expression, environment, onReturn) {
+	// todo : do I like the question mark or not?
+	"IF?": function(expression, environment, onReturn) {
 		var result = null;
 		var i = 1;
 		var evalNext;
@@ -387,7 +387,8 @@ var special = {
 
 		evalNext();
 	},
-	"fn": function(expression, environment, onReturn) {
+	// todo : more creative name for functions?
+	"FN": function(expression, environment, onReturn) {
 		// initialize parameter names
 		var parameterNames = [];
 		if (expression.list.length >= 2 && expression.list[1].type === "list") {
@@ -433,16 +434,15 @@ var special = {
 
 		onReturn(result);
 	},
-	// TODO : should this be in special, or core library?
-	"=": function(expression, environment, onReturn) {
+	// todo : name? LET instead?
+	"SET": function(expression, environment, onReturn) {
 		// todo : assumes the right number of list elements, etc.
 		eval(expression.list[2], environment, function(value) {
 			environment.Set(expression.list[1].value, value);
 			onReturn(null);
 		});
 	},
-	// TODO : name? object? struct? table? other?
-	"struct": function(expression, environment, onReturn) {
+	"BOX": function(expression, environment, onReturn) {
 		var struct = {};
 		var i = 1;
 		var evalNext;
@@ -452,7 +452,8 @@ var special = {
 				onReturn(struct);
 			}
 			else {
-				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === ".") {
+				// todo : store special symbols like @ and -> somewhere?
+				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === "@") {
 					var name = expression.list[i].value.slice(1);
 					i++;
 
@@ -474,7 +475,7 @@ var special = {
 
 		evalNext();
 	},
-	".": function(expression, environment, onReturn) {
+	"@": function(expression, environment, onReturn) {
 		if (expression.list.length < 3) {
 			onReturn(null); // not enough arguments!
 		}
@@ -503,61 +504,62 @@ var special = {
 function createLibrary(dialogBuffer, objectContext) {
 	var library = {
 		/* dialogue functions */
-		"say": function(parameters, environment, onReturn) {
+		"SAY": function(parameters, environment, onReturn) {
 			// todo : is this the right implementation of say?
 			// todo : hacky to force into a string with concatenation?
 			// todo : nicer way to print objects
 			dialogBuffer.AddText("" + parameters[0]);
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
-		"br": function(parameters, environment, onReturn) {
+		"BR": function(parameters, environment, onReturn) {
 			dialogBuffer.AddLinebreak();
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
-		"pg": function(parameters, environment, onReturn) {
+		"PG": function(parameters, environment, onReturn) {
 			// TODO : fix this method...
 			dialogBuffer.AddPagebreak();
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
-		"wvy": function(parameters, environment, onReturn) {
+		"WVY": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("wvy");
 			onReturn(null);
 		},
-		"/wvy": function(parameters, environment, onReturn) {
+		"/WVY": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("wvy");
 			onReturn(null);
 		},
-		"shk": function(parameters, environment, onReturn) {
+		"SHK": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("shk");
 			onReturn(null);
 		},
-		"/shk": function(parameters, environment, onReturn) {
+		"/SHK": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("shk");
 			onReturn(null);
 		},
-		"rbw": function(parameters, environment, onReturn) {
+		"RBW": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("rbw");
 			onReturn(null);
 		},
-		"/rbw": function(parameters, environment, onReturn) {
+		"/RBW": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("rbw");
 			onReturn(null);
 		},
-		"clr": function(parameters, environment, onReturn) {
+		// todo : rename to match COL from sprites?
+		"CLR": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("clr", parameters);
 			onReturn(null);
 		},
-		"/clr": function(parameters, environment, onReturn) {
+		"/CLR": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("clr");
 			onReturn(null);
 		},
 
 		/* TODO: missing old functions
-			- exit
-			- item
-			- printX
+			- exit (EXT)
+			- item (ITM)
+			- printX (DRW) -- correct name?
 		*/
-		"end": function(parameters, environment, onReturn) {
+		"END": function(parameters, environment, onReturn) {
 			// todo very global / hacky?
 			isEnding = true;
 			isNarrating = true;
@@ -566,38 +568,42 @@ function createLibrary(dialogBuffer, objectContext) {
 		},
 
 		/* math functions */
-		"==": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] === parameters[1]);
+		"IS": function(parameters, environment, onReturn) {
+			onReturn(parameters.length > 1 ? parameters[0] === parameters[1] : parameters[0] === true);
 		},
-		">": function(parameters, environment, onReturn) {
+		"GT": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] > parameters[1]);
 		},
-		"<": function(parameters, environment, onReturn) {
+		"LT": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] < parameters[1]);
 		},
-		">=": function(parameters, environment, onReturn) {
+		"GTE": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] >= parameters[1]);
 		},
-		"<=": function(parameters, environment, onReturn) {
+		"LTE": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] <= parameters[1]);
 		},
 		// TODO : should these allow multiple arguments?
-		"*": function(parameters, environment, onReturn) {
+		// TODO : use math symbols for any of these? > < == * / + -
+		"MLT": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] * parameters[1]);
 		},
-		"/": function(parameters, environment, onReturn) {
+		"DIV": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] / parameters[1]);
 		},
-		"+": function(parameters, environment, onReturn) {
+		"ADD": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] + parameters[1]);
 		},
-		"-": function(parameters, environment, onReturn) {
+		// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
+		"SUB": function(parameters, environment, onReturn) {
 			onReturn(parameters[0] - parameters[1]);
+		},
+		"NOT": function(parameters, environment, onReturn) {
+			onReturn(!parameters[0]);
 		},
 
 		// NEW FUNCTIONS (WIP)
-		// todo : other names?
-		"step": function(parameters, environment, onReturn) {
+		"HOP": function(parameters, environment, onReturn) {
 			var result = false;
 
 			if (objectContext != null && objectContext != undefined) {
@@ -613,7 +619,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(result);
 		},
-		"create": function(parameters, environment, onReturn) {
+		"NEW": function(parameters, environment, onReturn) {
 			var obj = null;
 
 			// TODO : allow user to specify coordinates
@@ -634,7 +640,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(obj);
 		},
-		"destroy": function(parameters, environment, onReturn) {
+		"BYE": function(parameters, environment, onReturn) {
 			// todo : what if the object passed in is no longer valid?
 			if (parameters.length >= 1 && "instanceId" in parameters[0]) {
 				delete objectInstances[parameters[0].instanceId];
@@ -643,18 +649,13 @@ function createLibrary(dialogBuffer, objectContext) {
 			onReturn(null);
 		},
 
-		// todo : how do I want to handle lists?
-		"list" : function(parameters, environment, onReturn) {
-			onReturn(parameters);
-		},
-
 		// prototype of custom text effects
-		//todo: is "tfx" the acronym I want to use?
-		"tfx": function(parameters, environment, onReturn) {
+		//todo: name? is "CFX" the acronym I want to use?
+		"CFX": function(parameters, environment, onReturn) {
 			dialogBuffer.AddTextEffect("tfx", parameters);
 			onReturn(null);
 		},
-		"/tfx": function(parameters, environment, onReturn) {
+		"/CFX": function(parameters, environment, onReturn) {
 			dialogBuffer.RemoveTextEffect("tfx");
 			onReturn(null);
 		},
