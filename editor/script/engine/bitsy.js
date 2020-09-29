@@ -1814,7 +1814,7 @@ function serializeWorld(skipFonts) {
 			}
 		}
 		if (type === "EXT" && object[id].dest.room != null) {
-			worldStr += "DEST " + object[id].dest.room + " " + object[id].dest.x + "," + object[id].dest.y + "\n";
+			worldStr += "OUT " + object[id].dest.room + " " + object[id].dest.x + "," + object[id].dest.y + "\n";
 		}
 		if (type === "EXT" && object[id].transition_effect != null) {
 			worldStr += "FX " + object[id].transition_effect + "\n";
@@ -2305,8 +2305,7 @@ function parseObject(lines, i, type) {
 			var itemCount = parseFloat(getArg(lines[i], 2));
 			options.inventory[itemId] = itemCount;
 		}
-		else if (getType(lines[i]) === "DEST" && type === "EXT") {
-			// TODO : right name for this? it's 4 characters right now...
+		else if (getType(lines[i]) === "OUT" && type === "EXT") {
 			// TODO : maintain the same format as before with the comma seperation?
 			options.destRoom = getId(lines[i]);
 
