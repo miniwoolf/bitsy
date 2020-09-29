@@ -397,7 +397,7 @@ function selectRoom(roomId) {
 function nextRoom() {
 	var ids = sortedRoomIdList();
 	var nextIndex = (roomIndex + 1) % ids.length;
-	var nextId = ids[roomIndex];
+	var nextId = ids[nextIndex];
 
 	events.Raise("select_room", { id: nextId });
 }
@@ -414,13 +414,13 @@ function prevRoom() {
 }
 
 function duplicateRoom() {
-	var copyRoomId = sortedRoomIdList()[roomIndex];
-	var roomToCopy = room[ copyRoomId ];
+	var idList = sortedRoomIdList();
+	var copyRoomId = idList[roomIndex];
+	var roomToCopy = room[copyRoomId];
 
-	roomIndex = Object.keys( room ).length;
+	roomIndex = idList.length;
 	var newRoomId = nextRoomId();
 
-	console.log(newRoomId);
 	var duplicateTilemap = [];
 	for (y in roomToCopy.tilemap) {
 		duplicateTilemap.push([]);
@@ -429,39 +429,14 @@ function duplicateRoom() {
 		}
 	}
 
-	var duplicateExits = [];
-	for (i in roomToCopy.exits) {
-		var exit = roomToCopy.exits[i];
-		duplicateExits.push( duplicateExit( exit ) );
-	}
+	room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
+	room[newRoomId].tilemap = duplicateTilemap;
+	room[newRoomId].objects = roomToCopy.objects.slice(0);
 
-	room[newRoomId] = {
-		id : newRoomId,
-		tilemap : duplicateTilemap,
-		walls : roomToCopy.walls.slice(0),
-		exits : duplicateExits,
-		endings : roomToCopy.endings.slice(0),
-		pal : roomToCopy.pal,
-		items : []
-	};
 	refreshGameData();
 
-	curRoom = newRoomId;
-	//console.log(curRoom);
-	markerTool.SetRoom(curRoom); // hack to re-find all the markers
-	roomTool.drawEditMap();
-	paintTool.UpdateCanvas();
-	updateRoomPaletteSelect();
-
-	updateRoomName();
-
-	// add new exit destination option to exits panel
-	var select = document.getElementById("exitDestinationSelect");
-	var option = document.createElement("option");
-	var roomLabel = localization.GetStringOrFallback("room_label", "room");
-	option.text = roomLabel + " " + newRoomId;
-	option.value = newRoomId;
-	select.add(option);
+	events.Raise("add_room", { id: newRoomId });
+	events.Raise("select_room", { id: newRoomId });
 }
 
 function newRoom() {

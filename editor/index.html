@@ -99,18 +99,6 @@
 					<span class="bitsy_icon icon_space_right">about</span>
 					<span class="localize about_tool_name">about</span>
 				</label>
-				
-				<input type="checkbox" value="roomPanel" id="roomCheck" onclick="togglePanelAnimated(event);" checked/>
-				<label title="show / hide room window" for="roomCheck">
-					<span class="bitsy_icon icon_space_right">room</span>
-					<span class="localize room_tool_name">room</span>
-				</label>
-
-				<input type="checkbox" value="exitsPanel" id="exitsCheck" onclick="togglePanelAnimated(event);" />
-				<label title="show / hide exits & endings window" for="exitsCheck">
-					<span class="bitsy_icon icon_space_right">exits_endings</span>
-					<span class="localize marker_tool_name">exits & endings</span>
-				</label>
 
 				<input type="checkbox" value="paintPanel" id="paintCheck" onclick="togglePanelAnimated(event);"  checked/>
 				<label title="show / hide paint window" for="paintCheck">
@@ -118,11 +106,26 @@
 					<span class="localize paint_tool_name">paint</span>
 				</label>
 				
-				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" />
-				<label title="show / hide find window" for="findCheck">
-					<span class="bitsy_icon icon_space_right">search</span>
-					<span>find</span> <!-- TODO : localize -->
+				<input type="checkbox" value="roomPanel" id="roomCheck" onclick="togglePanelAnimated(event);" checked/>
+				<label title="show / hide room window" for="roomCheck">
+					<span class="bitsy_icon icon_space_right">room</span>
+					<span class="localize room_tool_name">room</span>
 				</label>
+
+				<input type="checkbox" value="mapPanel" id="mapCheck" onclick="togglePanelAnimated(event);" checked/>
+				<label title="show / hide map window" for="mapCheck">
+					<!-- todo : map icons -->
+					<span class="bitsy_icon icon_space_right">room</span>
+					<!-- todo : localize -->
+					<span>map</span>
+				</label>
+
+				<!-- todo : deprecate exit tool -->
+				<!-- <input type="checkbox" value="exitsPanel" id="exitsCheck" onclick="togglePanelAnimated(event);" />
+				<label title="show / hide exits & endings window" for="exitsCheck">
+					<span class="bitsy_icon icon_space_right">exits_endings</span>
+					<span class="localize marker_tool_name">exits & endings</span>
+				</label> -->
 				
 				<input type="checkbox" value="colorsPanel" id="colorsCheck" onclick="togglePanelAnimated(event);"  checked/>
 				<label title="show / hide color palette window" for="colorsCheck">
@@ -134,6 +137,12 @@
 				<label title="show / hide dialog window" for="dialogCheck">
 					<span class="bitsy_icon icon_space_right">dialog</span>
 					<span class="localize dialog_tool_name">dialog</span>
+				</label>
+
+				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" />
+				<label title="show / hide find window" for="findCheck">
+					<span class="bitsy_icon icon_space_right">search</span>
+					<span>find</span> <!-- TODO : localize -->
 				</label>
 
 				<input type="checkbox" value="inventoryPanel" id="inventoryCheck" onclick="togglePanelAnimated(event);"  checked/>
@@ -324,10 +333,11 @@
 							</span>
 
 							<span style="float: right;">
-								<button title="add exits and endings" class="color0" onclick="showPanel('exitsPanel', 'roomPanel');" style="margin-top:2px;">
+								<!-- todo : deprecate exits tool -->
+								<!-- <button title="add exits and endings" class="color0" onclick="showPanel('exitsPanel', 'roomPanel');" style="margin-top:2px;">
 									<span class="localize marker_tool_name">exits & endings</span>
 									<span class="bitsy_icon">open_tool</span>
-								</button>
+								</button> -->
 
 								<input type="checkbox" id="roomVisibilityControlsCheck" onclick="document.getElementById('roomVisibilityControls').style.display = event.target.checked ? 'flex' : 'none';" />
 								<label title="show visibility controls" for="roomVisibilityControlsCheck">
@@ -636,13 +646,6 @@
 						</button>
 						<button title="delete drawing" class="color0 disableForAvatar" onclick="deleteDrawing();">
 							<span class="bitsy_icon">delete</span>
-						</button>
-
-						<span class="spacer"></span>
-
-						<!-- TODO : keep this with new panel? remove? extend to other tools? -->
-						<button title="find" class="color0" onclick="showPanel('findPanel', 'paintPanel');">
-							<span class="bitsy_icon">search</span>
 						</button>
 					</div>
 

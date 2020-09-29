@@ -1628,7 +1628,11 @@ function togglePanelUI(id, visible, insertNextToId) {
 
 	// update checkbox
 	if (id != "toolsPanel") {
-		document.getElementById(id.replace("Panel","Check")).checked = visible;
+		// these should always exist but sometimes don't during dev
+		var panelCheck = document.getElementById(id.replace("Panel","Check"));
+		if (panelCheck) {
+			panelCheck.checked = visible;
+		}
 	}
 }
 
