@@ -1125,6 +1125,26 @@ function directionToKeyName(direction) {
 	}
 }
 
+function updateLockState(spr) {
+	if ("lock" in spr) {
+		if (spr.lock.item != null) {
+			var itemCount = spr.lock.item in player().inventory ? player().inventory[spr.lock.item] : 0;
+			var unlocked = itemCount > 0 && itemCount >= spr.lock.toll;
+
+			spr.property.Set("locked", !unlocked);
+
+			if (unlocked) {
+				player().inventory[spr.lock.item] -= spr.lock.toll;
+
+				// show inventory change in UI
+				if (onInventoryChanged != null) {
+					onInventoryChanged(spr.lock.item);
+				}
+			}
+		}
+	}
+}
+
 var transition = new TransitionManager();
 
 function movePlayerThroughExit(ext) {
@@ -1142,14 +1162,7 @@ function movePlayerThroughExit(ext) {
 		initRoom(curRoom);
 	};
 
-	// set initial lock state
-	// todo : update on item pick up, or here?
-	if ("lock" in ext) {
-		if (ext.lock.item != null) {
-			var itemCount = ext.lock.item in player().inventory ? player().inventory[ext.lock.item] : 0;
-			ext.property.Set("locked", itemCount <= 0);
-		}
-	}
+	updateLockState(ext);
 
 	if (ext.dlg != undefined && ext.dlg != null) {
 		queueScript(
@@ -1820,7 +1833,11 @@ function serializeWorld(skipFonts) {
 			worldStr += "FX " + object[id].transition_effect + "\n";
 		}
 		if ((type === "EXT" || type === "END") && object[id].lock.item != null) {
-			worldStr += "LCK " + object[id].lock.item + "\n";
+			worldStr += "LCK " + object[id].lock.item;
+			if (object[id].lock.toll > 0) {
+				worldStr += " " + object[id].lock.toll;
+			}
+			worldStr += "\n";
 		}
 
 		worldStr += "\n";
@@ -1886,8 +1903,19 @@ function getId(line) {
 	return getArg(line,1);
 }
 
-function getArg(line,arg) {
+function getArg(line, arg) {
 	return line.split(" ")[arg];
+}
+
+function tryGetArg(line, arg) {
+	var lineArgs = line.split(" ");
+
+	if (lineArgs.length > arg) {
+		return lineArgs[arg];
+	}
+	else {
+		return null;
+	}
 }
 
 function getCoord(line,arg) {
@@ -2231,7 +2259,7 @@ function createObject(id, type, options) {
 		},
 		lock : {
 			item : valueOrDefault(options.lockId, null), // exit & ending only
-			// todo : other properties
+			toll : valueOrDefault(options.lockToll, 0),
 		},
 	};
 }
@@ -2309,7 +2337,7 @@ function parseObject(lines, i, type) {
 			// TODO : maintain the same format as before with the comma seperation?
 			options.destRoom = getId(lines[i]);
 
-			var coordArgs = getArg(lines[i], 2).split(",");
+			var coordArgs = getCoord(lines[i], 2);
 			options.destX = parseInt(coordArgs[0]);
 			options.destY = parseInt(coordArgs[1]);
 		}
@@ -2318,7 +2346,8 @@ function parseObject(lines, i, type) {
 		}
 		else if (getType(lines[i]) === "LCK" && (type === "EXT" || type === "END")) {
 			options.lockId = getId(lines[i]);
-			// todo : add other options: cost, min # of items
+			var tollArg = tryGetArg(lines[i], 2);
+			options.lockToll = Math.max(0, parseInt(tollArg != null ? tollArg : 0));
 		}
 
 		i++;
@@ -2629,15 +2658,7 @@ function startEndingDialog(ending) {
 	// TODO : remove back compat with old endings once I'm sure I want to use this...
 	var endingId = "dlg" in ending ? ending.dlg : ending.id;
 
-	// TODO : dupe of exit functionality.. share-able?
-	// TODO : test that this actually works after I fix endings
-	// set initial lock state
-	if ("lock" in ending) {
-		if (ending.lock.item != null) {
-			var itemCount = ending.lock.item in player().inventory ? player().inventory[ending.lock.item] : 0;
-			ending.property.Set("locked", itemCount <= 0);
-		}
-	}
+	updateLockState(ending);
 
 	queueScript(
 		endingId,

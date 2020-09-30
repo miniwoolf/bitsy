@@ -1,17 +1,12 @@
 /*
 NOTES
-- what's the right id for collisions scripts? CLD? HIT? other?
 - BUG: when scripts take too long they interrupt player keypresses!
 - should the compile then run model remain the same?
 - name of language / module?
 - missing functions
-- are the short names for sequences good or bad?
 - better multi-line dialog script parsing by handling strings inside quotes
-- what should the event ids be?
-	- three letter? STP, KEY, etc.
-	- or four letters? STEP, KEYD, etc.
-- should I re-implement infix operations for math?
 - what do I do about global vs local variables?
+- decide whether the new style names are good
 */
 
 function ScriptNext() {
@@ -125,8 +120,38 @@ function parseAtom(token) {
 	}
 }
 
+// TODO : to string for attribute boxes
+function expressionToString(expression) {
+	if (expression.type === "number") {
+		return atomValueToString(expression.value);
+	}
+	else if (expression.type === "string") {
+		return atomValueToString(expression.value);
+	}
+	else if (expression.type === "boolean") {
+		return atomValueToString(expression.value);
+	}
+	else if (expression.type === "symbol") {
+		return atomValueToString(expression.value);
+	}
+	else {
+		return "";
+	}
+}
+
+// todo : not totally convinced this is the right way to do this?
+function atomValueToString(value) {
+	if (typeof value === "boolean") {
+		return value ? "YES" : "NO";
+	}
+	else {
+		return "" + value;
+	}
+}
+
 // todo : hacky handling of strings here...
 this.ParseValue = function(valueStr) { return parseAtom(valueStr).value; }
+this.ValueToString = function(value) { return atomValueToString(value); }
 
 function parse(tokens, list) {
 	if (list === undefined || list === null) {
@@ -280,7 +305,7 @@ var special = {
 				}
 				else if (expression.list[i].type != "list") {
 					environment.Get(" _add_word_")(
-						["" + expression.list[i].value], // todo : replace with some kind of ToString converter
+						[expressionToString(expression.list[i])],
 						null,
 						function(value) { result = null; i++; evalNext(); });
 				}
@@ -359,8 +384,7 @@ var special = {
 
 		evalNext();
 	},
-	// todo : do I like the question mark or not?
-	"IF?": function(expression, environment, onReturn) {
+	"IF": function(expression, environment, onReturn) {
 		var result = null;
 		var i = 1;
 		var evalNext;
@@ -387,7 +411,7 @@ var special = {
 
 		evalNext();
 	},
-	// todo : more creative name for functions?
+	// todo : more creative name for functions? rename to routine? RN? RTN?
 	"FN": function(expression, environment, onReturn) {
 		// initialize parameter names
 		var parameterNames = [];
@@ -442,8 +466,9 @@ var special = {
 			onReturn(null);
 		});
 	},
+	// other name options: package (PKG), packet (PKT), parcel (PCL), a BIT (haha)
 	"BOX": function(expression, environment, onReturn) {
-		var struct = {};
+		var struct = {}; // todo : replace with more robust data structure
 		var i = 1;
 		var evalNext;
 
@@ -475,6 +500,7 @@ var special = {
 
 		evalNext();
 	},
+	// idea: call these "slots" (or pockets?)
 	"@": function(expression, environment, onReturn) {
 		if (expression.list.length < 3) {
 			onReturn(null); // not enough arguments!
@@ -508,7 +534,7 @@ function createLibrary(dialogBuffer, objectContext) {
 			// todo : is this the right implementation of say?
 			// todo : hacky to force into a string with concatenation?
 			// todo : nicer way to print objects
-			dialogBuffer.AddText("" + parameters[0]);
+			dialogBuffer.AddText(atomValueToString(parameters[0]));
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
 		"BR": function(parameters, environment, onReturn) {
@@ -619,6 +645,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(result);
 		},
+		// todo : rename? HI? HEY? HLO?
 		"NEW": function(parameters, environment, onReturn) {
 			var obj = null;
 
@@ -659,6 +686,8 @@ function createLibrary(dialogBuffer, objectContext) {
 			dialogBuffer.RemoveTextEffect("tfx");
 			onReturn(null);
 		},
+
+		// TODO : "ERR" {} // error messages -- would be good to put throughout
 
 		// secret dialog buffer methods (todo: maybe they shouldn't be secret?)
 		" _add_word_": function(parameters, environment, onReturn) {

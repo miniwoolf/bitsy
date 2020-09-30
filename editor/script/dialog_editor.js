@@ -40,7 +40,7 @@ function DialogTool() {
 
 		var titleTextInput = document.createElement("input");
 		titleTextInput.classList.add("textInputField");
-		titleTextInput.type = "text";
+		titleTextInput.type = "string";
 		titleTextInput.placeholder = localization.GetStringOrFallback("title_placeholder", "Title");
 		div.appendChild(titleTextInput);
 
@@ -598,7 +598,7 @@ function DialogTool() {
 		}
 	}
 
-	// todo : name? dialogBlock? dialogExpression? dialogExpressionBlock? dialogList? dialogListBlock?
+	// todo : rename? dialogBlock? dialogExpression? dialogExpressionBlock? dialogList? dialogListBlock?
 	function BlockEditor(dialogList, parentEditor) {
 		var self = this;
 
@@ -632,73 +632,49 @@ function DialogTool() {
 			// build the editors
 			childEditors = [];
 
-			function isCodeBlock(node) { return node.type === "code_block"; };
-			function isChildType(node,type) { return node.children[0].type === type; };
-			function isIf(node) { return isCodeBlock(node) && isChildType(node,"if") && !node.children[0].IsSingleLine(); };
-			function isSeq(node) { return isCodeBlock(node) && (isChildType(node,"sequence") || isChildType(node,"cycle") || isChildType(node,"shuffle")); };
-
-			function isDescribedFunction(node) {
-				return isCodeBlock(node) && isChildType(node, "function") && functionDescriptionMap[node.children[0].name] != undefined;
-			}
-
-			function isExpression(node) {
-				return isCodeBlock(node) && (isChildType(node, "operator") || isChildType(node, "literal") || isChildType(node, "variable"));
-			};
-
-			var dialogNodeList = [];
+			var dialogExpressionList = [];
 			function addText() {
-				// TODO : re-implement
+				if (dialogExpressionList.length > 0) {
+					var editor = new DialogTextEditor(dialogExpressionList, self);
+					childEditors.push(editor);
 
-				// OLD
-				// if (dialogNodeList.length > 0) {
-				// 	var editor = new DialogTextEditor(dialogNodeList, self);
-				// 	childEditors.push(editor);
-
-				// 	dialogNodeList = [];
-				// }
+					dialogExpressionList = [];
+				}
 			}
 
-			for (var i = 0; i < dialogList.list.length; i++) {
+			for (var i = 1; i < dialogList.list.length; i++) {
 				var expression = dialogList.list[i];
 
-				// for now.. only described functions work -- need to fix!
-				console.log("expression " + expression);
-				if (expression.type === "list" && expression.list[0].value in functionDescriptionMap) {			
-					var editor = new FunctionEditor(expression, self);
-					childEditors.push(editor);	
+				if (expression.type === "list") {
+					addText();
+
+					// todo : math and other special symbols
+					// todo : access the special symbols from script module?
+					var symbol = expression.list[0].type === "symbol" ? expression.list[0].value : null;
+					if (symbol === "SEQ" || symbol === "CYC" || symbol === "SHF") {
+						var editor = new SequenceEditor(expression, self);
+						childEditors.push(editor);
+					}
+					else if (symbol === "IF") {
+						var editor = new ConditionalEditor(expression, self);
+						childEditors.push(editor);
+					}
+					else if (symbol === "PIK") {
+						var editor = new ChoiceEditor(expression, self);
+						childEditors.push(editor);
+					}
+					else if (symbol === "->") {
+						var editor = new BlockEditor(expression, self);
+						childEditors.push(editor);
+					}
+					else {
+						var editor = new FunctionEditor(expression, self);
+						childEditors.push(editor);
+					}
 				}
 				else {
-					console.log("NOT SUPPORTED YET??");
+					dialogExpressionList.push(expression);
 				}
-
-				// OLD
-				// if (isIf(node)) {
-				// 	addText();
-
-				// 	var editor = new ConditionalEditor(node, self);
-				// 	childEditors.push(editor);
-				// }
-				// else if (isSeq(node)) {
-				// 	addText();
-
-				// 	var editor = new SequenceEditor(node, self);
-				// 	childEditors.push(editor);
-				// }
-				// else if (isDescribedFunction(node)) {
-				// 	addText();
-
-				// 	var editor = new FunctionEditor(node, self);
-				// 	childEditors.push(editor);
-				// }
-				// else if (isExpression(node)) {
-				// 	addText();
-
-				// 	var editor = new ExpressionEditor(node, self);
-				// 	childEditors.push(editor);
-				// }
-				// else {
-				// 	dialogNodeList.push(node);
-				// }
 			}
 
 			addText();
@@ -1041,12 +1017,10 @@ function DialogTool() {
 		}
 	}
 
-	var useExperimentalTextEditor = false;
-
 	// a bit hacky to have it as a global variable but it's nice that it remembers what you did!
 	var globalShowTextEffectsControls = true;
 
-	function DialogTextEditor(dialogNodeList, parentEditor) {
+	function DialogTextEditor(expressionList, parentEditor) {
 		var div = document.createElement("div");
 		div.classList.add("dialogEditor");
 		div.classList.add("actionEditor");
@@ -1062,140 +1036,45 @@ function DialogTool() {
 			// hacky :(
 			var scriptStr = '"""\n' +  textArea.value + '\n"""';
 			var tempDialogNode = scriptInterpreter.Parse(scriptStr);
-			dialogNodeList = tempDialogNode.children;
+			expressionList = tempDialogNode.children;
 			parentEditor.NotifyUpdate(true);
 		}
 
 		var textSelectionChangeHandler = createOnTextSelectionChange(OnDialogTextChange);
+	
+		var dialogText = "";
 
-		if (!useExperimentalTextEditor) {
-			var dialogText = scriptUtils.SerializeDialogNodeList(dialogNodeList);
-
-			var textHolderDiv = document.createElement("div");
-			textHolderDiv.classList.add("dialogBoxContainer");
-
-			var textArea = document.createElement("textarea");
-			textArea.value = dialogText;
-
-			textArea.onchange = OnDialogTextChange;
-			textArea.onkeyup = OnDialogTextChange;
-			textArea.onblur = OnDialogTextChange;
-
-			textArea.rows = Math.max(2, dialogText.split("\n").length + 1);
-			textArea.cols = 32;
-
-			textArea.addEventListener('click', textSelectionChangeHandler);
-			textArea.addEventListener('select', textSelectionChangeHandler);
-			textArea.addEventListener('blur', textSelectionChangeHandler);
-
-			textHolderDiv.appendChild(textArea);
-
-			textHolderDiv.onclick = function() {
-				textArea.focus(); // hijack focus into the actual textarea
+		// todo : add a serializer?
+		for (var i = 0; i < expressionList.length; i++) {
+			if (expressionList[i].type === "symbol") {
+				dialogText += expressionList[i].value + (i < expressionList.length - 1 ? " " : "");
 			}
-
-			div.appendChild(textHolderDiv);
 		}
-		else {
-			var textboxContainerDiv = document.createElement("div");
-			textboxContainerDiv.classList.add("dialogTextboxContainer");
-			var textboxContentDiv = document.createElement("div");
-			textboxContentDiv.classList.add("dialogTextboxContent");
-			textboxContainerDiv.appendChild(textboxContentDiv);
-			div.appendChild(textboxContainerDiv);
 
-			// create HTML from dialog nodes
-			var curLineDiv = document.createElement("div");
-			curLineDiv.classList.add("textboxLine");
+		var textHolderDiv = document.createElement("div");
+		textHolderDiv.classList.add("dialogBoxContainer");
 
-			var renderableTextEffects = ["clr1", "clr2", "clr3", "wvy", "shk", "rbw"];
-			var curTextEffects = [];
+		var textArea = document.createElement("textarea");
+		textArea.value = dialogText;
 
-			for (var i = 0; i < dialogNodeList.length; i++) {
-				var node = dialogNodeList[i];
-				if (node.type === "code_block" && node.children[0].type === "function"
-					&& renderableTextEffects.indexOf(node.children[0].name) >= 0) {
-					if (curTextEffects.indexOf(node.children[0].name) < 0) {
-						curTextEffects.push(node.children[0].name);
-					}
-					else {
-						curTextEffects.splice(curTextEffects.indexOf(node.children[0].name), 1);
-					}
-				}
-				else if (node.type === "function" && node.name === "br") {
-					textboxContentDiv.appendChild(curLineDiv);
-					curLineDiv = document.createElement("div");
-				}
-				else {
-					var curTextSpan = document.createElement("span");
-					curTextSpan.classList.add("textboxSpan");
-					curLineDiv.appendChild(curTextSpan);
+		textArea.onchange = OnDialogTextChange;
+		textArea.onkeyup = OnDialogTextChange;
+		textArea.onblur = OnDialogTextChange;
 
-					// store active effects in the span class list
-					for (var j = 0; j < curTextEffects.length; j++) {
-						curTextSpan.classList.add(curTextEffects[j]);
-					}
+		textArea.rows = Math.max(2, dialogText.split("\n").length + 1);
+		textArea.cols = 32;
 
-					if (node.type === "code_block") {
-						curTextSpan.classList.add("textboxCodeSpan");
-					}
+		textArea.addEventListener('click', textSelectionChangeHandler);
+		textArea.addEventListener('select', textSelectionChangeHandler);
+		textArea.addEventListener('blur', textSelectionChangeHandler);
 
-					var nextText = node.Serialize();
+		textHolderDiv.appendChild(textArea);
 
-					for (var j = 0; j < nextText.length; j++) {
-						var characterSpan = document.createElement("span");
-						characterSpan.classList.add("textboxCharacterSpan");
-						characterSpan.innerText = nextText[j];
-
-						var outerSpan = characterSpan;
-
-						// actually apply effects on a per-character basis
-						for (var k = 0; k < curTextEffects.length; k++) {
-							var effectWrapperSpan = document.createElement("span");
-							effectWrapperSpan.classList.add("textboxCharacterSpan"); // hacky?
-							effectWrapperSpan.style.animationDelay = (-0.25 * curLineDiv.innerText.length) + "s";
-
-							if (curTextEffects[k] === "clr1") {
-								var color = rgbToHex(getPal(curPal())[0][0], getPal(curPal())[0][1], getPal(curPal())[0][2]);
-								effectWrapperSpan.style.color = color;
-							}
-							else if (curTextEffects[k] === "clr2") {
-								var color = rgbToHex(getPal(curPal())[1][0], getPal(curPal())[1][1], getPal(curPal())[1][2]);
-								effectWrapperSpan.style.color = color;
-							}
-							else if (curTextEffects[k] === "clr3") {
-								var color = rgbToHex(getPal(curPal())[2][0], getPal(curPal())[2][1], getPal(curPal())[2][2]);
-								effectWrapperSpan.style.color = color;
-							}
-							else if (curTextEffects[k] === "wvy") {
-								effectWrapperSpan.classList.add("textEffectWvy");
-							}
-							else if (curTextEffects[k] === "shk") {
-								effectWrapperSpan.classList.add("textEffectShk");
-							}
-							else if (curTextEffects[k] === "rbw") {
-								effectWrapperSpan.classList.add("textEffectRbw");
-							}
-
-							effectWrapperSpan.appendChild(outerSpan);
-
-							outerSpan = effectWrapperSpan;
-						}
-
-						curTextSpan.appendChild(outerSpan);
-					}
-				}
-			}
-
-			textboxContentDiv.appendChild(curLineDiv);
-			// end HTML render
-
-			textboxContentDiv.contentEditable = true;
-			textboxContentDiv.spellcheck = false;
-			textboxContentDiv.addEventListener("input", function(e) {
-				console.log(textboxContentDiv.innerText);
-			});
+		textHolderDiv.onclick = function() {
+			textArea.focus(); // hijack focus into the actual textarea
 		}
+
+		div.appendChild(textHolderDiv);
 
 		// add text effects controls
 		var textEffectsDiv = document.createElement("div");
@@ -1314,12 +1193,12 @@ function DialogTool() {
 			function() { textEffectsDiv.style.display = "none"; });
 
 		this.GetNodes = function() {
-			return dialogNodeList;
+			return expressionList;
 		}
 
 		this.OnNodeEnter = function(event) {
 			if (event.id != undefined) {
-				var enterIndex = dialogNodeList.findIndex(function(node) { return node.GetId() === event.id });
+				var enterIndex = expressionList.findIndex(function(node) { return node.GetId() === event.id });
 				if (enterIndex == 0) {
 					div.classList.add("executing");
 				}
@@ -1328,8 +1207,8 @@ function DialogTool() {
 
 		this.OnNodeExit = function(event) {
 			if (event.id != undefined) {
-				var exitIndex = dialogNodeList.findIndex(function(node) { return node.GetId() === event.id });
-				if (exitIndex >= dialogNodeList.length-1 || event.forceClear) {
+				var exitIndex = expressionList.findIndex(function(node) { return node.GetId() === event.id });
+				if (exitIndex >= expressionList.length-1 || event.forceClear) {
 					div.classList.remove("executing");
 					div.classList.remove("executingLeave");
 					void div.offsetWidth; // hack to force reflow to allow animation to restart
@@ -1352,7 +1231,7 @@ function DialogTool() {
 		if (node.type === "code_block" &&
 			(node.children[0].type === "operator"||
 				node.children[0].type === "literal" ||
-				node.children[0].type === "variable")) {
+				node.children[0].type === "symbol")) {
 			expressionRootNode = node.children[0];
 		}
 		else {
@@ -1377,7 +1256,7 @@ function DialogTool() {
 					if (node.type === "code_block" &&
 						(node.children[0].type === "operator" ||
 							node.children[0].type === "literal" ||
-							node.children[0].type === "variable")) {
+							node.children[0].type === "symbol")) {
 						node.children[0] = expressionRootNode;
 					}
 					else {
@@ -1419,7 +1298,7 @@ function DialogTool() {
 			else {
 				// parameter base case
 				var parameterEditor = new ParameterEditor(
-					["number", "text", "bool", "variable", "function", "expression"],
+					["number", "string", "boolean", "symbol", "list"],
 					function() { 
 						return expressionRootNode;
 					},
@@ -1457,7 +1336,7 @@ function DialogTool() {
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
-					["number", "text", "bool", "variable", "function", "expression"],
+					["number", "string", "boolean", "symbol", "list"],
 					function() { 
 						return node.left;
 					},
@@ -1482,7 +1361,7 @@ function DialogTool() {
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
-					["number", "text", "bool", "variable", "function", "expression"],
+					["number", "string", "boolean", "symbol", "list"],
 					function() {
 						return node.right;
 					},
@@ -1571,7 +1450,7 @@ function DialogTool() {
 	}
 
 	var sequenceTypeDescriptionMap = {
-		"sequence" : {
+		"SEQ" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("sequence_list_name", "sequence list");
 			},
@@ -1582,7 +1461,7 @@ function DialogTool() {
 				return localization.GetStringOrFallback("sequence_list_description", "go through each item once in _:");
 			},
 		},
-		"cycle" : {
+		"CYC" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("cycle_list_name", "cycle list");
 			},
@@ -1593,7 +1472,7 @@ function DialogTool() {
 				return localization.GetStringOrFallback("cycle_list_description", "repeat items in a _:");
 			},
 		},
-		"shuffle" : {
+		"SHF" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("shuffle_list_name", "shuffle list");
 			},
@@ -1606,15 +1485,14 @@ function DialogTool() {
 		},
 	};
 
-	function SequenceEditor(node, parentEditor) {
+	function SequenceEditor(sequenceExpression, parentEditor) {
 		var self = this;
-
-		// this hack is terrible
-		var sequenceNode = node.children[0];
 
 		var div = document.createElement("div");
 		div.classList.add("sequenceEditor");
 		div.classList.add("actionEditor");
+
+		var sequenceType = sequenceExpression.list[0].value;
 
 		var orderControls = new OrderControls(this, parentEditor);
 		div.appendChild(orderControls.GetElement());
@@ -1630,9 +1508,9 @@ function DialogTool() {
 		function CreateSequenceDescription(isEditable) {
 			descriptionDiv.innerHTML = "";
 
-			titleDiv.innerText = sequenceTypeDescriptionMap[sequenceNode.type].GetName();
+			titleDiv.innerText = sequenceTypeDescriptionMap[sequenceType].GetName();
 
-			var descriptionText = sequenceTypeDescriptionMap[sequenceNode.type].GetDescription();
+			var descriptionText = sequenceTypeDescriptionMap[sequenceType].GetDescription();
 			var descriptionTextSplit = descriptionText.split("_");
 
 			var descSpan1 = document.createElement("span");
@@ -1646,14 +1524,14 @@ function DialogTool() {
 					var sequenceTypeOption = document.createElement("option");
 					sequenceTypeOption.value = type;
 					sequenceTypeOption.innerText = typeName;
-					sequenceTypeOption.selected = (type === sequenceNode.type);
+					sequenceTypeOption.selected = (type === sequenceType);
 					sequenceTypeSelect.appendChild(sequenceTypeOption);
 				}
 				sequenceTypeSelect.onchange = function() {
-					console.log(sequenceNode);
-					sequenceNode = scriptUtils.ChangeSequenceType(sequenceNode, sequenceTypeSelect.value);
-					node.SetChildren([sequenceNode]);
-					CreateSequenceDescription(true);
+					// todo : reimplement
+					// sequenceNode = scriptUtils.ChangeSequenceType(sequenceNode, sequenceTypeSelect.value);
+					// node.SetChildren([sequenceNode]);
+					// CreateSequenceDescription(true);
 					parentEditor.NotifyUpdate();
 				}
 				descriptionDiv.appendChild(sequenceTypeSelect);
@@ -1661,7 +1539,7 @@ function DialogTool() {
 			else {
 				var sequenceTypeSpan = document.createElement("span");
 				sequenceTypeSpan.classList.add("parameterUneditable");
-				sequenceTypeSpan.innerText = sequenceTypeDescriptionMap[sequenceNode.type].GetTypeName();
+				sequenceTypeSpan.innerText = sequenceTypeDescriptionMap[sequenceType].GetTypeName();
 				descriptionDiv.appendChild(sequenceTypeSpan);
 			}
 
@@ -1704,7 +1582,7 @@ function DialogTool() {
 			function() { CreateSequenceDescription(false); } /*onDeselect*/ );
 
 		this.GetNodes = function() {
-			return [node];
+			return [sequenceExpression];
 		}
 
 		this.NotifyUpdate = function() {
@@ -1743,9 +1621,9 @@ function DialogTool() {
 		function CreateOptionEditors() {
 			optionEditors = [];
 
-			for (var i = 0; i < sequenceNode.children.length; i++) {
-				var optionNode = sequenceNode.children[i];
-				var optionEditor = new SequenceOptionEditor(optionNode, self);
+			for (var i = 1; i < sequenceExpression.list.length; i++) {
+				var optionExpression = sequenceExpression.list[i];
+				var optionEditor = new SequenceOptionEditor(optionExpression, self);
 				optionEditor.SetOrderNumber(i+1);
 				optionRootDiv.appendChild(optionEditor.GetElement());
 				optionEditors.push(optionEditor);
@@ -1769,13 +1647,14 @@ function DialogTool() {
 				updatedOptions = updatedOptions.concat(editor.GetNodes());
 			}
 
-			sequenceNode.SetChildren(updatedOptions);
+			// TODO : reimplement
+			// sequenceNode.SetChildren(updatedOptions);
 		}
 
 		CreateOptionEditors();
 
 		this.OnNodeEnter = function(event) {
-			if (event.id === node.GetId()) {
+			if (event.id === expression.GetId()) {
 				div.classList.add("executing");
 			}
 
@@ -1791,7 +1670,7 @@ function DialogTool() {
 		// in fact sharing the child - parent relationship code between the two
 		// would make sense...
 		this.OnNodeExit = function(event) {
-			if (event.id === node.GetId() || event.forceClear) {
+			if (event.id === sequenceExpression.GetId() || event.forceClear) {
 				div.classList.remove("executing");
 				div.classList.remove("executingLeave");
 				void div.offsetWidth; // hack to force reflow to allow animation to restart
@@ -1807,7 +1686,7 @@ function DialogTool() {
 		};
 	}
 
-	function SequenceOptionEditor(optionNode, parentEditor) {
+	function SequenceOptionEditor(optionExpression, parentEditor) {
 		var div = document.createElement("div");
 		div.classList.add("optionEditor");
 
@@ -1822,15 +1701,18 @@ function DialogTool() {
 		orderLabel.innerText = "#)";
 		div.appendChild(orderLabel);
 
-		var blockEditor = new BlockEditor(optionNode, parentEditor);
-		div.appendChild(blockEditor.GetElement());
+		// todo : handle non-dialog options? share with block editor?
+		if (optionExpression.list[0].value === "->") {
+			var blockEditor = new BlockEditor(optionExpression, parentEditor);
+			div.appendChild(blockEditor.GetElement());			
+		}
 
 		this.GetElement = function() {
 			return div;
 		}
 
 		this.GetNodes = function() {
-			return [optionNode];
+			return [optionExpression];
 		}
 
 		this.SetOrderNumber = function(num) {
@@ -1853,10 +1735,8 @@ function DialogTool() {
 		AddSelectionBehavior(this);
 	}
 
-	function ConditionalEditor(node, parentEditor) {
+	function ConditionalEditor(conditionalExpression, parentEditor) {
 		var self = this;
-
-		var conditionalNode = node.children[0];
 
 		var div = document.createElement("div");
 		div.classList.add("conditionalEditor");
@@ -2021,8 +1901,9 @@ function DialogTool() {
 		function CreateOptionEditors() {
 			optionEditors = [];
 
-			for (var i = 0; i < conditionalNode.children.length; i++) {
-				var optionEditor = new ConditionalOptionEditor(conditionalNode.children[i], self, i);
+			for (var i = 1; i < conditionalExpression.list.length; i += 2) {
+				var conditionPair = conditionalExpression.list.slice(i, (i + 1) < conditionalExpression.list.length ? (i + 2) : (i + 1));
+				var optionEditor = new ConditionalOptionEditor(conditionPair, self, i - 1);
 				optionRootDiv.appendChild(optionEditor.GetElement());
 				optionEditors.push(optionEditor);
 			}
@@ -2039,14 +1920,15 @@ function DialogTool() {
 
 		// TODO : share w/ sequence editor?
 		function UpdateNodeOptions() {
-			var updatedOptions = [];
+			// todo : reimplement
+			// var updatedOptions = [];
 
-			for (var i = 0; i < optionEditors.length; i++) {
-				var editor = optionEditors[i];
-				updatedOptions = updatedOptions.concat(editor.GetNodes());
-			}
+			// for (var i = 0; i < optionEditors.length; i++) {
+			// 	var editor = optionEditors[i];
+			// 	updatedOptions = updatedOptions.concat(editor.GetNodes());
+			// }
 
-			conditionalNode.SetChildren(updatedOptions);
+			// conditionalNode.SetChildren(updatedOptions);
 		}
 
 		CreateOptionEditors();
@@ -2080,7 +1962,7 @@ function DialogTool() {
 		};
 	}
 
-	function ConditionalOptionEditor(conditionPairNode, parentEditor, index) {
+	function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 		var div = document.createElement("div");
 		div.classList.add("optionEditor");
 
@@ -2092,26 +1974,32 @@ function DialogTool() {
 		topControlsDiv.appendChild(orderControls.GetElement());
 
 		// condition
-		var comparisonEditor = new ConditionalComparisonEditor(conditionPairNode.children[0], this, index);
+		var comparisonExpression = conditionPair.length >= 2 ? conditionPair[0] : null;
+		var comparisonEditor = new ConditionalComparisonEditor(comparisonExpression, this, index);
 		div.appendChild(comparisonEditor.GetElement());
 
 		// result
-		var resultBlockEditor = new BlockEditor(conditionPairNode.children[1], this);
-		div.appendChild(resultBlockEditor.GetElement());
+		var resultExpression = conditionPair.length >= 2 ? conditionPair[1] : conditionPair[0];
+		if (resultExpression.list[0].value === "->") { // todo : non dialog results!
+			var resultBlockEditor = new BlockEditor(resultExpression, this);
+			div.appendChild(resultBlockEditor.GetElement());
+		}
 
 		this.GetElement = function() {
 			return div;
 		}
 
 		this.GetNodes = function() {
-			return [conditionPairNode];
+			return conditionPair;
 		}
 
 		this.NotifyUpdate = function() {
-			var updatedChildren = comparisonEditor.GetNodes().concat(resultBlockEditor.GetNodes());
-			conditionPairNode.SetChildren(updatedChildren);
+			// TODO : reimplement
 
-			parentEditor.NotifyUpdate();
+			// var updatedChildren = comparisonEditor.GetNodes().concat(resultBlockEditor.GetNodes());
+			// conditionPairNode.SetChildren(updatedChildren);
+
+			// parentEditor.NotifyUpdate();
 		}
 
 		this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {
@@ -2138,7 +2026,7 @@ function DialogTool() {
 			function() { comparisonEditor.Deselect(); });
 	}
 
-	function ConditionalComparisonEditor(conditionNode, parentEditor, index) {
+	function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 		var self = this;
 
 		var conditionStartSpan;
@@ -2152,7 +2040,7 @@ function DialogTool() {
 			div.innerHTML = "";
 
 			conditionStartSpan = document.createElement("span");
-			if (conditionNode.type === "else") {
+			if (conditionExpression === null) {
 				conditionStartSpan.innerText = localization.GetStringOrFallback("condition_else_label", "else");
 			}
 			else if (index === 0) {
@@ -2163,13 +2051,14 @@ function DialogTool() {
 			}
 			div.appendChild(conditionStartSpan);
 
-			if (conditionNode.type != "else") {
-				conditionExpressionEditor = new ExpressionEditor(conditionNode, self, true);
+			if (conditionExpression != null) {
+				// todo : re-implement
+				conditionExpressionEditor = new FunctionEditor(conditionExpression, self, true); // new ExpressionEditor(conditionNode, self, true);
 				div.appendChild(conditionExpressionEditor.GetElement());
 			}
 
 			conditionEndSpan = document.createElement("span");
-			if (conditionNode.type != "else") {
+			if (conditionExpression != null) {
 				conditionEndSpan.innerText = ", " + localization.GetStringOrFallback("condition_then_label", "then") + ":";
 			}
 			else {
@@ -2185,26 +2074,33 @@ function DialogTool() {
 		}
 
 		this.GetNodes = function() {
-			if (conditionNode.type === "else") {
-				return [conditionNode];
-			}
-			else {
-				return conditionExpressionEditor.GetNodes();
-			}
+			// TODO : reimplement
+			return [];
+
+
+			// if (conditionNode.type === "else") {
+			// 	return [conditionNode];
+			// }
+			// else {
+			// 	return conditionExpressionEditor.GetNodes();
+			// }
 		}
 
 		this.UpdateIndex = function(i) {
-			index = i;
+			// TODO : reimplement
 
-			// update the initial label based on the order of the option
-			if (conditionNode.type != "else") {
-				if (index === 0) {
-					conditionStartSpan.innerText = localization.GetStringOrFallback("condition_if_label", "if") + " ";
-				}
-				else {
-					conditionStartSpan.innerText = localization.GetStringOrFallback("condition_else_if_label", "else if") + " ";
-				}
-			}
+
+			// index = i;
+
+			// // update the initial label based on the order of the option
+			// if (conditionNode.type != "else") {
+			// 	if (index === 0) {
+			// 		conditionStartSpan.innerText = localization.GetStringOrFallback("condition_if_label", "if") + " ";
+			// 	}
+			// 	else {
+			// 		conditionStartSpan.innerText = localization.GetStringOrFallback("condition_else_if_label", "else if") + " ";
+			// 	}
+			// }
 		}
 
 		this.Select = function() {
@@ -2225,6 +2121,88 @@ function DialogTool() {
 
 		this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {
 			parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+		}
+	}
+
+	function ChoiceEditor(choiceExpression, parentEditor) {
+		var self = this;
+
+		var div = document.createElement("div");
+		div.classList.add("choiceEditor");
+		div.classList.add("actionEditor");
+
+		var orderControls = new OrderControls(this, parentEditor);
+		div.appendChild(orderControls.GetElement());
+
+		var titleDiv = document.createElement("div");
+		titleDiv.classList.add("actionTitle");
+		titleDiv.innerText = "choice"; // TODO : localize
+		div.appendChild(titleDiv);
+
+		var descriptionDiv = document.createElement("div");
+		descriptionDiv.classList.add("sequenceDescription"); // hack
+		descriptionDiv.innerText = "let player pick from choices:"; // TODO : localize
+		div.appendChild(descriptionDiv);
+
+		var optionRootDiv = document.createElement("div");
+		optionRootDiv.classList.add("optionRoot");
+		div.appendChild(optionRootDiv);
+
+		this.GetElement = function() {
+			return div;
+		}
+
+		AddSelectionBehavior(this);
+
+		var optionEditors = [];
+		function CreateOptionEditors() {
+			optionEditors = [];
+
+			for (var i = 1; i < choiceExpression.list.length; i += 2) {
+				var optionExpression = choiceExpression.list[i];
+				var resultExpression = choiceExpression.list[i + 1];
+				var optionEditor = new ChoiceOptionEditor(optionExpression, resultExpression, self, i - 1);
+				optionRootDiv.appendChild(optionEditor.GetElement());
+				optionEditors.push(optionEditor);
+			}
+		}
+
+		CreateOptionEditors();
+	}
+
+	function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, index) {
+		var div = document.createElement("div");
+		div.classList.add("optionEditor");
+
+		var topControlsDiv = document.createElement("div");
+		topControlsDiv.classList.add("optionControls");
+		div.appendChild(topControlsDiv);
+
+		var orderControls = new OrderControls(this, parentEditor);
+		topControlsDiv.appendChild(orderControls.GetElement());
+
+		var optionLabel = document.createElement("span");
+		optionLabel.innerText = "if player picks:"; // todo : localize
+		div.appendChild(optionLabel);
+
+		// condition
+		if (choiceExpression.list[0].value === "->") { // todo : non dialog choices? or is that an error?
+			var choiceBlockEditor = new BlockEditor(choiceExpression, this);
+			div.appendChild(choiceBlockEditor.GetElement());
+		}
+
+		var resultLabel = document.createElement("span");
+		resultLabel.innerText = "then do:"; // todo : localize
+		div.appendChild(resultLabel);
+
+		// result
+		if (resultExpression.list[0].value === "->") { // todo : non dialog results!
+			var resultBlockEditor = new BlockEditor(resultExpression, this);
+			div.appendChild(resultBlockEditor.GetElement());
+		}
+
+		this.GetElement = function() {
+			return div;
 		}
 	}
 
@@ -2290,8 +2268,9 @@ function DialogTool() {
 		}
 	}
 
+	// todo : update for new names, new functions, etc
 	var functionDescriptionMap = {
-		"end" : {
+		"END" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("function_end_name", "end");
 			},
@@ -2305,7 +2284,7 @@ function DialogTool() {
 			},
 			parameters : [],
 		},
-		"exit" : {
+		"EXT" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("function_exit_name", "exit");
 			},
@@ -2313,14 +2292,14 @@ function DialogTool() {
 				return localization.GetStringOrFallback("function_exit_description", "move player to _ at (_,_)[ with effect _]");
 			},
 			parameters : [
-				{ types: ["room", "text", "variable"], index: 0, name: "room", },
-				{ types: ["number", "variable"], index: 1, name: "x", },
-				{ types: ["number", "variable"], index: 2, name: "y", },
-				{ types: ["transition", "text", "variable"], index: 3, name: "transition effect", },
+				{ types: ["room", "string", "symbol"], index: 0, name: "room", },
+				{ types: ["number", "symbol"], index: 1, name: "x", },
+				{ types: ["number", "symbol"], index: 2, name: "y", },
+				{ types: ["transition", "string", "symbol"], index: 3, name: "transition effect", },
 			],
 			commands : [RoomMoveDestinationCommand],
 		},
-		"pg" : {
+		"PG" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("function_pg_name", "pagebreak");
 			},
@@ -2334,7 +2313,7 @@ function DialogTool() {
 			},
 			parameters : [],
 		},
-		"item" : {
+		"ITM" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("function_item_name", "item");
 			},
@@ -2342,41 +2321,31 @@ function DialogTool() {
 				return localization.GetStringOrFallback("function_item_description", "_ in inventory[ = _]");
 			},
 			parameters : [
-				{ types: ["item", "text", "variable"], index: 0, name: "item", },
-				{ types: ["number", "variable"], index: 1, name: "amount", },
+				{ types: ["item", "string", "symbol"], index: 0, name: "item", },
+				{ types: ["number", "symbol"], index: 1, name: "amount", },
 			],
 		},
-		"property" : {
-			GetName : function() {
-				return localization.GetStringOrFallback("function_property_name", "property");
-			},
-			GetDescription : function() {
-				return localization.GetStringOrFallback("function_property_description", "property _[ = _]");
-			},
-			GetHelpText : function() { // TODO : when there's more than one property, this will have to change!
-				return localization.GetStringOrFallback(
-					"function_property_locked_example_help",
-					"change the value of a property: "
-					+ "for example, set the locked property to true to stop an exit from changing rooms, "
-					+ "or to prevent an ending from stopping the game");
-			},
-			parameters : [
-				{ types: ["variable"], index: 0, name: "name", doNotEdit: true }, // NOTE: disable editing of property names for this version
-				{ types: ["number", "text", "bool", "variable"], index: 1, name: "value" },
-			],
-		},
-		"print" : {
-			GetName : function() {
-				return localization.GetStringOrFallback("function_print_name", "print");
-			},
-			GetDescription : function() {
-				return localization.GetStringOrFallback("function_print_description", "print _ in the dialog box");
-			},
-			parameters : [
-				{ types: ["text", "variable"], index: 0, name: "output", },
-			],
-		},
-		"say" : {
+		// todo : reimplement as "special" thing for @
+		// "property" : {
+		// 	GetName : function() {
+		// 		return localization.GetStringOrFallback("function_property_name", "property");
+		// 	},
+		// 	GetDescription : function() {
+		// 		return localization.GetStringOrFallback("function_property_description", "property _[ = _]");
+		// 	},
+		// 	GetHelpText : function() { // TODO : when there's more than one property, this will have to change!
+		// 		return localization.GetStringOrFallback(
+		// 			"function_property_locked_example_help",
+		// 			"change the value of a property: "
+		// 			+ "for example, set the locked property to true to stop an exit from changing rooms, "
+		// 			+ "or to prevent an ending from stopping the game");
+		// 	},
+		// 	parameters : [
+		// 		{ types: ["symbol"], index: 0, name: "name", doNotEdit: true }, // NOTE: disable editing of property names for this version
+		// 		{ types: ["number", "string", "boolean", "symbol"], index: 1, name: "value" },
+		// 	],
+		// },
+		"SAY" : {
 			GetName : function() {
 				return localization.GetStringOrFallback("function_say_name", "say");
 			},
@@ -2384,8 +2353,15 @@ function DialogTool() {
 				return localization.GetStringOrFallback("function_print_description", "print _ in the dialog box");
 			},
 			parameters : [
-				{ types: ["text", "variable"], index: 0, name: "output", },
+				{ types: ["string", "symbol"], index: 0, name: "output", },
 			],
+		},
+		"default" : {
+			GetName : function() { return "function"; },
+			GetDescription : function() {
+				return "evaluate _ with input:";
+			},
+			parameters: [ { types: ["symbol"], index: -1, name: "name", } ], // todo : the -1 is hacky
 		},
 	};
 
@@ -2399,7 +2375,9 @@ function DialogTool() {
 
 		var self = this;
 
-		var functionSymbol = expression.list[0].value;
+		var fnSymbol = expression.list[0].value;
+		var fnDescriptionId = fnSymbol in functionDescriptionMap ? fnSymbol : "default";
+		var fnParamLength = expression.list.length - 1;
 
 		var div = document.createElement(isInline ? "span" : "div");
 		div.classList.add("functionEditor");
@@ -2416,7 +2394,7 @@ function DialogTool() {
 		}
 
 		if (!isInline) {
-			var titleText = functionDescriptionMap[functionSymbol].GetName();
+			var titleText = functionDescriptionMap[fnDescriptionId].GetName();
 			var titleDiv = document.createElement("div");
 			titleDiv.classList.add("actionTitle");
 			titleDiv.innerText = titleText;
@@ -2464,7 +2442,7 @@ function DialogTool() {
 			helpTextContent.classList.add("helpTextContent");
 			helpTextDiv.appendChild(helpTextContent);
 
-			var helpTextFunc = functionDescriptionMap[functionSymbol].GetHelpText;
+			var helpTextFunc = functionDescriptionMap[fnDescriptionId].GetHelpText;
 			hasHelpText = helpTextFunc != undefined && helpTextFunc != null;
 			if (hasHelpText) {
 				helpTextContent.innerText = helpTextFunc();
@@ -2505,12 +2483,12 @@ function DialogTool() {
 				addParameterDiv.innerHTML = "";
 			}
 
-			var descriptionText = functionDescriptionMap[functionSymbol].GetDescription();
+			var descriptionText = functionDescriptionMap[fnDescriptionId].GetDescription();
 			var descriptionTextSplit = descriptionText.split("_");
 
 			function createGetArgFunc(expression, parameterIndex) {
 				return function() {
-					return expression.list[parameterIndex];
+					return expression.list[parameterIndex + 1];
 				};
 			}
 
@@ -2521,7 +2499,9 @@ function DialogTool() {
 				};
 			}
 
-			for (var i = 0; i < descriptionTextSplit.length; i++) {
+			var i = 0;
+
+			for (; i < descriptionTextSplit.length; i++) {
 				var descriptionSpan = document.createElement("span");
 				descriptionDiv.appendChild(descriptionSpan);
 
@@ -2529,14 +2509,14 @@ function DialogTool() {
 				if (text.indexOf("[") >= 0) { // optional parameter text start
 					var optionalTextStartSplit = text.split("[");
 					descriptionSpan.innerText = optionalTextStartSplit[0];
-					var nextParam = functionDescriptionMap[functionSymbol].parameters[i];
-					if (expression.list.length - 1 > nextParam.index && optionalTextStartSplit.length > 1) {
+					var nextParam = functionDescriptionMap[fnDescriptionId].parameters[i];
+					if (fnParamLength > nextParam.index && optionalTextStartSplit.length > 1) {
 						descriptionSpan.innerText += optionalTextStartSplit[1];
 					}
 				}
 				else if (text[text.length - 1] === "]") { // optional parameter text end
-					var prevParam = functionDescriptionMap[functionSymbol].parameters[i-1];
-					if (expression.list.length - 1 > prevParam.index) {
+					var prevParam = functionDescriptionMap[fnDescriptionId].parameters[i-1];
+					if (fnParamLength > prevParam.index) {
 						descriptionSpan.innerText = text.slice(0, text.length - 1);
 					}
 				}
@@ -2545,11 +2525,11 @@ function DialogTool() {
 				}
 
 				if (i < descriptionTextSplit.length - 1) {
-					var parameterInfo = functionDescriptionMap[functionSymbol].parameters[i];
+					var parameterInfo = functionDescriptionMap[fnDescriptionId].parameters[i];
 
-					if (expression.list.length - 1 > parameterInfo.index) {
+					if (fnParamLength > parameterInfo.index) {
 						var parameterEditor = new ParameterEditor(
-							parameterInfo.types.concat(["function", "expression"]),
+							parameterInfo.types.concat(["list"]),
 							createGetArgFunc(expression, parameterInfo.index),
 							createSetArgFunc(expression, parameterInfo.index, self),
 							isEditable && !(parameterInfo.doNotEdit),
@@ -2561,7 +2541,7 @@ function DialogTool() {
 						curParameterEditors.push(parameterEditor);
 						descriptionDiv.appendChild(parameterEditor.GetElement());
 					}
-					else if (!isInline && isEditable && expression.list.length - 1 == parameterInfo.index && parameterInfo.name) {
+					else if (!isInline && isEditable && fnParamLength == parameterInfo.index && parameterInfo.name) {
 						function createAddParameterHandler(expression, parameterInfo) {
 							return function() {
 								expression.list.push(CreateDefaultArgNode(parameterInfo.types[0]));
@@ -2578,6 +2558,32 @@ function DialogTool() {
 				}
 			}
 
+			// add any additional parameters that go beyond the defined description
+			i -= (fnDescriptionId === "default" ? 2 : 1); // ok this is pretty awkward to me
+			var inputSeperator = " ";
+
+			for (; i < fnParamLength; i++) {
+				var spaceSpan = document.createElement("span");
+				spaceSpan.innerText = inputSeperator;
+				descriptionDiv.appendChild(spaceSpan);
+
+				var parameterEditor = new ParameterEditor(
+					["number", "string", "boolean", "symbol", "list"],
+					createGetArgFunc(expression, i),
+					createSetArgFunc(expression, i, self),
+					isEditable,
+					!isInline && editParameterTypes,
+					function(expressionString, onAcceptHandler) {
+						parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+					});
+
+				curParameterEditors.push(parameterEditor);
+				descriptionDiv.appendChild(parameterEditor.GetElement());
+
+				inputSeperator = ", ";
+			}
+
+
 			if (!isInline) {
 				// clean up and reset command editors
 				for (var i = 0; i < curCommandEditors.length; i++) {
@@ -2586,7 +2592,7 @@ function DialogTool() {
 				curCommandEditors = [];
 
 				// add custom edit commands
-				var commands = functionDescriptionMap[functionSymbol].commands;
+				var commands = functionDescriptionMap[fnDescriptionId].commands;
 				if (isEditable && commands) {
 					for (var i = 0; i < commands.length; i++) {
 						var commandEditor = new commands[i](expression, parentEditor, CreateFunctionDescription);
@@ -2656,34 +2662,30 @@ function DialogTool() {
 	function CreateDefaultArgNode(type) {
 		var argNode;
 		if (type === "number") {
-			argNode = scriptUtils.CreateLiteralNode("0");
+			// todo : replace these with helper function from script module?
+			argNode = { type: "number", value: 0 };
 		}
-		else if (type === "text") {
-			argNode = scriptUtils.CreateLiteralNode("");
+		else if (type === "string") {
+			argNode = { type: "string", value: "" };
 		}
-		else if (type === "bool") {
-			argNode = scriptUtils.CreateLiteralNode("true");
+		else if (type === "boolean") {
+			argNode = { type: "boolean", value: true };
 		}
-		else if (type === "variable") {
-			argNode = scriptUtils.CreateVariableNode("a"); // TODO : find first var instead?
+		else if (type === "symbol") {
+			argNode = { type: "symbol", value: "a" }; // TODO : find first var instead?
 		}
-		else if (type === "function") {
-			argNode = scriptUtils.CreateFunctionBlock("item", ["0"]);
-		}
-		else if (type === "expression") {
-			var expNode = scriptInterpreter.CreateExpression("a + 1");
-			var blockNode = scriptUtils.CreateCodeBlock();
-			blockNode.AddChild(expNode);
-			argNode = blockNode;
+		else if (type === "list") {
+			// todo : I recreated the old logic for this but is this still what we want?
+			argNode = [{ type: "symbol", value: "item" }, { type: "symbol", value: "0" }];
 		}
 		else if (type === "room") {
-			argNode = scriptUtils.CreateStringLiteralNode("0"); // TODO : find first room instead?
+			argNode = { type: "symbol", value: "0" }; // TODO : find first room instead?
 		}
 		else if (type === "item") {
-			argNode = scriptUtils.CreateStringLiteralNode("0"); // TODO : find first item instead?
+			argNode = { type: "symbol", value: "0" }; // TODO : find first item instead?
 		}
 		else if (type === "transition") {
-			argNode = scriptUtils.CreateStringLiteralNode("fade_w");
+			argNode = { type: "string", value: "fade_w" };
 		}
 		return argNode;
 	}
@@ -2692,13 +2694,13 @@ function DialogTool() {
 		if (type === "number") {
 			return "pinkColor";
 		}
-		else if (type === "text") {
+		else if (type === "string") {
 			return "greenColor";
 		}
-		else if (type === "bool") {
+		else if (type === "boolean") {
 			return "greenColor";
 		}
-		else if (type === "variable") {
+		else if (type === "symbol") {
 			return "goldColor";
 		}
 		else if (type === "room") {
@@ -2821,26 +2823,18 @@ function DialogTool() {
 						}
 					}
 				}
-				else if (type === "function") {
+				else if (type === "list") {
 					var inlineFunctionEditor = TryCreateFunctionEditor();
 					if (inlineFunctionEditor != null) {
 						parameterValue.appendChild(inlineFunctionEditor.GetElement());
 					}
 					else {
 						// just in case
-						parameterValue.innerText = value;
+						parameterValue.innerText = "ERROR"; // todo : can this be handled better?
 					}
 				}
-				else if (type === "expression") {
-					var inlineExpressionEditor = TryCreateExpressionEditor();
-					if (inlineExpressionEditor != null) {
-						parameterValue.appendChild(inlineExpressionEditor.GetElement());
-					}
-					else {
-						parameterValue.innerText = value;
-					}
-				}
-				else if (type === "text") {
+				// todo : handle lists for special forms, and for math expressions
+				else if (type === "string") {
 					parameterValue.innerText = '"' + curValue + '"';
 				}
 				else {
@@ -2851,9 +2845,8 @@ function DialogTool() {
 
 		function TryCreateFunctionEditor() {
 			var inlineFunctionEditor = null;
-			var funcNode = getArgFunc();
-			if (funcNode.type === "code_block" && funcNode.children[0].type === "function" &&
-				functionDescriptionMap[funcNode.children[0].name] != undefined) { // TODO : copied from block editor
+			var funcExpression = getArgFunc();
+			if (funcExpression.type === "list") {
 				inlineFunctionEditor = new FunctionEditor(getArgFunc(), self, true);
 			}
 			return inlineFunctionEditor;
@@ -2865,7 +2858,7 @@ function DialogTool() {
 			if (expressionNode.type === "code_block" && 
 				(expressionNode.children[0].type === "operator" || 
 					expressionNode.children[0].type === "literal" ||
-					expressionNode.children[0].type === "variable")) {
+					expressionNode.children[0].type === "symbol")) {
 				inlineExpressionEditor = new ExpressionEditor(expressionNode, self, true);
 			}
 			return inlineExpressionEditor;
@@ -2895,9 +2888,9 @@ function DialogTool() {
 					onChange(argNode);
 				}
 			}
-			else if (type === "text") {
+			else if (type === "string") {
 				parameterInput = document.createElement("input");
-				parameterInput.type = "text";
+				parameterInput.type = "string";
 				parameterInput.value = value;
 				parameterInput.onchange = function(event) {
 					var val = event.target.value;
@@ -2905,18 +2898,18 @@ function DialogTool() {
 					onChange(argNode);
 				}
 			}
-			else if (type === "bool") {
+			else if (type === "boolean") {
 				parameterInput = document.createElement("select");
 
 				var boolTrueOption = document.createElement("option");
-				boolTrueOption.value = "true";
-				boolTrueOption.innerText = "true"; // TODO : localize
+				boolTrueOption.value = "YES";
+				boolTrueOption.innerText = "YES"; // TODO : localize
 				boolTrueOption.selected = value;
 				parameterInput.appendChild(boolTrueOption);
 
 				var boolFalseOption = document.createElement("option");
-				boolFalseOption.value = "false";
-				boolFalseOption.innerText = "false"; // TODO : localize
+				boolFalseOption.value = "NO";
+				boolFalseOption.innerText = "NO"; // TODO : localize
 				boolFalseOption.selected = !value;
 				parameterInput.appendChild(boolFalseOption);
 
@@ -2926,11 +2919,11 @@ function DialogTool() {
 					onChange(argNode);
 				}
 			}
-			else if (type === "variable") {
+			else if (type === "symbol") {
 				parameterInput = document.createElement("span");
 
 				var variableInput = document.createElement("input");
-				variableInput.type = "text";
+				variableInput.type = "string";
 				variableInput.setAttribute("list", "variable_datalist");
 				variableInput.value = value;
 				parameterInput.appendChild(variableInput);
@@ -3005,7 +2998,7 @@ function DialogTool() {
 					onChange(argNode);
 				}
 			}
-			else if (type === "function") {
+			else if (type === "list") {
 				parameterInput = document.createElement("span");
 				var inlineFunctionEditor = TryCreateFunctionEditor();
 				if (inlineFunctionEditor != null) {
@@ -3018,7 +3011,7 @@ function DialogTool() {
 					parameterInput.innerText = value;
 				}
 			}
-			else if (type === "expression") {
+			else if (type === "list") {
 				parameterInput = document.createElement("span");
 				var inlineExpressionEditor = TryCreateExpressionEditor();
 				if (inlineExpressionEditor != null) {
@@ -3036,49 +3029,43 @@ function DialogTool() {
 
 		function GetValue() {
 			var arg = getArgFunc();
-			if (arg.type === "literal") {
-				return arg.value;
+			if (arg.type === "number" || arg.type === "string" || arg.type === "boolean" || arg.type === "symbol") {
+				return scriptNext.ValueToString(arg.value);
 			}
-			else if (arg.type === "variable") {
-				return arg.name;
+			else if (arg.type === "list") {
+				return "LIST"; // arg.list; // todo : re-implement this
 			}
-			else if (arg.type === "code_block" && arg.children[0].type === "function") {
-				return arg.children[0].name;
-			}
+
 			return null;
 		}
 
 		function DoesEditorTypeMatchNode(type, node) {
-			if (type === "number" && node.type === "literal" && node.value === null) {
-				// this is a catch-all for weird-ness
+			if (type === "boolean" && node.value === null) {
+				// todo : keep this catch all for weird cases?
 				return true;
 			}
-			else if (type === "number" && node.type === "literal" && (typeof node.value) === "number") {
+			else if (type === "number" && node.type === "number" && (typeof node.value) === "number") {
 				return true;
 			}
-			else if (type === "text" && node.type === "literal" && (typeof node.value) === "string") {
+			else if (type === "string" && node.type === "string" && (typeof node.value) === "string") {
 				return true;
 			}
-			else if (type === "bool" && node.type === "literal" && (typeof node.value) === "boolean") {
+			else if (type === "boolean" && node.type === "boolean" && (typeof node.value) === "boolean") {
 				return true;
 			}
-			else if (type === "variable" && node.type === "variable") {
+			else if (type === "symbol" && node.type === "symbol") {
 				return true;
 			}
-			else if (type === "room" && node.type === "literal" && (typeof node.value) === "string" && room.hasOwnProperty(node.value)) {
+			else if (type === "room" && node.type === "string" && (typeof node.value) === "string" && node.value in room) {
 				return true;
 			}
-			else if (type === "item" && node.type === "literal" && (typeof node.value) === "string" && item.hasOwnProperty(node.value)) {
+			else if (type === "item" && node.type === "string" && (typeof node.value) === "string" && node.value in item) {
 				return true;
 			}
-			else if (type === "transition" && node.type === "literal" && (typeof node.value) === "string") {
+			else if (type === "transition" && node.type === "string" && (typeof node.value) === "string") {
 				return true;
 			}
-			else if (type === "function" && node.type === "code_block" && node.children[0].type === "function") {
-				return true;
-			}
-			else if (type === "expression" && node.type === "code_block" && // TODO : I really need to put this in a helper function
-				(node.children[0].type === "operator" || node.children[0].type === "variable" || node.children[0].type === "literal")) {
+			else if (type === "list" && node.type === "list") {
 				return true;
 			}
 
@@ -3346,7 +3333,7 @@ function DialogTool() {
 				if (operator === "=") {
 					// you need a variable to use the assignment operator!
 					var leftNode = GetLeftmostNode(expressionRootNode);
-					if (leftNode.type === "variable") {
+					if (leftNode.type === "symbol") {
 						expressionString = leftNode.Serialize() + " " + operator;
 					}
 				}
@@ -3455,7 +3442,7 @@ function DialogTool() {
 		div.appendChild(nonNumericInputDiv);
 
 		// add variable:
-		var selectedVarNode = CreateDefaultArgNode("variable");
+		var selectedVarNode = CreateDefaultArgNode("symbol");
 
 		var addVariableDiv = document.createElement("div");
 		addVariableDiv.style.display = "flex";
@@ -3463,16 +3450,16 @@ function DialogTool() {
 		addVariableDiv.classList.add("goldColorBackground");
 
 		var variableParameterEditor = new ParameterEditor(
-			["variable"], 
+			["symbol"], 
 			function() { return selectedVarNode; },
 			function(node) { selectedVarNode = node; },
 			true,
 			false);
 
 		var addVariableButton = document.createElement("button");
-		addVariableButton.classList.add(GetColorClassForParameterType("variable"));
+		addVariableButton.classList.add(GetColorClassForParameterType("symbol"));
 		addVariableButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
-			+ localization.GetStringOrFallback("variable_label", "variable");;
+			+ localization.GetStringOrFallback("variable_label", "symbol");;
 		addVariableButton.style.flexGrow = "1";
 		addVariableButton.style.marginRight = "5px";
 		addVariableButton.onclick = function() {
@@ -3527,7 +3514,7 @@ function DialogTool() {
 		nonNumericInputDiv.appendChild(addItemDiv);
 
 		// add text:
-		var selectedTextNode = CreateDefaultArgNode("text");
+		var selectedTextNode = CreateDefaultArgNode("string");
 
 		var addTextDiv = document.createElement("div");
 		addTextDiv.style.display = "flex";
@@ -3535,16 +3522,16 @@ function DialogTool() {
 		addTextDiv.classList.add("greenColorBackground");
 
 		var textParameterEditor = new ParameterEditor(
-			["text"], 
+			["string"], 
 			function() { return selectedTextNode; },
 			function(node) { selectedTextNode = node; },
 			true,
 			false);
 
 		var addTextButton = document.createElement("button");
-		addTextButton.classList.add(GetColorClassForParameterType("text"));
+		addTextButton.classList.add(GetColorClassForParameterType("string"));
 		addTextButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
-			+ localization.GetStringOrFallback("value_type_text", "text");
+			+ localization.GetStringOrFallback("value_type_text", "string");
 		addTextButton.style.flexGrow = "1";
 		addTextButton.style.marginRight = "5px";
 		addTextButton.onclick = function() {
@@ -3577,10 +3564,10 @@ function DialogTool() {
 		boolInputDiv.style.display = "flex";
 		nonNumericInputDiv.appendChild(boolInputDiv);
 
-		var boolInputs = ["true", "false"];
+		var boolInputs = ["YES", "NO"];
 		for (var i = 0; i < boolInputs.length; i++) {
 			var button = document.createElement("button");
-			button.classList.add(GetColorClassForParameterType("bool"));
+			button.classList.add(GetColorClassForParameterType("boolean"));
 			button.style.flexGrow = "1";
 			button.innerText = boolInputs[i];
 			button.onclick = CreateBoolInputHandler(boolInputs[i]);
