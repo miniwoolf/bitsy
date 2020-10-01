@@ -447,7 +447,10 @@ function DialogTool() {
 
 		function RefreshEditorUI() {
 			div.innerHTML = "";
-			scriptRootNode = scriptNext.Parse(dialog[dialogId]);
+			scriptRootNode = scriptNext.Compile(dialog[dialogId]);
+
+			console.log(">>> SERIALIZE >>> \n" + scriptNext.Serialize(scriptRootNode));
+
 			rootEditor = new BlockEditor(scriptRootNode, self);
 
 			viewportDiv = document.createElement("div");

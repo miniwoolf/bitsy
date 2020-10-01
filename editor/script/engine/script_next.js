@@ -13,7 +13,7 @@ function ScriptNext() {
 
 var compiledScripts = {};
 
-function Parse(script) {
+function compile(script) {
 	var scriptStr = script.src;
 	if (scriptStr.indexOf("\n") < 0) {
 		// wrap one-line dialogs in a dialog expression
@@ -27,12 +27,12 @@ function Parse(script) {
 
 	return compiledScripts[script.id];
 }
-this.Parse = Parse;
+this.Compile = compile;
 
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(script, objectContext, callback) {
 	if (!(script.id in compiledScripts)) {
-		Parse(script);
+		compile(script);
 	}
 
 	var coreLibrary = createLibrary(dialogBuffer, objectContext);
@@ -61,6 +61,169 @@ this.RunCallback = RunCallback;
 this.Reset = function() {
 	compiledScripts = {};
 }
+
+var indentStep = 4;
+
+function serializeSingleLine(expressionList, indentDepth) {
+	var out = "";
+
+	for (var i = 0; i < expressionList.length; i++) {
+		if (i > 0) {
+			out += " ";
+		}
+
+		out += serialize(expressionList[i], indentDepth + indentStep); // todo : need the increase in indent?
+	}
+
+	return out;
+}
+
+function serializeMultiLines(expressionList, indentDepth, startBreakIndex) {
+	if (startBreakIndex === undefined || startBreakIndex === null) {
+		startBreakIndex = 0;
+	}
+
+	var out = "";
+
+	for (var i = 0; i < expressionList.length; i++) {
+		if (i > startBreakIndex) {
+			out += "\n" + (" ".repeat(indentDepth + indentStep));
+		}
+		else if (i > 0) {
+			out += " ";
+		}
+
+		out += serialize(expressionList[i], indentDepth + indentStep);
+	}
+
+	return out;
+}
+
+function serializeAlternatingLines(expressionList, indentDepth) {
+	var out = "";
+
+	for (var i = 0; i < expressionList.length; i++) {
+		var isChoiceResult = i > 0 && (i - 1) % 2 != 0;
+		var indentNext = indentDepth + indentStep + (isChoiceResult ? indentStep : 0);
+
+		if (i > 0) {
+			out += "\n" + (" ".repeat(indentNext));
+		}
+
+		out += serialize(expressionList[i], indentNext);
+	}
+
+	return out;
+}
+
+function serializePairedLines(expressionList, indentDepth) {
+	var out = "";
+
+	for (var i = 0; i < expressionList.length; i++) {
+		if (i > 0 && (i - 1) % 2 === 0) {
+			out += "\n" + (" ".repeat(indentDepth + indentStep));
+		}
+		else if (i > 0) {
+			out += " ";
+		}
+
+		out += serialize(expressionList[i], indentDepth + indentStep);
+	}
+
+	return out;	
+}
+
+function serializeWrappedLines(expressionList, indentDepth) {
+	var out = "";
+
+	var wordWrapLen = 32; // hard coded to match default bitsy font -- make it more flexible later?
+	var curLineLen = 0;
+	var prevLineIsMultiLine = false;
+	var inlineFunctions = ["SAY", "BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"];
+
+	for (var i = 0; i < expressionList.length; i++) {
+		var exp = expressionList[i];
+		var expStr = serialize(expressionList[i], indentDepth + indentStep);
+		var nextWordLen = exp.type != "list" ? expStr.length : 0;
+		var isMultiLine = exp.type === "list" && inlineFunctions.indexOf(exp.list[0].value) === -1;
+
+		if (prevLineIsMultiLine || isMultiLine || (curLineLen + nextWordLen + 1) > wordWrapLen) {
+			out += "\n" + (" ".repeat(indentDepth + indentStep));
+			curLineLen = 0;
+		}
+		else if (i > 0) {
+			out += " ";
+			curLineLen++;
+		}
+
+		prevLineIsMultiLine = isMultiLine;
+		curLineLen += nextWordLen;
+
+		out += expStr;
+	}
+
+	return out;
+}
+
+function serializeList(expression, indentDepth) {
+	var listType = expression.list[0].value; // todo : what if the first item is a list itself? (or it's empty)
+
+	var out = "{";
+
+	if (listType === "->") {
+		out += serializeWrappedLines(expression.list, indentDepth);
+	}
+	else if (["SEQ", "CYC", "SHF"].indexOf(listType) != -1) {
+		out += serializeMultiLines(expression.list, indentDepth);
+	}
+	else if (listType === "PIK") {
+		out += serializeAlternatingLines(expression.list, indentDepth);
+	}
+	else if (listType === "IF" || listType === "BOX") {
+		out += serializePairedLines(expression.list, indentDepth);
+	}
+	else if (listType === "FN") {
+		out += serializeMultiLines(expression.list, indentDepth, 1);
+	}
+	else {
+		out += serializeSingleLine(expression.list, indentDepth);
+	}
+
+	if (out.indexOf("\n") != -1) {
+		out += "\n" + (" ".repeat(indentDepth));
+	}
+
+	out += "}";
+
+	return out;
+}
+
+function serialize(expression, indentDepth) {
+	if (indentDepth === undefined || indentDepth === null) {
+		indentDepth = 0;
+	}
+
+	var out = "";
+
+	if (expression.type === "number") {
+		out = "" + expression.value;
+	}
+	else if (expression.type === "string") {
+		out = '"' + expression.value + '"';
+	}
+	else if (expression.type === "boolean") {
+		out = expression.value ? "YES" : "NO";
+	}
+	else if (expression.type === "symbol") {
+		out = expression.value;
+	}
+	else if (expression.type === "list") {
+		out = serializeList(expression, indentDepth);
+	}
+
+	return out;
+}
+this.Serialize = serialize;
 
 function tokenize(script) {
 	// store string literals and replace them with special token
@@ -117,35 +280,6 @@ function parseAtom(token) {
 			type: "symbol",
 			value: token,
 		};
-	}
-}
-
-// TODO : to string for attribute boxes
-function expressionToString(expression) {
-	if (expression.type === "number") {
-		return atomValueToString(expression.value);
-	}
-	else if (expression.type === "string") {
-		return atomValueToString(expression.value);
-	}
-	else if (expression.type === "boolean") {
-		return atomValueToString(expression.value);
-	}
-	else if (expression.type === "symbol") {
-		return atomValueToString(expression.value);
-	}
-	else {
-		return "";
-	}
-}
-
-// todo : not totally convinced this is the right way to do this?
-function atomValueToString(value) {
-	if (typeof value === "boolean") {
-		return value ? "YES" : "NO";
-	}
-	else {
-		return "" + value;
 	}
 }
 
