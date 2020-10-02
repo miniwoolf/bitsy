@@ -38,6 +38,7 @@ this.Run = function(script, objectContext, callback) {
 	var coreLibrary = createLibrary(dialogBuffer, objectContext);
 	// todo : make this environment chaining less awkward?
 	var libraryEnv = new Environment(coreLibrary);
+	var mathEnv = new Environment(mathLibrary);
 	var variableEnv = new Environment(variable, libraryEnv);
 	// todo : avatar? or player? for global avatar access
 	var objectEnv = new Environment({ ME: objectContext }, variableEnv);
@@ -64,7 +65,7 @@ this.Reset = function() {
 
 var indentStep = 4;
 
-function serializeSingleLine(expressionList, indentDepth) {
+function serializeSingle(expressionList, indentDepth) {
 	var out = "";
 
 	for (var i = 0; i < expressionList.length; i++) {
@@ -78,7 +79,7 @@ function serializeSingleLine(expressionList, indentDepth) {
 	return out;
 }
 
-function serializeMultiLines(expressionList, indentDepth, startBreakIndex) {
+function serializeMulti(expressionList, indentDepth, startBreakIndex) {
 	if (startBreakIndex === undefined || startBreakIndex === null) {
 		startBreakIndex = 0;
 	}
@@ -99,7 +100,7 @@ function serializeMultiLines(expressionList, indentDepth, startBreakIndex) {
 	return out;
 }
 
-function serializeAlternatingLines(expressionList, indentDepth) {
+function serializeAlternating(expressionList, indentDepth) {
 	var out = "";
 
 	for (var i = 0; i < expressionList.length; i++) {
@@ -116,7 +117,7 @@ function serializeAlternatingLines(expressionList, indentDepth) {
 	return out;
 }
 
-function serializePairedLines(expressionList, indentDepth) {
+function serializePaired(expressionList, indentDepth) {
 	var out = "";
 
 	for (var i = 0; i < expressionList.length; i++) {
@@ -133,22 +134,33 @@ function serializePairedLines(expressionList, indentDepth) {
 	return out;	
 }
 
-function serializeWrappedLines(expressionList, indentDepth) {
+function isInlineFunction(symbol) {
+	return ["SAY", "BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"].indexOf(symbol) != -1;
+}
+this.IsInlineFunction = isInlineFunction;
+
+var wordWrapLen = 32; // hard coded to match default bitsy font -- make it more flexible later?
+
+function serializeWrapped(expressionList, indentDepth) {
+	var indentNext = 0;
+
+	if (indentDepth != undefined && indentDepth != null) {
+		indentNext = indentDepth + indentStep;
+	}
+
 	var out = "";
 
-	var wordWrapLen = 32; // hard coded to match default bitsy font -- make it more flexible later?
 	var curLineLen = 0;
 	var prevLineIsMultiLine = false;
-	var inlineFunctions = ["SAY", "BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"];
 
 	for (var i = 0; i < expressionList.length; i++) {
 		var exp = expressionList[i];
-		var expStr = serialize(expressionList[i], indentDepth + indentStep);
-		var nextWordLen = exp.type != "list" ? expStr.length : 0;
-		var isMultiLine = exp.type === "list" && inlineFunctions.indexOf(exp.list[0].value) === -1;
+		var expStr = serialize(expressionList[i], indentNext);
+		var nextWordLen = exp.type != "list" && exp.value != "->" ? expStr.length : 0;
+		var isMultiLine = exp.type === "list" && !isInlineFunction(exp.list[0].value);
 
 		if (prevLineIsMultiLine || isMultiLine || (curLineLen + nextWordLen + 1) > wordWrapLen) {
-			out += "\n" + (" ".repeat(indentDepth + indentStep));
+			out += "\n" + (" ".repeat(indentNext));
 			curLineLen = 0;
 		}
 		else if (i > 0) {
@@ -164,29 +176,64 @@ function serializeWrappedLines(expressionList, indentDepth) {
 
 	return out;
 }
+this.SerializeWrapped = serializeWrapped;
 
+function isDialogExpression(symbol) {
+	return symbol === "->";
+}
+this.IsDialogExpression = isDialogExpression;
+
+function isSequence(symbol) {
+	return ["SEQ", "CYC", "SHF"].indexOf(symbol) != -1;
+}
+this.IsSequence = isSequence;
+
+function isChoice(symbol) {
+	return symbol === "PIK";
+}
+this.IsChoice = isChoice;
+
+function isConditional(symbol) {
+	return symbol === "IF";
+}
+this.IsConditional = isConditional;
+
+function isBox(symbol) {
+	return symbol === "BOX";
+}
+this.IsBox = isBox;
+
+function isFunctionDefinition(symbol) {
+	return symbol === "FN";
+}
+this.IsFunctionDefinition = isFunctionDefinition;
+
+// todo : nicer formatting for asignment to multiline lists?
 function serializeList(expression, indentDepth) {
-	var listType = expression.list[0].value; // todo : what if the first item is a list itself? (or it's empty)
+	var listType = null;
+	if (expression.list.length > 0 && expression.list[0].type === "symbol") {
+		listType = expression.list[0].value;
+	}
 
 	var out = "{";
 
-	if (listType === "->") {
-		out += serializeWrappedLines(expression.list, indentDepth);
+	if (isDialogExpression(listType)) {
+		out += serializeWrapped(expression.list, indentDepth);
 	}
-	else if (["SEQ", "CYC", "SHF"].indexOf(listType) != -1) {
-		out += serializeMultiLines(expression.list, indentDepth);
+	else if (isSequence(listType)) {
+		out += serializeMulti(expression.list, indentDepth);
 	}
-	else if (listType === "PIK") {
-		out += serializeAlternatingLines(expression.list, indentDepth);
+	else if (isChoice(listType)) {
+		out += serializeAlternating(expression.list, indentDepth);
 	}
-	else if (listType === "IF" || listType === "BOX") {
-		out += serializePairedLines(expression.list, indentDepth);
+	else if (isConditional(listType) || isBox(listType)) {
+		out += serializePaired(expression.list, indentDepth);
 	}
-	else if (listType === "FN") {
-		out += serializeMultiLines(expression.list, indentDepth, 1);
+	else if (isFunctionDefinition(listType)) {
+		out += serializeMulti(expression.list, indentDepth, 1);
 	}
 	else {
-		out += serializeSingleLine(expression.list, indentDepth);
+		out += serializeSingle(expression.list, indentDepth);
 	}
 
 	if (out.indexOf("\n") != -1) {
@@ -198,6 +245,26 @@ function serializeList(expression, indentDepth) {
 	return out;
 }
 
+function serializeAtom(value, type) {
+	var out = "";
+
+	if (type === "number") {
+		out = "" + value;
+	}
+	else if (type === "string") {
+		out = '"' + value + '"';
+	}
+	else if (type === "boolean") {
+		out = value ? "YES" : "NO";
+	}
+	else if (type === "symbol") {
+		out = value;
+	}
+
+	return out;
+}
+this.SerializeValue = serializeAtom;
+
 function serialize(expression, indentDepth) {
 	if (indentDepth === undefined || indentDepth === null) {
 		indentDepth = 0;
@@ -205,20 +272,11 @@ function serialize(expression, indentDepth) {
 
 	var out = "";
 
-	if (expression.type === "number") {
-		out = "" + expression.value;
-	}
-	else if (expression.type === "string") {
-		out = '"' + expression.value + '"';
-	}
-	else if (expression.type === "boolean") {
-		out = expression.value ? "YES" : "NO";
-	}
-	else if (expression.type === "symbol") {
-		out = expression.value;
-	}
-	else if (expression.type === "list") {
+	if (expression.type === "list") {
 		out = serializeList(expression, indentDepth);
+	}
+	else {
+		out = serializeAtom(expression.value, expression.type);
 	}
 
 	return out;
@@ -282,10 +340,7 @@ function parseAtom(token) {
 		};
 	}
 }
-
-// todo : hacky handling of strings here...
-this.ParseValue = function(valueStr) { return parseAtom(valueStr).value; }
-this.ValueToString = function(value) { return atomValueToString(value); }
+this.ParseValue = function(valueStr) { return parseAtom(valueStr).value; };
 
 function parse(tokens, list) {
 	if (list === undefined || list === null) {
@@ -727,41 +782,6 @@ function createLibrary(dialogBuffer, objectContext) {
 			onReturn(null);
 		},
 
-		/* math functions */
-		"IS": function(parameters, environment, onReturn) {
-			onReturn(parameters.length > 1 ? parameters[0] === parameters[1] : parameters[0] === true);
-		},
-		"GT": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] > parameters[1]);
-		},
-		"LT": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] < parameters[1]);
-		},
-		"GTE": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] >= parameters[1]);
-		},
-		"LTE": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] <= parameters[1]);
-		},
-		// TODO : should these allow multiple arguments?
-		// TODO : use math symbols for any of these? > < == * / + -
-		"MLT": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] * parameters[1]);
-		},
-		"DIV": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] / parameters[1]);
-		},
-		"ADD": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] + parameters[1]);
-		},
-		// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
-		"SUB": function(parameters, environment, onReturn) {
-			onReturn(parameters[0] - parameters[1]);
-		},
-		"NOT": function(parameters, environment, onReturn) {
-			onReturn(!parameters[0]);
-		},
-
 		// NEW FUNCTIONS (WIP)
 		"HOP": function(parameters, environment, onReturn) {
 			var result = false;
@@ -841,5 +861,44 @@ function createLibrary(dialogBuffer, objectContext) {
 
 	return library;
 }
+
+var mathLibrary = {
+	/* math functions */
+	"IS": function(parameters, environment, onReturn) {
+		onReturn(parameters.length > 1 ? parameters[0] === parameters[1] : parameters[0] === true);
+	},
+	"GT": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] > parameters[1]);
+	},
+	"LT": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] < parameters[1]);
+	},
+	"GTE": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] >= parameters[1]);
+	},
+	"LTE": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] <= parameters[1]);
+	},
+	// TODO : should these allow multiple arguments?
+	// TODO : use math symbols for any of these? > < == * / + -
+	"MLT": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] * parameters[1]);
+	},
+	"DIV": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] / parameters[1]);
+	},
+	"ADD": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] + parameters[1]);
+	},
+	// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
+	"SUB": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] - parameters[1]);
+	},
+	"NOT": function(parameters, environment, onReturn) {
+		onReturn(!parameters[0]);
+	},
+};
+
+this.IsMathExpression = function(symbol) { return symbol in mathLibrary; };
 
 } // ScriptNext
