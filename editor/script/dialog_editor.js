@@ -3,6 +3,10 @@ TODO dialog editor refactor:
 - start by getting functions working
 - need to support undescribed functions
 - rename this root tool class? rename file?
+- ideas
+	- remove word wrap in text area -- just do it in serialization
+	- try out WYSIWYG preview but only when you click away from the text boxes
+	- I can do a lot to combine and simplify this stuff -- look at the serialization code for ideas
 */
 
 function DialogTool() {
@@ -431,13 +435,53 @@ function DialogTool() {
 		}
 	}
 
+	function createListEditor(expression, parent) {
+		var listType = null;
+		if (expression.list.length > 0 && expression.list[0].type === "symbol") {
+			listType = expression.list[0].value;
+		}
+
+		var editor = null;
+
+		if (scriptNext.IsDialogExpression(listType)) {
+			editor = new BlockEditor(expression, parent);
+		}
+		else if (scriptNext.IsSequence(listType)) {
+			editor = new SequenceEditor(expression, parent);
+		}
+		else if (scriptNext.IsChoice(listType)) {
+			editor = new ChoiceEditor(expression, parent);
+		}
+		else if (scriptNext.IsConditional(listType)) {
+			editor = new ConditionalEditor(expression, parent);
+		}
+		else if (scriptNext.IsMathExpression(listType)) {
+			editor = new MathExpressionEditor(expression, parent);
+		}
+		else {
+			editor = new FunctionEditor(expression, parent);
+		}
+
+		return editor;
+	}
+
+	function createExpressionEditor(expression, parent) {
+		if (expression.type === "list") {
+			return createListEditor(expression, parent);
+		}
+		else {
+			// todo : actually support the ParameterEditor properly
+			return new FunctionEditor(expression, parent);
+		}
+	}
+
 	function DialogScriptEditor(dialogId) {
 		var listener = new EventListener(events);
 
 		var editorId = dialogScriptEditorUniqueIdCounter;
 		dialogScriptEditorUniqueIdCounter++;
 
-		var scriptRootNode, div, rootEditor;
+		var scriptRoot, div, rootEditor;
 		div = document.createElement("div");
 
 		var self = this;
@@ -447,11 +491,11 @@ function DialogTool() {
 
 		function RefreshEditorUI() {
 			div.innerHTML = "";
-			scriptRootNode = scriptNext.Compile(dialog[dialogId]);
+			scriptRoot = scriptNext.Compile(dialog[dialogId]);
 
-			console.log(">>> SERIALIZE >>> \n" + scriptNext.Serialize(scriptRootNode));
+			console.log(">>> SERIALIZE >>> \n" + scriptNext.Serialize(scriptRoot));
 
-			rootEditor = new BlockEditor(scriptRootNode, self);
+			rootEditor = createExpressionEditor(scriptRoot, self);
 
 			viewportDiv = document.createElement("div");
 			viewportDiv.classList.add("dialogContentViewport");
@@ -483,11 +527,11 @@ function DialogTool() {
 		}
 
 		this.GetNode = function() {
-			return scriptRootNode;
+			return scriptRoot;
 		}
 
 		function OnUpdate() {
-			// scriptInterpreter.DebugVisualizeScriptTree(scriptRootNode);
+			// scriptInterpreter.DebugVisualizeScriptTree(scriptRoot);
 
 			var dialogStr = rootEditor.Serialize();
 
@@ -536,6 +580,7 @@ function DialogTool() {
 			}
 		});
 
+		// TODO : remove these?
 		/* root level creation functions for the dialog editor top-bar UI */
 		this.AddDialog = function() {
 			var printFunc = scriptUtils.CreateEmptyPrintFunc();
@@ -648,40 +693,14 @@ function DialogTool() {
 			for (var i = 1; i < dialogList.list.length; i++) {
 				var expression = dialogList.list[i];
 
-				var symbol = null;
+				var listType = null;
 				if (expression.type === "list" && expression.list[0].type === "symbol") {
-					symbol = expression.list[0].value;
+					listType = expression.list[0].value;
 				}
 
-				if (expression.type === "list" && !scriptNext.IsInlineFunction(symbol)) {
+				if (expression.type === "list" && !scriptNext.IsInlineFunction(listType)) {
 					addText();
-
-					// todo : math and other special symbols
-					// todo : access the special symbols from script module?
-					if (scriptNext.IsSequence(symbol)) {
-						var editor = new SequenceEditor(expression, self);
-						childEditors.push(editor);
-					}
-					else if (scriptNext.IsConditional(symbol)) {
-						var editor = new ConditionalEditor(expression, self);
-						childEditors.push(editor);
-					}
-					else if (scriptNext.IsChoice(symbol)) {
-						var editor = new ChoiceEditor(expression, self);
-						childEditors.push(editor);
-					}
-					else if (scriptNext.IsDialogExpression(symbol)) {
-						var editor = new BlockEditor(expression, self);
-						childEditors.push(editor);
-					}
-					else if (scriptNext.IsMathExpression(symbol)) {
-						var editor = new MathExpressionEditor(expression, self);
-						childEditors.push(editor);
-					}
-					else {
-						var editor = new FunctionEditor(expression, self);
-						childEditors.push(editor);
-					}
+					childEditors.push(createExpressionEditor(expression, self));
 				}
 				else {
 					dialogExpressionList.push(expression);
@@ -1275,6 +1294,11 @@ function DialogTool() {
 			var customControls = orderControls.GetCustomControlsContainer();
 			customControls.appendChild(editExpressionButton);
 			customControls.appendChild(toggleParameterTypesButton);
+
+			var titleDiv = document.createElement("div");
+			titleDiv.classList.add("actionTitle");
+			titleDiv.innerText = "calculate math"; // TODO : is this right? localize
+			div.appendChild(titleDiv);
 		}
 
 		var expressionSpan = document.createElement("span");
@@ -1296,13 +1320,21 @@ function DialogTool() {
 
 		function AddOperatorControlRecursive(expression, isEditable) {
 			// left expression
-			if (expression.list[1].type === "list" && scriptNext.IsMathExpression(expression.list[1].value)) {
+			if (expression.list[1].type === "list" && scriptNext.IsMathExpression(expression.list[1].list[0].value)) {
+				var parenSpanL = document.createElement("span");
+				parenSpanL.innerText = "(";
+				expressionSpan.appendChild(parenSpanL);
+
 				AddOperatorControlRecursive(expression.list[1], isEditable);
+
+				var parenSpanR = document.createElement("span");
+				parenSpanR.innerText = ")";
+				expressionSpan.appendChild(parenSpanR);
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
 					["number", "string", "boolean", "symbol", "list"],
-					function() { 
+					function() {
 						return expression.list[1];
 					},
 					function(argExpression) {
@@ -1323,14 +1355,22 @@ function DialogTool() {
 			expressionSpan.appendChild(operatorEditor.GetElement());
 
 			// right expression
-			if (expression.list[2].type === "list" && scriptNext.IsMathExpression(expression.list[2].value)) {
-				AddOperatorControlRecursive(expression.list[2].right, isEditable);
+			if (expression.list[2].type === "list" && scriptNext.IsMathExpression(expression.list[2].list[0].value)) {
+				var parenSpanL = document.createElement("span");
+				parenSpanL.innerText = "(";
+				expressionSpan.appendChild(parenSpanL);
+
+				AddOperatorControlRecursive(expression.list[2], isEditable);
+
+				var parenSpanR = document.createElement("span");
+				parenSpanR.innerText = ")";
+				expressionSpan.appendChild(parenSpanR);
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
 					["number", "string", "boolean", "symbol", "list"],
 					function() {
-						return expression.list[2].right;
+						return expression.list[2];
 					},
 					function(argExpression) {
 						expression.list[2] = argExpression;
@@ -1405,9 +1445,9 @@ function DialogTool() {
 
 				for (var symbol in operatorMap) {
 					var operatorOption = document.createElement("option");
-					operatorOption.value = operatorMap[symbol];
-					operatorOption.innerText = symbol;
-					operatorOption.selected = operatorMap[symbol] === operatorSymbol;
+					operatorOption.value = symbol;
+					operatorOption.innerText = operatorMap[symbol];
+					operatorOption.selected = symbol === operatorSymbol;
 					operatorSelect.appendChild(operatorOption);
 				}
 
@@ -1682,11 +1722,8 @@ function DialogTool() {
 		orderLabel.innerText = "#)";
 		div.appendChild(orderLabel);
 
-		// todo : handle non-dialog options? share with block editor?
-		if (optionExpression.list[0].value === "->") {
-			var blockEditor = new BlockEditor(optionExpression, parentEditor);
-			div.appendChild(blockEditor.GetElement());			
-		}
+		var editor = createExpressionEditor(optionExpression, parentEditor);
+		div.appendChild(editor.GetElement());
 
 		this.GetElement = function() {
 			return div;
@@ -1706,11 +1743,11 @@ function DialogTool() {
 
 		// just pass these on
 		this.OnNodeEnter = function(event) {
-			blockEditor.OnNodeEnter(event);
+			editor.OnNodeEnter(event);
 		}
 
 		this.OnNodeExit = function(event) {
-			blockEditor.OnNodeExit(event);
+			editor.OnNodeExit(event);
 		}
 
 		AddSelectionBehavior(this);
@@ -1961,10 +1998,8 @@ function DialogTool() {
 
 		// result
 		var resultExpression = conditionPair.length >= 2 ? conditionPair[1] : conditionPair[0];
-		if (resultExpression.list[0].value === "->") { // todo : non dialog results!
-			var resultBlockEditor = new BlockEditor(resultExpression, this);
-			div.appendChild(resultBlockEditor.GetElement());
-		}
+		var resultEditor = createExpressionEditor(resultExpression, this);
+		div.appendChild(resultEditor.GetElement());
 
 		this.GetElement = function() {
 			return div;
@@ -1994,11 +2029,11 @@ function DialogTool() {
 
 		// just pass these on
 		this.OnNodeEnter = function(event) {
-			resultBlockEditor.OnNodeEnter(event);
+			resultEditor.OnNodeEnter(event);
 		}
 
 		this.OnNodeExit = function(event) {
-			resultBlockEditor.OnNodeExit(event);
+			resultEditor.OnNodeExit(event);
 		}
 
 		AddSelectionBehavior(
@@ -2168,20 +2203,16 @@ function DialogTool() {
 		div.appendChild(optionLabel);
 
 		// condition
-		if (choiceExpression.list[0].value === "->") { // todo : non dialog choices? or is that an error?
-			var choiceBlockEditor = new BlockEditor(choiceExpression, this);
-			div.appendChild(choiceBlockEditor.GetElement());
-		}
+		var choiceEditor = createExpressionEditor(choiceExpression, this);
+		div.appendChild(choiceEditor.GetElement());
 
 		var resultLabel = document.createElement("span");
 		resultLabel.innerText = "then do:"; // todo : localize
 		div.appendChild(resultLabel);
 
 		// result
-		if (resultExpression.list[0].value === "->") { // todo : non dialog results!
-			var resultBlockEditor = new BlockEditor(resultExpression, this);
-			div.appendChild(resultBlockEditor.GetElement());
-		}
+		var resultEditor = createExpressionEditor(resultExpression, this);
+		div.appendChild(resultEditor.GetElement());
 
 		this.GetElement = function() {
 			return div;
@@ -2767,6 +2798,8 @@ function DialogTool() {
 
 			span.innerHTML = "";
 
+			// todo : feels like I should be able to simplify this a lot so there isn't 
+			// a split between editable and non-editable...
 			if (isEditable) {
 				var parameterEditable = document.createElement("span");
 				parameterEditable.classList.add("parameterEditable");
@@ -2823,6 +2856,16 @@ function DialogTool() {
 						}
 					}
 				}
+				else if (type === "list" && scriptNext.IsMathExpression(curValue[0].value)) {
+					var inlineExpressionEditor = TryCreateExpressionEditor();
+					if (inlineExpressionEditor != null) {
+						parameterValue.appendChild(inlineExpressionEditor.GetElement());
+					}
+					else {
+						// just in case
+						parameterValue.innerText = "ERROR"; // todo : can this be handled better?
+					}
+				}
 				else if (type === "list") {
 					var inlineFunctionEditor = TryCreateFunctionEditor();
 					if (inlineFunctionEditor != null) {
@@ -2854,12 +2897,9 @@ function DialogTool() {
 
 		function TryCreateExpressionEditor() {
 			var inlineExpressionEditor = null;
-			var expressionNode = getArgFunc();
-			if (expressionNode.type === "code_block" && 
-				(expressionNode.children[0].type === "operator" || 
-					expressionNode.children[0].type === "literal" ||
-					expressionNode.children[0].type === "symbol")) {
-				inlineExpressionEditor = new MathExpressionEditor(expressionNode, self, true);
+			var mathExpression = getArgFunc();
+			if (mathExpression.type === "list") { // do more testing?
+				inlineExpressionEditor = new MathExpressionEditor(mathExpression, self, true);
 			}
 			return inlineExpressionEditor;
 		}
@@ -2998,7 +3038,19 @@ function DialogTool() {
 					onChange(argNode);
 				}
 			}
-			else if (type === "list") {
+			else if (type === "list" && scriptNext.IsMathExpression(value[0].value)) { // todo : handle empty list etc
+				parameterInput = document.createElement("span");
+				var inlineExpressionEditor = TryCreateExpressionEditor();
+				if (inlineExpressionEditor != null) {
+					inlineExpressionEditor.Select();
+					parameterInput.appendChild(inlineExpressionEditor.GetElement());
+				}
+				else {
+					parameterInput.classList.add("parameterUneditable");
+					parameterInput.innerText = value;
+				}
+			}
+			else if (type === "list") { // todo : there are other possibilities for lists too... choices, seq, etc
 				parameterInput = document.createElement("span");
 				var inlineFunctionEditor = TryCreateFunctionEditor();
 				if (inlineFunctionEditor != null) {
@@ -3007,18 +3059,6 @@ function DialogTool() {
 				}
 				else {
 					// just in case
-					parameterInput.classList.add("parameterUneditable");
-					parameterInput.innerText = value;
-				}
-			}
-			else if (type === "list") {
-				parameterInput = document.createElement("span");
-				var inlineExpressionEditor = TryCreateExpressionEditor();
-				if (inlineExpressionEditor != null) {
-					inlineExpressionEditor.Select();
-					parameterInput.appendChild(inlineExpressionEditor.GetElement());
-				}
-				else {
 					parameterInput.classList.add("parameterUneditable");
 					parameterInput.innerText = value;
 				}
@@ -3033,39 +3073,41 @@ function DialogTool() {
 				return scriptNext.SerializeValue(arg.value, arg.type);
 			}
 			else if (arg.type === "list") {
-				return "LIST"; // arg.list; // todo : re-implement this
+				return arg.list; // TODO : is this what I want?
 			}
 
 			return null;
 		}
 
-		function DoesEditorTypeMatchNode(type, node) {
-			if (type === "boolean" && node.value === null) {
+		function DoesEditorTypeMatchExpression(type, exp) {
+			console.log(exp);
+
+			if (type === "boolean" && exp.value === null) {
 				// todo : keep this catch all for weird cases?
 				return true;
 			}
-			else if (type === "number" && node.type === "number" && (typeof node.value) === "number") {
+			else if (type === "number" && exp.type === "number" && (typeof exp.value) === "number") {
 				return true;
 			}
-			else if (type === "string" && node.type === "string" && (typeof node.value) === "string") {
+			else if (type === "string" && exp.type === "string" && (typeof exp.value) === "string") {
 				return true;
 			}
-			else if (type === "boolean" && node.type === "boolean" && (typeof node.value) === "boolean") {
+			else if (type === "boolean" && exp.type === "boolean" && (typeof exp.value) === "boolean") {
 				return true;
 			}
-			else if (type === "symbol" && node.type === "symbol") {
+			else if (type === "symbol" && exp.type === "symbol") {
 				return true;
 			}
-			else if (type === "room" && node.type === "string" && (typeof node.value) === "string" && node.value in room) {
+			else if (type === "room" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in room) {
 				return true;
 			}
-			else if (type === "item" && node.type === "string" && (typeof node.value) === "string" && node.value in item) {
+			else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in item) {
 				return true;
 			}
-			else if (type === "transition" && node.type === "string" && (typeof node.value) === "string") {
+			else if (type === "transition" && exp.type === "string" && (typeof exp.value) === "string") {
 				return true;
 			}
-			else if (type === "list" && node.type === "list") {
+			else if (type === "list" && exp.type === "list") {
 				return true;
 			}
 
@@ -3075,7 +3117,7 @@ function DialogTool() {
 		// edit parameter with the first matching type this parameter supports
 		var curType = parameterTypes[0];
 		for (var i = 0; i < parameterTypes.length; i++) {
-			if (DoesEditorTypeMatchNode(parameterTypes[i], getArgFunc())) {
+			if (DoesEditorTypeMatchExpression(parameterTypes[i], getArgFunc())) {
 				curType = parameterTypes[i];
 				break;
 			}

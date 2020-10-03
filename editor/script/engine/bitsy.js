@@ -4,21 +4,25 @@ TODO general
 
 TODO script_next
 - redo graphical editor
+- ideas
+	- put text format controls on top of text box
+	- make text box nicer: all black, bitsy font, preview/WYSIWYG/syntax highlighting when not selected, full bleed textarea
 
 TODO maps
 X transitions?
-- other properties for maps?
 - is it ok to make room "0" invalid
 	- how do we handle back compat?
 - what should the low id be for maps? 0? 1?
 - should avatar be able to enter neighboring room when moved via script???
 - what should happen if you immediately land on an exit, ending, or item when entering a new room via the map??
-- tool to edit maps
 
 TODO new exits & endings (& portals?)
 - new locks
 - fix bug with ending dialog (doesn't start at correct time)
 - prototype portals?
+- instead of portals: exits that go to exits
+	- OUT ROOMID EXITID
+	- that way when the dest exit moves, the exit still points at the right location
 - figure out back compat:
 	- how do we deal with overlapping ids (END for dialog vs sprite) -- new one? detection? use SPR + TYP for everything?
 	- can differentiate via version number (before or after 8.0)
