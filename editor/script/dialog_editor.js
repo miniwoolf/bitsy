@@ -435,7 +435,7 @@ function DialogTool() {
 		}
 	}
 
-	function createListEditor(expression, parent) {
+	function createListEditor(expression, parent, isInline) {
 		var listType = null;
 		if (expression.list.length > 0 && expression.list[0].type === "symbol") {
 			listType = expression.list[0].value;
@@ -459,19 +459,41 @@ function DialogTool() {
 			editor = new MathExpressionEditor(expression, parent);
 		}
 		else {
-			editor = new FunctionEditor(expression, parent);
+			// todo : can anything else be inline??
+			editor = new FunctionEditor(expression, parent, isInline);
 		}
 
 		return editor;
 	}
 
-	function createExpressionEditor(expression, parent) {
+	// todo : name? atom? value?
+	// todo : handle special editors?
+	function createLiteralEditor(expression, parent, isInline) {
+		if (expression.type === "number") {
+			return new NumberEditor(expression, parent, isInline);
+		}
+		else if (expression.type === "string") {
+			return new StringEditor(expression, parent, isInline);
+		}
+		else if (expression.type === "boolean") {
+			return new BooleanEditor(expression, parent, isInline);
+		}
+		else if (expression.type === "symbol") {
+			return new SymbolEditor(expression, parent, isInline);
+		}
+	}
+
+	// todo : allow inline?
+	function createExpressionEditor(expression, parent, isInline) {
+		if (isInline === undefined || isInline === null) {
+			isInline = false;
+		}
+
 		if (expression.type === "list") {
-			return createListEditor(expression, parent);
+			return createListEditor(expression, parent, isInline);
 		}
 		else {
-			// todo : actually support the ParameterEditor properly
-			return new FunctionEditor(expression, parent);
+			return createLiteralEditor(expression, parent, isInline);
 		}
 	}
 
@@ -1428,6 +1450,7 @@ function DialogTool() {
 		"MLT" : "*",
 	};
 
+	// todo : rename MathOperatorEditor
 	function ExpressionOperatorEditor(expression, parentEditor, isEditable) {
 		var operatorSpan = document.createElement("span");
 		operatorSpan.style.marginLeft = "5px";
@@ -2598,15 +2621,11 @@ function DialogTool() {
 				spaceSpan.innerText = inputSeperator;
 				descriptionDiv.appendChild(spaceSpan);
 
-				var parameterEditor = new ParameterEditor(
-					["number", "string", "boolean", "symbol", "list"],
-					createGetArgFunc(expression, i),
-					createSetArgFunc(expression, i, self),
-					isEditable,
-					!isInline && editParameterTypes,
-					function(expressionString, onAcceptHandler) {
-						parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
-					});
+				// todo : this is a test
+				var parameterEditor = createExpressionEditor(expression.list[i + 1], this, true);
+				if (isEditable && parameterEditor.Select) {
+					parameterEditor.Select();
+				}
 
 				curParameterEditors.push(parameterEditor);
 				descriptionDiv.appendChild(parameterEditor.GetElement());
@@ -2688,6 +2707,178 @@ function DialogTool() {
 				setTimeout(function() { div.classList.remove("executingLeave") }, 1100);
 			}
 		};
+	}
+
+	function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateInput) {
+		var div = isInline ? document.createElement("span") : document.createElement("div");
+
+		if (!isInline) {
+			div.classList.add("actionEditor");
+		}
+
+		var orderControls = null;
+		if (!isInline) {
+			orderControls = new OrderControls(this, parentEditor);
+			div.appendChild(orderControls.GetElement());
+		}
+
+		if (!isInline) {
+			var titleDiv = document.createElement("div");
+			titleDiv.classList.add("actionTitle");
+			titleDiv.innerText = valueName;
+			div.appendChild(titleDiv);
+		}
+
+		var span = document.createElement("span");
+		span.classList.add("parameterEditor");
+		div.appendChild(span);
+
+		function CreateValueInput(isEditable) {
+			span.innerHTML = "";
+
+			if (isEditable) {
+				var input = onCreateInput(); // todo : any params?
+				span.appendChild(input);
+			}
+			else {
+				var valueSpan = document.createElement("span");
+				valueSpan.classList.add("parameterUneditable");
+				valueSpan.classList.add(GetColorClassForParameterType(expression.type));
+				valueSpan.innerText = scriptNext.SerializeValue(expression.value, expression.type);
+				
+				span.appendChild(valueSpan)
+			}
+		}
+
+		this.GetElement = function() {
+			return div;
+		}
+
+		AddSelectionBehavior(
+			this,
+			function() { CreateValueInput(true); },
+			function() { CreateValueInput(false); },
+			isInline);
+
+		CreateValueInput(false);
+	}
+
+	// todo : how do I want to handle inline stuff now?
+	function NumberEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"number", // todo : localize
+				function() {
+					var input = document.createElement("input");
+					input.type = "number";
+					input.min = 0;
+					input.step = "any";
+					input.value = expression.value;
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				}
+			));
+	}
+
+	// todo: do I want any of these names to differ from the script type? text or variable for example?
+	function StringEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"text", // todo : localize
+				function() {
+					var input = document.createElement("input");
+					input.type = "string";
+					input.value = expression.value;
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				}
+			));
+	}
+
+	function BooleanEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"boolean", // todo : localize // todo : friendlier name?
+				function() {
+					var input = document.createElement("select");
+
+					var boolTrueOption = document.createElement("option");
+					boolTrueOption.value = "YES";
+					boolTrueOption.innerText = "YES"; // TODO : localize
+					boolTrueOption.selected = expression.value;
+					input.appendChild(boolTrueOption);
+
+					var boolFalseOption = document.createElement("option");
+					boolFalseOption.value = "NO";
+					boolFalseOption.innerText = "NO"; // TODO : localize
+					boolFalseOption.selected = !expression.value;
+					input.appendChild(boolFalseOption);
+
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				}
+			));
+	}
+
+	function SymbolEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"symbol", // todo : localize // todo : name variable instead??
+				function() {
+					var input = document.createElement("span");
+
+					var variableInput = document.createElement("input");
+					variableInput.type = "string";
+					variableInput.setAttribute("list", "variable_datalist");
+					variableInput.value = expression.value;
+					input.appendChild(variableInput);
+					
+					// todo : make this more robust?
+					var variableDatalist = document.createElement("datalist");
+					variableDatalist.id = "variable_datalist"; // will duplicates break this?
+					for (var name in variable) {
+						var variableOption = document.createElement("option");
+						variableOption.value = name;
+						variableDatalist.appendChild(variableOption);
+					}
+					input.appendChild(variableDatalist);
+
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				}
+			));
 	}
 
 	function CreateDefaultArgNode(type) {
@@ -3141,6 +3332,7 @@ function DialogTool() {
 		}
 	}
 
+	// todo : put in shared location?
 	function GetItemNameFromId(id) {
 		if (!item[id]) {
 			return "";
@@ -3149,6 +3341,7 @@ function DialogTool() {
 		return (item[id].name != null ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
 	}
 
+	// todo : put in shared location?
 	function GetRoomNameFromId(id) {
 		if (!room[id]) {
 			return "";
@@ -3274,6 +3467,7 @@ function DialogTool() {
 	}
 
 	/* EXPRESSION BUILDER
+		TODO : rename to MathBuilder? MathExpressionBuilder?
 		TODO :
 		- move into its own file?
 		- name vs expression editor? kind of confusing

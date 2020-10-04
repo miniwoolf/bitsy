@@ -723,7 +723,8 @@ function createLibrary(dialogBuffer, objectContext) {
 			// todo : is this the right implementation of say?
 			// todo : hacky to force into a string with concatenation?
 			// todo : nicer way to print objects
-			dialogBuffer.AddText(atomValueToString(parameters[0]));
+			// todo : new way to convert bools etc to string
+			dialogBuffer.AddText("" + parameters[0]);
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
 		"BR": function(parameters, environment, onReturn) {
