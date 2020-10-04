@@ -157,7 +157,6 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 function DialogExpressionEditor(dialogExpression, parentEditor) {
 	var div = document.createElement("div");
-	div.classList.add("actionEditor");
 
 	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
 	div.appendChild(blockEditor.GetElement());
