@@ -467,9 +467,18 @@ function DialogTool() {
 	}
 
 	// todo : name? atom? value?
-	// todo : handle special editors?
-	function createLiteralEditor(expression, parent, isInline) {
-		if (expression.type === "number") {
+	// todo : should I validate the special editors better here?
+	function createLiteralEditor(expression, parent, isInline, specialEditorType) {
+		if (specialEditorType && specialEditorType === "room") {
+			return new RoomIdEditor(expression, parent, isInline);
+		}
+		else if (specialEditorType && specialEditorType === "item") {
+			return new ItemIdEditor(expression, parent, isInline);
+		}
+		else if (specialEditorType && specialEditorType === "transition") {
+			return new TransitionIdEditor(expression, parent, isInline);
+		}
+		else if (expression.type === "number") {
 			return new NumberEditor(expression, parent, isInline);
 		}
 		else if (expression.type === "string") {
@@ -484,7 +493,7 @@ function DialogTool() {
 	}
 
 	// todo : allow inline?
-	function createExpressionEditor(expression, parent, isInline) {
+	function createExpressionEditor(expression, parent, isInline, specialEditorType) {
 		if (isInline === undefined || isInline === null) {
 			isInline = false;
 		}
@@ -493,7 +502,7 @@ function DialogTool() {
 			return createListEditor(expression, parent, isInline);
 		}
 		else {
-			return createLiteralEditor(expression, parent, isInline);
+			return createLiteralEditor(expression, parent, isInline, specialEditorType);
 		}
 	}
 
@@ -1264,6 +1273,7 @@ function DialogTool() {
 		};
 	}
 
+	// todo : what if there are math expressions that don't have two input params?
 	function MathExpressionEditor(expression, parentEditor, isInline) {
 		if (isInline === undefined || isInline === null) {
 			isInline = false;
@@ -1355,14 +1365,10 @@ function DialogTool() {
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
+					expression,
+					1,
+					self, // todo -- should be parent editor instead?
 					["number", "string", "boolean", "symbol", "list"],
-					function() {
-						return expression.list[1];
-					},
-					function(argExpression) {
-						expression.list[1] = argExpression;
-						parentEditor.NotifyUpdate();
-					},
 					isEditable,
 					editParameterTypes,
 					function(expressionString, onAcceptHandler) {
@@ -1390,14 +1396,10 @@ function DialogTool() {
 			}
 			else {
 				var parameterEditor = new ParameterEditor(
+					expression,
+					2,
+					self, // todo -- should be parent editor instead?
 					["number", "string", "boolean", "symbol", "list"],
-					function() {
-						return expression.list[2];
-					},
-					function(argExpression) {
-						expression.list[2] = argExpression;
-						parentEditor.NotifyUpdate();
-					},
 					isEditable,
 					editParameterTypes,
 					function(expressionString, onAcceptHandler) {
@@ -2583,9 +2585,10 @@ function DialogTool() {
 
 					if (fnParamLength > parameterInfo.index) {
 						var parameterEditor = new ParameterEditor(
+							expression,
+							parameterInfo.index + 1,
+							self,
 							parameterInfo.types.concat(["list"]),
-							createGetArgFunc(expression, parameterInfo.index),
-							createSetArgFunc(expression, parameterInfo.index, self),
 							isEditable && !(parameterInfo.doNotEdit),
 							!isInline && editParameterTypes,
 							function(expressionString, onAcceptHandler) {
@@ -2621,11 +2624,16 @@ function DialogTool() {
 				spaceSpan.innerText = inputSeperator;
 				descriptionDiv.appendChild(spaceSpan);
 
-				// todo : this is a test
-				var parameterEditor = createExpressionEditor(expression.list[i + 1], this, true);
-				if (isEditable && parameterEditor.Select) {
-					parameterEditor.Select();
-				}
+				var parameterEditor = new ParameterEditor(
+					expression,
+					i + 1,
+					self, // or should this be parent editor?
+					["number", "text", "boolean", "symbol", "list"],
+					isEditable,
+					!isInline && editParameterTypes,
+					function(expressionString, onAcceptHandler) {
+						parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+					});
 
 				curParameterEditors.push(parameterEditor);
 				descriptionDiv.appendChild(parameterEditor.GetElement());
@@ -2709,7 +2717,7 @@ function DialogTool() {
 		};
 	}
 
-	function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateInput) {
+	function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateInput, getDisplayValue) {
 		var div = isInline ? document.createElement("span") : document.createElement("div");
 
 		if (!isInline) {
@@ -2744,7 +2752,7 @@ function DialogTool() {
 				var valueSpan = document.createElement("span");
 				valueSpan.classList.add("parameterUneditable");
 				valueSpan.classList.add(GetColorClassForParameterType(expression.type));
-				valueSpan.innerText = scriptNext.SerializeValue(expression.value, expression.type);
+				valueSpan.innerText = getDisplayValue ? getDisplayValue() : scriptNext.SerializeValue(expression.value, expression.type);
 				
 				span.appendChild(valueSpan)
 			}
@@ -2881,6 +2889,192 @@ function DialogTool() {
 			));
 	}
 
+
+	// todo : put in shared location?
+	function GetItemNameFromId(id) {
+		if (!item[id]) {
+			return "";
+		}
+
+		return (item[id].name != null ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
+	}
+
+	// todo : put in shared location?
+	function GetRoomNameFromId(id) {
+		if (!room[id]) {
+			return "";
+		}
+
+		return (room[id].name != null ? room[id].name : localization.GetStringOrFallback("room_label", "room") + " " + id);
+	}
+
+	function RoomIdEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"room select", // todo : localize
+				function() {
+					var input = document.createElement("select");
+					input.title = "choose room";
+
+					for (id in room) {
+						var roomOption = document.createElement("option");
+						roomOption.value = id;
+						roomOption.innerText = GetRoomNameFromId(id);
+						roomOption.selected = id === expression.value;
+						input.appendChild(roomOption);
+					}
+
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				},
+				function() {
+					return GetRoomNameFromId(expression.value);
+				},
+			));
+	}
+
+	// for rendering item thumbnails
+	var thumbnailRenderer = CreateDrawingThumbnailRenderer();
+
+	// todo : reimplement thumbnail rendering
+	function ItemIdEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"item select", // todo : localize
+				function() {
+					var input = document.createElement("select");
+					input.title = "choose item";
+
+					for (id in item) {
+						var itemOption = document.createElement("option");
+						itemOption.value = id;
+						itemOption.innerText = GetItemNameFromId(id);
+						itemOption.selected = id === expression.value;
+						input.appendChild(itemOption);
+					}
+
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				},
+				function() {
+					return GetItemNameFromId(expression.value);
+				},
+			));
+
+		// todo : use this somehow
+		// // todo : is this the right place for this? shouldn't I put it inside the item id editor?
+		// if (curType === "item") {
+		// 	var itemId = expression.list[parameterIndex].value;
+
+		// 	// only try to render the item if it actually exists!
+		// 	if (item.hasOwnProperty(itemId)) {
+		// 		var itemThumbnail = document.createElement("img");
+		// 		span.appendChild(itemThumbnail);
+		// 		itemThumbnail.id = "param_item_" + itemId;
+		// 		itemThumbnail.style.width = "16px";
+		// 		itemThumbnail.style.marginLeft = "4px";
+		// 		thumbnailRenderer.Render(itemId, function(uri) { itemThumbnail.src = uri; }, { isAnimated: false });
+		// 	}
+		// }
+	}
+
+	// TODO : put in shared location?
+	var transitionTypes = [
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_fade_w", "fade (white)"); },
+			id: "fade_w",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_fade_b", "fade (black)"); },
+			id: "fade_b",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_wave", "wave"); },
+			id: "wave",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_tunnel", "tunnel"); },
+			id: "tunnel",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_slide_u", "slide up"); },
+			id: "slide_u",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_slide_d", "slide down"); },
+			id: "slide_d",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_slide_l", "slide left"); },
+			id: "slide_l",
+		},
+		{
+			GetName: function() { return localization.GetStringOrFallback("transition_slide_r", "slide right"); },
+			id: "slide_r",
+		},
+	];
+
+	function TransitionIdEditor(expression, parentEditor, isInline) {
+		Object.assign(
+			this,
+			new LiteralEditor(
+				expression,
+				parentEditor,
+				isInline,
+				"transition select", // todo : localize
+				function() {
+					var input = document.createElement("select");
+					input.title = "select transition effect";
+
+					for (var i = 0; i < transitionTypes.length; i++) {
+						var id = transitionTypes[i].id;
+						var transitionOption = document.createElement("option");
+						transitionOption.value = id;
+						transitionOption.innerText = transitionTypes[i].GetName();
+						transitionOption.selected = id === expression.value;
+						input.appendChild(transitionOption);
+					}
+
+					input.onchange = function(event) {
+						expression.value = event.target.value;
+						// todo : notify parent!
+					}
+
+					return input;
+				},
+				function() {
+					var name = "";
+
+					// TODO : kind of using the loop in a weird way
+					for (var i = 0; i < transitionTypes.length; i++) {
+						var id = transitionTypes[i].id;
+						if (id === expression.value) {
+							name = transitionTypes[i].GetName();
+						}
+					}
+
+					return name;
+				},
+			));		
+	}
+
+	// todo : remove? rename?
 	function CreateDefaultArgNode(type) {
 		var argNode;
 		if (type === "number") {
@@ -2925,174 +3119,43 @@ function DialogTool() {
 		else if (type === "symbol") {
 			return "goldColor";
 		}
-		else if (type === "room") {
-			return "greenColor";
-		}
-		else if (type === "item") {
-			return "greenColor";
-		}
-		else if (type === "transition") {
-			return "greenColor";
-		}
 	}
 
-	// for rendering item thumbnails
-	var thumbnailRenderer = CreateDrawingThumbnailRenderer();
-
-	// TODO : put in shared location?
-	var transitionTypes = [
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_fade_w", "fade (white)"); },
-			id: "fade_w",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_fade_b", "fade (black)"); },
-			id: "fade_b",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_wave", "wave"); },
-			id: "wave",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_tunnel", "tunnel"); },
-			id: "tunnel",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_slide_u", "slide up"); },
-			id: "slide_u",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_slide_d", "slide down"); },
-			id: "slide_d",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_slide_l", "slide left"); },
-			id: "slide_l",
-		},
-		{
-			GetName: function() { return localization.GetStringOrFallback("transition_slide_r", "slide right"); },
-			id: "slide_r",
-		},
-	];
-
-	function ParameterEditor(parameterTypes, getArgFunc, setArgFunc, isEditable, isTypeEditable, openExpressionBuilderFunc) {
+	function ParameterEditor(expression, parameterIndex, parentEditor, parameterTypes, isEditable, isTypeEditable, openExpressionBuilderFunc) {
 		var self = this;
 
 		var curType;
 
 		var span = document.createElement("span");
-		span.classList.add("parameterEditor");
 
 		function UpdateEditor(type) {
 			curType = type;
-			var curValue = GetValue();
 
 			span.innerHTML = "";
 
-			// todo : feels like I should be able to simplify this a lot so there isn't 
-			// a split between editable and non-editable...
-			if (isEditable) {
-				var parameterEditable = document.createElement("span");
-				parameterEditable.classList.add("parameterEditable");
-
-				if (isTypeEditable) {
-					var typeSelect = document.createElement("select");
-					parameterEditable.appendChild(typeSelect);
-					for (var i = 0; i < parameterTypes.length; i++) {
-						var typeOption = document.createElement("option");
-						typeOption.value = parameterTypes[i];
-						typeOption.innerText = parameterTypes[i]; // TODO : localize
-						typeOption.selected = curType === parameterTypes[i];
-						typeSelect.appendChild(typeOption);
-					}
-
-					typeSelect.onchange = function(event) {
-						ChangeEditorType(event.target.value);
-					}
+			if (isEditable && isTypeEditable) {
+				var typeSelect = document.createElement("select");
+				span.appendChild(typeSelect);
+				for (var i = 0; i < parameterTypes.length; i++) {
+					var typeOption = document.createElement("option");
+					typeOption.value = parameterTypes[i];
+					typeOption.innerText = parameterTypes[i]; // TODO : localize
+					typeOption.selected = curType === parameterTypes[i];
+					typeSelect.appendChild(typeOption);
 				}
 
-				var parameterInput = CreateInput(curType, curValue, setArgFunc);
-				parameterEditable.appendChild(parameterInput);
-
-				span.appendChild(parameterEditable);
-			}
-			else {
-				var parameterValue = document.createElement("span");
-				parameterValue.classList.add("parameterUneditable");
-				parameterValue.classList.add(GetColorClassForParameterType(type));
-				span.appendChild(parameterValue);
-
-				if (type === "room") {
-					parameterValue.innerText = GetRoomNameFromId(curValue);
-				}
-				else if (type === "item") {
-					parameterValue.innerText = GetItemNameFromId(curValue);
-
-					// only try to render the item if it actually exists!
-					if (item.hasOwnProperty(curValue)) {
-						var itemThumbnail = document.createElement("img");
-						span.appendChild(itemThumbnail);
-						itemThumbnail.id = "param_item_" + curValue;
-						itemThumbnail.style.width = "16px";
-						itemThumbnail.style.marginLeft = "4px";
-						thumbnailRenderer.Render(curValue, function(uri) { itemThumbnail.src = uri; }, { isAnimated: false });
-					}
-				}
-				else if (type === "transition") {
-					// TODO : kind of using the loop in a weird way
-					for (var i = 0; i < transitionTypes.length; i++) {
-						var id = transitionTypes[i].id;
-						if (id === curValue) {
-							parameterValue.innerText = transitionTypes[i].GetName();
-						}
-					}
-				}
-				else if (type === "list" && scriptNext.IsMathExpression(curValue[0].value)) {
-					var inlineExpressionEditor = TryCreateExpressionEditor();
-					if (inlineExpressionEditor != null) {
-						parameterValue.appendChild(inlineExpressionEditor.GetElement());
-					}
-					else {
-						// just in case
-						parameterValue.innerText = "ERROR"; // todo : can this be handled better?
-					}
-				}
-				else if (type === "list") {
-					var inlineFunctionEditor = TryCreateFunctionEditor();
-					if (inlineFunctionEditor != null) {
-						parameterValue.appendChild(inlineFunctionEditor.GetElement());
-					}
-					else {
-						// just in case
-						parameterValue.innerText = "ERROR"; // todo : can this be handled better?
-					}
-				}
-				// todo : handle lists for special forms, and for math expressions
-				else if (type === "string") {
-					parameterValue.innerText = '"' + curValue + '"';
-				}
-				else {
-					parameterValue.innerText = curValue;
+				typeSelect.onchange = function(event) {
+					ChangeEditorType(event.target.value);
 				}
 			}
-		}
 
-		function TryCreateFunctionEditor() {
-			var inlineFunctionEditor = null;
-			var funcExpression = getArgFunc();
-			if (funcExpression.type === "list") {
-				inlineFunctionEditor = new FunctionEditor(getArgFunc(), self, true);
-			}
-			return inlineFunctionEditor;
-		}
+			var editor = createExpressionEditor(expression.list[parameterIndex], parentEditor, true, curType);
 
-		function TryCreateExpressionEditor() {
-			var inlineExpressionEditor = null;
-			var mathExpression = getArgFunc();
-			if (mathExpression.type === "list") { // do more testing?
-				inlineExpressionEditor = new MathExpressionEditor(mathExpression, self, true);
+			if (isEditable && editor.Select) {
+				editor.Select();
 			}
-			return inlineExpressionEditor;
+
+			span.appendChild(editor.GetElement());
 		}
 
 		function ChangeEditorType(type) {
@@ -3101,178 +3164,10 @@ function DialogTool() {
 		}
 
 		function SetArgToDefault(type) {
-			setArgFunc(CreateDefaultArgNode(type));
-		}
-
-		function CreateInput(type, value, onChange) {
-			var parameterInput;
-
-			if (type === "number") {
-				parameterInput = document.createElement("input");
-				parameterInput.type = "number";
-				parameterInput.min = 0;
-				parameterInput.step = "any";
-				parameterInput.value = value;
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "string") {
-				parameterInput = document.createElement("input");
-				parameterInput.type = "string";
-				parameterInput.value = value;
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateStringLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "boolean") {
-				parameterInput = document.createElement("select");
-
-				var boolTrueOption = document.createElement("option");
-				boolTrueOption.value = "YES";
-				boolTrueOption.innerText = "YES"; // TODO : localize
-				boolTrueOption.selected = value;
-				parameterInput.appendChild(boolTrueOption);
-
-				var boolFalseOption = document.createElement("option");
-				boolFalseOption.value = "NO";
-				boolFalseOption.innerText = "NO"; // TODO : localize
-				boolFalseOption.selected = !value;
-				parameterInput.appendChild(boolFalseOption);
-
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "symbol") {
-				parameterInput = document.createElement("span");
-
-				var variableInput = document.createElement("input");
-				variableInput.type = "string";
-				variableInput.setAttribute("list", "variable_datalist");
-				variableInput.value = value;
-				parameterInput.appendChild(variableInput);
-				
-				var variableDatalist = document.createElement("datalist");
-				variableDatalist.id = "variable_datalist"; // will duplicates break this?
-				for (var name in variable) {
-					var variableOption = document.createElement("option");
-					variableOption.value = name;
-					variableDatalist.appendChild(variableOption);
-				}
-				parameterInput.appendChild(variableDatalist);
-
-				variableInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateVariableNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "room") {
-				parameterInput = document.createElement("select");
-				parameterInput.title = "choose room";
-
-				for (id in room) {
-					var roomOption = document.createElement("option");
-					roomOption.value = id;
-					roomOption.innerText = GetRoomNameFromId(id);
-					roomOption.selected = id === value;
-					parameterInput.appendChild(roomOption);
-				}
-
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateStringLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "item") {
-				parameterInput = document.createElement("select");
-				parameterInput.title = "choose item";
-
-				for (id in item) {
-					var itemOption = document.createElement("option");
-					itemOption.value = id;
-					itemOption.innerText = GetItemNameFromId(id);
-					itemOption.selected = id === value;
-					parameterInput.appendChild(itemOption);
-				}
-
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateStringLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "transition") {
-				parameterInput = document.createElement("select");
-				parameterInput.title = "select transition effect";
-
-				for (var i = 0; i < transitionTypes.length; i++) {
-					var id = transitionTypes[i].id;
-					var transitionOption = document.createElement("option");
-					transitionOption.value = id;
-					transitionOption.innerText = transitionTypes[i].GetName();
-					transitionOption.selected = id === value;
-					parameterInput.appendChild(transitionOption);
-				}
-
-				parameterInput.onchange = function(event) {
-					var val = event.target.value;
-					var argNode = scriptUtils.CreateStringLiteralNode(val);
-					onChange(argNode);
-				}
-			}
-			else if (type === "list" && scriptNext.IsMathExpression(value[0].value)) { // todo : handle empty list etc
-				parameterInput = document.createElement("span");
-				var inlineExpressionEditor = TryCreateExpressionEditor();
-				if (inlineExpressionEditor != null) {
-					inlineExpressionEditor.Select();
-					parameterInput.appendChild(inlineExpressionEditor.GetElement());
-				}
-				else {
-					parameterInput.classList.add("parameterUneditable");
-					parameterInput.innerText = value;
-				}
-			}
-			else if (type === "list") { // todo : there are other possibilities for lists too... choices, seq, etc
-				parameterInput = document.createElement("span");
-				var inlineFunctionEditor = TryCreateFunctionEditor();
-				if (inlineFunctionEditor != null) {
-					inlineFunctionEditor.Select();
-					parameterInput.appendChild(inlineFunctionEditor.GetElement());
-				}
-				else {
-					// just in case
-					parameterInput.classList.add("parameterUneditable");
-					parameterInput.innerText = value;
-				}
-			}
-
-			return parameterInput;
-		}
-
-		function GetValue() {
-			var arg = getArgFunc();
-			if (arg.type === "number" || arg.type === "string" || arg.type === "boolean" || arg.type === "symbol") {
-				return scriptNext.SerializeValue(arg.value, arg.type);
-			}
-			else if (arg.type === "list") {
-				return arg.list; // TODO : is this what I want?
-			}
-
-			return null;
+			expression.list[parameterIndex] = CreateDefaultArgNode(type);
 		}
 
 		function DoesEditorTypeMatchExpression(type, exp) {
-			console.log(exp);
-
 			if (type === "boolean" && exp.value === null) {
 				// todo : keep this catch all for weird cases?
 				return true;
@@ -3308,7 +3203,7 @@ function DialogTool() {
 		// edit parameter with the first matching type this parameter supports
 		var curType = parameterTypes[0];
 		for (var i = 0; i < parameterTypes.length; i++) {
-			if (DoesEditorTypeMatchExpression(parameterTypes[i], getArgFunc())) {
+			if (DoesEditorTypeMatchExpression(parameterTypes[i], expression.list[parameterIndex])) {
 				curType = parameterTypes[i];
 				break;
 			}
@@ -3322,7 +3217,7 @@ function DialogTool() {
 
 		this.NotifyUpdate = function() {
 			// hack to force an update
-			setArgFunc(getArgFunc());
+			// TODO : re-implement??
 		}
 
 		this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {
@@ -3330,24 +3225,6 @@ function DialogTool() {
 				openExpressionBuilderFunc(expressionString, onAcceptHandler);
 			}
 		}
-	}
-
-	// todo : put in shared location?
-	function GetItemNameFromId(id) {
-		if (!item[id]) {
-			return "";
-		}
-
-		return (item[id].name != null ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
-	}
-
-	// todo : put in shared location?
-	function GetRoomNameFromId(id) {
-		if (!room[id]) {
-			return "";
-		}
-
-		return (room[id].name != null ? room[id].name : localization.GetStringOrFallback("room_label", "room") + " " + id);
 	}
 
 	function OrderControls(editor, parentEditor) {
@@ -3685,12 +3562,13 @@ function DialogTool() {
 		addVariableDiv.classList.add("addNonNumericControlBox");
 		addVariableDiv.classList.add("goldColorBackground");
 
-		var variableParameterEditor = new ParameterEditor(
-			["symbol"], 
-			function() { return selectedVarNode; },
-			function(node) { selectedVarNode = node; },
-			true,
-			false);
+		// todo : re-implement
+		// var variableParameterEditor = new ParameterEditor(
+		// 	["symbol"], 
+		// 	function() { return selectedVarNode; },
+		// 	function(node) { selectedVarNode = node; },
+		// 	true,
+		// 	false);
 
 		var addVariableButton = document.createElement("button");
 		addVariableButton.classList.add(GetColorClassForParameterType("symbol"));
@@ -3721,12 +3599,13 @@ function DialogTool() {
 		addItemDiv.classList.add("addNonNumericControlBox");
 		addItemDiv.classList.add("greenColorBackground");
 
-		var itemParameterEditor = new ParameterEditor(
-			["item"], 
-			function() { return selectedItemNode; },
-			function(node) { selectedItemNode = node; },
-			true,
-			false);
+		// todo : reimplement
+		// var itemParameterEditor = new ParameterEditor(
+		// 	["item"], 
+		// 	function() { return selectedItemNode; },
+		// 	function(node) { selectedItemNode = node; },
+		// 	true,
+		// 	false);
 
 		var addItemButton = document.createElement("button");
 		addItemButton.classList.add(GetColorClassForParameterType("item"));
@@ -3757,12 +3636,13 @@ function DialogTool() {
 		addTextDiv.classList.add("addNonNumericControlBox");
 		addTextDiv.classList.add("greenColorBackground");
 
-		var textParameterEditor = new ParameterEditor(
-			["string"], 
-			function() { return selectedTextNode; },
-			function(node) { selectedTextNode = node; },
-			true,
-			false);
+		// todo : reimplement
+		// var textParameterEditor = new ParameterEditor(
+		// 	["string"], 
+		// 	function() { return selectedTextNode; },
+		// 	function(node) { selectedTextNode = node; },
+		// 	true,
+		// 	false);
 
 		var addTextButton = document.createElement("button");
 		addTextButton.classList.add(GetColorClassForParameterType("string"));
