@@ -558,3 +558,7 @@
 .inlineEditButtonHolder button {
 	padding: 0px;
 }
+
+.boxSlotEditor {
+	margin-top: 5px;
+}

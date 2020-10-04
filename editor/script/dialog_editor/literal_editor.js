@@ -170,6 +170,47 @@ function SymbolEditor(expression, parentEditor, isInline) {
 		));
 }
 
+// todo : is slot the right name?
+function SlotSymbolEditor(expression, parentEditor, isInline) {
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"symbol", // todo : localize // todo : name variable instead??
+			function() {
+				var input = document.createElement("span");
+
+				var variableInput = document.createElement("input");
+				variableInput.type = "string";
+				variableInput.setAttribute("list", "variable_datalist");
+				variableInput.value = expression.value.slice(1);
+				input.appendChild(variableInput);
+				
+				// todo : make this more robust?
+				var variableDatalist = document.createElement("datalist");
+				variableDatalist.id = "variable_datalist"; // will duplicates break this?
+				for (var name in variable) {
+					var variableOption = document.createElement("option");
+					variableOption.value = name;
+					variableDatalist.appendChild(variableOption);
+				}
+				input.appendChild(variableDatalist);
+
+				input.onchange = function(event) {
+					expression.value = "@" + event.target.value;
+					// todo : notify parent!
+				}
+
+				return input;
+			},
+			function() {
+				return scriptNext.SerializeValue(expression.value, expression.type).slice(1);
+			},
+		));
+}
+
 
 // todo : put in shared location?
 function GetItemNameFromId(id) {
