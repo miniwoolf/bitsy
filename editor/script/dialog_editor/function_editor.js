@@ -14,6 +14,7 @@ function FunctionDefinitionEditor(expression, parentEditor) {
 	inputDescription.innerText = "a function with input:";
 	div.appendChild(inputDescription);
 
+	// todo : what if there is no input params??
 	var inputEditor = new FunctionInputEditor(expression.list[1], this);
 	div.appendChild(inputEditor.GetElement());
 

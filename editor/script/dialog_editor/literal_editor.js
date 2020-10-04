@@ -214,11 +214,11 @@ function SlotSymbolEditor(expression, parentEditor, isInline) {
 
 // todo : put in shared location?
 function GetItemNameFromId(id) {
-	if (!item[id]) {
+	if (!object[id] || object[id].type != "ITM") {
 		return "";
 	}
 
-	return (item[id].name != null ? item[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
+	return (object[id].name != null ? object[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
 }
 
 // todo : put in shared location?
@@ -268,6 +268,8 @@ var thumbnailRenderer = CreateDrawingThumbnailRenderer();
 
 // todo : reimplement thumbnail rendering
 function ItemIdEditor(expression, parentEditor, isInline) {
+	var itemThumbnail = null;
+
 	Object.assign(
 		this,
 		new LiteralEditor(
@@ -279,16 +281,19 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 				var input = document.createElement("select");
 				input.title = "choose item";
 
-				for (id in item) {
-					var itemOption = document.createElement("option");
-					itemOption.value = id;
-					itemOption.innerText = GetItemNameFromId(id);
-					itemOption.selected = id === expression.value;
-					input.appendChild(itemOption);
+				for (id in object) {
+					if (object[id].type === "ITM") {
+						var itemOption = document.createElement("option");
+						itemOption.value = id;
+						itemOption.innerText = GetItemNameFromId(id);
+						itemOption.selected = id === expression.value;
+						input.appendChild(itemOption);
+					}
 				}
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
+					thumbnailRenderer.Render(expression.value, function(uri) { itemThumbnail.src = uri; }, { frameIndex: 0 });
 					// todo : notify parent!
 				}
 
@@ -299,21 +304,18 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 			},
 		));
 
-	// todo : use this somehow
-	// // todo : is this the right place for this? shouldn't I put it inside the item id editor?
-	// if (curType === "item") {
-	// 	var itemId = expression.list[parameterIndex].value;
+	// todo : replace this with a generic picker hosted by the find.js?
+	// only try to render the item if it actually exists!
+	if (expression.value in object && object[expression.value].type === "ITM") {
+		itemThumbnail = document.createElement("img");
+		itemThumbnail.id = "param_item_" + expression.value;
+		itemThumbnail.style.width = "16px";
+		itemThumbnail.style.marginLeft = "4px";
 
-	// 	// only try to render the item if it actually exists!
-	// 	if (item.hasOwnProperty(itemId)) {
-	// 		var itemThumbnail = document.createElement("img");
-	// 		span.appendChild(itemThumbnail);
-	// 		itemThumbnail.id = "param_item_" + itemId;
-	// 		itemThumbnail.style.width = "16px";
-	// 		itemThumbnail.style.marginLeft = "4px";
-	// 		thumbnailRenderer.Render(itemId, function(uri) { itemThumbnail.src = uri; }, { isAnimated: false });
-	// 	}
-	// }
+		this.GetElement().prepend(itemThumbnail);
+
+		thumbnailRenderer.Render(expression.value, function(uri) { itemThumbnail.src = uri; }, { frameIndex: 0 });
+	}
 }
 
 // TODO : put in shared location?
@@ -509,8 +511,8 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 		else if (type === "room" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in room) {
 			return true;
 		}
-		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in item) {
-			return true;
+		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in object && object[exp.value].type === "ITM") {
+			return true; // todo : this is really long now...
 		}
 		else if (type === "transition" && exp.type === "string" && (typeof exp.value) === "string") {
 			return true;
