@@ -562,8 +562,7 @@ function createListEditor(expression, parent, isInline) {
 		editor = new MathExpressionEditor(expression, parent, isInline);
 	}
 	else {
-		// todo : can anything else be inline??
-		editor = new FunctionEditor(expression, parent, isInline);
+		editor = new ExpressionEditor(expression, parent, isInline);
 	}
 
 	return editor;

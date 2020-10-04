@@ -11,7 +11,7 @@ function BoxEditor(expression, parentEditor) {
 	div.appendChild(titleDiv);
 
 	var inputDescription = document.createElement("div");
-	inputDescription.innerText = "create box containing:";
+	inputDescription.innerText = "make box containing:";
 	div.appendChild(inputDescription);
 
 	// todo : validate that input is correct?

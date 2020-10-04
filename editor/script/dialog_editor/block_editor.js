@@ -257,7 +257,7 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("function_pg_name", "pagebreak"),
 			function() {
 				var node = scriptUtils.CreateFunctionBlock("pg", []);
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -307,7 +307,7 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("function_exit_name", "exit"),
 			function() {
 				var node = scriptUtils.CreateFunctionBlock("exit", ["0", 0, 0]);
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -317,7 +317,7 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("function_end_name", "end"),
 			function() {
 				var node = scriptUtils.CreateFunctionBlock("end", []);
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -327,7 +327,7 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("dialog_action_locked_set", "lock / unlock"),
 			function() {
 				var node = scriptUtils.CreatePropertyNode("locked", true);
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -337,7 +337,7 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("dialog_action_item_set", "set item count"),
 			function() {
 				var node = scriptUtils.CreateFunctionBlock("item", ["0", 10]);
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -351,7 +351,7 @@ function ActionBuilder(parentEditor) {
 				codeBlock.children.push(expressionNode);
 				var node = scriptUtils.CreateFunctionBlock("item", ["0"]);
 				node.children[0].args.push(codeBlock); // hacky
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 
@@ -365,7 +365,7 @@ function ActionBuilder(parentEditor) {
 				codeBlock.children.push(expressionNode);
 				var node = scriptUtils.CreateFunctionBlock("item", ["0"]);
 				node.children[0].args.push(codeBlock); // hacky
-				var editor = new FunctionEditor(node, parentEditor);
+				var editor = new ExpressionEditor(node, parentEditor);
 				return editor;
 			}));
 

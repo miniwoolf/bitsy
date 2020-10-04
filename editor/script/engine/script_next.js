@@ -134,8 +134,9 @@ function serializePaired(expressionList, indentDepth) {
 	return out;	
 }
 
+// todo : should "SAY" be inline? "PG"?
 function isInlineFunction(symbol) {
-	return ["SAY", "BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"].indexOf(symbol) != -1;
+	return ["BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"].indexOf(symbol) != -1;
 }
 this.IsInlineFunction = isInlineFunction;
 
@@ -494,7 +495,7 @@ var special = {
 				}
 				else if (expression.list[i].type != "list") {
 					environment.Get(" _add_word_")(
-						[expressionToString(expression.list[i])],
+						[serializeAtom(expression.list[i].value, expression.list[i].type)],
 						null,
 						function(value) { result = null; i++; evalNext(); });
 				}
@@ -715,6 +716,25 @@ var special = {
 	},
 }
 
+function valueToString(value) {
+	var str = "";
+	if (typeof value === "function") {
+		str += "FN";
+	}
+	else if (typeof value === "object") {
+		// todo : smarter to string for boxes later on (include name, id, type, etc)
+		str += "BOX";
+	}
+	else if (typeof value === "boolean") {
+		str += value ? "YES" : "NO";
+	}
+	else {
+		str += value;
+	}
+
+	return str;
+}
+
 // TODO : refactor to remove environment? doesn't seem like I'm using it...
 function createLibrary(dialogBuffer, objectContext) {
 	var library = {
@@ -724,7 +744,7 @@ function createLibrary(dialogBuffer, objectContext) {
 			// todo : hacky to force into a string with concatenation?
 			// todo : nicer way to print objects
 			// todo : new way to convert bools etc to string
-			dialogBuffer.AddText("" + parameters[0]);
+			dialogBuffer.AddText(valueToString(parameters[0]));
 			dialogBuffer.AddScriptReturn(onReturn);
 		},
 		"BR": function(parameters, environment, onReturn) {

@@ -312,12 +312,8 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 		}
 		div.appendChild(conditionStartSpan);
 
-		// todo : what about just a value as the condition? etc...
-		if (conditionExpression != null) {
-			// todo : re-implement
-			conditionExpressionEditor = new FunctionEditor(conditionExpression, self, true); // new ExpressionEditor(conditionNode, self, true);
-			div.appendChild(conditionExpressionEditor.GetElement());
-		}
+		conditionExpressionEditor = createExpressionEditor(conditionExpression, self, true);
+		div.appendChild(conditionExpressionEditor.GetElement());
 
 		conditionEndSpan = document.createElement("span");
 		if (conditionExpression != null) {

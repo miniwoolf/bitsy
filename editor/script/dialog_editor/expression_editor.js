@@ -1,6 +1,5 @@
-// todo : rename since it's not just functions anymore?
 // todo : update for new names, new functions, etc
-var functionDescriptionMap = {
+var expressionDescriptionMap = {
 	"END" : {
 		GetName : function() {
 			return localization.GetStringOrFallback("function_end_name", "end");
@@ -116,16 +115,17 @@ var functionDescriptionMap = {
 var isHelpTextOn = true;
 
 // TODO : support UNDESCRIBED functions! need a new editor?
-function FunctionEditor(expression, parentEditor, isInline) {
+function ExpressionEditor(expression, parentEditor, isInline) {
 	if (isInline === undefined || isInline === null) {
 		isInline = false;
 	}
 
 	var self = this;
 
-	var fnSymbol = expression.list[0].value;
-	var fnDescriptionId = fnSymbol in functionDescriptionMap ? fnSymbol : "default";
-	var fnParamLength = expression.list.length - 1;
+	// todo : what if the first expression is not a symbol?
+	var symbol = expression.list[0].value;
+	var descriptionId = symbol in expressionDescriptionMap ? symbol : "default";
+	var paramLength = expression.list.length - 1;
 
 	var div = document.createElement(isInline ? "span" : "div");
 	div.classList.add("functionEditor");
@@ -142,7 +142,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 	}
 
 	if (!isInline) {
-		var titleText = functionDescriptionMap[fnDescriptionId].GetName();
+		var titleText = expressionDescriptionMap[descriptionId].GetName();
 		var titleDiv = document.createElement("div");
 		titleDiv.classList.add("actionTitle");
 		titleDiv.innerText = titleText;
@@ -164,7 +164,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 	toggleParameterTypesButton.appendChild(iconUtils.CreateIcon("settings"));
 	toggleParameterTypesButton.onclick = function() {
 		editParameterTypes = !editParameterTypes;
-		CreateFunctionDescription(true);
+		CreateExpressionDescription(true);
 	}
 
 	if (!isInline) {
@@ -190,7 +190,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 		helpTextContent.classList.add("helpTextContent");
 		helpTextDiv.appendChild(helpTextContent);
 
-		var helpTextFunc = functionDescriptionMap[fnDescriptionId].GetHelpText;
+		var helpTextFunc = expressionDescriptionMap[descriptionId].GetHelpText;
 		hasHelpText = helpTextFunc != undefined && helpTextFunc != null;
 		if (hasHelpText) {
 			helpTextContent.innerText = helpTextFunc();
@@ -222,7 +222,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 	// TODO : populate default values!!
 	var curParameterEditors = [];
 	var curCommandEditors = []; // store custom commands
-	function CreateFunctionDescription(isEditable) {
+	function CreateExpressionDescription(isEditable) {
 		curParameterEditors = [];
 		descriptionDiv.innerHTML = "";
 
@@ -231,21 +231,8 @@ function FunctionEditor(expression, parentEditor, isInline) {
 			addParameterDiv.innerHTML = "";
 		}
 
-		var descriptionText = functionDescriptionMap[fnDescriptionId].GetDescription();
+		var descriptionText = expressionDescriptionMap[descriptionId].GetDescription();
 		var descriptionTextSplit = descriptionText.split("_");
-
-		function createGetArgFunc(expression, parameterIndex) {
-			return function() {
-				return expression.list[parameterIndex + 1];
-			};
-		}
-
-		function createSetArgFunc(expression, parameterIndex, parentEditor) {
-			return function(newParam) {
-				expression.list.splice(parameterIndex, 1, newParam);
-				parentEditor.NotifyUpdate();
-			};
-		}
 
 		var i = 0;
 
@@ -257,14 +244,14 @@ function FunctionEditor(expression, parentEditor, isInline) {
 			if (text.indexOf("[") >= 0) { // optional parameter text start
 				var optionalTextStartSplit = text.split("[");
 				descriptionSpan.innerText = optionalTextStartSplit[0];
-				var nextParam = functionDescriptionMap[fnDescriptionId].parameters[i];
-				if (fnParamLength > nextParam.index && optionalTextStartSplit.length > 1) {
+				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
+				if (paramLength > nextParam.index && optionalTextStartSplit.length > 1) {
 					descriptionSpan.innerText += optionalTextStartSplit[1];
 				}
 			}
 			else if (text[text.length - 1] === "]") { // optional parameter text end
-				var prevParam = functionDescriptionMap[fnDescriptionId].parameters[i-1];
-				if (fnParamLength > prevParam.index) {
+				var prevParam = expressionDescriptionMap[descriptionId].parameters[i-1];
+				if (paramLength > prevParam.index) {
 					descriptionSpan.innerText = text.slice(0, text.length - 1);
 				}
 			}
@@ -273,9 +260,9 @@ function FunctionEditor(expression, parentEditor, isInline) {
 			}
 
 			if (i < descriptionTextSplit.length - 1) {
-				var parameterInfo = functionDescriptionMap[fnDescriptionId].parameters[i];
+				var parameterInfo = expressionDescriptionMap[descriptionId].parameters[i];
 
-				if (fnParamLength > parameterInfo.index) {
+				if (paramLength > parameterInfo.index) {
 					var parameterEditor = new ParameterEditor(
 						expression,
 						parameterInfo.index + 1,
@@ -290,11 +277,11 @@ function FunctionEditor(expression, parentEditor, isInline) {
 					curParameterEditors.push(parameterEditor);
 					descriptionDiv.appendChild(parameterEditor.GetElement());
 				}
-				else if (!isInline && isEditable && fnParamLength == parameterInfo.index && parameterInfo.name) {
+				else if (!isInline && isEditable && paramLength == parameterInfo.index && parameterInfo.name) {
 					function createAddParameterHandler(expression, parameterInfo) {
 						return function() {
 							expression.list.push(CreateDefaultArgNode(parameterInfo.types[0]));
-							CreateFunctionDescription(true);
+							CreateExpressionDescription(true);
 							parentEditor.NotifyUpdate();
 						}
 					}
@@ -308,10 +295,10 @@ function FunctionEditor(expression, parentEditor, isInline) {
 		}
 
 		// add any additional parameters that go beyond the defined description
-		i -= (fnDescriptionId === "default" ? 2 : 1); // ok this is pretty awkward to me
+		i -= (descriptionId === "default" ? 2 : 1); // ok this is pretty awkward to me
 		var inputSeperator = " ";
 
-		for (; i < fnParamLength; i++) {
+		for (; i < paramLength; i++) {
 			var spaceSpan = document.createElement("span");
 			spaceSpan.innerText = inputSeperator;
 			descriptionDiv.appendChild(spaceSpan);
@@ -342,10 +329,10 @@ function FunctionEditor(expression, parentEditor, isInline) {
 			curCommandEditors = [];
 
 			// add custom edit commands
-			var commands = functionDescriptionMap[fnDescriptionId].commands;
+			var commands = expressionDescriptionMap[descriptionId].commands;
 			if (isEditable && commands) {
 				for (var i = 0; i < commands.length; i++) {
-					var commandEditor = new commands[i](expression, parentEditor, CreateFunctionDescription);
+					var commandEditor = new commands[i](expression, parentEditor, CreateExpressionDescription);
 					curCommandEditors.push(commandEditor);
 					customCommandsDiv.appendChild(commandEditor.GetElement());
 				}
@@ -360,7 +347,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 		}
 	}
 
-	CreateFunctionDescription(false);
+	CreateExpressionDescription(false);
 
 	this.GetElement = function() {
 		return div;
@@ -380,7 +367,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 
 	AddSelectionBehavior(
 		this,
-		function() { CreateFunctionDescription(true); }, /*onSelect*/
+		function() { CreateExpressionDescription(true); }, /*onSelect*/
 		function() { /*onDeselect*/
 			for (var i = 0; i < curParameterEditors.length; i++) {
 				if (curParameterEditors[i].Deselect) {
@@ -388,7 +375,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 				}
 			}
 
-			CreateFunctionDescription(false);
+			CreateExpressionDescription(false);
 		},
 		isInline);
 
@@ -409,7 +396,7 @@ function FunctionEditor(expression, parentEditor, isInline) {
 	};
 }
 
-function RoomMoveDestinationCommand(functionNode, parentEditor, createFunctionDescriptionFunc) {
+function RoomMoveDestinationCommand(functionNode, parentEditor, createExpressionDescriptionFunc) {
 	var listener = new EventListener(events);
 
 	var isMoving = false;
@@ -456,7 +443,7 @@ function RoomMoveDestinationCommand(functionNode, parentEditor, createFunctionDe
 			moveMessageSpan.innerHTML = "";
 			moveButton.innerHTML = commandDescription;
 
-			createFunctionDescriptionFunc(true);
+			createExpressionDescriptionFunc(true);
 			parentEditor.NotifyUpdate();
 			events.Raise("enable_room_tool");
 		}
