@@ -1,5 +1,5 @@
 // todo : rename? dialogBlock? dialogExpression? dialogExpressionBlock? dialogList? dialogListBlock?
-function BlockEditor(dialogList, parentEditor) {
+function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 	var self = this;
 
 	var div = document.createElement("div");
@@ -42,15 +42,18 @@ function BlockEditor(dialogList, parentEditor) {
 			}
 		}
 
-		for (var i = 1; i < dialogList.list.length; i++) {
-			var expression = dialogList.list[i];
+		for (var i = 0; i < expressionList.length; i++) {
+			var expression = expressionList[i];
 
 			var listType = null;
 			if (expression.type === "list" && expression.list[0].type === "symbol") {
 				listType = expression.list[0].value;
 			}
 
-			if (expression.type === "list" && !scriptNext.IsInlineFunction(listType)) {
+			if (!isDialogExpression) {
+				childEditors.push(createExpressionEditor(expression, self));
+			}
+			else if (expression.type === "list" && !scriptNext.IsInlineFunction(listType)) {
 				addText();
 				childEditors.push(createExpressionEditor(expression, self));
 			}
@@ -150,6 +153,18 @@ function BlockEditor(dialogList, parentEditor) {
 
 	CreateChildEditors();
 	RefreshChildUI();
+}
+
+function DialogExpressionEditor(dialogExpression, parentEditor) {
+	var div = document.createElement("div");
+	div.classList.add("actionEditor");
+
+	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
+	div.appendChild(blockEditor.GetElement());
+
+	this.GetElement = function() {
+		return div;
+	}
 }
 
 function ActionBuilder(parentEditor) {

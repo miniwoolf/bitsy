@@ -541,7 +541,7 @@ function createListEditor(expression, parent, isInline) {
 	var editor = null;
 
 	if (scriptNext.IsDialogExpression(listType)) {
-		editor = new BlockEditor(expression, parent);
+		editor = new DialogExpressionEditor(expression, parent);
 	}
 	else if (scriptNext.IsSequence(listType)) {
 		editor = new SequenceEditor(expression, parent);
@@ -551,6 +551,9 @@ function createListEditor(expression, parent, isInline) {
 	}
 	else if (scriptNext.IsConditional(listType)) {
 		editor = new ConditionalEditor(expression, parent);
+	}
+	else if (scriptNext.IsFunctionDefinition(listType)) {
+		editor = new FunctionDefinitionEditor(expression, parent);
 	}
 	else if (scriptNext.IsMathExpression(listType)) {
 		editor = new MathExpressionEditor(expression, parent, isInline);

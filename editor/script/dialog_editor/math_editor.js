@@ -54,7 +54,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 
 		var titleDiv = document.createElement("div");
 		titleDiv.classList.add("actionTitle");
-		titleDiv.innerText = "calculate math"; // TODO : is this right? localize
+		titleDiv.innerText = "calculate"; // TODO : is this right? localize
 		div.appendChild(titleDiv);
 	}
 
