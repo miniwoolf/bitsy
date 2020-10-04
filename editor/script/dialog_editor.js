@@ -456,7 +456,7 @@ function DialogTool() {
 			editor = new ConditionalEditor(expression, parent);
 		}
 		else if (scriptNext.IsMathExpression(listType)) {
-			editor = new MathExpressionEditor(expression, parent);
+			editor = new MathExpressionEditor(expression, parent, isInline);
 		}
 		else {
 			// todo : can anything else be inline??
