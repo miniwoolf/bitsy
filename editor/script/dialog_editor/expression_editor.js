@@ -101,6 +101,14 @@ var expressionDescriptionMap = {
 			{ types: ["direction", "string", "symbol", "list"], index: 0, name: "direction", },
 		],
 	},
+	"PAL" : {
+		GetName : function() { return "palette swap"; }, // todo : localize
+		GetDescription : function() { return "change palette of current room to _"; }, // todo : localize
+		parameters : [
+			// todo : create special parameter type for palette IDs
+			{ types: ["string", "symbol", "list"], index: 0, name: "palette", },
+		],
+	},
 	"default" : {
 		GetName : function() { return "function"; }, // todo : localize
 		GetDescription : function() {

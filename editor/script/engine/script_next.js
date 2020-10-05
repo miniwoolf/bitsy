@@ -804,6 +804,7 @@ function createLibrary(dialogBuffer, objectContext) {
 		},
 
 		// NEW FUNCTIONS (WIP)
+		// todo : require object reference as first parameter
 		"HOP": function(parameters, environment, onReturn) {
 			var result = false;
 
@@ -849,6 +850,13 @@ function createLibrary(dialogBuffer, objectContext) {
 			}
 
 			onReturn(null);
+		},
+
+		// todo : make sure rooms remember their original pal id and reset to it
+		"PAL": function(parameters, environment, onReturn) {
+			room[curRoom].pal = parameters[0];
+
+			onReturn(null); // todo : replace all nulls with false? return palette id?
 		},
 
 		// prototype of custom text effects
