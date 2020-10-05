@@ -1101,13 +1101,13 @@ function move(object, direction, canEnterNeighborRoom) {
 
 function keyNameToDirection(keyName) {
 	switch (keyName) {
-		case "left":
+		case "LFT":
 			return Direction.Left;
-		case "right":
+		case "RGT":
 			return Direction.Right;
-		case "up":
+		case "UP":
 			return Direction.Up;
-		case "down":
+		case "DWN":
 			return Direction.Down;
 		default:
 			return Direction.None;
@@ -1117,13 +1117,13 @@ function keyNameToDirection(keyName) {
 function directionToKeyName(direction) {
 	switch (direction) {
 		case Direction.Left:
-			return "left";
+			return "LFT";
 		case Direction.Right:
-			return "right";
+			return "RGT";
 		case Direction.Up:
-			return "up";
+			return "UP";
 		case Direction.Down:
-			return "down";
+			return "DWN";
 		default:
 			return null; // todo : error -- how to handle?
 	}

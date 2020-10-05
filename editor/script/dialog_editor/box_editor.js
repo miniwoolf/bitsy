@@ -24,7 +24,7 @@ function BoxEditor(expression, parentEditor) {
 		return div;
 	}
 
-	AddSelectionBehavior(this);	
+	AddSelectionBehavior(this);
 }
 
 // todo : name?

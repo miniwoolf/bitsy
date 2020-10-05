@@ -86,7 +86,7 @@
 
 @keyframes executingLeaveAnimation {
 	from { background: #6767b2; }
-	to { background: white; }	
+	to { background: white; }
 }
 
 .executingLeave.actionEditor {

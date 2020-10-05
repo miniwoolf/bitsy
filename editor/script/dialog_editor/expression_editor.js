@@ -94,13 +94,11 @@ var expressionDescriptionMap = {
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "value", },
 		],
 	},
-	// todo : replace with special math expression editor???
-	"IS" : {
-		GetName : function() { return "equals"; }, // todo : localize
-		GetDescription : function() { return "_ == _" }, // todo : localize
+	"HOP" : {
+		GetName : function() { return "hop"; }, // todo : localize
+		GetDescription : function() { return "move one space _"; },
 		parameters : [
-			{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "left", },
-			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "right", },
+			{ types: ["direction", "string", "symbol", "list"], index: 0, name: "direction", },
 		],
 	},
 	"default" : {

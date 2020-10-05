@@ -580,6 +580,9 @@ function createLiteralEditor(expression, parent, isInline, specialEditorType) {
 	else if (specialEditorType && specialEditorType === "transition") {
 		return new TransitionIdEditor(expression, parent, isInline);
 	}
+	else if (specialEditorType && specialEditorType === "direction") {
+		return new DirectionEditor(expression, parent, isInline);
+	}
 	else if (specialEditorType && specialEditorType === "slot") {
 		return new SlotSymbolEditor(expression, parent, isInline);
 	}

@@ -395,10 +395,59 @@ function TransitionIdEditor(expression, parentEditor, isInline) {
 
 				return name;
 			},
-		));		
+		));
 }
 
-// todo : remove? rename?
+// todo : localize all of these
+var directionTypes = {
+	"LFT": {
+		GetName : function() { return "left"; },
+	},
+	"RGT": {
+		GetName : function() { return "right"; },
+	},
+	"UP": {
+		GetName : function() { return "up"; },
+	},
+	"DWN": {
+		GetName : function() { return "down"; },
+	},
+};
+
+function DirectionEditor(expression, parentEditor, isInline) {
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"direction select", // todo : localize
+			function() {
+				var input = document.createElement("select");
+				input.title = "choose direction";
+
+				for (var id in directionTypes) {
+					var directionOption = document.createElement("option");
+					directionOption.value = id;
+					directionOption.innerText = directionTypes[id].GetName();
+					directionOption.selected = id === expression.value;
+					input.appendChild(directionOption);
+				}
+
+				input.onchange = function(event) {
+					expression.value = event.target.value;
+					// todo : notify parent!
+				}
+
+				return input;
+			},
+			function() {
+				return directionTypes[expression.value].GetName();
+			},
+		));
+}
+
+// todo : remove? rename? combine with checking for if type is valid?
 function CreateDefaultArgNode(type) {
 	var argNode;
 	if (type === "number") {
@@ -426,6 +475,9 @@ function CreateDefaultArgNode(type) {
 	}
 	else if (type === "transition") {
 		argNode = { type: "string", value: "fade_w" };
+	}
+	else if (type === "direction") {
+		argNode = { type: "string", value: "LFT" };
 	}
 	return argNode;
 }
@@ -515,6 +567,10 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 			return true; // todo : this is really long now...
 		}
 		else if (type === "transition" && exp.type === "string" && (typeof exp.value) === "string") {
+			// todo : test it's valid string?
+			return true;
+		}
+		else if (type === "direction" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in directionTypes) {
 			return true;
 		}
 		else if (type === "list" && exp.type === "list") {
