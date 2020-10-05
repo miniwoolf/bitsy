@@ -56,6 +56,8 @@
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 
 .actionTitle {
@@ -74,6 +76,7 @@
 	padding-top: 2px;
 	padding-bottom: 4px; /* hack - useful??? */
 	border: none;
+	margin: 0px;
 }
 
 .conditionalComparisonEditor > .actionEditor.inline {
