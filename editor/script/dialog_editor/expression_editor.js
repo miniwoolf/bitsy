@@ -29,25 +29,27 @@ var expressionDescriptionMap = {
 		],
 		commands : [RoomMoveDestinationCommand],
 	},
-	"PG" : {
-		GetName : function() {
-			return localization.GetStringOrFallback("function_pg_name", "pagebreak");
-		},
-		GetDescription : function() {
-			return localization.GetStringOrFallback("function_pg_description", "start a new page of dialog");
-		},
-		GetHelpText : function() {
-			return localization.GetStringOrFallback(
-				"function_pg_help",
-				"if there are actions after this one, they will start after the player presses continue");
-		},
-		parameters : [],
-	},
+	// todo : add to text effects instead? along with BR?
+	// "PG" : {
+	// 	GetName : function() {
+	// 		return localization.GetStringOrFallback("function_pg_name", "pagebreak");
+	// 	},
+	// 	GetDescription : function() {
+	// 		return localization.GetStringOrFallback("function_pg_description", "start a new page of dialog");
+	// 	},
+	// 	GetHelpText : function() {
+	// 		return localization.GetStringOrFallback(
+	// 			"function_pg_help",
+	// 			"if there are actions after this one, they will start after the player presses continue");
+	// 	},
+	// 	parameters : [],
+	// },
 	"ITM" : {
 		GetName : function() {
 			return localization.GetStringOrFallback("function_item_name", "item");
 		},
 		GetDescription : function() {
+			// todo : update text to match "is set to" convention?
 			return localization.GetStringOrFallback("function_item_description", "_ in inventory[ = _]");
 		},
 		parameters : [
@@ -55,26 +57,6 @@ var expressionDescriptionMap = {
 			{ types: ["number", "symbol"], index: 1, name: "amount", },
 		],
 	},
-	// todo : reimplement as "special" thing for @
-	// "property" : {
-	// 	GetName : function() {
-	// 		return localization.GetStringOrFallback("function_property_name", "property");
-	// 	},
-	// 	GetDescription : function() {
-	// 		return localization.GetStringOrFallback("function_property_description", "property _[ = _]");
-	// 	},
-	// 	GetHelpText : function() { // TODO : when there's more than one property, this will have to change!
-	// 		return localization.GetStringOrFallback(
-	// 			"function_property_locked_example_help",
-	// 			"change the value of a property: "
-	// 			+ "for example, set the locked property to true to stop an exit from changing rooms, "
-	// 			+ "or to prevent an ending from stopping the game");
-	// 	},
-	// 	parameters : [
-	// 		{ types: ["symbol"], index: 0, name: "name", doNotEdit: true }, // NOTE: disable editing of property names for this version
-	// 		{ types: ["number", "string", "boolean", "symbol"], index: 1, name: "value" },
-	// 	],
-	// },
 	"SAY" : {
 		GetName : function() {
 			return localization.GetStringOrFallback("function_say_name", "say");
@@ -94,11 +76,35 @@ var expressionDescriptionMap = {
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "value", },
 		],
 	},
+	"@" : {
+		GetName : function() { return "slot"; }, // todo : localize // todo : name? slot? attribute? property? field?
+		GetDescription : function() { return "slot _ of _[ is set to _]"; },
+		parameters : [
+			// todo : create special parameter type for sprite references
+			{ types: ["symbol", "list"], index: 0, name: "box", }, // todo : name?
+			{ types: ["symbol", "list"], index: 1, name: "slot", }, // todo : name?
+			{ types: ["number", "boolean", "string", "symbol", "list"], index: 2, name: "value", },
+		],
+		// TODO : add help text?
+	},
 	"HOP" : {
 		GetName : function() { return "hop"; }, // todo : localize
-		GetDescription : function() { return "move one space _"; },
+		GetDescription : function() { return "move _ one space _"; },
 		parameters : [
-			{ types: ["direction", "string", "symbol", "list"], index: 0, name: "direction", },
+			// todo : create special parameter type for sprite references
+			{ types: ["symbol", "list"], index: 0, name: "sprite", },
+			{ types: ["direction", "string", "symbol", "list"], index: 1, name: "direction", },
+		],
+	},
+	"NEW" : {
+		GetName : function() { return "new sprite"; }, // todo : localize
+		GetDescription : function() { return "make new sprite _[ at _][,_]"; }, // todo : localize
+		parameters : [
+			// todo : create special parameter type for sprite IDs
+			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
+			// todo : it would be better if these were added all at once instead of piecemeal (command like room pos?)
+			{ types: ["number", "symbol", "list"], index: 1, name: "x", },
+			{ types: ["number", "symbol", "list"], index: 2, name: "y", },
 		],
 	},
 	"PAL" : {
@@ -108,6 +114,15 @@ var expressionDescriptionMap = {
 			// todo : create special parameter type for palette IDs
 			{ types: ["string", "symbol", "list"], index: 0, name: "palette", },
 		],
+	},
+	// todo : do I really want this function?
+	"NOT" : {
+		GetName : function() { return "not"; }, // todo : localize
+		GetDescription : function() { return "not _"; },
+		parameters : [
+			{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "value", },
+		],
+		// TODO : add help text?
 	},
 	"default" : {
 		GetName : function() { return "function"; }, // todo : localize
@@ -240,6 +255,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		var descriptionText = expressionDescriptionMap[descriptionId].GetDescription();
 		var descriptionTextSplit = descriptionText.split("_");
 
+		console.log(descriptionTextSplit);
+
 		var i = 0;
 
 		for (; i < descriptionTextSplit.length; i++) {
@@ -247,7 +264,21 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			descriptionDiv.appendChild(descriptionSpan);
 
 			var text = descriptionTextSplit[i];
-			if (text.indexOf("[") >= 0) { // optional parameter text start
+			if (text.indexOf("][") >= 0) {
+				// hacky way to handle multiple optional parameters D:
+				var optionalTextMidSplit = text.split("][");
+
+				var prevParam = expressionDescriptionMap[descriptionId].parameters[i-1];
+				if (paramLength > prevParam.index) {
+					descriptionSpan.innerText = optionalTextMidSplit[0];
+				}
+
+				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
+				if (paramLength > nextParam.index && optionalTextStartSplit.length > 1) {
+					descriptionSpan.innerText += optionalTextMidSplit[1];
+				}
+			}
+			else if (text.indexOf("[") >= 0) { // optional parameter text start
 				var optionalTextStartSplit = text.split("[");
 				descriptionSpan.innerText = optionalTextStartSplit[0];
 				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
@@ -255,10 +286,11 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 					descriptionSpan.innerText += optionalTextStartSplit[1];
 				}
 			}
-			else if (text[text.length - 1] === "]") { // optional parameter text end
+			else if (text.indexOf("]") >= 0) { // optional parameter text end
+				var optionalTextEndSplit = text.split("]");
 				var prevParam = expressionDescriptionMap[descriptionId].parameters[i-1];
 				if (paramLength > prevParam.index) {
-					descriptionSpan.innerText = text.slice(0, text.length - 1);
+					descriptionSpan.innerText = optionalTextEndSplit[0];
 				}
 			}
 			else { // regular description text

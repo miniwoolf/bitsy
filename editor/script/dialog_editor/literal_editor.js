@@ -113,13 +113,13 @@ function BooleanEditor(expression, parentEditor, isInline) {
 
 				var boolTrueOption = document.createElement("option");
 				boolTrueOption.value = "YES";
-				boolTrueOption.innerText = "YES"; // TODO : localize
+				boolTrueOption.innerText = "yes"; // TODO : localize
 				boolTrueOption.selected = expression.value;
 				input.appendChild(boolTrueOption);
 
 				var boolFalseOption = document.createElement("option");
 				boolFalseOption.value = "NO";
-				boolFalseOption.innerText = "NO"; // TODO : localize
+				boolFalseOption.innerText = "no"; // TODO : localize
 				boolFalseOption.selected = !expression.value;
 				input.appendChild(boolFalseOption);
 
@@ -129,6 +129,9 @@ function BooleanEditor(expression, parentEditor, isInline) {
 				}
 
 				return input;
+			},
+			function() {
+				return expression.value ? "yes" : "no"; // todo : localize
 			}
 		));
 }

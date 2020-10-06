@@ -808,15 +808,13 @@ function createLibrary(dialogBuffer, objectContext) {
 		"HOP": function(parameters, environment, onReturn) {
 			var result = false;
 
-			if (objectContext != null && objectContext != undefined) {
-				// todo : make this line a little more readable
-				// todo : player vs everything else is hacky?
-				if (objectContext.id === "A") {
-					result = movePlayer(keyNameToDirection(parameters[0]));
-				}
-				else {
-					result = !move(objectContext, keyNameToDirection(parameters[0])).collision;
-				}
+			var instance = parameters[0];
+
+			if (instance.id === "A") {
+				result = movePlayer(keyNameToDirection(parameters[1]));
+			}
+			else {
+				result = !move(instance, keyNameToDirection(parameters[1])).collision;
 			}
 
 			onReturn(result);
@@ -859,6 +857,12 @@ function createLibrary(dialogBuffer, objectContext) {
 			onReturn(null); // todo : replace all nulls with false? return palette id?
 		},
 
+		// todo : what about OTHER one parameter math functions? cos? sin? etc...
+		// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
+		"NOT": function(parameters, environment, onReturn) {
+			onReturn(!parameters[0]);
+		},
+
 		// prototype of custom text effects
 		//todo: name? is "CFX" the acronym I want to use?
 		"CFX": function(parameters, environment, onReturn) {
@@ -894,7 +898,7 @@ function createLibrary(dialogBuffer, objectContext) {
 var mathLibrary = {
 	/* math functions */
 	"IS": function(parameters, environment, onReturn) {
-		onReturn(parameters.length > 1 ? parameters[0] === parameters[1] : parameters[0] === true);
+		onReturn(parameters[0] === parameters[1]);
 	},
 	"GT": function(parameters, environment, onReturn) {
 		onReturn(parameters[0] > parameters[1]);
@@ -923,8 +927,8 @@ var mathLibrary = {
 	"SUB": function(parameters, environment, onReturn) {
 		onReturn(parameters[0] - parameters[1]);
 	},
-	"NOT": function(parameters, environment, onReturn) {
-		onReturn(!parameters[0]);
+	"ISNT": function(parameters, environment, onReturn) {
+		onReturn(parameters[0] != parameters[1]);
 	},
 };
 

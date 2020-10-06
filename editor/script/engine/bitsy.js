@@ -4,6 +4,10 @@ TODO general
 
 TODO script_next
 - redo graphical editor
+- audit all new functions and function names
+- RND
+- RNG
+- FOR
 - ideas
 	- put text format controls on top of text box
 	- make text box nicer: all black, bitsy font, preview/WYSIWYG/syntax highlighting when not selected, full bleed textarea

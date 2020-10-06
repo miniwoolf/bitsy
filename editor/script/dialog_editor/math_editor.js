@@ -164,6 +164,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 // hacky to duplicate these here!
 var comparisonOperators = {
 	"IS" : "==",
+	"ISNT" : "!=",
 	"GTE" : ">=",
 	"LTE" : "<=",
 	"GT" : ">",
