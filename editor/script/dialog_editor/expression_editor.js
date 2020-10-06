@@ -107,6 +107,14 @@ var expressionDescriptionMap = {
 			{ types: ["number", "symbol", "list"], index: 2, name: "y", },
 		],
 	},
+	"BYE" : {
+		GetName : function() { return "remove sprite"; }, // todo : localize
+		GetDescription : function() { return "goodbye, sprite _!"; }, // todo : localize todo : swap title and description?
+		parameters : [
+			// todo : create special parameter type for sprite IDs
+			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
+		],
+	},
 	"PAL" : {
 		GetName : function() { return "palette swap"; }, // todo : localize
 		GetDescription : function() { return "change palette of current room to _"; }, // todo : localize
