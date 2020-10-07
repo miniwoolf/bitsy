@@ -77,12 +77,12 @@ var expressionDescriptionMap = {
 		],
 	},
 	"@" : {
-		GetName : function() { return "slot"; }, // todo : localize // todo : name? slot? attribute? property? field?
-		GetDescription : function() { return "slot _ of _[ is set to _]"; },
+		GetName : function() { return "entry value"; }, // todo : localize
+		GetDescription : function() { return "entry _ for _[ is set to _]"; }, // todo : localize! and wording?
 		parameters : [
 			// todo : create special parameter type for sprite references
-			{ types: ["symbol", "list"], index: 0, name: "box", }, // todo : name?
-			{ types: ["symbol", "list"], index: 1, name: "slot", }, // todo : name?
+			{ types: ["symbol", "list"], index: 1, name: "entry", }, // todo : localize
+			{ types: ["symbol", "list"], index: 0, name: "table", }, // todo : localize
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 2, name: "value", },
 		],
 		// TODO : add help text?
@@ -96,20 +96,20 @@ var expressionDescriptionMap = {
 			{ types: ["direction", "string", "symbol", "list"], index: 1, name: "direction", },
 		],
 	},
-	"NEW" : {
-		GetName : function() { return "new sprite"; }, // todo : localize
-		GetDescription : function() { return "make new sprite _[ at _][,_]"; }, // todo : localize
+	"PUT" : {
+		GetName : function() { return "put down new sprite"; }, // todo : localize
+		GetDescription : function() { return "sprite _ put down[ at _| here][,_]"; }, // todo : localize
 		parameters : [
 			// todo : create special parameter type for sprite IDs
 			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
 			// todo : it would be better if these were added all at once instead of piecemeal (command like room pos?)
-			{ types: ["number", "symbol", "list"], index: 1, name: "x", },
-			{ types: ["number", "symbol", "list"], index: 2, name: "y", },
+			{ types: ["number", "symbol", "list"], index: 1, name: "x position", },
+			{ types: ["number", "symbol", "list"], index: 2, name: "y position", },
 		],
 	},
-	"BYE" : {
-		GetName : function() { return "remove sprite"; }, // todo : localize
-		GetDescription : function() { return "goodbye, sprite _!"; }, // todo : localize todo : swap title and description?
+	"RID" : {
+		GetName : function() { return "get rid of sprite"; }, // todo : localize
+		GetDescription : function() { return "get rid of _"; }, // todo : localize todo : swap title and description?
 		parameters : [
 			// todo : create special parameter type for sprite IDs
 			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
@@ -275,10 +275,14 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			if (text.indexOf("][") >= 0) {
 				// hacky way to handle multiple optional parameters D:
 				var optionalTextMidSplit = text.split("][");
+				var optionalTextMidDefaultSplit = optionalTextMidSplit[0].split("|");
 
-				var prevParam = expressionDescriptionMap[descriptionId].parameters[i-1];
+				var prevParam = expressionDescriptionMap[descriptionId].parameters[i - 1];
 				if (paramLength > prevParam.index) {
-					descriptionSpan.innerText = optionalTextMidSplit[0];
+					descriptionSpan.innerText = optionalTextMidDefaultSplit[0];
+				}
+				else if (optionalTextMidDefaultSplit.length > 1) {
+					descriptionSpan.innerText = optionalTextMidDefaultSplit[1];
 				}
 
 				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
@@ -296,9 +300,15 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			}
 			else if (text.indexOf("]") >= 0) { // optional parameter text end
 				var optionalTextEndSplit = text.split("]");
-				var prevParam = expressionDescriptionMap[descriptionId].parameters[i-1];
+				var optionalTextEndDefaultSplit = optionalTextEndSplit[0].split("|");
+
+				var prevParam = expressionDescriptionMap[descriptionId].parameters[i - 1];
+
 				if (paramLength > prevParam.index) {
-					descriptionSpan.innerText = optionalTextEndSplit[0];
+					descriptionSpan.innerText = optionalTextEndDefaultSplit[0];
+				}
+				else if (optionalTextEndDefaultSplit.length > 1) {
+					descriptionSpan.innerText = optionalTextEndDefaultSplit[1];
 				}
 			}
 			else { // regular description text

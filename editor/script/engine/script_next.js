@@ -199,10 +199,10 @@ function isConditional(symbol) {
 }
 this.IsConditional = isConditional;
 
-function isBox(symbol) {
-	return symbol === "BOX";
+function isTable(symbol) {
+	return symbol === "TBL";
 }
-this.IsBox = isBox;
+this.IsTable = isTable;
 
 function isFunctionDefinition(symbol) {
 	return symbol === "FN";
@@ -227,7 +227,7 @@ function serializeList(expression, indentDepth) {
 	else if (isChoice(listType)) {
 		out += serializeAlternating(expression.list, indentDepth);
 	}
-	else if (isConditional(listType) || isBox(listType)) {
+	else if (isConditional(listType) || isTable(listType)) {
 		out += serializePaired(expression.list, indentDepth);
 	}
 	else if (isFunctionDefinition(listType)) {
@@ -656,8 +656,7 @@ var special = {
 			onReturn(null);
 		});
 	},
-	// other name options: package (PKG), packet (PKT), parcel (PCL), a BIT (haha)
-	"BOX": function(expression, environment, onReturn) {
+	"TBL": function(expression, environment, onReturn) {
 		var struct = {}; // todo : replace with more robust data structure
 		var i = 1;
 		var evalNext;
@@ -690,7 +689,7 @@ var special = {
 
 		evalNext();
 	},
-	// idea: call these "slots" (or pockets?)
+	// table entry accessor (todo: use other symbol? "." ":" and store it somewhere?)
 	"@": function(expression, environment, onReturn) {
 		if (expression.list.length < 3) {
 			onReturn(null); // not enough arguments!
@@ -699,7 +698,7 @@ var special = {
 		var name = expression.list[2].value;
 
 		eval(expression.list[1], environment, function(obj) {
-			// todo : handle null / invalid objects
+			// todo : handle null / invalid tables
 			if (expression.list.length >= 4) {
 				eval(expression.list[3], environment, function(value) {
 					obj[name] = value;
@@ -710,7 +709,7 @@ var special = {
 				onReturn(obj[name]);
 			}
 			else {
-				onReturn(null); // no property value!
+				onReturn(null); // no value!
 			}
 		});
 	},
@@ -723,7 +722,7 @@ function valueToString(value) {
 	}
 	else if (typeof value === "object") {
 		// todo : smarter to string for boxes later on (include name, id, type, etc)
-		str += "BOX";
+		str += "TBL";
 	}
 	else if (typeof value === "boolean") {
 		str += value ? "YES" : "NO";
@@ -819,8 +818,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(result);
 		},
-		// todo : rename? HI? HEY? HLO?
-		"NEW": function(parameters, environment, onReturn) {
+		"PUT": function(parameters, environment, onReturn) {
 			var obj = null;
 
 			// TODO : allow user to specify coordinates
@@ -841,7 +839,7 @@ function createLibrary(dialogBuffer, objectContext) {
 
 			onReturn(obj);
 		},
-		"BYE": function(parameters, environment, onReturn) {
+		"RID": function(parameters, environment, onReturn) {
 			// todo : what if the object passed in is no longer valid?
 			if (parameters.length >= 1 && "instanceId" in parameters[0]) {
 				delete objectInstances[parameters[0].instanceId];

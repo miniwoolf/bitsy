@@ -552,8 +552,8 @@ function createListEditor(expression, parent, isInline) {
 	else if (scriptNext.IsConditional(listType)) {
 		editor = new ConditionalEditor(expression, parent);
 	}
-	else if (scriptNext.IsBox(listType)) {
-		editor = new BoxEditor(expression, parent);
+	else if (scriptNext.IsTable(listType)) {
+		editor = new TableEditor(expression, parent);
 	}
 	else if (scriptNext.IsFunctionDefinition(listType)) {
 		editor = new FunctionDefinitionEditor(expression, parent);
@@ -583,8 +583,8 @@ function createLiteralEditor(expression, parent, isInline, specialEditorType) {
 	else if (specialEditorType && specialEditorType === "direction") {
 		return new DirectionEditor(expression, parent, isInline);
 	}
-	else if (specialEditorType && specialEditorType === "slot") {
-		return new SlotSymbolEditor(expression, parent, isInline);
+	else if (specialEditorType && specialEditorType === "entry") {
+		return new EntrySymbolEditor(expression, parent, isInline);
 	}
 	else if (expression.type === "number") {
 		return new NumberEditor(expression, parent, isInline);

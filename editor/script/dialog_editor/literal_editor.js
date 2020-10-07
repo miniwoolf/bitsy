@@ -173,8 +173,7 @@ function SymbolEditor(expression, parentEditor, isInline) {
 		));
 }
 
-// todo : is slot the right name?
-function SlotSymbolEditor(expression, parentEditor, isInline) {
+function EntrySymbolEditor(expression, parentEditor, isInline) {
 	Object.assign(
 		this,
 		new LiteralEditor(
