@@ -987,7 +987,7 @@ var RainbowEffect = function() {
 		char.color.a = 255;
 	}
 };
-TextEffects["rbw"] = new RainbowEffect();
+TextEffects["RBW"] = new RainbowEffect();
 
 var ColorEffect = function() {
 	this.DoEffect = function(char, time, parameters) {
@@ -1001,14 +1001,14 @@ var ColorEffect = function() {
 		char.color.a = 255;
 	}
 };
-TextEffects["clr"] = new ColorEffect();
+TextEffects["CLR"] = new ColorEffect();
 
 var WavyEffect = function() {
 	this.DoEffect = function(char, time) {
 		char.offset.y += Math.sin( (time / 250) - (char.col / 2) ) * 4;
 	}
 };
-TextEffects["wvy"] = new WavyEffect();
+TextEffects["WVY"] = new WavyEffect();
 
 var ShakyEffect = function() {
 	function disturb(func, time, offset, mult1, mult2) {
@@ -1026,7 +1026,7 @@ var ShakyEffect = function() {
 						* disturb(Math.cos,time,char.col,0.2,0.3);
 	}
 };
-TextEffects["shk"] = new ShakyEffect();
+TextEffects["SHK"] = new ShakyEffect();
 
 // prototype of custom text effects
 /*
@@ -1035,6 +1035,7 @@ TextEffects["shk"] = new ShakyEffect();
   - need to figure out what this best way to return the results
   - use input and output? or properties for char?
   - need a special environment to avoid things like dialog and exits
+  - is this the name I want?
 */
 var CustomEffect = function() {
 	this.DoEffect = function(char, time, parameters) {
@@ -1054,7 +1055,7 @@ var CustomEffect = function() {
 		}
 	};
 };
-TextEffects["tfx"] = new CustomEffect();
+TextEffects["TFX"] = new CustomEffect();
 
 var DebugHighlightEffect = function() {
 	this.DoEffect = function(char) {

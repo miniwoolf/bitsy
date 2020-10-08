@@ -76,17 +76,6 @@ var expressionDescriptionMap = {
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "value", },
 		],
 	},
-	"@" : {
-		GetName : function() { return "entry value"; }, // todo : localize
-		GetDescription : function() { return "entry _ for _[ is set to _]"; }, // todo : localize! and wording?
-		parameters : [
-			// todo : create special parameter type for sprite references
-			{ types: ["symbol", "list"], index: 1, name: "entry", }, // todo : localize
-			{ types: ["symbol", "list"], index: 0, name: "table", }, // todo : localize
-			{ types: ["number", "boolean", "string", "symbol", "list"], index: 2, name: "value", },
-		],
-		// TODO : add help text?
-	},
 	"HOP" : {
 		GetName : function() { return "hop"; }, // todo : localize
 		GetDescription : function() { return "move _ one space _"; },
@@ -139,6 +128,19 @@ var expressionDescriptionMap = {
 		},
 		parameters: [ { types: ["symbol"], index: -1, name: "name", } ], // todo : the -1 is hacky
 	},
+};
+
+// hacky?
+expressionDescriptionMap[SymNext.Entry] = {
+	GetName : function() { return "entry value"; }, // todo : localize
+	GetDescription : function() { return "entry _ for _[ is set to _]"; }, // todo : localize! and wording?
+	parameters : [
+		// todo : create special parameter type for sprite references
+		{ types: ["symbol", "list"], index: 1, name: "entry", }, // todo : localize
+		{ types: ["symbol", "list"], index: 0, name: "table", }, // todo : localize
+		{ types: ["number", "boolean", "string", "symbol", "list"], index: 2, name: "value", },
+	],
+	// TODO : add help text?
 };
 
 var isHelpTextOn = true;

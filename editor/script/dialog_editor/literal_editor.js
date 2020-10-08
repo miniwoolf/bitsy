@@ -201,7 +201,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 				input.appendChild(variableDatalist);
 
 				input.onchange = function(event) {
-					expression.value = "@" + event.target.value;
+					expression.value = SymNext.Entry + event.target.value;
 					// todo : notify parent!
 				}
 

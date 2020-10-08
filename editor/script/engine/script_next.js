@@ -7,7 +7,15 @@ NOTES
 - better multi-line dialog script parsing by handling strings inside quotes
 - what do I do about global vs local variables?
 - decide whether the new style names are good
+- global variables aren't working
 */
+
+var SymNext = {
+	CurlyOpen : "{",
+	CurlyClose : "}",
+	DialogStart : "->",
+	Entry : ":",
+};
 
 function ScriptNext() {
 
@@ -18,7 +26,7 @@ function compile(script) {
 	if (scriptStr.indexOf("\n") < 0) {
 		// wrap one-line dialogs in a dialog expression
 		// TODO : is this still what I want?
-		scriptStr = "{-> " + scriptStr + "}";
+		scriptStr = SymNext.CurlyOpen + SymNext.DialogStart + " " + scriptStr + SymNext.CurlyClose;
 	}
 
 	var tokens = tokenize(scriptStr);
@@ -30,19 +38,19 @@ function compile(script) {
 this.Compile = compile;
 
 // TODO : pass in dialog buffer instead of using a global reference?
-this.Run = function(script, objectContext, callback) {
+this.Run = function(script, instance, callback) {
 	if (!(script.id in compiledScripts)) {
 		compile(script);
 	}
 
-	var coreLibrary = createLibrary(dialogBuffer, objectContext);
-	// todo : make this environment chaining less awkward?
-	var libraryEnv = new Environment(coreLibrary);
-	var mathEnv = new Environment(mathLibrary);
-	var variableEnv = new Environment(variable, libraryEnv);
-	// todo : avatar? or player? for global avatar access
-	var objectEnv = new Environment({ ME: objectContext }, variableEnv);
-	eval(compiledScripts[script.id], objectEnv, callback);
+	var globalEnv = createGlobalEnvironment(variable);
+	var coreLibrary = createCoreLibrary(globalEnv);
+	var dialogLibrary = createDialogLibrary(dialogBuffer, coreLibrary);
+	var spriteLibrary = createSpriteLibrary(instance, dialogLibrary);
+	var mathLibrary = createMathLibrary(spriteLibrary);
+	var instanceEnv = createInstanceEnvironment(instance, mathLibrary);
+
+	eval(compiledScripts[script.id], instanceEnv, callback);
 }
 
 var RunCallback = function(script, objectContext, inputParameters, callback) {
@@ -157,7 +165,7 @@ function serializeWrapped(expressionList, indentDepth) {
 	for (var i = 0; i < expressionList.length; i++) {
 		var exp = expressionList[i];
 		var expStr = serialize(expressionList[i], indentNext);
-		var nextWordLen = exp.type != "list" && exp.value != "->" ? expStr.length : 0;
+		var nextWordLen = exp.type != "list" && exp.value != SymNext.DialogStart ? expStr.length : 0;
 		var isMultiLine = exp.type === "list" && !isInlineFunction(exp.list[0].value);
 
 		if (prevLineIsMultiLine || isMultiLine || (curLineLen + nextWordLen + 1) > wordWrapLen) {
@@ -180,7 +188,7 @@ function serializeWrapped(expressionList, indentDepth) {
 this.SerializeWrapped = serializeWrapped;
 
 function isDialogExpression(symbol) {
-	return symbol === "->";
+	return symbol === SymNext.DialogStart;
 }
 this.IsDialogExpression = isDialogExpression;
 
@@ -216,7 +224,7 @@ function serializeList(expression, indentDepth) {
 		listType = expression.list[0].value;
 	}
 
-	var out = "{";
+	var out = SymNext.CurlyOpen;
 
 	if (isDialogExpression(listType)) {
 		out += serializeWrapped(expression.list, indentDepth);
@@ -241,7 +249,7 @@ function serializeList(expression, indentDepth) {
 		out += "\n" + (" ".repeat(indentDepth));
 	}
 
-	out += "}";
+	out += SymNext.CurlyClose;
 
 	return out;
 }
@@ -350,13 +358,13 @@ function parse(tokens, list) {
 
 	while (tokens.length > 0) {
 		var token = tokens.shift();
-		if (token === "{") {
+		if (token === SymNext.CurlyOpen) {
 			list.push({
 				type: "list",
 				list: parse(tokens),
 			});
 		}
-		else if (token === "}") {
+		else if (token === SymNext.CurlyClose) {
 			break;
 		}
 		else {
@@ -401,7 +409,7 @@ function parse(tokens, list) {
 // 		// else: then what?
 // 	});
 //
-// TODO : it also would need a special case for the "->" operator
+// TODO : it also would need a special case for the SymNext.DialogStart operator
 
 function evalList(expression, environment, onReturn) {
 	var i = 0;
@@ -444,69 +452,7 @@ function eval(expression, environment, onReturn) {
 	}
 }
 
-// not sure yet how I want to design the environment
-// TODO : should I allow library methods to be overwritten by the user?
-// TODO : global vars vs local vars? need back compat with globals..
-function Environment(localEnvironment, parent) {
-	this.Has = function(symbol) {
-		// todo : break up line?
-		return (symbol in localEnvironment) || (parent != undefined && parent != null && parent.Has(symbol));
-	};
-
-	this.Get = function(symbol) {
-		if (symbol in localEnvironment) {
-			return localEnvironment[symbol];
-		}
-		else if (parent != undefined && parent != null && parent.Has(symbol)) {
-			return parent.Get(symbol);
-		}
-		else {
-			return null;
-		}
-	};
-
-	this.Set = function(symbol, value) {
-		if (!(symbol in localEnvironment) && parent != undefined && parent != null && parent.Has(symbol)) {
-			parent.Set(symbol, value);
-		}
-		else {
-			localEnvironment[symbol] = value;
-		}
-	};
-}
-
 var special = {
-	"->": function(expression, environment, onReturn) {
-		var result = null;
-		var i = 1;
-		var evalNext;
-
-		evalNext = function() {
-			if (i >= expression.list.length) {
-				onReturn(result);
-			}
-			else {
-				if (expression.list[i].type === "string") {
-					// TODO : clean up... get rid of null environment? codify how to access "secret" environment methods
-					environment.Get(" _add_text_")(
-						[expression.list[i].value],
-						null,
-						function(value) { result = null; i++; evalNext(); });
-				}
-				else if (expression.list[i].type != "list") {
-					environment.Get(" _add_word_")(
-						[serializeAtom(expression.list[i].value, expression.list[i].type)],
-						null,
-						function(value) { result = null; i++; evalNext(); });
-				}
-				else {
-					eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
-				}
-			}
-		}
-
-		evalNext();
-	},
 	"SEQ": function(expression, environment, onReturn) {
 		if ("index" in expression) {
 			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
@@ -548,6 +494,8 @@ var special = {
 		var i = 1;
 		var evalNext;
 
+		var buffer = environment.Get("DIALOG_BUFFER", true);
+
 		// use this to capture the current expression
 		function createReturnHandler(expression, environment, onReturn) {
 			return function() {
@@ -559,7 +507,10 @@ var special = {
 			if (i + 1 < expression.list.length) {
 				// initialize choice that will evaluate the option result
 				var handler = createReturnHandler(expression.list[i + 1], environment, onReturn);
-				environment.Get(" _add_choice_")([], environment, handler);
+
+				if (buffer) {
+					buffer.AddChoiceOption(handler);
+				}
 
 				// eval option (will create the choice text)
 				eval(expression.list[i], environment, function() {
@@ -617,13 +568,12 @@ var special = {
 		// TODO : do we really need to pass the environment into functions?
 		var result = function(parameters, hackDoWeReallyNeededEnvironment, onReturn) {
 			// create local function environment from input parameters
-			var parameterMap = {};
+			var fnEnvironment = new Table(environment);
 			for (var i = 0; i < parameters.length; i++) {
 				if (i < parameterNames.length) {
-					parameterMap[parameterNames[i]] = parameters[i];
+					fnEnvironment.Set(parameterNames[i], parameters[i]);
 				}
 			}
-			var fnEnvironment = new Environment(parameterMap, environment);
 
 			// every expression after the parameter list is a statement in the function
 			var result = null;
@@ -652,7 +602,8 @@ var special = {
 	"SET": function(expression, environment, onReturn) {
 		// todo : assumes the right number of list elements, etc.
 		eval(expression.list[2], environment, function(value) {
-			environment.Set(expression.list[1].value, value);
+			// todo : what about local variables?
+			environment.SetGlobal(expression.list[1].value, value);
 			onReturn(null);
 		});
 	},
@@ -667,7 +618,7 @@ var special = {
 			}
 			else {
 				// todo : store special symbols like @ and -> somewhere?
-				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === "@") {
+				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SymNext.Entry) {
 					var name = expression.list[i].value.slice(1);
 					i++;
 
@@ -689,31 +640,72 @@ var special = {
 
 		evalNext();
 	},
-	// table entry accessor (todo: use other symbol? "." ":" and store it somewhere?)
-	"@": function(expression, environment, onReturn) {
-		if (expression.list.length < 3) {
-			onReturn(null); // not enough arguments!
+}
+
+// hacky?
+special[SymNext.DialogStart] = function(expression, environment, onReturn) {
+	var result = null;
+	var i = 1;
+	var evalNext;
+
+	// todo : what if no buffer is available?
+	var buffer = environment.Get("DIALOG_BUFFER", true);
+
+	evalNext = function() {
+		if (i >= expression.list.length) {
+			onReturn(result);
 		}
+		else {
+			if (expression.list[i].type === "string") {
+				if (buffer) {
+					buffer.AddText(expression.list[i].value);
+				}
 
-		var name = expression.list[2].value;
-
-		eval(expression.list[1], environment, function(obj) {
-			// todo : handle null / invalid tables
-			if (expression.list.length >= 4) {
-				eval(expression.list[3], environment, function(value) {
-					obj[name] = value;
-					onReturn(value);
-				});
+				result = null;
+				i++;
+				evalNext();
 			}
-			else if (name in obj) {
-				onReturn(obj[name]);
+			else if (expression.list[i].type != "list") {
+				if (buffer) {
+					buffer.AddWord(serializeAtom(expression.list[i].value, expression.list[i].type));
+				}
+
+				result = null;
+				i++;
+				evalNext();
 			}
 			else {
-				onReturn(null); // no value!
+				eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
 			}
-		});
-	},
-}
+		}
+	}
+
+	evalNext();
+};
+
+special[SymNext.Entry] = function(expression, environment, onReturn) {
+	if (expression.list.length < 3) {
+		onReturn(null); // not enough arguments!
+	}
+
+	var name = expression.list[2].value;
+
+	eval(expression.list[1], environment, function(obj) {
+		// todo : handle null / invalid tables
+		if (expression.list.length >= 4) {
+			eval(expression.list[3], environment, function(value) {
+				obj[name] = value;
+				onReturn(value);
+			});
+		}
+		else if (name in obj) {
+			onReturn(obj[name]);
+		}
+		else {
+			onReturn(null); // no value!
+		}
+	});
+};
 
 function valueToString(value) {
 	var str = "";
@@ -721,7 +713,7 @@ function valueToString(value) {
 		str += "FN";
 	}
 	else if (typeof value === "object") {
-		// todo : smarter to string for boxes later on (include name, id, type, etc)
+		// todo : smarter to string for tables later on (include name, id, type, etc)
 		str += "TBL";
 	}
 	else if (typeof value === "boolean") {
@@ -734,202 +726,341 @@ function valueToString(value) {
 	return str;
 }
 
-// TODO : refactor to remove environment? doesn't seem like I'm using it...
-function createLibrary(dialogBuffer, objectContext) {
-	var library = {
-		/* dialogue functions */
-		"SAY": function(parameters, environment, onReturn) {
-			// todo : is this the right implementation of say?
-			// todo : hacky to force into a string with concatenation?
-			// todo : nicer way to print objects
-			// todo : new way to convert bools etc to string
-			dialogBuffer.AddText(valueToString(parameters[0]));
-			dialogBuffer.AddScriptReturn(onReturn);
+// todo : extend table so this doesn't have to be custom?
+function createGlobalEnvironment(variableStore) {
+	var env = {
+		Has: function(key) {
+			return variableStore.hasOwnProperty(key);
 		},
-		"BR": function(parameters, environment, onReturn) {
-			dialogBuffer.AddLinebreak();
-			dialogBuffer.AddScriptReturn(onReturn);
-		},
-		"PG": function(parameters, environment, onReturn) {
-			// TODO : fix this method...
-			dialogBuffer.AddPagebreak();
-			dialogBuffer.AddScriptReturn(onReturn);
-		},
-		"WVY": function(parameters, environment, onReturn) {
-			dialogBuffer.AddTextEffect("wvy");
-			onReturn(null);
-		},
-		"/WVY": function(parameters, environment, onReturn) {
-			dialogBuffer.RemoveTextEffect("wvy");
-			onReturn(null);
-		},
-		"SHK": function(parameters, environment, onReturn) {
-			dialogBuffer.AddTextEffect("shk");
-			onReturn(null);
-		},
-		"/SHK": function(parameters, environment, onReturn) {
-			dialogBuffer.RemoveTextEffect("shk");
-			onReturn(null);
-		},
-		"RBW": function(parameters, environment, onReturn) {
-			dialogBuffer.AddTextEffect("rbw");
-			onReturn(null);
-		},
-		"/RBW": function(parameters, environment, onReturn) {
-			dialogBuffer.RemoveTextEffect("rbw");
-			onReturn(null);
-		},
-		// todo : rename to match COL from sprites?
-		"CLR": function(parameters, environment, onReturn) {
-			dialogBuffer.AddTextEffect("clr", parameters);
-			onReturn(null);
-		},
-		"/CLR": function(parameters, environment, onReturn) {
-			dialogBuffer.RemoveTextEffect("clr");
-			onReturn(null);
-		},
-
-		/* TODO: missing old functions
-			- exit (EXT)
-			- item (ITM)
-			- printX (DRW) -- correct name?
-		*/
-		"END": function(parameters, environment, onReturn) {
-			// todo very global / hacky?
-			isEnding = true;
-			isNarrating = true;
-			dialogRenderer.SetCentered(true);
-			onReturn(null);
-		},
-
-		// NEW FUNCTIONS (WIP)
-		// todo : require object reference as first parameter
-		"HOP": function(parameters, environment, onReturn) {
-			var result = false;
-
-			var instance = parameters[0];
-
-			if (instance.id === "A") {
-				result = movePlayer(keyNameToDirection(parameters[1]));
-			}
-			else {
-				result = !move(instance, keyNameToDirection(parameters[1])).collision;
+		Get: function(key) {
+			if (variableStore.hasOwnProperty(key)) {
+				return variableStore[key];
 			}
 
-			onReturn(result);
+			return false;
 		},
-		"PUT": function(parameters, environment, onReturn) {
-			var obj = null;
-
-			// TODO : allow user to specify coordinates
-			// TODO : what if there's no id? or user uses name instead?
-			if (objectContext != null && objectContext != undefined) {
-				var objLocation = { id: parameters[0], x: objectContext.x, y: objectContext.y };
-
-				if (parameters.length >= 3) {
-					objLocation.x = parameters[1];
-					objLocation.y = parameters[2];
-				}
-
-				obj = createObjectInstance(nextObjectInstanceId, objLocation);
-				objectInstances[nextObjectInstanceId] = obj;
-
-				nextObjectInstanceId++;
-			}
-
-			onReturn(obj);
-		},
-		"RID": function(parameters, environment, onReturn) {
-			// todo : what if the object passed in is no longer valid?
-			if (parameters.length >= 1 && "instanceId" in parameters[0]) {
-				delete objectInstances[parameters[0].instanceId];
-			}
-
-			onReturn(null);
-		},
-
-		// todo : make sure rooms remember their original pal id and reset to it
-		"PAL": function(parameters, environment, onReturn) {
-			room[curRoom].pal = parameters[0];
-
-			onReturn(null); // todo : replace all nulls with false? return palette id?
-		},
-
-		// todo : what about OTHER one parameter math functions? cos? sin? etc...
-		// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
-		"NOT": function(parameters, environment, onReturn) {
-			onReturn(!parameters[0]);
-		},
-
-		// prototype of custom text effects
-		//todo: name? is "CFX" the acronym I want to use?
-		"CFX": function(parameters, environment, onReturn) {
-			dialogBuffer.AddTextEffect("tfx", parameters);
-			onReturn(null);
-		},
-		"/CFX": function(parameters, environment, onReturn) {
-			dialogBuffer.RemoveTextEffect("tfx");
-			onReturn(null);
-		},
-
-		// TODO : "ERR" {} // error messages -- would be good to put throughout
-
-		// secret dialog buffer methods (todo: maybe they shouldn't be secret?)
-		" _add_word_": function(parameters, environment, onReturn) {
-			dialogBuffer.AddWord(parameters[0]);
-			dialogBuffer.AddScriptReturn(onReturn);
-		},
-		// this one is kind of a duplicate of "say" isn't it?
-		" _add_text_": function(parameters, environment, onReturn) {
-			dialogBuffer.AddText(parameters[0]);
-			dialogBuffer.AddScriptReturn(onReturn);
-		},
-		// todo: name?
-		" _add_choice_": function(parameters, environment, onReturn) {
-			dialogBuffer.AddChoiceOption(onReturn);
+		Set: function(key, value) {
+			variableStore[key] = value;
+			return value;
 		},
 	};
 
-	return library;
+	return env;
 }
 
-var mathLibrary = {
-	/* math functions */
-	"IS": function(parameters, environment, onReturn) {
+function createInstanceEnvironment(instance, parent) {
+	var env = new Table(parent);
+
+	// todo : name? THIS? SELF? I? something else?
+	env.Set("ME", instance);
+
+	return env;
+}
+
+function createCoreLibrary(parent) {
+	var lib = new Table(parent);
+
+	/* TODO: missing old functions
+		- exit (EXT)
+		- item (ITM)
+	*/
+
+	lib.Set("END", function(parameters, environment, onReturn) {
+		// todo very global / hacky?
+		isEnding = true;
+		isNarrating = true;
+		dialogRenderer.SetCentered(true);
+		onReturn(null);
+	});
+
+	// todo : make sure rooms remember their original pal id and reset to it
+	lib.Set("PAL", function(parameters, environment, onReturn) {
+		room[curRoom].pal = parameters[0];
+		onReturn(null); // todo : replace all nulls with false? return palette id?
+	});
+
+	// todo : what about OTHER one parameter math functions? cos? sin? etc...
+	// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
+	lib.Set("NOT", function(parameters, environment, onReturn) {
+		onReturn(!parameters[0]);
+	});
+
+	return lib;
+}
+
+function createDialogLibrary(dialogBuffer, parent) {
+	var lib = new Table(parent);
+
+	/* todo
+		missing old func:
+		- printX (DRW) -- correct name?
+	*/
+
+	lib.Set("SAY", function(parameters, environment, onReturn) {
+		// todo : is this the right implementation of say?
+		// todo : hacky to force into a string with concatenation?
+		// todo : nicer way to print objects
+		// todo : new way to convert bools etc to string
+		dialogBuffer.AddText(valueToString(parameters[0]));
+		dialogBuffer.AddScriptReturn(onReturn);
+	});
+
+	lib.Set("BR", function(parameters, environment, onReturn) {
+		dialogBuffer.AddLinebreak();
+		dialogBuffer.AddScriptReturn(onReturn);
+	});
+
+	lib.Set("PG", function(parameters, environment, onReturn) {
+		// TODO : fix this method...
+		dialogBuffer.AddPagebreak();
+		dialogBuffer.AddScriptReturn(onReturn);
+	});
+
+	var textEffectIds = ["WVY", "SHK", "RBW", "CLR", "TFX"];
+
+	function addTextEffect(id) {
+		lib.Set(id, function(parameters, environment, onReturn) {
+			dialogBuffer.AddTextEffect(id, parameters);
+			onReturn(null);
+		});
+
+		lib.Set("/" + id, function(parameters, environment, onReturn) {
+			dialogBuffer.RemoveTextEffect(id);
+			onReturn(null);
+		});
+	};
+
+	for (var i = 0; i < textEffectIds.length; i++) {
+		addTextEffect(textEffectIds[i]);
+	}
+
+	// add secret dialog buffer entry for use by dialog expressions & choices
+	lib.SetSecret("DIALOG_BUFFER", dialogBuffer);
+
+	return lib;
+}
+
+function createSpriteLibrary(contextInstance, parent) {
+	var lib = new Table(parent);
+
+	// NEW FUNCTIONS (WIP)
+
+	// create new sprite instance
+	lib.Set("PUT", function(parameters, environment, onReturn) {
+		var instance = null;
+
+		// todo : what if there's no parameters[0]?
+		var location = { id: parameters[0], x: 0, y: 0, };
+
+		if (parameters.length >= 3) {
+			location.x = parameters[1];
+			location.y = parameters[2];
+		}
+		else if (contextInstance != undefined && contextInstance != null) {
+			// todo : what if the context instance is invalid now?
+			location.x = contextInstance.x; // todo : upper?
+			location.y = contextInstance.y;
+		}
+
+		// todo: rename createObjectInstance
+		instance = createObjectInstance(nextObjectInstanceId, location);
+		objectInstances[nextObjectInstanceId] = instance;
+		nextObjectInstanceId++;
+
+		onReturn(instance);
+	});
+
+	// remove sprite instance
+	lib.Set("RID", function(parameters, environment, onReturn) {
+		// todo : allow deleting the current sprite if no parameters?
+		// todo : what if the object passed in is no longer valid?
+		if (parameters.length >= 1 && "instanceId" in parameters[0]) {
+			delete objectInstances[parameters[0].instanceId];
+		}
+
+		onReturn(null);
+	});
+
+	// move a sprite instance (with collisions)
+	lib.Set("HOP", function(parameters, environment, onReturn) {
+		// todo : allow moving the current sprite if no parameters? that would mean putting the reference param last
+		var result = false;
+
+		var instance = parameters[0];
+
+		if (instance.id === "A") {
+			result = movePlayer(keyNameToDirection(parameters[1]));
+		}
+		else {
+			result = !move(instance, keyNameToDirection(parameters[1])).collision;
+		}
+
+		onReturn(result);
+	});
+
+	return lib;
+}
+
+function createMathLibrary(parent) {
+	var lib = new Table(parent);
+
+	lib.Set("IS", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] === parameters[1]);
-	},
-	"GT": function(parameters, environment, onReturn) {
+	});
+
+	lib.Set("ISNT", function(parameters, environment, onReturn) {
+		onReturn(parameters[0] != parameters[1]);
+	});
+
+	lib.Set("GT", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] > parameters[1]);
-	},
-	"LT": function(parameters, environment, onReturn) {
+	});
+
+	lib.Set("LT", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] < parameters[1]);
-	},
-	"GTE": function(parameters, environment, onReturn) {
+	});
+
+	lib.Set("GTE", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] >= parameters[1]);
-	},
-	"LTE": function(parameters, environment, onReturn) {
+	});
+
+	lib.Set("LTE", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] <= parameters[1]);
-	},
+	});
+
 	// TODO : should these allow multiple arguments?
 	// TODO : use math symbols for any of these? > < == * / + -
-	"MLT": function(parameters, environment, onReturn) {
+	lib.Set("MLT", function(parameters, environment, onReturn) {
 		onReturn(parameters[0] * parameters[1]);
-	},
-	"DIV": function(parameters, environment, onReturn) {
-		onReturn(parameters[0] / parameters[1]);
-	},
-	"ADD": function(parameters, environment, onReturn) {
-		onReturn(parameters[0] + parameters[1]);
-	},
-	// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
-	"SUB": function(parameters, environment, onReturn) {
-		onReturn(parameters[0] - parameters[1]);
-	},
-	"ISNT": function(parameters, environment, onReturn) {
-		onReturn(parameters[0] != parameters[1]);
-	},
-};
+	});
 
-this.IsMathExpression = function(symbol) { return symbol in mathLibrary; };
+	lib.Set("DIV", function(parameters, environment, onReturn) {
+		onReturn(parameters[0] / parameters[1]);
+	});
+
+	lib.Set("ADD", function(parameters, environment, onReturn) {
+		onReturn(parameters[0] + parameters[1]);
+	});
+
+	// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
+	lib.Set("SUB", function(parameters, environment, onReturn) {
+		onReturn(parameters[0] - parameters[1]);
+	});
+
+	return lib;
+}
+
+// todo : is this a good way to do this?
+this.IsMathExpression = (function() {
+	var mathLibKeys = createMathLibrary().Keys();
+	return function(symbol) {
+		return mathLibKeys.indexOf(symbol) != -1;
+	};
+})();
 
 } // ScriptNext
+
+function Table(parent) {
+	var entries = {};
+	var keyList = []; // maintained in insertion order
+
+	var hasParent = parent != undefined && parent != null;
+
+	var GetInternalKey = function(key, isSecret) {
+		return isSecret ? key : SymNext.Entry + key;
+	}
+
+	this.Has = function(key, isSecret) {
+		var hasEntry = false;
+		var internalKey = GetInternalKey(key, isSecret);
+
+		if (entries.hasOwnProperty(internalKey)) {
+			hasEntry = true;
+		}
+		else if (hasParent && parent.Has(key, isSecret)) {
+			hasEntry = true;
+		}
+
+		return hasEntry;
+	}
+
+	this.Get = function(key, isSecret) {
+		var value = false;
+		var internalKey = GetInternalKey(key, isSecret);
+
+		if (entries.hasOwnProperty(internalKey)) {
+			value = entries[internalKey];
+		}
+		else if (hasParent && parent.Has(key, isSecret)) {
+			value = parent.Get(key, isSecret);
+		}
+
+		return value;
+	}
+
+	function set(key, value, options) {
+		var isGlobal = options && options.isGlobal;
+		var isSecret = options && options.isSecret;
+
+		var internalKey = GetInternalKey(key, isSecret);
+		var hasInternalEntry = entries.hasOwnProperty(internalKey);
+
+		if (!hasInternalEntry && hasParent && (isGlobal || parent.Has(key, isSecret))) {
+			parent.Set(key, value, options);
+		}
+		else {
+			if (!isSecret && !hasInternalEntry) {
+				keyList.push(key);
+			}
+
+			if (!hasInternalEntry) {
+				AddGetterSetter(key, internalKey);
+			}
+
+			entries[internalKey] = value;
+		}
+
+		return value;
+	}
+
+	this.Set = set;
+
+	this.SetGlobal = function(key, value) {
+		set(key, value, { isGlobal: true });
+	}
+
+	this.SetSecret = function(key, value) {
+		set(key, value, { isSecret: true });
+	}
+
+	// only includes keys for entries that are not secret
+	this.Keys = function() {
+		return keyList;
+	}
+
+	this.ForEach = function(f) {
+		for (var i = 0; i < keyList.length; i++) {
+			var k = keyList[i];
+			var v = entries[GetInternalKey(k)];
+			f(v, k);
+		}
+	}
+
+	// adds external getter and setter for convenience of the engine
+	var AddGetterSetter = (function(object) {
+		return function(externalKey, internalKey) {
+			var getterSetter = {};
+
+			getterSetter[externalKey] = {
+				get : function() {
+					return entries[internalKey];
+				},
+				set : function(value) {
+					entries[internalKey] = value;
+				},
+			};
+
+			Object.defineProperties(object, getterSetter);
+		};
+	})(this);
+} // Table
