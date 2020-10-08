@@ -558,7 +558,7 @@ function createListEditor(expression, parent, isInline) {
 	else if (scriptNext.IsFunctionDefinition(listType)) {
 		editor = new FunctionDefinitionEditor(expression, parent);
 	}
-	else if (scriptNext.IsMathExpression(listType)) {
+	else if (library.IsMathExpression(listType)) {
 		editor = new MathExpressionEditor(expression, parent, isInline);
 	}
 	else {

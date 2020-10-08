@@ -77,7 +77,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 
 	function AddOperatorControlRecursive(expression, isEditable) {
 		// left expression
-		if (expression.list[1].type === "list" && scriptNext.IsMathExpression(expression.list[1].list[0].value)) {
+		if (expression.list[1].type === "list" && library.IsMathExpression(expression.list[1].list[0].value)) {
 			var parenSpanL = document.createElement("span");
 			parenSpanL.innerText = "(";
 			expressionSpan.appendChild(parenSpanL);
@@ -108,7 +108,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 		expressionSpan.appendChild(operatorEditor.GetElement());
 
 		// right expression
-		if (expression.list[2].type === "list" && scriptNext.IsMathExpression(expression.list[2].list[0].value)) {
+		if (expression.list[2].type === "list" && library.IsMathExpression(expression.list[2].list[0].value)) {
 			var parenSpanL = document.createElement("span");
 			parenSpanL.innerText = "(";
 			expressionSpan.appendChild(parenSpanL);

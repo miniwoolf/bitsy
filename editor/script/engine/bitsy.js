@@ -2739,4 +2739,5 @@ var scriptUtils = scriptModule.CreateUtils(); // TODO: move to editor.js?
 // scriptInterpreter.SetDialogBuffer( dialogBuffer );
 
 /* SCRIPT NEXT */
+var library = new Library();
 var scriptNext = new ScriptNext();
