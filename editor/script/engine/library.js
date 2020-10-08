@@ -68,7 +68,7 @@ function valueToString(value) {
 	if (typeof value === "function") {
 		str += "FN";
 	}
-	else if (typeof value === "object") {
+	else if (value instanceof Table) { // todo : some other way to detect tables??
 		// todo : smarter to string for tables later on (include name, id, type, etc)
 		str += "TBL";
 	}
@@ -144,7 +144,7 @@ function createSpriteLibrary(contextInstance, parent) {
 		var instance = null;
 
 		// todo : what if there's no parameters[0]?
-		var location = { id: parameters[0], x: 0, y: 0, };
+		var location = createObjectLocation(parameters[0], 0, 0);
 
 		if (parameters.length >= 3) {
 			location.x = parameters[1];

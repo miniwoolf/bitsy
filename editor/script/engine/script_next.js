@@ -604,23 +604,22 @@ var special = {
 		});
 	},
 	"TBL": function(expression, environment, onReturn) {
-		var struct = {}; // todo : replace with more robust data structure
+		var table = new Table();
 		var i = 1;
 		var evalNext;
 
 		evalNext = function() {
 			if (i >= expression.list.length) {
-				onReturn(struct);
+				onReturn(table);
 			}
 			else {
-				// todo : store special symbols like @ and -> somewhere?
 				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SymNext.Entry) {
 					var name = expression.list[i].value.slice(1);
 					i++;
 
 					// TODO : what if there's an out-of-index error?
 					eval(expression.list[i], environment, function(value) {
-						struct[name] = value;
+						table.Set(name, value);
 						i++;
 						evalNext();
 					});
@@ -684,18 +683,18 @@ special[SymNext.Entry] = function(expression, environment, onReturn) {
 		onReturn(null); // not enough arguments!
 	}
 
-	var name = expression.list[2].value;
+	var key = expression.list[2].value;
 
-	eval(expression.list[1], environment, function(obj) {
+	eval(expression.list[1], environment, function(table) {
 		// todo : handle null / invalid tables
 		if (expression.list.length >= 4) {
 			eval(expression.list[3], environment, function(value) {
-				obj[name] = value;
+				table.Set(key, value);
 				onReturn(value);
 			});
 		}
-		else if (name in obj) {
-			onReturn(obj[name]);
+		else if (table.Has(key)) {
+			onReturn(table.Get(key));
 		}
 		else {
 			onReturn(null); // no value!
