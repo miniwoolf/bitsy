@@ -1,5 +1,3 @@
-// todo : remove unused environment parameters
-
 function Library() {
 
 // todo : extend table so this doesn't have to be custom?
@@ -17,6 +15,13 @@ function createGlobalEnvironment(variableStore) {
 		},
 		Set: function(key, value) {
 			variableStore[key] = value;
+
+			// WIP --- this isn't quite working yet...
+			// // hacky?
+			// if (onVariableChanged) {
+			// 	onVariableChanged(key);
+			// }
+
 			return value;
 		},
 	};
@@ -41,7 +46,7 @@ function createCoreLibrary(parent) {
 		- item (ITM)
 	*/
 
-	lib.Set("END", function(parameters, environment, onReturn) {
+	lib.Set("END", function(parameters, onReturn) {
 		// todo very global / hacky?
 		isEnding = true;
 		isNarrating = true;
@@ -50,15 +55,69 @@ function createCoreLibrary(parent) {
 	});
 
 	// todo : make sure rooms remember their original pal id and reset to it
-	lib.Set("PAL", function(parameters, environment, onReturn) {
+	lib.Set("PAL", function(parameters, onReturn) {
 		room[curRoom].pal = parameters[0];
 		onReturn(null); // todo : replace all nulls with false? return palette id?
 	});
 
 	// todo : what about OTHER one parameter math functions? cos? sin? etc...
 	// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
-	lib.Set("NOT", function(parameters, environment, onReturn) {
+	lib.Set("NOT", function(parameters, onReturn) {
 		onReturn(!parameters[0]);
+	});
+
+	// WIP --- for loops, range, and random for tables
+	// todo :
+	// should I also have NTH and LEN? or have them instead?
+	// if keys are strings... they can't be used to update the table!
+	// other ideas: NK == nth key, NV == nth value
+	lib.Set("FOR", function(parameters, onReturn) {
+		// todo : verify the inputs are correct
+		var table = parameters[0];
+		var fn = parameters[1];
+
+		var keys = table.Keys();
+		var i = 0;
+		var evalNext;
+
+		evalNext = function() {
+			if (i >= keys.length) {
+				onReturn(null);
+			}
+			else {
+				var k = keys[i];
+				var v = table.Get(k);
+
+				fn([v, k], function() {
+					i++;
+					evalNext();
+				});
+			}
+		};
+
+		evalNext();
+	});
+
+	// todo : should max be inclusive or exclusive? look at other langs
+	lib.Set("RNG", function(parameters, onReturn) {
+		var min = parameters[0];
+		var max = parameters[1];
+		var index = 0;
+		var table = new Table();
+
+		for (var i = min; i < max; i++) {
+			table.Set("" + index, i);
+			index++;
+		}
+
+		onReturn(table);
+	});
+
+	lib.Set("RND", function(parameters, onReturn) {
+		var table = parameters[0];
+		var keys = table.Keys();
+		var k = keys[Math.floor(Math.random() * keys.length)];
+		onReturn(table.Get(k));
 	});
 
 	return lib;
@@ -92,7 +151,7 @@ function createDialogLibrary(dialogBuffer, parent) {
 		- printX (DRW) -- correct name?
 	*/
 
-	lib.Set("SAY", function(parameters, environment, onReturn) {
+	lib.Set("SAY", function(parameters, onReturn) {
 		// todo : is this the right implementation of say?
 		// todo : hacky to force into a string with concatenation?
 		// todo : nicer way to print objects
@@ -101,12 +160,12 @@ function createDialogLibrary(dialogBuffer, parent) {
 		dialogBuffer.AddScriptReturn(onReturn);
 	});
 
-	lib.Set("BR", function(parameters, environment, onReturn) {
+	lib.Set("BR", function(parameters, onReturn) {
 		dialogBuffer.AddLinebreak();
 		dialogBuffer.AddScriptReturn(onReturn);
 	});
 
-	lib.Set("PG", function(parameters, environment, onReturn) {
+	lib.Set("PG", function(parameters, onReturn) {
 		// TODO : fix this method...
 		dialogBuffer.AddPagebreak();
 		dialogBuffer.AddScriptReturn(onReturn);
@@ -115,12 +174,12 @@ function createDialogLibrary(dialogBuffer, parent) {
 	var textEffectIds = ["WVY", "SHK", "RBW", "CLR", "TFX"];
 
 	function addTextEffect(id) {
-		lib.Set(id, function(parameters, environment, onReturn) {
+		lib.Set(id, function(parameters, onReturn) {
 			dialogBuffer.AddTextEffect(id, parameters);
 			onReturn(null);
 		});
 
-		lib.Set("/" + id, function(parameters, environment, onReturn) {
+		lib.Set("/" + id, function(parameters, onReturn) {
 			dialogBuffer.RemoveTextEffect(id);
 			onReturn(null);
 		});
@@ -142,7 +201,7 @@ function createSpriteLibrary(contextInstance, parent) {
 	// NEW FUNCTIONS (WIP)
 
 	// create new sprite instance
-	lib.Set("PUT", function(parameters, environment, onReturn) {
+	lib.Set("PUT", function(parameters, onReturn) {
 		var instance = null;
 
 		// todo : what if there's no parameters[0]?
@@ -167,7 +226,7 @@ function createSpriteLibrary(contextInstance, parent) {
 	});
 
 	// remove sprite instance
-	lib.Set("RID", function(parameters, environment, onReturn) {
+	lib.Set("RID", function(parameters, onReturn) {
 		// todo : allow deleting the current sprite if no parameters?
 		// todo : what if the object passed in is no longer valid?
 		if (parameters.length >= 1 && "instanceId" in parameters[0]) {
@@ -178,7 +237,7 @@ function createSpriteLibrary(contextInstance, parent) {
 	});
 
 	// move a sprite instance (with collisions)
-	lib.Set("HOP", function(parameters, environment, onReturn) {
+	lib.Set("HOP", function(parameters, onReturn) {
 		// todo : allow moving the current sprite if no parameters? that would mean putting the reference param last
 		var result = false;
 
@@ -200,46 +259,46 @@ function createSpriteLibrary(contextInstance, parent) {
 function createMathLibrary(parent) {
 	var lib = new Table(parent);
 
-	lib.Set("IS", function(parameters, environment, onReturn) {
+	lib.Set("IS", function(parameters, onReturn) {
 		onReturn(parameters[0] === parameters[1]);
 	});
 
-	lib.Set("ISNT", function(parameters, environment, onReturn) {
+	lib.Set("ISNT", function(parameters, onReturn) {
 		onReturn(parameters[0] != parameters[1]);
 	});
 
-	lib.Set("GT", function(parameters, environment, onReturn) {
+	lib.Set("GT", function(parameters, onReturn) {
 		onReturn(parameters[0] > parameters[1]);
 	});
 
-	lib.Set("LT", function(parameters, environment, onReturn) {
+	lib.Set("LT", function(parameters, onReturn) {
 		onReturn(parameters[0] < parameters[1]);
 	});
 
-	lib.Set("GTE", function(parameters, environment, onReturn) {
+	lib.Set("GTE", function(parameters, onReturn) {
 		onReturn(parameters[0] >= parameters[1]);
 	});
 
-	lib.Set("LTE", function(parameters, environment, onReturn) {
+	lib.Set("LTE", function(parameters, onReturn) {
 		onReturn(parameters[0] <= parameters[1]);
 	});
 
 	// TODO : should these allow multiple arguments?
 	// TODO : use math symbols for any of these? > < == * / + -
-	lib.Set("MLT", function(parameters, environment, onReturn) {
+	lib.Set("MLT", function(parameters, onReturn) {
 		onReturn(parameters[0] * parameters[1]);
 	});
 
-	lib.Set("DIV", function(parameters, environment, onReturn) {
+	lib.Set("DIV", function(parameters, onReturn) {
 		onReturn(parameters[0] / parameters[1]);
 	});
 
-	lib.Set("ADD", function(parameters, environment, onReturn) {
+	lib.Set("ADD", function(parameters, onReturn) {
 		onReturn(parameters[0] + parameters[1]);
 	});
 
 	// todo : potentially using "SUB" instead "-" frees up "-" to be the dialog start symbal
-	lib.Set("SUB", function(parameters, environment, onReturn) {
+	lib.Set("SUB", function(parameters, onReturn) {
 		onReturn(parameters[0] - parameters[1]);
 	});
 

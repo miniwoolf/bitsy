@@ -52,8 +52,7 @@ this.Run = function(script, instance, callback) {
 var RunCallback = function(script, objectContext, inputParameters, callback) {
 	this.Run(script, objectContext, function(result) {
 		if (result instanceof Function) {
-			// TODO : pass in an environment?
-			result(inputParameters, null, callback);
+			result(inputParameters, callback);
 		}
 		else {
 			callback(result);
@@ -415,7 +414,7 @@ function evalList(expression, environment, onReturn) {
 	evalNext = function() {
 		if (i >= expression.list.length) {
 			if (values[0] instanceof Function) {
-				values[0](values.slice(1), environment, onReturn);
+				values[0](values.slice(1), onReturn);
 			}
 			// else: then what?
 		}
@@ -561,10 +560,9 @@ var special = {
 			}
 		}
 
-		// TODO : do we really need to pass the environment into functions?
-		var result = function(parameters, hackDoWeReallyNeededEnvironment, onReturn) {
+		var result = function(parameters, onReturn) {
 			// create local function environment from input parameters
-			var fnEnvironment = new Table(environment);
+			var fnEnvironment = new Table(environment); // todo : should it have access to the external environment?
 			for (var i = 0; i < parameters.length; i++) {
 				if (i < parameterNames.length) {
 					fnEnvironment.Set(parameterNames[i], parameters[i]);
@@ -780,14 +778,6 @@ function Table(parent) {
 	// only includes keys for entries that are not secret
 	this.Keys = function() {
 		return keyList;
-	}
-
-	this.ForEach = function(f) {
-		for (var i = 0; i < keyList.length; i++) {
-			var k = keyList[i];
-			var v = entries[GetInternalKey(k)];
-			f(v, k);
-		}
 	}
 
 	// adds external getter and setter for convenience of the engine

@@ -3,6 +3,9 @@ INVENTORY UI
 
 TODO
 - encapsulate this!!
+- refactor to work with
+	- variable store that changes at runtime
+	- more complex types (TBL, FN)
 
 */
 
@@ -129,7 +132,8 @@ function updateInventoryVariableUI(){
 
 	function addVariableRegister(id) {
 		var varName = id;
-		var varValue = isPlayMode ? scriptInterpreter.GetVariable(id) : variable[id];
+		// var varValue = isPlayMode ? scriptInterpreter.GetVariable(id) : variable[id];
+		var varValue = variable[id];
 
 		if(id === null)
 		{
@@ -177,18 +181,18 @@ function updateInventoryVariableUI(){
 		varDiv.appendChild(deleteVarEl);	
 	}
 
-	if(isPlayMode) {
-		var variableNames = scriptInterpreter.GetVariableNames();
-		for(var i = 0; i < variableNames.length; i++) {
-			var id = variableNames[i];
-			addVariableRegister(id);
-		}
-	}
-	else {
+	// if(isPlayMode) {
+	// 	var variableNames = scriptInterpreter.GetVariableNames();
+	// 	for(var i = 0; i < variableNames.length; i++) {
+	// 		var id = variableNames[i];
+	// 		addVariableRegister(id);
+	// 	}
+	// }
+	// else {
 		for(id in variable) {
 			addVariableRegister(id);
 		}
-	}
+	// }
 
 	function createAddButton() {
 		var addVarEl = document.createElement("button");

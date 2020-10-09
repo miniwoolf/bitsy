@@ -30,20 +30,25 @@ var expressionDescriptionMap = {
 		commands : [RoomMoveDestinationCommand],
 	},
 	// todo : add to text effects instead? along with BR?
-	// "PG" : {
-	// 	GetName : function() {
-	// 		return localization.GetStringOrFallback("function_pg_name", "pagebreak");
-	// 	},
-	// 	GetDescription : function() {
-	// 		return localization.GetStringOrFallback("function_pg_description", "start a new page of dialog");
-	// 	},
-	// 	GetHelpText : function() {
-	// 		return localization.GetStringOrFallback(
-	// 			"function_pg_help",
-	// 			"if there are actions after this one, they will start after the player presses continue");
-	// 	},
-	// 	parameters : [],
-	// },
+	"BR" : {
+		GetName : function() { return "linebreak"; }, // todo : localize
+		GetDescription : function() { return "start a new line of dialog"; },
+		parameter : [],
+	},
+	"PG" : {
+		GetName : function() {
+			return localization.GetStringOrFallback("function_pg_name", "pagebreak");
+		},
+		GetDescription : function() {
+			return localization.GetStringOrFallback("function_pg_description", "start a new page of dialog");
+		},
+		GetHelpText : function() {
+			return localization.GetStringOrFallback(
+				"function_pg_help",
+				"if there are actions after this one, they will start after the player presses continue");
+		},
+		parameters : [],
+	},
 	"ITM" : {
 		GetName : function() {
 			return localization.GetStringOrFallback("function_item_name", "item");
@@ -120,6 +125,32 @@ var expressionDescriptionMap = {
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "value", },
 		],
 		// TODO : add help text?
+	},
+	"FOR" : {
+		GetName : function() { return "for each"; }, // todo : localize
+		GetDescription : function() { return "for each entry in _, do: _"; },
+		parameters : [
+			{ types: ["symbol", "list"], index: 0, name: "table", },
+			{ types: ["symbol", "list"], index: 1, name: "function", },
+		],
+		// TODO : add help text?
+	},
+	"RNG" : {
+		GetName : function() { return "range"; }, // todo : localize
+		GetDescription : function() { return "range of _ to _"; },
+		parameters : [
+			{ types: ["number", "symbol", "list"], index: 0, name: "min", },
+			{ types: ["number", "symbol", "list"], index: 1, name: "max", },
+		],
+		// TODO : add help text?		
+	},
+	"RND" : {
+		GetName : function() { return "random"; }, // todo : localize
+		GetDescription : function() { return "random value from _"; },
+		parameters : [
+			{ types: ["symbol", "list"], index: 0, name: "table", },
+		],
+		// TODO : add help text?		
 	},
 	"default" : {
 		GetName : function() { return "function"; }, // todo : localize
