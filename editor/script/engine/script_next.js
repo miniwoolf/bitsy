@@ -754,15 +754,15 @@ function Table(parent) {
 			parent.Set(key, value, options);
 		}
 		else if (!readOnlyEntries[internalKey]) {
-			if (!isSecret && !hasInternalEntry) {
-				keyList.push(key);
-			}
-
-			if (isReadOnly) {
-				readOnlyEntries[internalKey] = true;
-			}
-
 			if (!hasInternalEntry) {
+				if (!isSecret) {
+					keyList.push(key);
+				}
+
+				if (isReadOnly) {
+					readOnlyEntries[internalKey] = true;
+				}
+
 				AddGetterSetter(externalKey != null ? externalKey : key, internalKey);
 			}
 
