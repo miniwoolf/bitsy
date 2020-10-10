@@ -705,6 +705,7 @@ special[SymNext.Entry] = function(expression, environment, onReturn) {
 function Table(parent) {
 	var entries = {};
 	var keyList = []; // maintained in insertion order
+	var readOnlyEntries = {}; // todo : is this the best way to keep track of this?
 
 	var hasParent = parent != undefined && parent != null;
 
@@ -743,17 +744,22 @@ function Table(parent) {
 	function set(key, value, options) {
 		var isGlobal = options && options.isGlobal;
 		var isSecret = options && options.isSecret;
+		var isReadOnly = options && options.isReadOnly;
 		var externalKey = options && options.externalKey ? options.externalKey : null;
 
 		var internalKey = GetInternalKey(key, isSecret);
 		var hasInternalEntry = entries.hasOwnProperty(internalKey);
 
-		if (!hasInternalEntry && hasParent && (isGlobal || parent.Has(key, isSecret))) {
+		if ((!hasInternalEntry || isReadOnly[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
 			parent.Set(key, value, options);
 		}
 		else {
 			if (!isSecret && !hasInternalEntry) {
 				keyList.push(key);
+			}
+
+			if (isReadOnly) {
+				readOnlyEntries[internalKey] = true;
 			}
 
 			if (!hasInternalEntry) {

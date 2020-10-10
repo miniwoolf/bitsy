@@ -1180,9 +1180,9 @@ function createSpriteInstance(instanceId, location) {
 	// todo : are the names all the way I want?
 	// todo : add read-only
 	// todo : what are all the entries I want?
-	instance.Set("ID", definition.id, { externalKey: "id" });
-	instance.Set("TYPE", definition.type, { externalKey: "type" }); // todo : "long" names ok?
-	instance.Set("NAME", definition.name, { externalKey: "name" });
+	instance.Set("ID", definition.id, { externalKey: "id", isReadOnly: true, });
+	instance.Set("TYPE", definition.type, { externalKey: "type", isReadOnly: true, }); // todo : "long" names ok?
+	instance.Set("NAME", definition.name, { externalKey: "name" }); // todo : should also be read only?
 	instance.Set("DRW", definition.drw, { externalKey: "drw" });
 	instance.Set("COL", definition.col, { externalKey: "col" });
 	instance.Set("X", location.x, { externalKey: "x" });
