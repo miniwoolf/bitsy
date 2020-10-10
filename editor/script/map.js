@@ -82,15 +82,15 @@ function MapTool(controls) {
 			for (var rx = 0; rx < roomsize; rx++) {
 				var tileId = room[roomId].tilemap[ry][rx];
 
-				for (var i = 0; i < room[roomId].objects.length; i++) {
-					var sprite = room[roomId].objects[i];
+				for (var i = 0; i < room[roomId].sprites.length; i++) {
+					var sprite = room[roomId].sprites[i];
 					if (sprite.x === rx && sprite.y === ry) {
 						tileId = sprite.id;
 					}
 				}
 
-				if (tileId != "0" && tileId in object) {
-					ctx.fillStyle = hexFromPal(parseInt(object[tileId].col));
+				if (tileId != "0" && (tileId in tile)) {
+					ctx.fillStyle = hexFromPal(parseInt(tile[tileId].col));
 					DrawRoomTile(x, y, rx, ry, size, ctx);
 				}
 			}

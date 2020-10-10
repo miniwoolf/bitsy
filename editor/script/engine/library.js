@@ -154,7 +154,7 @@ function createDialogLibrary(dialogBuffer, parent) {
 	lib.Set("SAY", function(parameters, onReturn) {
 		// todo : is this the right implementation of say?
 		// todo : hacky to force into a string with concatenation?
-		// todo : nicer way to print objects
+		// todo : nicer way to print tables
 		// todo : new way to convert bools etc to string
 		dialogBuffer.AddText(valueToString(parameters[0]));
 		dialogBuffer.AddScriptReturn(onReturn);
@@ -205,7 +205,7 @@ function createSpriteLibrary(contextInstance, parent) {
 		var instance = null;
 
 		// todo : what if there's no parameters[0]?
-		var location = createObjectLocation(parameters[0], 0, 0);
+		var location = createSpriteLocation(parameters[0], 0, 0);
 
 		if (parameters.length >= 3) {
 			location.x = parameters[1];
@@ -217,10 +217,9 @@ function createSpriteLibrary(contextInstance, parent) {
 			location.y = contextInstance.y;
 		}
 
-		// todo: rename createObjectInstance
-		instance = createObjectInstance(nextObjectInstanceId, location);
-		objectInstances[nextObjectInstanceId] = instance;
-		nextObjectInstanceId++;
+		instance = createSpriteInstance(nextInstanceId, location);
+		spriteInstances[nextInstanceId] = instance;
+		nextInstanceId++;
 
 		onReturn(instance);
 	});
@@ -228,9 +227,9 @@ function createSpriteLibrary(contextInstance, parent) {
 	// remove sprite instance
 	lib.Set("RID", function(parameters, onReturn) {
 		// todo : allow deleting the current sprite if no parameters?
-		// todo : what if the object passed in is no longer valid?
+		// todo : what if the sprite passed in is no longer valid?
 		if (parameters.length >= 1 && "instanceId" in parameters[0]) {
-			delete objectInstances[parameters[0].instanceId];
+			delete spriteInstances[parameters[0].instanceId];
 		}
 
 		onReturn(null);

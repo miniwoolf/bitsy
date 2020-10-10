@@ -101,41 +101,41 @@ function RoomTool(canvas) {
 				var isAvatarAlreadyHere = false;
 
 				for (roomId in room) {
-					var playerObj = null;
-					for (i in room[roomId].objects) {
-						var obj = room[roomId].objects[i];
-						if (obj.id === drawingId) {
-							playerObj = obj;
+					var playerSpr = null;
+					for (i in room[roomId].sprites) {
+						var spr = room[roomId].sprites[i];
+						if (spr.id === drawingId) {
+							playerSpr = spr;
 						}
 					}
 
-					if (playerObj) {
-						if (roomId === curRoom && x == playerObj.x && y == playerObj.y) {
+					if (playerSpr) {
+						if (roomId === curRoom && x == playerSpr.x && y == playerSpr.y) {
 							isAvatarAlreadyHere = true;
 						}
 
-						var index = room[roomId].objects.indexOf(playerObj);
-						room[roomId].objects.splice(index, 1);
+						var index = room[roomId].sprites.indexOf(playerSpr);
+						room[roomId].sprites.splice(index, 1);
 					}
 				}
 
 				if (!isAvatarAlreadyHere) {
-					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
+					room[curRoom].sprites.push(createSpriteLocation(drawingId, x, y));
 				}
 			}
 			else {
 				// TODO : is this the final behavior I want?
 
-				var otherObject = getObjectLocation(curRoom, x, y);
-				var isObjectAlreadyHere = otherObject != null && otherObject.id === drawingId;
+				var otherSpr = getSpriteLocation(curRoom, x, y);
+				var isSprAlreadyHere = otherSpr != null && otherSpr.id === drawingId;
 
-				if (otherObject) {
-					var index = room[curRoom].objects.indexOf(otherObject);
-					room[curRoom].objects.splice(index, 1);
+				if (otherSpr) {
+					var index = room[curRoom].sprites.indexOf(otherSpr);
+					room[curRoom].sprites.splice(index, 1);
 				}
 
-				if (!isObjectAlreadyHere) {
-					room[curRoom].objects.push(createObjectLocation(drawingId, x, y));
+				if (!isSprAlreadyHere) {
+					room[curRoom].sprites.push(createSpriteLocation(drawingId, x, y));
 				}
 			}
 
@@ -271,7 +271,7 @@ function RoomTool(canvas) {
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 
 		//draw map
-		drawRoom(room[curRoom], { drawObjectInstances: false });
+		drawRoom(room[curRoom], { drawInstances: false });
 
 		//draw grid
 		if (self.drawMapGrid) {
@@ -431,7 +431,7 @@ function duplicateRoom() {
 
 	room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
 	room[newRoomId].tilemap = duplicateTilemap;
-	room[newRoomId].objects = roomToCopy.objects.slice(0);
+	room[newRoomId].sprites = roomToCopy.sprites.slice(0);
 
 	refreshGameData();
 
@@ -461,18 +461,7 @@ function deleteRoom() {
 		var roomId = sortedRoomIdList()[roomIndex];
 
 		// delete exits in _other_ rooms that go to this room
-		for( r in room )
-		{
-			if( r != roomId) {
-				for( i in room[r].exits )
-				{
-					if( room[r].exits[i].dest.room === roomId )
-					{
-						room[r].exits.splice( i, 1 );
-					}
-				}
-			}
-		}
+		// todo : re-implement?
 
 		delete room[roomId];
 

@@ -216,11 +216,11 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 
 // todo : put in shared location?
 function GetItemNameFromId(id) {
-	if (!object[id] || object[id].type != "ITM") {
+	if (!tile[id] || tile[id].type != "ITM") {
 		return "";
 	}
 
-	return (object[id].name != null ? object[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
+	return (tile[id].name != null ? tile[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
 }
 
 // todo : put in shared location?
@@ -283,8 +283,8 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 				var input = document.createElement("select");
 				input.title = "choose item";
 
-				for (id in object) {
-					if (object[id].type === "ITM") {
+				for (id in tile) {
+					if (tile[id].type === "ITM") {
 						var itemOption = document.createElement("option");
 						itemOption.value = id;
 						itemOption.innerText = GetItemNameFromId(id);
@@ -308,7 +308,7 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 
 	// todo : replace this with a generic picker hosted by the find.js?
 	// only try to render the item if it actually exists!
-	if (expression.value in object && object[expression.value].type === "ITM") {
+	if (expression.value in tile && tile[expression.value].type === "ITM") {
 		itemThumbnail = document.createElement("img");
 		itemThumbnail.id = "param_item_" + expression.value;
 		itemThumbnail.style.width = "16px";
@@ -565,7 +565,7 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 		else if (type === "room" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in room) {
 			return true;
 		}
-		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in object && object[exp.value].type === "ITM") {
+		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in tile && tile[exp.value].type === "ITM") {
 			return true; // todo : this is really long now...
 		}
 		else if (type === "transition" && exp.type === "string" && (typeof exp.value) === "string") {

@@ -115,7 +115,7 @@ function PaintTool(canvas, roomTool) {
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 
 		//pixel color
-		var colorIndex = object[drawingId].col;
+		var colorIndex = tile[drawingId].col;
 		var color = getPal(curPal())[colorIndex];
 		ctx.fillStyle = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
 
@@ -149,7 +149,7 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function getImageSource() {
-		return renderer.GetImageSource(object[drawingId].drw);
+		return renderer.GetImageSource(tile[drawingId].drw);
 	}
 
 	function getFrameData(frameIndex) {
@@ -157,7 +157,7 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function getRenderId() {
-		return object[drawingId].drw;
+		return tile[drawingId].drw;
 	}
 
 	function getDrawingType() {
@@ -165,7 +165,7 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function isCurDrawingAnimated() {
-		return object[drawingId].animation.isAnimated;
+		return tile[drawingId].animation.isAnimated;
 	}
 
 	function curDrawingData() {
@@ -182,7 +182,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
-		if (object[drawingId] && object[drawingId].animation.isAnimated) {
+		if (tile[drawingId] && tile[drawingId].animation.isAnimated) {
 			document.getElementById("animatedCheckbox").checked = true;
 
 			if (curDrawingFrameIndex == 0)
@@ -207,7 +207,7 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		// wall UI
-		if (object[drawingId].type === "TIL") {
+		if (tile[drawingId].type === "TIL") {
 			document.getElementById("wall").setAttribute("style", "display:block;");
 			updateWallCheckboxOnCurrentTile();
 		}
@@ -216,7 +216,7 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		// dialog UI
-		if (drawingId === "A" || object[drawingId].type === "TIL") {
+		if (drawingId === "A" || tile[drawingId].type === "TIL") {
 			document.getElementById("dialog").setAttribute("style", "display:none;");
 		}
 		else {
@@ -224,7 +224,7 @@ function PaintTool(canvas, roomTool) {
 			reloadDialogUI();
 		}
 
-		if (object[drawingId].type === "ITM") {
+		if (tile[drawingId].type === "ITM") {
 			document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
 		}
 		else {
@@ -259,7 +259,7 @@ function PaintTool(canvas, roomTool) {
 			return;
 		}
 
-		if (object[drawingId].isWall == undefined || object[drawingId].isWall == null) {
+		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null) {
 			// clear out any existing wall settings for this tile in any rooms
 			// (this is back compat for old-style wall settings)
 			for (roomId in room) {
@@ -271,7 +271,7 @@ function PaintTool(canvas, roomTool) {
 			}
 		}
 
-		object[drawingId].isWall = checked;
+		tile[drawingId].isWall = checked;
 
 		refreshGameData();
 
@@ -281,15 +281,14 @@ function PaintTool(canvas, roomTool) {
 		}
 	}
 
-	// TODO : who uses this?
-	this.GetCurObject = function() {
-		console.log("GET OBJECT " + drawingId);
-		return object[drawingId];
+	// TODO : who uses this? once in reload paint dialog ui, and once in this file... probably could be removed
+	this.GetCurTile = function() {
+		return tile[drawingId];
 	}
 
 	this.NewDrawing = function(type, imageData) {
-		var nextId = nextObjectId(sortedBase36IdList(object)); // TODO : helper function?
-		createObject(nextId, type, { drawingData:imageData });
+		var nextId = nextObjectId(sortedBase36IdList(tile)); // TODO : helper function?
+		createTile(nextId, type, { drawingData:imageData });
 		refreshGameData();
 
 		events.Raise("add_drawing", { id: nextId });
@@ -310,12 +309,12 @@ function PaintTool(canvas, roomTool) {
 	this.DuplicateDrawing = function() {
 		var sourceImageData = renderer.GetImageSource(getRenderId());
 
-		var type = object[drawingId].type;
+		var type = tile[drawingId].type;
 
 		// tiles have extra data to copy
 		var tileIsWall = false;
 		if (getDrawingType() === TileType.Tile) {
-			tileIsWall = object[drawingId].isWall;
+			tileIsWall = tile[drawingId].isWall;
 		}
 
 		this.NewDrawing(type, sourceImageData);
@@ -323,7 +322,7 @@ function PaintTool(canvas, roomTool) {
 		// HACKY
 		// tiles have extra data to copy
 		if (getDrawingType() === TileType.Tile) {
-			object[drawingId].isWall = tileIsWall;
+			tile[drawingId].isWall = tileIsWall;
 			// make sure the wall toggle gets updated
 			self.ReloadDrawing();
 		}
@@ -343,14 +342,14 @@ function PaintTool(canvas, roomTool) {
 			else if (getDrawingType() == TileType.Item) {
 				removeAllItems(drawingId);
 			}
-			// TODO : remove all object locations
+			// TODO : remove all sprite locations
 
-			var dlgId = object[drawingId].dlg;
+			var dlgId = tile[drawingId].dlg;
 			if (dlgId && dialog[dlgId]) {
 				delete dialog[dlgId];
 			}
 
-			delete object[drawingId];
+			delete tile[drawingId];
 
 			events.Raise("delete_drawing", { id: drawingId });
 
@@ -371,13 +370,13 @@ function PaintTool(canvas, roomTool) {
 	function updateWallCheckboxOnCurrentTile() {
 		var isCurTileWall = false;
 
-		if (object[drawingId].isWall == undefined || object[drawingId].isWall == null ) {
+		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null ) {
 			if (room[curRoom]) {
 				isCurTileWall = (room[curRoom].walls.indexOf(drawingId) != -1);
 			}
 		}
 		else {
-			isCurTileWall = object[drawingId].isWall;
+			isCurTileWall = tile[drawingId].isWall;
 		}
 
 		if (isCurTileWall) {
@@ -404,21 +403,21 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function updateDrawingNameUI() {
-		var obj = object[drawingId];
+		var til = tile[drawingId];
 
-		if (obj.id === "A") { // hacky
+		if (til.id === "A") { // hacky
 			document.getElementById("drawingName").value = "avatar"; // TODO: localize
 		}
-		else if (obj.name != null) {
-			document.getElementById("drawingName").value = obj.name;
+		else if (til.name != null) {
+			document.getElementById("drawingName").value = til.name;
 		}
 		else {
 			document.getElementById("drawingName").value = "";
 		}
 
-		document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + obj.id;
+		document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + til.id;
 
-		document.getElementById("drawingName").readOnly = obj.id === "A";
+		document.getElementById("drawingName").readOnly = til.id === "A";
 	}
 
 	this.SetPaintGrid = function(isVisible) {
@@ -431,13 +430,13 @@ function PaintTool(canvas, roomTool) {
 	// todo : create new improved controls for this sometime (in seperate object?)
 	this.SetAnimated = function(isAnimated) {
 		if (isAnimated) {
-			addObjectAnimation();
+			addDrawingAnimation();
 			document.getElementById("animation").setAttribute("style","display:block;");
 			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
 			renderAnimationPreview(drawingId);
 		}
 		else {
-			removeObjectAnimation();
+			removeDrawingAnimation();
 			document.getElementById("animation").setAttribute("style","display:none;");
 			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
 		}
@@ -448,21 +447,21 @@ function PaintTool(canvas, roomTool) {
 		self.ReloadDrawing();
 	}
 
-	function addObjectAnimation() {
+	function addDrawingAnimation() {
 		//set editor mode
 		curDrawingFrameIndex = 0;
 
-		//mark object as animated
-		object[drawingId].animation.isAnimated = true;
-		object[drawingId].animation.frameIndex = 0;
-		object[drawingId].animation.frameCount = 2;
+		//mark tile as animated
+		tile[drawingId].animation.isAnimated = true;
+		tile[drawingId].animation.frameIndex = 0;
+		tile[drawingId].animation.frameCount = 2;
 
-		//add blank frame to object (or restore removed animation)
-		if (object[drawingId].cachedAnimation != null) {
-			restoreDrawingAnimation(object[drawingId].drw, object[drawingId].cachedAnimation);
+		//add blank frame to tile (or restore removed animation)
+		if (tile[drawingId].cachedAnimation != null) {
+			restoreDrawingAnimation(tile[drawingId].drw, tile[drawingId].cachedAnimation);
 		}
 		else {
-			addNewFrameToDrawing(object[drawingId].drw);
+			addNewFrameToDrawing(tile[drawingId].drw);
 		}
 
 		// TODO RENDERER : refresh images
@@ -475,15 +474,15 @@ function PaintTool(canvas, roomTool) {
 		resetAllAnimations();
 	}
 
-	function removeObjectAnimation(drawingId) {
-		//mark object as non-animated
-		object[drawingId].animation.isAnimated = false;
-		object[drawingId].animation.frameIndex = 0;
-		object[drawingId].animation.frameCount = 0;
+	function removeDrawingAnimation(drawingId) {
+		//mark tile as non-animated
+		tile[drawingId].animation.isAnimated = false;
+		tile[drawingId].animation.frameIndex = 0;
+		tile[drawingId].animation.frameCount = 0;
 
-		//remove all but the first frame of the object
-		cacheDrawingAnimation(object[drawingId], object[drawingId].drw);
-		removeDrawingAnimation(object[drawingId].drw);
+		//remove all but the first frame of the tile
+		cacheDrawingAnimation(tile[drawingId], tile[drawingId].drw);
+		removeDrawingAnimation(tile[drawingId].drw);
 
 		// TODO RENDERER : refresh images
 
@@ -590,13 +589,13 @@ function getDrawingTypeFromId(drawingId) {
 	if (drawingId === "A") {
 		return TileType.Avatar;
 	}
-	else if (object[drawingId].type === "SPR") {
+	else if (tile[drawingId].type === "SPR") {
 		return TileType.Sprite;
 	}
-	else if (object[drawingId].type === "TIL") {
+	else if (tile[drawingId].type === "TIL") {
 		return TileType.Tile;
 	}
-	else if (object[drawingId].type === "ITM") {
+	else if (tile[drawingId].type === "ITM") {
 		return TileType.Item;
 	}
 
@@ -671,20 +670,20 @@ function togglePaintGrid(e) {
 
 function on_drawing_name_change() {
 	var str = document.getElementById("drawingName").value;
-	var obj = paintTool.GetCurObject();
-	var oldName = obj.name;
+	var til = paintTool.GetCurTile();
+	var oldName = til.name;
 
 	if (str.length > 0) {
-		obj.name = str;
+		til.name = str;
 	}
 	else {
-		obj.name = null;
+		til.name = null;
 	}
 
 	updateNamesFromCurData()
 
 	// make sure items referenced in scripts update their names
-	if (obj.type === TileType.Item) {
+	if (til.type === TileType.Item) {
 		// console.log("SWAP ITEM NAMES");
 
 		var ItemNameSwapVisitor = function() {
@@ -710,14 +709,14 @@ function on_drawing_name_change() {
 			};
 		};
 
-		var newName = obj.name;
+		var newName = til.name;
 
 		if (newName === null || newName === undefined) {
-			newName = obj.id;
+			newName = til.id;
 		}
 
 		if (oldName === null || oldName === undefined) {
-			oldName = obj.id;
+			oldName = til.id;
 		}
 
 		if (newName != oldName) {
@@ -744,5 +743,5 @@ function on_drawing_name_change() {
 
 	refreshGameData();
 
-	events.Raise("change_drawing_name", { id: obj.id, name: obj.name });
+	events.Raise("change_drawing_name", { id: til.id, name: til.name });
 }

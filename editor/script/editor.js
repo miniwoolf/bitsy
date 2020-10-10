@@ -398,26 +398,9 @@ function deleteDialog() {
 		nextDialog();
 
 		// delete all references to deleted dialog (TODO : should this go in a wrapper function somewhere?)
-		for (id in object) {
-			if (object[id].dlg === tempDialogId) {
-				object[id].dlg = null;
-			}
-		}
-
-		for (id in room) {
-			for (var i = 0; i < room[id].exits.length; i++) {
-				var exit = room[id].exits[i];
-				if (exit.dlg === tempDialogId) {
-					exit.dlg = null;
-				}
-			}
-
-			for (var i = 0; i < room[id].endings.length; i++) {
-				var end = room[id].endings[i];
-				if (end.id === tempDialogId) {
-					room[id].endings.splice(i, 1);
-					i--;
-				}
+		for (id in tile) {
+			if (tile[id].dlg === tempDialogId) {
+				tile[id].dlg = null;
 			}
 		}
 
@@ -436,7 +419,7 @@ function reloadDialogUI() {
 	var dialogContent = document.getElementById("dialog");
 	dialogContent.innerHTML = "";
 
-	var obj = paintTool.GetCurObject();
+	var til = paintTool.GetCurTile();
 
 	// clean up previous widget
 	if (paintDialogWidget) {
@@ -447,26 +430,26 @@ function reloadDialogUI() {
 	paintDialogWidget = dialogTool.CreateWidget(
 		"dialog",
 		"paintPanel",
-		obj.dlg,
+		til.dlg,
 		true,
 		function(id) {
-			obj.dlg = id;
+			til.dlg = id;
 		},
 		{
 			CreateFromEmptyTextBox: true,
 			OnCreateNewDialog: function(id) {
-				obj.dlg = id;
+				til.dlg = id;
 				refreshGameData();
 			},
 			GetDefaultName: function() {
-				var desc = paintTool.drawing.getNameOrDescription();
+				var desc = paintTool.drawing.getNameOrDescription(); // todo : fix!!!
 				return CreateDefaultName(desc + " dialog", dialog, true); // todo : localize
 			}, // todo : localize
 		});
 	dialogContent.appendChild(paintDialogWidget.GetElement());
 
-	if (alwaysShowDrawingDialog && dialog[obj.dlg]) {
-		events.Raise("select_dialog", { id: obj.dlg, insertNextToId: null, showIfHidden: false });
+	if (alwaysShowDrawingDialog && dialog[til.dlg]) {
+		events.Raise("select_dialog", { id: til.dlg, insertNextToId: null, showIfHidden: false });
 	}
 }
 
@@ -1741,10 +1724,10 @@ function takeSnapshotGif(e) {
 	gifCaptureCanvas.width = 512; // stop hardcoding 512?
 	gifCaptureCanvas.height = 512;
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawObjectInstances: false, } );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawInstances: false, } );
 	var frame0 = gifCaptureCtx.getImageData(0,0,512,512);
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawObjectInstances: false, } );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawInstances: false, } );
 	var frame1 = gifCaptureCtx.getImageData(0,0,512,512);
 
 	if (isGifSnapshotLandscape) {

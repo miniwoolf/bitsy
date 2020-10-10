@@ -186,17 +186,17 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 	this.GetSelectedId = GetSelectedId;
 
 	this.ChangeSelectedPaletteName = function(name) {
-		var obj = palette[ GetSelectedId() ];
+		var pal = palette[ GetSelectedId() ];
 		if(name.length > 0) {
-			obj.name = name;
+			pal.name = name;
 		}
 		else {
-			obj.name = null;
+			pal.name = null;
 		}
 
 		updateNamesFromCurData() // TODO ... this should really be an event?
 
-		events.Raise("change_palette_name", { id: obj.id, name: obj.name });
+		events.Raise("change_palette_name", { id: pal.id, name: pal.name });
 		events.Raise("palette_list_change");
 	}
 

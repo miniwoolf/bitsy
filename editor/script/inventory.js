@@ -22,7 +22,7 @@ function updateInventoryItemUI(){
 
 	function createOnItemValueChange(id) {
 		return function(event) {
-			var playerEntry = isPlayMode ? player() : object[playerId];
+			var playerEntry = isPlayMode ? player() : tile[playerId];
 
 			if (event.target.value <= 0) {
 				delete playerEntry.inventory[id];
@@ -39,12 +39,12 @@ function updateInventoryItemUI(){
 
 	// console.log("UPDATE!!!!");
 	var itemLabel = localization.GetStringOrFallback("item_label", "item");
-	for (id in object) {
-		var obj = object[id];
+	for (id in tile) {
+		var til = tile[id];
 
-		if (obj.type === "ITM") {
-			var itemName = obj.name != null ? obj.name : itemLabel + " " + id;
-			var playerEntry = isPlayMode ? player() : object[playerId];
+		if (til.type === "ITM") {
+			var itemName = til.name != null ? til.name : itemLabel + " " + id;
+			var playerEntry = isPlayMode ? player() : tile[playerId];
 			var itemCount = playerEntry.inventory[id] != undefined ? parseFloat(playerEntry.inventory[id]) : 0;
 
 			var itemDiv = document.createElement("div");

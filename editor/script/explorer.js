@@ -187,7 +187,7 @@ function PaintExplorer(idPrefix,selectCallback) {
 
 			nameCaption.innerText = img.title;
 			var curPaintMode = drawingCategory;
-			var obj = object[id];
+			var obj = tile[id];
 			if( obj.name === undefined || obj.name === null ) {
 				// console.log("default name!!!!");
 				nameCaption.classList.add( "thumbnailDefaultName" );

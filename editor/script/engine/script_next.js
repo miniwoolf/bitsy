@@ -49,8 +49,8 @@ this.Run = function(script, instance, callback) {
 	eval(compiledScripts[script.id], env, callback);
 }
 
-var RunCallback = function(script, objectContext, inputParameters, callback) {
-	this.Run(script, objectContext, function(result) {
+var RunCallback = function(script, instance, inputParameters, callback) {
+	this.Run(script, instance, function(result) {
 		if (result instanceof Function) {
 			result(inputParameters, callback);
 		}
@@ -743,6 +743,7 @@ function Table(parent) {
 	function set(key, value, options) {
 		var isGlobal = options && options.isGlobal;
 		var isSecret = options && options.isSecret;
+		var externalKey = options && options.externalKey ? options.externalKey : null;
 
 		var internalKey = GetInternalKey(key, isSecret);
 		var hasInternalEntry = entries.hasOwnProperty(internalKey);
@@ -756,7 +757,7 @@ function Table(parent) {
 			}
 
 			if (!hasInternalEntry) {
-				AddGetterSetter(key, internalKey);
+				AddGetterSetter(externalKey != null ? externalKey : key, internalKey);
 			}
 
 			entries[internalKey] = value;
@@ -781,7 +782,7 @@ function Table(parent) {
 	}
 
 	// adds external getter and setter for convenience of the engine
-	var AddGetterSetter = (function(object) {
+	var AddGetterSetter = (function(table) {
 		return function(externalKey, internalKey) {
 			var getterSetter = {};
 
@@ -794,7 +795,7 @@ function Table(parent) {
 				},
 			};
 
-			Object.defineProperties(object, getterSetter);
+			Object.defineProperties(table, getterSetter);
 		};
 	})(this);
 } // Table

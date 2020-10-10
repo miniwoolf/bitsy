@@ -120,31 +120,31 @@ function DialogTextEditor(expressionList, parentEditor) {
 	var textEffectsPrintDrawingSelect = document.createElement("select");
 	textEffectsPrintDrawingDiv.appendChild(textEffectsPrintDrawingSelect);
 
-	for (id in object) {
+	for (id in tile) {
 		var option = document.createElement("option");
 
-		var objectName = "";
-		if (object[id].name) {
-			objectName += object[id].name;
+		var tileName = "";
+		if (tile[id].name) {
+			tileName += tile[id].name;
 		}
 		else if (getDrawingTypeFromId(id) == TileType.Avatar) {
-			objectName += localization.GetStringOrFallback("avatar_label", "avatar");
+			tileName += localization.GetStringOrFallback("avatar_label", "avatar");
 		}
 		else {
 			if (getDrawingTypeFromId(id) == TileType.Sprite) {
-				objectName += localization.GetStringOrFallback("sprite_label", "sprite");
+				tileName += localization.GetStringOrFallback("sprite_label", "sprite");
 			}
 			else if (getDrawingTypeFromId(id) == TileType.Tile) {
-				objectName += localization.GetStringOrFallback("tile_label", "tile");
+				tileName += localization.GetStringOrFallback("tile_label", "tile");
 			}
 			else if (getDrawingTypeFromId(id) == TileType.Item) {
-				objectName += localization.GetStringOrFallback("item_label", "item");
+				tileName += localization.GetStringOrFallback("item_label", "item");
 			}
 
-			objectName += " " + id;
+			tileName += " " + id;
 		}
 
-		option.innerText = objectName;
+		option.innerText = tileName;
 
 		option.value = '{printSprite "' + id + '"}'; // TODO : replace with "printDrawing"
 
