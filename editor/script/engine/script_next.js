@@ -750,10 +750,10 @@ function Table(parent) {
 		var internalKey = GetInternalKey(key, isSecret);
 		var hasInternalEntry = entries.hasOwnProperty(internalKey);
 
-		if ((!hasInternalEntry || isReadOnly[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
+		if ((!hasInternalEntry || readOnlyEntries[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
 			parent.Set(key, value, options);
 		}
-		else {
+		else if (!readOnlyEntries[internalKey]) {
 			if (!isSecret && !hasInternalEntry) {
 				keyList.push(key);
 			}
