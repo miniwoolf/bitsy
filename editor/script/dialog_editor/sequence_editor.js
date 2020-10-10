@@ -130,7 +130,7 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 		function() { CreateSequenceDescription(true); }, /*onSelect*/
 		function() { CreateSequenceDescription(false); } /*onDeselect*/ );
 
-	this.GetNodes = function() {
+	this.GetExpressionList = function() {
 		return [sequenceExpression];
 	}
 
@@ -193,11 +193,10 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 
 		for (var i = 0; i < optionEditors.length; i++) {
 			var editor = optionEditors[i];
-			updatedOptions = updatedOptions.concat(editor.GetNodes());
+			updatedOptions = updatedOptions.concat(editor.GetExpressionList());
 		}
 
-		// TODO : reimplement
-		// sequenceNode.SetChildren(updatedOptions);
+		sequenceExpression.list = [sequenceExpression.list[0]].concat(updatedOptions);
 	}
 
 	CreateOptionEditors();
@@ -257,7 +256,7 @@ function SequenceOptionEditor(optionExpression, parentEditor) {
 		return div;
 	}
 
-	this.GetNodes = function() {
+	this.GetExpressionList = function() {
 		return [optionExpression];
 	}
 

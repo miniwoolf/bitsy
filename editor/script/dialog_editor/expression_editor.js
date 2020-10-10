@@ -442,8 +442,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		return div;
 	}
 
-	this.GetNodes = function() {
-		return [node];
+	this.GetExpressionList = function() {
+		return [expression];
 	}
 
 	this.NotifyUpdate = function() {

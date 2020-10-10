@@ -2159,7 +2159,7 @@ function togglePreviewDialog(event) {
 			on_play_mode();
 		
 			startPreviewDialog(
-				curDialogEditor.GetNode(), 
+				curDialogEditor.GetScriptRoot(), 
 				function() {
 					togglePreviewDialog({ target : { checked : false } });
 				});

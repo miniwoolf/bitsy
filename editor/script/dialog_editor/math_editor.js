@@ -147,8 +147,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 		function() { CreateExpressionControls(false); },
 		isInline);
 
-	this.GetNodes = function() {
-		// todo : re-implement?
+	this.GetExpressionList = function() {
 		return [expression];
 	}
 

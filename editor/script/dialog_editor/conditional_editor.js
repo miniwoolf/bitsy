@@ -123,8 +123,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 
 	AddSelectionBehavior(this);
 
-	this.GetNodes = function() {
-		return [node];
+	this.GetExpressionList = function() {
+		return [conditionalExpression];
 	}
 
 	this.NotifyUpdate = function() {
@@ -250,7 +250,7 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 		return div;
 	}
 
-	this.GetNodes = function() {
+	this.GetExpressionList = function() {
 		return conditionPair;
 	}
 
@@ -260,7 +260,7 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 		// var updatedChildren = comparisonEditor.GetNodes().concat(resultBlockEditor.GetNodes());
 		// conditionPairNode.SetChildren(updatedChildren);
 
-		// parentEditor.NotifyUpdate();
+		parentEditor.NotifyUpdate();
 	}
 
 	this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {
@@ -331,17 +331,9 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 		return div;
 	}
 
-	this.GetNodes = function() {
-		// TODO : reimplement
-		return [];
-
-
-		// if (conditionNode.type === "else") {
-		// 	return [conditionNode];
-		// }
-		// else {
-		// 	return conditionExpressionEditor.GetNodes();
-		// }
+	this.GetExpressionList = function() {
+		// will this always work???
+		return conditionExpressionEditor.GetExpressionList();
 	}
 
 	this.UpdateIndex = function(i) {

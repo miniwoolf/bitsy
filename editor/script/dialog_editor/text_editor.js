@@ -14,10 +14,10 @@ function DialogTextEditor(expressionList, parentEditor) {
 	// div.appendChild(span);
 
 	function OnDialogTextChange() {
-		// hacky :(
-		var scriptStr = '"""\n' +  textArea.value + '\n"""';
-		var tempDialogNode = scriptInterpreter.Parse(scriptStr);
-		expressionList = tempDialogNode.children;
+		console.log("TEXT CHANGE!!!");
+		// a bit wonky
+		var tempDialogExpression = scriptNext.Parse(textArea.value, true);
+		expressionList = tempDialogExpression.list.slice(1);
 		parentEditor.NotifyUpdate(true);
 	}
 
@@ -166,7 +166,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 		function() { textEffectsDiv.style.display = globalShowTextEffectsControls ? "block" : "none"; },
 		function() { textEffectsDiv.style.display = "none"; });
 
-	this.GetNodes = function() {
+	this.GetExpressionList = function() {
 		return expressionList;
 	}
 

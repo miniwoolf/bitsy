@@ -17,7 +17,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 	this.NotifyUpdate = function(hasNewChildren) {
 		if (hasNewChildren) {
-			UpdateNodeChildren();
+			UpdateChildren();
 		}
 
 		parentEditor.NotifyUpdate();
@@ -86,30 +86,32 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		}
 	}
 
-	function UpdateNodeChildren() {
+	function UpdateChildren() {
 		var updatedChildren = [];
 
 		for (var i = 0; i < childEditors.length; i++) {
 			var editor = childEditors[i];
-			updatedChildren = updatedChildren.concat(editor.GetNodes());
+			updatedChildren = updatedChildren.concat(editor.GetExpressionList());
 		}
 
-		blockNode.SetChildren(updatedChildren);
+		expressionList = updatedChildren;
+
+		parentEditor.NotifyUpdate();
 	}
 
-	this.GetNodes = function() {
-		return [blockNode];
+	this.GetExpressionList = function() {
+		return expressionList;
 	}
 
 	this.Serialize = function() {
-		return blockNode.Serialize();
+		return scriptNext.SerializeWrapped(expressionList);
 	}
 
 	this.RemoveChild = function(childEditor) {
 		childEditors.splice(childEditors.indexOf(childEditor),1);
 		RefreshChildUI();
 
-		UpdateNodeChildren();
+		UpdateChildren();
 
 		parentEditor.NotifyUpdate();
 	}
@@ -122,7 +124,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		childEditors.splice(index, 0, childEditor);
 		RefreshChildUI();
 
-		UpdateNodeChildren();
+		UpdateChildren();
 
 		parentEditor.NotifyUpdate();
 	}
@@ -158,12 +160,25 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 function DialogExpressionEditor(dialogExpression, parentEditor) {
 	var div = document.createElement("div");
 
-	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
-	div.appendChild(blockEditor.GetElement());
-
 	this.GetElement = function() {
 		return div;
 	}
+
+	this.GetExpressionList = function() {
+		return [dialogExpression];
+	}
+
+	this.NotifyUpdate = function() {
+		dialogExpression.list = [dialogExpression.list[0]].concat(blockEditor.GetExpressionList());
+		parentEditor.NotifyUpdate();
+	}
+
+	this.Serialize = function() {
+		return scriptNext.Serialize(dialogExpression);
+	}
+
+	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
+	div.appendChild(blockEditor.GetElement());
 }
 
 function ActionBuilder(parentEditor) {
@@ -245,7 +260,8 @@ function ActionBuilder(parentEditor) {
 				// hacky access of the parent node is required
 				// because the print function needs to start with a parent
 				// otherwise the dialog editor can't serialize the text D:
-				parentEditor.GetNodes()[0].AddChild(printFunc);
+				// TODO : re-implement!!!
+				// parentEditor.GetNodes()[0].AddChild(printFunc);
 
 				var editor = new DialogTextEditor([printFunc], parentEditor);
 				return editor;

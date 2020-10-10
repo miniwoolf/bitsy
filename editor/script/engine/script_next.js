@@ -21,9 +21,12 @@ function ScriptNext() {
 
 var compiledScripts = {};
 
-function compile(script) {
+function compile(script, options) {
+	var doNotStore = options && options.doNotStore;
+	var forceWrapDialogStart = options && options.forceWrapDialogStart;
+
 	var scriptStr = script.src;
-	if (scriptStr.indexOf("\n") < 0) {
+	if (forceWrapDialogStart || scriptStr.indexOf("\n") < 0) {
 		// wrap one-line dialogs in a dialog expression
 		// TODO : is this still what I want?
 		scriptStr = SymNext.CurlyOpen + SymNext.DialogStart + " " + scriptStr + SymNext.CurlyClose;
@@ -31,11 +34,22 @@ function compile(script) {
 
 	var tokens = tokenize(scriptStr);
 	var expressions = parse(tokens);
-	compiledScripts[script.id] = expressions[0];
+	var rootExpression = expressions[0];
 
-	return compiledScripts[script.id];
+	if (!doNotStore) {
+		compiledScripts[script.id] = rootExpression;
+	}
+
+	return rootExpression;
 }
 this.Compile = compile;
+
+// temporary parsing... not sure about this implementation..
+this.Parse = function(scriptSrc, forceWrapDialogStart) {
+	return compile(
+		{ src: scriptSrc, id: null },
+		{ doNotStore: true, forceWrapDialogStart: forceWrapDialogStart });
+}
 
 // TODO : pass in dialog buffer instead of using a global reference?
 this.Run = function(script, instance, callback) {

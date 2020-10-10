@@ -43,6 +43,10 @@ function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateIn
 		return div;
 	}
 
+	this.NotifyUpdate = function() {
+		parentEditor.NotifyUpdate();
+	}
+
 	AddSelectionBehavior(
 		this,
 		function() { CreateValueInput(true); },
@@ -69,7 +73,7 @@ function NumberEditor(expression, parentEditor, isInline) {
 				input.value = expression.value;
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -92,7 +96,7 @@ function StringEditor(expression, parentEditor, isInline) {
 				input.value = expression.value;
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -125,7 +129,7 @@ function BooleanEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -165,7 +169,7 @@ function SymbolEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -202,7 +206,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = SymNext.Entry + event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -254,7 +258,7 @@ function RoomIdEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -296,7 +300,7 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 				input.onchange = function(event) {
 					expression.value = event.target.value;
 					thumbnailRenderer.Render(expression.value, function(uri) { itemThumbnail.src = uri; }, { frameIndex: 0 });
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -379,7 +383,7 @@ function TransitionIdEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -438,7 +442,7 @@ function DirectionEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					// todo : notify parent!
+					parentEditor.NotifyUpdate();
 				}
 
 				return input;
@@ -527,7 +531,7 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 			}
 		}
 
-		var editor = createExpressionEditor(expression.list[parameterIndex], parentEditor, true, curType);
+		var editor = createExpressionEditor(expression.list[parameterIndex], self, true, curType);
 
 		if (isEditable && editor.Select) {
 			editor.Select();
@@ -597,9 +601,12 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 		return span;
 	}
 
+	this.GetExpressionList = function() {
+		return [expression];
+	}
+
 	this.NotifyUpdate = function() {
-		// hack to force an update
-		// TODO : re-implement??
+		parentEditor.NotifyUpdate();
 	}
 
 	this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {

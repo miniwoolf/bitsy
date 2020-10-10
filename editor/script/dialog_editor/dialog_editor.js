@@ -28,6 +28,7 @@ function DialogTool() {
 		return new TitleWidget();
 	}
 
+	// todo : REIMPLEMENT
 	// find (non-inline) non-dialog code in a script
 	function FindCodeVisitor() {
 		var foundCode = false;
@@ -36,9 +37,7 @@ function DialogTool() {
 		}
 
 		this.Visit = function(node) {
-			if (node.type === "code_block" && !scriptUtils.IsInlineCode(node)) {
-				foundCode = true;
-			}
+			foundCode = false; // TODO : reimplement
 		}
 	}
 
@@ -228,7 +227,7 @@ function DialogTool() {
 
 		function CheckForComplexCodeInDialog(shouldOpenIfComplex) {
 			var codeVisitor = new FindCodeVisitor();
-			scriptEditor.GetNode().VisitAll(codeVisitor);
+			// scriptEditor.GetNode().VisitAll(codeVisitor);
 			if (codeVisitor.FoundCode()) {
 				ChangeSettingsVisibility(true);
 
@@ -266,7 +265,7 @@ function DialogTool() {
 		var editorId = dialogScriptEditorUniqueIdCounter;
 		dialogScriptEditorUniqueIdCounter++;
 
-		var scriptRootNode, div;
+		var scriptRoot, div;
 		div = document.createElement("div");
 		div.style.width = "100%"; // hack
 
@@ -276,7 +275,7 @@ function DialogTool() {
 			var dialogStr = !DoesDialogExist() ? "" : dialog[dialogId].src;
 
 			div.innerHTML = "";
-			scriptRootNode = scriptInterpreter.Parse(dialogStr, dialogId);
+			scriptRoot = scriptNext.Parse(dialogStr);
 
 			var dialogBoxContainer = document.createElement("div");
 			dialogBoxContainer.classList.add("dialogBoxContainer");
@@ -286,15 +285,10 @@ function DialogTool() {
 			codeTextArea.rows = 2;
 			codeTextArea.cols = 32;
 			codeTextArea.classList.add(style);
-			codeTextArea.value = scriptRootNode.Serialize();
+			codeTextArea.value = scriptNext.Serialize(scriptRoot); // todo : do I need to remove the wrapping stuff?
 			function OnTextChangeHandler() {
-				var dialogStr = '"""\n' + codeTextArea.value + '\n"""'; // single lines?
-				scriptRootNode = scriptInterpreter.Parse(dialogStr, dialogId);
-
-				// useful debug messages when parsing is broken:
-				// scriptInterpreter.DebugVisualizeScriptTree(scriptRootNode);
-				// console.log(dialogStr);
-				// console.log(scriptRootNode.Serialize());
+				var dialogStr = codeTextArea.value;
+				scriptRoot = scriptNext.Parse(dialogStr);
 
 				OnUpdate();
 			}
@@ -310,12 +304,12 @@ function DialogTool() {
 			return div;
 		}
 
-		this.GetNode = function() {
-			return scriptRootNode;
+		this.GetScriptRoot = function() {
+			return scriptRoot;
 		}
 
 		function OnUpdate() {
-			var dialogStr = scriptRootNode.Serialize();
+			var dialogStr = scriptRoot.Serialize();
 
 			var didMakeNewDialog = false;
 			if (dialogStr.length > 0 && !DoesDialogExist()) {
@@ -328,10 +322,7 @@ function DialogTool() {
 				return;
 			}
 
-			if (dialogStr.indexOf("\n") > -1) {
-				// hacky - expose the triple-quotes symbol somewhere?
-				dialogStr = '"""\n' + dialogStr + '\n"""';
-			}
+			// TODO : do I need to something to handle single line scripts??
 
 			dialog[dialogId].src = dialogStr;
 
@@ -376,8 +367,6 @@ function DialogTool() {
 			div.innerHTML = "";
 			scriptRoot = scriptNext.Compile(dialog[dialogId]);
 
-			console.log(">>> SERIALIZE >>> \n" + scriptNext.Serialize(scriptRoot));
-
 			rootEditor = createExpressionEditor(scriptRoot, self);
 
 			viewportDiv = document.createElement("div");
@@ -388,10 +377,11 @@ function DialogTool() {
 				// a hack to allow you to not have anything selected
 				// if you click the background of the script editor
 				// global curSelectedEditor is still a bit hacky :/
-				if (curSelectedEditor != null) {
-					curSelectedEditor.Deselect();
-					curSelectedEditor = null;
-				}
+				// todo : FIX THIS!!!
+				// if (curSelectedEditor != null) {
+				// 	curSelectedEditor.Deselect();
+				// 	curSelectedEditor = null;
+				// }
 			}
 
 			viewportDiv.appendChild(rootEditor.GetElement());
@@ -409,18 +399,16 @@ function DialogTool() {
 			return div;
 		}
 
-		this.GetNode = function() {
+		this.GetScriptRoot = function() {
 			return scriptRoot;
 		}
 
 		function OnUpdate() {
-			// scriptInterpreter.DebugVisualizeScriptTree(scriptRoot);
-
 			var dialogStr = rootEditor.Serialize();
 
-			if (dialogStr.indexOf("\n") > -1) {
-				// hacky - expose the triple-quotes symbol somewhere?
-				dialogStr = '"""\n' + dialogStr + '\n"""';
+			// handle one line scripts: a little hard coded
+			if (dialogStr.indexOf("\n") === -1) {
+				dialogStr = dialogStr.substr(4, dialogStr.length - 5);
 			}
 
 			dialog[dialogId].src = dialogStr;
@@ -462,44 +450,6 @@ function DialogTool() {
 				RefreshEditorUI();
 			}
 		});
-
-		// TODO : remove these?
-		/* root level creation functions for the dialog editor top-bar UI */
-		this.AddDialog = function() {
-			var printFunc = scriptUtils.CreateEmptyPrintFunc();
-			rootEditor.GetNodes()[0].AddChild(printFunc); // hacky -- see note in action builder
-			var editor = new DialogTextEditor([printFunc], rootEditor);
-			rootEditor.AppendChild(editor);
-			OnUpdate();
-		}
-
-		this.AddSequence = function() {
-			var node = scriptUtils.CreateSequenceBlock();
-			var editor = new SequenceEditor(node, rootEditor);
-			rootEditor.AppendChild(editor);
-			OnUpdate();
-		}
-
-		this.AddCycle = function() {
-			var node = scriptUtils.CreateCycleBlock();
-			var editor = new SequenceEditor(node, rootEditor);
-			rootEditor.AppendChild(editor);
-			OnUpdate();
-		}
-
-		this.AddShuffle = function() {
-			var node = scriptUtils.CreateShuffleBlock();
-			var editor = new SequenceEditor(node, rootEditor);
-			rootEditor.AppendChild(editor);
-			OnUpdate();
-		}
-
-		this.AddConditional = function() {
-			var node = scriptUtils.CreateIfBlock();
-			var editor = new ConditionalEditor(node, rootEditor);
-			rootEditor.AppendChild(editor);
-			OnUpdate();
-		}
 
 		// I only listen to these events at the root of the script editor
 		// since that makes it easier to clean them up when the editor
@@ -735,38 +685,6 @@ var AddSelectionBehavior = (function() {
 		}
 	}
 })();
-
-// todo : remove?
-/* OLD UN-WRAPPED FUNCTIONS */
-function addDialogBlockUI() {
-	if (curDialogEditor != null) {
-		curDialogEditor.AddDialog();
-	}
-}
-
-function addSeqBlockUI() {
-	if (curDialogEditor != null) {
-		curDialogEditor.AddSequence();
-	}
-}
-
-function addCycleBlock() {
-	if (curDialogEditor != null) {
-		curDialogEditor.AddCycle();
-	}
-}
-
-function addShuffleBlock() {
-	if (curDialogEditor != null) {
-		curDialogEditor.AddShuffle();
-	}
-}
-
-function addIfBlockUI() {
-	if (curDialogEditor != null) {
-		curDialogEditor.AddConditional();
-	}
-}
 
 function ConvertNumberStringToArabic(numberString) {
 	var arabicNumerals = ["٠","١","٢","٣","٤","٥","٦","٧","٨","٩"];
