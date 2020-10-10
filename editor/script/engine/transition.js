@@ -8,7 +8,7 @@ var TransitionManager = function() {
 	var frameRate = 8; // cap the FPS
 	var prevStep = -1; // used to avoid running post-process effect constantly
 
-	this.BeginTransition = function(startRoom,startX,startY,endRoom,endX,endY,effectName) {
+	this.BeginTransition = function(startRoom, startX, startY, endRoom, endX, endY, effectName, onInitNextRoom) {
 		// console.log("--- START ROOM TRANSITION ---");
 
 		curEffect = effectName;
@@ -27,7 +27,7 @@ var TransitionManager = function() {
 		}
 
 		drawRoom(room[startRoom]);
-		var startPalette = getPal( room[startRoom].pal );
+		var startPalette = getPal(curPalId);
 		var startImage = new PostProcessImage( ctx.getImageData(0,0,canvas.width,canvas.height) ); // TODO : don't use global ctx?
 		transitionStart = new TransitionInfo(startImage, startPalette, startX, startY);
 
@@ -40,8 +40,10 @@ var TransitionManager = function() {
 			player().room = "_transition_none";
 		}
 
+		onInitNextRoom(endRoom);
+
 		drawRoom(room[endRoom]);
-		var endPalette = getPal( room[endRoom].pal );
+		var endPalette = getPal(curPalId);
 		var endImage = new PostProcessImage( ctx.getImageData(0,0,canvas.width,canvas.height) );
 		transitionEnd = new TransitionInfo(endImage, endPalette, endX, endY);
 

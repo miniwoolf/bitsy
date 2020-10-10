@@ -1724,10 +1724,10 @@ function takeSnapshotGif(e) {
 	gifCaptureCanvas.width = 512; // stop hardcoding 512?
 	gifCaptureCanvas.height = 512;
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawInstances: false, } );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawInstances: false, palId: curPal(), } );
 	var frame0 = gifCaptureCtx.getImageData(0,0,512,512);
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawInstances: false, } );
+	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawInstances: false, palId: curPal(), } );
 	var frame1 = gifCaptureCtx.getImageData(0,0,512,512);
 
 	if (isGifSnapshotLandscape) {

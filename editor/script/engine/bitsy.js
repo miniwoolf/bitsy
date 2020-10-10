@@ -71,6 +71,7 @@ function initPalettes() {
 	};
 }
 initPalettes();
+var curPalId = "default";
 
 // Instances
 var spriteInstances = {};
@@ -482,7 +483,7 @@ function update() {
 
 function updateRender() {
 	// clear the screen!
-	ctx.fillStyle = "rgb(" + getPal(curPal())[0][0] + "," + getPal(curPal())[0][1] + "," + getPal(curPal())[0][2] + ")";
+	ctx.fillStyle = "rgb(" + getPal(curPalId)[0][0] + "," + getPal(curPalId)[0][1] + "," + getPal(curPalId)[0][2] + ")";
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
 	if (transition.IsTransitionActive()) {
@@ -986,8 +987,11 @@ function movePlayer(direction) {
 		var destY = player().y - (dy * roomsize);
 
 		if (transition_effect) {
-			transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, transition_effect);
+			transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, transition_effect, initRoom);
 			transition.UpdateTransition(0);
+		}
+		else {
+			initRoom(destRoom);
 		}
 
 		player().room = destRoom;
@@ -995,7 +999,6 @@ function movePlayer(direction) {
 		player().y = destY;
 
 		curRoom = destRoom;
-		initRoom(curRoom);
 	}
 
 	var curMapLocation = room[curRoom].mapLocation;
@@ -1108,16 +1111,17 @@ var transition = new TransitionManager();
 function movePlayerThroughExit(ext) {
 	var GoToDest = function() {
 		if (ext.transition_effect != null) {
-			transition.BeginTransition(player().room, player().x, player().y, ext.dest.room, ext.dest.x, ext.dest.y, ext.transition_effect);
+			transition.BeginTransition(player().room, player().x, player().y, ext.dest.room, ext.dest.x, ext.dest.y, ext.transition_effect, initRoom);
 			transition.UpdateTransition(0);
+		}
+		else {
+			initRoom(ext.dest.room);
 		}
 
 		player().room = ext.dest.room;
 		player().x = ext.dest.x;
 		player().y = ext.dest.y;
 		curRoom = ext.dest.room;
-
-		initRoom(curRoom);
 	};
 
 	updateLockState(ext);
@@ -1161,6 +1165,8 @@ function initRoom(roomId) {
 	}
 
 	nextInstanceId++;
+
+	curPalId = room[roomId].pal;
 }
 
 function createSpriteLocation(id, x, y) {
@@ -2378,22 +2384,20 @@ function drawRoom(room, options) {
 	var context = getOptionOrDefault("context", ctx);
 	var frameIndex = getOptionOrDefault("frameIndex", null);
 	var drawInstances = getOptionOrDefault("drawInstances", true);
+	var paletteId = getOptionOrDefault("palId", curPalId);
 
-	var paletteId = "default";
-
-	if (room === undefined) {
-		// protect against invalid rooms
-		context.fillStyle = "rgb(" + getPal(paletteId)[0][0] + "," + getPal(paletteId)[0][1] + "," + getPal(paletteId)[0][2] + ")";
-		context.fillRect(0,0,canvas.width,canvas.height);
-		return;
+	if (paletteId === null || (!paletteId in palette)) {
+		paletteId = "default";
 	}
 
 	//clear screen
-	if (room.pal != null && palette[paletteId] != undefined) {
-		paletteId = room.pal;
-	}
 	context.fillStyle = "rgb(" + getPal(paletteId)[0][0] + "," + getPal(paletteId)[0][1] + "," + getPal(paletteId)[0][2] + ")";
 	context.fillRect(0,0,canvas.width,canvas.height);
+
+	if (room === undefined && room === null) {
+		// protect against invalid rooms
+		return;
+	}
 
 	//draw tiles
 	for (i in room.tilemap) {
@@ -2430,10 +2434,6 @@ function drawRoom(room, options) {
 			drawTile(img, location.x, location.y, context);
 		}
 	}
-}
-
-function curPal() {
-	return getRoomPal(curRoom);
 }
 
 function getRoomPal(roomId) {

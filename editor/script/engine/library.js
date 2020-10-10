@@ -56,7 +56,7 @@ function createCoreLibrary(parent) {
 
 	// todo : make sure rooms remember their original pal id and reset to it
 	lib.Set("PAL", function(parameters, onReturn) {
-		room[curRoom].pal = parameters[0];
+		curPalId = parameters[0];
 		onReturn(null); // todo : replace all nulls with false? return palette id?
 	});
 
