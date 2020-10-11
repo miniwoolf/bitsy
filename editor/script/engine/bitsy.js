@@ -1676,10 +1676,10 @@ function serializeWorld(skipFonts) {
 		if (type === "EXT" && tile[id].transition_effect != null) {
 			worldStr += "FX " + tile[id].transition_effect + "\n";
 		}
-		if ((type === "EXT" || type === "END") && tile[id].lock.item != null) {
-			worldStr += "LCK " + tile[id].lock.item;
-			if (tile[id].lock.toll > 0) {
-				worldStr += " " + tile[id].lock.toll;
+		if ((type === "EXT" || type === "END") && tile[id].lockItem != null) {
+			worldStr += "LCK " + tile[id].lockItem;
+			if (tile[id].lockToll > 0) {
+				worldStr += " " + tile[id].lockToll;
 			}
 			worldStr += "\n";
 		}
