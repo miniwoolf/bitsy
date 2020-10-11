@@ -23,6 +23,21 @@ function TableEditor(expression, parentEditor) {
 		div.appendChild(editor.GetElement());
 	}
 
+	// todo : name?
+	var editParameterTypes = false;
+	var toggleParameterTypesButton = document.createElement("button");
+	toggleParameterTypesButton.title = "toggle editing parameter types";
+	toggleParameterTypesButton.appendChild(iconUtils.CreateIcon("settings"));
+	toggleParameterTypesButton.onclick = function() {
+		editParameterTypes = !editParameterTypes;
+		for (var i = 0; i < entryEditors.length; i++) {
+			entryEditors[i].SetValueTypeEditable(editParameterTypes);
+		}
+	}
+
+	var customControls = orderControls.GetCustomControlsContainer();
+	customControls.appendChild(toggleParameterTypesButton);
+
 	this.GetElement = function() {
 		return div;
 	}
@@ -46,6 +61,7 @@ function TableEditor(expression, parentEditor) {
 		function() {
 			for (var i = 0; i < entryEditors.length; i++) {
 				entryEditors[i].Select();
+				entryEditors[i].SetValueTypeEditable(editParameterTypes);
 			}
 		},
 		function() {
@@ -90,11 +106,14 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	this.Select = function() {
 		nameEditor.Select();
 		valueEditor.Select();
-		valueEditor.SetTypeEditable(true);
 	}
 
 	this.Deselect = function() {
 		nameEditor.Deselect();
 		valueEditor.Deselect();
+	}
+
+	this.SetValueTypeEditable = function(editable) {
+		valueEditor.SetTypeEditable(editable);
 	}
 }
