@@ -32,6 +32,12 @@ function TableEditor(expression, parentEditor) {
 	}
 
 	this.NotifyUpdate = function() {
+		expression.list = [expression.list[0]];
+
+		for (var i = 0; i < entryEditors.length; i++) {
+			expression.list = expression.list.concat(entryEditors[i].GetExpressionList());
+		}
+
 		parentEditor.NotifyUpdate();
 	}
 
@@ -61,8 +67,12 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	seperatorSpan.innerText = " : ";
 	div.appendChild(seperatorSpan);
 
-	// todo : replace with parametereditor?
-	var valueEditor = createExpressionEditor(valueExpression, this, true);
+	// todo : add expression builder handler?
+	var valueEditor = new ExpressionTypePicker(
+		valueExpression,
+		this, // or should this be parent editor?
+		["number", "text", "boolean", "symbol", "list"]);
+
 	div.appendChild(valueEditor.GetElement());
 
 	this.GetElement = function() {
@@ -80,6 +90,7 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	this.Select = function() {
 		nameEditor.Select();
 		valueEditor.Select();
+		valueEditor.SetTypeEditable(true);
 	}
 
 	this.Deselect = function() {

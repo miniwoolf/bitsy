@@ -62,6 +62,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 	expressionSpan.style.display = "inline-flex";
 	div.appendChild(expressionSpan);
 
+	// todo : I don't need to recreate these all the time anymore!
 	function CreateExpressionControls(isEditable) {
 		expressionSpan.innerHTML = "";
 
@@ -88,19 +89,24 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 			parenSpanR.innerText = ")";
 			expressionSpan.appendChild(parenSpanR);
 		}
-		else {
-			var parameterEditor = new ParameterEditor(
-				expression,
-				1,
+		else {			
+			var leftValueEditor = new ExpressionTypePicker(
+				expression.list[1],
 				self, // todo -- should be parent editor instead?
 				["number", "string", "boolean", "symbol", "list"],
-				isEditable,
-				editParameterTypes,
-				function(expressionString, onAcceptHandler) {
-					parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+				{
+					// todo : do I need this handler?
+					openExpressionBuilderFunc : function(expressionString, onAcceptHandler) {
+						parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+					},
 				});
 
-			expressionSpan.appendChild(parameterEditor.GetElement());
+			if (isEditable) {
+				leftValueEditor.Select();
+				leftValueEditor.SetTypeEditable(editParameterTypes);
+			}
+
+			expressionSpan.appendChild(leftValueEditor.GetElement());
 		}
 
 		// operator
@@ -120,18 +126,22 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 			expressionSpan.appendChild(parenSpanR);
 		}
 		else {
-			var parameterEditor = new ParameterEditor(
-				expression,
-				2,
+			var rightValueEditor = new ExpressionTypePicker(
+				expression.list[2],
 				self, // todo -- should be parent editor instead?
 				["number", "string", "boolean", "symbol", "list"],
-				isEditable,
-				editParameterTypes,
-				function(expressionString, onAcceptHandler) {
-					parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+				{
+					openExpressionBuilderFunc : function(expressionString, onAcceptHandler) {
+						parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
+					},
 				});
 
-			expressionSpan.appendChild(parameterEditor.GetElement());
+			if (isEditable) {
+				rightValueEditor.Select();
+				rightValueEditor.SetTypeEditable(editParameterTypes);
+			}
+
+			expressionSpan.appendChild(rightValueEditor.GetElement());
 		}
 	}
 
@@ -433,7 +443,7 @@ function ExpressionBuilder(expressionString, parentEditor, onCancelHandler, onAc
 	div.appendChild(nonNumericInputDiv);
 
 	// add variable:
-	var selectedVarNode = CreateDefaultArgNode("symbol");
+	var selectedVarNode = CreateDefaultExpression("symbol");
 
 	var addVariableDiv = document.createElement("div");
 	addVariableDiv.style.display = "flex";
@@ -470,7 +480,7 @@ function ExpressionBuilder(expressionString, parentEditor, onCancelHandler, onAc
 	nonNumericInputDiv.appendChild(addVariableDiv);
 
 	// add item:
-	var selectedItemNode = CreateDefaultArgNode("item");
+	var selectedItemNode = CreateDefaultExpression("item");
 
 	var addItemDiv = document.createElement("div");
 	addItemDiv.style.display = "flex";
@@ -507,7 +517,7 @@ function ExpressionBuilder(expressionString, parentEditor, onCancelHandler, onAc
 	nonNumericInputDiv.appendChild(addItemDiv);
 
 	// add text:
-	var selectedTextNode = CreateDefaultArgNode("string");
+	var selectedTextNode = CreateDefaultExpression("string");
 
 	var addTextDiv = document.createElement("div");
 	addTextDiv.style.display = "flex";

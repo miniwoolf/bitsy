@@ -453,41 +453,63 @@ function DirectionEditor(expression, parentEditor, isInline) {
 		));
 }
 
-// todo : remove? rename? combine with checking for if type is valid?
-function CreateDefaultArgNode(type) {
-	var argNode;
+// todo : rename? SetTo? Make? Update?
+function CreateDefaultExpression(type, exp) {
+	if (exp === undefined || exp === null) {
+		exp = {};
+	}
+
+	if (exp.hasOwnProperty("value")) {
+		delete exp.value;
+	}
+
+	if (exp.hasOwnProperty("list")) {
+		delete exp.list;
+	}
+
 	if (type === "number") {
 		// todo : replace these with helper function from script module?
-		argNode = { type: "number", value: 0 };
+		exp.type = "number";
+		exp.value = 0;
 	}
-	else if (type === "string") {
-		argNode = { type: "string", value: "" };
+	else if (type === "text") {
+		exp.type = "string";
+		exp.value = "hello";
 	}
 	else if (type === "boolean") {
-		argNode = { type: "boolean", value: true };
+		exp.type = "boolean";
+		exp.value = true;
 	}
 	else if (type === "symbol") {
-		argNode = { type: "symbol", value: "a" }; // TODO : find first var instead?
-	}
-	else if (type === "list") {
-		// todo : I recreated the old logic for this but is this still what we want?
-		argNode = [{ type: "symbol", value: "item" }, { type: "symbol", value: "0" }];
+		exp.type = "symbol";
+		exp.value = "a"; // TODO : find first var instead?
 	}
 	else if (type === "room") {
-		argNode = { type: "symbol", value: "0" }; // TODO : find first room instead?
+		exp.type = "string";
+		exp.value = "0"; // TODO : find first room instead?
 	}
 	else if (type === "item") {
-		argNode = { type: "symbol", value: "0" }; // TODO : find first item instead?
+		exp.type = "string";
+		exp.value = "0"; // TODO : find first item instead?
 	}
 	else if (type === "transition") {
-		argNode = { type: "string", value: "fade_w" };
+		exp.type = "string";
+		exp.value = "fade_w";
 	}
 	else if (type === "direction") {
-		argNode = { type: "string", value: "LFT" };
+		exp.type = "string";
+		exp.value = "LFT";
 	}
-	return argNode;
+	else if (type === "list") {
+		// todo : provide more specialized options: fn, tbl, etc
+		exp.type = "list";
+		exp.list = [{ type: "symbol", value: "ITM" }, CreateDefaultExpression("item")];
+	}
+
+	return exp;
 }
 
+// todo : rename?
 function GetColorClassForParameterType(type) {
 	if (type === "number") {
 		return "pinkColor";
@@ -503,10 +525,12 @@ function GetColorClassForParameterType(type) {
 	}
 }
 
-function ParameterEditor(expression, parameterIndex, parentEditor, parameterTypes, isEditable, isTypeEditable, openExpressionBuilderFunc) {
+function ExpressionTypePicker(expression, parentEditor, types, options) {
 	var self = this;
 
 	var curType;
+	var editor;
+	var typeSelect;
 
 	var span = document.createElement("span");
 
@@ -515,38 +539,40 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 
 		span.innerHTML = "";
 
-		if (isEditable && isTypeEditable) {
-			var typeSelect = document.createElement("select");
-			span.appendChild(typeSelect);
-			for (var i = 0; i < parameterTypes.length; i++) {
-				var typeOption = document.createElement("option");
-				typeOption.value = parameterTypes[i];
-				typeOption.innerText = parameterTypes[i]; // TODO : localize
-				typeOption.selected = curType === parameterTypes[i];
-				typeSelect.appendChild(typeOption);
-			}
-
-			typeSelect.onchange = function(event) {
-				ChangeEditorType(event.target.value);
-			}
+		typeSelect = document.createElement("select");
+		typeSelect.style.display = "none";
+		span.appendChild(typeSelect);
+		for (var i = 0; i < types.length; i++) {
+			var typeOption = document.createElement("option");
+			typeOption.value = types[i];
+			typeOption.innerText = types[i]; // TODO : localize
+			typeOption.selected = curType === types[i];
+			typeSelect.appendChild(typeOption);
 		}
 
-		var editor = createExpressionEditor(expression.list[parameterIndex], self, true, curType);
-
-		if (isEditable && editor.Select) {
-			editor.Select();
+		typeSelect.onchange = function(event) {
+			ChangeEditorType(event.target.value);
 		}
+
+		editor = createExpressionEditor(expression, self, true, curType);
 
 		span.appendChild(editor.GetElement());
 	}
 
 	function ChangeEditorType(type) {
-		SetArgToDefault(type);
-		UpdateEditor(type);
-	}
+		CreateDefaultExpression(type, expression);
 
-	function SetArgToDefault(type) {
-		expression.list[parameterIndex] = CreateDefaultArgNode(type);
+		console.log(expression);
+
+		UpdateEditor(type);
+
+		// kind of hacky...
+		if (isSelected) {
+			editor.Select();
+		}
+		typeSelect.style.display = isTypeEditable ? "inline" : "none";
+
+		parentEditor.NotifyUpdate();
 	}
 
 	function DoesEditorTypeMatchExpression(type, exp) {
@@ -557,7 +583,7 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 		else if (type === "number" && exp.type === "number" && (typeof exp.value) === "number") {
 			return true;
 		}
-		else if (type === "string" && exp.type === "string" && (typeof exp.value) === "string") {
+		else if (type === "text" && exp.type === "string" && (typeof exp.value) === "string") {
 			return true;
 		}
 		else if (type === "boolean" && exp.type === "boolean" && (typeof exp.value) === "boolean") {
@@ -587,10 +613,10 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 	}
 
 	// edit parameter with the first matching type this parameter supports
-	var curType = parameterTypes[0];
-	for (var i = 0; i < parameterTypes.length; i++) {
-		if (DoesEditorTypeMatchExpression(parameterTypes[i], expression.list[parameterIndex])) {
-			curType = parameterTypes[i];
+	var curType = types[0];
+	for (var i = 0; i < types.length; i++) {
+		if (DoesEditorTypeMatchExpression(types[i], expression)) {
+			curType = types[i];
 			break;
 		}
 	}
@@ -609,9 +635,29 @@ function ParameterEditor(expression, parameterIndex, parentEditor, parameterType
 		parentEditor.NotifyUpdate();
 	}
 
+	var isSelected = false;
+
+	this.Select = function() {
+		editor.Select();
+		isSelected = true;
+	}
+
+	this.Deselect = function() {
+		typeSelect.style.display = "none";
+		editor.Deselect();
+		isSelected = false;
+	}
+
+	var isTypeEditable = false;
+
+	this.SetTypeEditable = function(isEditable) {
+		isTypeEditable = isEditable;
+		typeSelect.style.display = isTypeEditable ? "inline" : "none";
+	}
+
 	this.OpenExpressionBuilder = function(expressionString, onAcceptHandler) {
-		if (openExpressionBuilderFunc) {
-			openExpressionBuilderFunc(expressionString, onAcceptHandler);
+		if (options && options.openExpressionBuilderFunc) {
+			options.openExpressionBuilderFunc(expressionString, onAcceptHandler);
 		}
 	}
 }

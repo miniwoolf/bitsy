@@ -352,16 +352,16 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 				var parameterInfo = expressionDescriptionMap[descriptionId].parameters[i];
 
 				if (paramLength > parameterInfo.index) {
-					var parameterEditor = new ParameterEditor(
-						expression,
-						parameterInfo.index + 1,
+					// todo : needs options?
+					var parameterEditor = new ExpressionTypePicker(
+						expression.list[parameterInfo.index + 1],
 						self,
-						parameterInfo.types.concat(["list"]),
-						isEditable && !(parameterInfo.doNotEdit),
-						!isInline && editParameterTypes,
-						function(expressionString, onAcceptHandler) {
-							parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
-						});
+						parameterInfo.types.concat(["list"]));
+
+					if (isEditable) {
+						parameterEditor.Select();
+						parameterEditor.SetTypeEditable(editParameterTypes);
+					}
 
 					curParameterEditors.push(parameterEditor);
 					descriptionDiv.appendChild(parameterEditor.GetElement());
@@ -369,7 +369,7 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 				else if (!isInline && isEditable && paramLength == parameterInfo.index && parameterInfo.name) {
 					function createAddParameterHandler(expression, parameterInfo) {
 						return function() {
-							expression.list.push(CreateDefaultArgNode(parameterInfo.types[0]));
+							expression.list.push(CreateDefaultExpression(parameterInfo.types[0]));
 							CreateExpressionDescription(true);
 							parentEditor.NotifyUpdate();
 						}
@@ -392,16 +392,16 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			spaceSpan.innerText = inputSeperator;
 			descriptionDiv.appendChild(spaceSpan);
 
-			var parameterEditor = new ParameterEditor(
-				expression,
-				i + 1,
+			// todo : needs any options?
+			var parameterEditor = new ExpressionTypePicker(
+				expression.list[i + 1],
 				self, // or should this be parent editor?
-				["number", "text", "boolean", "symbol", "list"],
-				isEditable,
-				!isInline && editParameterTypes,
-				function(expressionString, onAcceptHandler) {
-					parentEditor.OpenExpressionBuilder(expressionString, onAcceptHandler);
-				});
+				["number", "text", "boolean", "symbol", "list"]);
+
+			if (isEditable) {
+				parameterEditor.Select();
+				parameterEditor.SetTypeEditable(editParameterTypes);
+			}
 
 			curParameterEditors.push(parameterEditor);
 			descriptionDiv.appendChild(parameterEditor.GetElement());
