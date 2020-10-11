@@ -62,6 +62,17 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	var div = document.createElement("div");
 	div.classList.add("tableEntryEditor");
 
+	var editValueType = false;
+	var toggleEditTypeButton = document.createElement("button");
+	toggleEditTypeButton.title = "toggle editing entry type";
+	toggleEditTypeButton.style.display = "none";
+	toggleEditTypeButton.appendChild(iconUtils.CreateIcon("settings"));
+	toggleEditTypeButton.onclick = function() {
+		editValueType = !editValueType;
+		valueEditor.SetTypeEditable(editValueType);
+	}
+	div.appendChild(toggleEditTypeButton);
+
 	var nameEditor = createExpressionEditor(nameExpression, this, true, "entry");
 	div.appendChild(nameEditor.GetElement());
 
@@ -76,17 +87,6 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 		["number", "text", "boolean", "symbol", "list"]);
 
 	div.appendChild(valueEditor.GetElement());
-
-	var editValueType = false;
-	var toggleEditTypeButton = document.createElement("button");
-	toggleEditTypeButton.title = "toggle editing entry type";
-	toggleEditTypeButton.style.display = "none";
-	toggleEditTypeButton.appendChild(iconUtils.CreateIcon("settings"));
-	toggleEditTypeButton.onclick = function() {
-		editValueType = !editValueType;
-		valueEditor.SetTypeEditable(editValueType);
-	}
-	div.appendChild(toggleEditTypeButton);
 
 	this.GetElement = function() {
 		return div;
