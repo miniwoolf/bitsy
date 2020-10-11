@@ -503,10 +503,10 @@ function createListEditor(expression, parent, isInline) {
 		editor = new ConditionalEditor(expression, parent);
 	}
 	else if (scriptNext.IsTable(listType)) {
-		editor = new TableEditor(expression, parent);
+		editor = new TableEditor(expression, parent, isInline);
 	}
 	else if (scriptNext.IsFunctionDefinition(listType)) {
-		editor = new FunctionDefinitionEditor(expression, parent);
+		editor = new FunctionDefinitionEditor(expression, parent, isInline);
 	}
 	else if (library.IsMathExpression(listType)) {
 		editor = new MathExpressionEditor(expression, parent, isInline);

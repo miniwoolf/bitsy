@@ -1,9 +1,11 @@
-function TableEditor(expression, parentEditor) {
+function TableEditor(expression, parentEditor, isInline) {
 	var div = document.createElement("div");
 	div.classList.add("actionEditor");
 
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	if (!isInline) {
+		var orderControls = new OrderControls(this, parentEditor);
+		div.appendChild(orderControls.GetElement());
+	}
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -22,21 +24,6 @@ function TableEditor(expression, parentEditor) {
 		entryEditors.push(editor);
 		div.appendChild(editor.GetElement());
 	}
-
-	// todo : name?
-	var editParameterTypes = false;
-	var toggleParameterTypesButton = document.createElement("button");
-	toggleParameterTypesButton.title = "toggle editing parameter types";
-	toggleParameterTypesButton.appendChild(iconUtils.CreateIcon("settings"));
-	toggleParameterTypesButton.onclick = function() {
-		editParameterTypes = !editParameterTypes;
-		for (var i = 0; i < entryEditors.length; i++) {
-			entryEditors[i].SetValueTypeEditable(editParameterTypes);
-		}
-	}
-
-	var customControls = orderControls.GetCustomControlsContainer();
-	customControls.appendChild(toggleParameterTypesButton);
 
 	this.GetElement = function() {
 		return div;
@@ -61,7 +48,6 @@ function TableEditor(expression, parentEditor) {
 		function() {
 			for (var i = 0; i < entryEditors.length; i++) {
 				entryEditors[i].Select();
-				entryEditors[i].SetValueTypeEditable(editParameterTypes);
 			}
 		},
 		function() {
@@ -91,6 +77,17 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 
 	div.appendChild(valueEditor.GetElement());
 
+	var editValueType = false;
+	var toggleEditTypeButton = document.createElement("button");
+	toggleEditTypeButton.title = "toggle editing entry type";
+	toggleEditTypeButton.style.display = "none";
+	toggleEditTypeButton.appendChild(iconUtils.CreateIcon("settings"));
+	toggleEditTypeButton.onclick = function() {
+		editValueType = !editValueType;
+		valueEditor.SetTypeEditable(editValueType);
+	}
+	div.appendChild(toggleEditTypeButton);
+
 	this.GetElement = function() {
 		return div;
 	}
@@ -106,14 +103,12 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	this.Select = function() {
 		nameEditor.Select();
 		valueEditor.Select();
+		toggleEditTypeButton.style.display = "inline";
 	}
 
 	this.Deselect = function() {
 		nameEditor.Deselect();
 		valueEditor.Deselect();
-	}
-
-	this.SetValueTypeEditable = function(editable) {
-		valueEditor.SetTypeEditable(editable);
+		toggleEditTypeButton.style.display = "none";
 	}
 }

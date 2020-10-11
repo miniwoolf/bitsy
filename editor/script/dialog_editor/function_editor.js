@@ -1,9 +1,11 @@
-function FunctionDefinitionEditor(expression, parentEditor) {
+function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 	var div = document.createElement("div");
 	div.classList.add("actionEditor");
 
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	if (!isInline) {
+		var orderControls = new OrderControls(this, parentEditor);
+		div.appendChild(orderControls.GetElement());
+	}
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
