@@ -69,6 +69,12 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		childEditorRootDiv.innerHTML = "";
 
 		for (var i = 0; i < childEditors.length; i++) {
+			if (i >= childEditors.length - 1 && !isDialogExpression) {
+				var outputDescSpan = document.createElement("div");
+				outputDescSpan.innerText = "output:"; // TODO : localize
+				childEditorRootDiv.appendChild(outputDescSpan);
+			}
+
 			var editor = childEditors[i];
 			childEditorRootDiv.appendChild(editor.GetElement());
 

@@ -29,7 +29,25 @@ function FunctionDefinitionEditor(expression, parentEditor) {
 		return div;
 	}
 
-	AddSelectionBehavior(this);
+	this.GetExpressionList = function() {
+		return [expression];
+	}
+
+	this.NotifyUpdate = function() {
+		expression.list = [expression.list[0], expression.list[1]];
+		expression.list = expression.list.concat(blockEditor.GetExpressionList());
+
+		parentEditor.NotifyUpdate();
+	}
+
+	AddSelectionBehavior(
+		this,
+		function() {
+			inputEditor.Select();	
+		},
+		function() {
+			inputEditor.Deselect();
+		});
 }
 
 // todo : name: input vs parameter?
@@ -40,12 +58,15 @@ function FunctionInputEditor(expression, parentEditor) {
 
 	var inputSeperator = "";
 
+	var inputEditors = [];
+
 	for (var i = 0; i < expression.list.length; i++) {
 		var spaceSpan = document.createElement("span");
 		spaceSpan.innerText = inputSeperator;
 		div.appendChild(spaceSpan);
 
 		var parameterDefEditor = createExpressionEditor(expression.list[i], this, true);
+		inputEditors.push(parameterDefEditor);
 		div.appendChild(parameterDefEditor.GetElement());
 
 		inputSeperator = ", ";
@@ -53,5 +74,25 @@ function FunctionInputEditor(expression, parentEditor) {
 
 	this.GetElement = function() {
 		return div;
+	}
+
+	this.GetExpressionList = function() {
+		return [expression];
+	}
+
+	this.NotifyUpdate = function() {
+		parentEditor.NotifyUpdate();
+	}
+
+	this.Select = function() {
+		for (var i = 0; i < inputEditors.length; i++) {
+			inputEditors[i].Select();
+		}
+	}
+
+	this.Deselect = function() {
+		for (var i = 0; i < inputEditors.length; i++) {
+			inputEditors[i].Deselect();
+		}
 	}
 }
