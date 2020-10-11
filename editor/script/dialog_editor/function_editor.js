@@ -10,17 +10,8 @@ function FunctionDefinitionEditor(expression, parentEditor) {
 	titleDiv.innerText = "define function"; // todo : localize
 	div.appendChild(titleDiv);
 
-	var inputDescription = document.createElement("div");
-	inputDescription.innerText = "a function with input:";
-	div.appendChild(inputDescription);
-
-	// todo : what if there is no input params??
 	var inputEditor = new FunctionInputEditor(expression.list[1], this);
 	div.appendChild(inputEditor.GetElement());
-
-	var blockDescription = document.createElement("div");
-	blockDescription.innerText = "that does:"
-	div.appendChild(blockDescription);
 
 	var blockEditor = new BlockEditor(expression.list.slice(2), this, false);
 	div.appendChild(blockEditor.GetElement());
@@ -54,26 +45,87 @@ function FunctionDefinitionEditor(expression, parentEditor) {
 // todo : validate that it's symbols only?
 // todo : add new parameter definitions
 function FunctionInputEditor(expression, parentEditor) {
-	var div = document.createElement("div");
+	var self = this;
 
-	var inputSeperator = "";
+	var span = document.createElement("span");
+
+	var inputDescription = document.createElement("span");
+	span.appendChild(inputDescription);
+
+	var inputEditorRoot = document.createElement("span");
+	span.appendChild(inputEditorRoot);
 
 	var inputEditors = [];
 
-	for (var i = 0; i < expression.list.length; i++) {
-		var spaceSpan = document.createElement("span");
-		spaceSpan.innerText = inputSeperator;
-		div.appendChild(spaceSpan);
+	function createInputEditor(inputExpression, isEditable) {
+		var parameterDefEditor = createExpressionEditor(inputExpression, self, true);
 
-		var parameterDefEditor = createExpressionEditor(expression.list[i], this, true);
+		if (isEditable) {
+			parameterDefEditor.Select();
+		}
+
 		inputEditors.push(parameterDefEditor);
-		div.appendChild(parameterDefEditor.GetElement());
-
-		inputSeperator = ", ";
 	}
 
+	function updateInputEditorList() {
+		// todo : localize
+		inputDescription.innerText = inputEditors.length > 0 ? "a function with input: " : "a function ";
+		inputDescription.style.display = inputEditors.length > 0 ? "block" : "inline";
+		thatDoesSpan.style.display = inputEditors.length > 0 ? "block" : "inline"
+
+		if (inputEditors.length <= 0 && removeInputButton.style.display === "inline") {
+			removeInputButton.style.display = "none";
+		}
+		else if (inputEditors.length > 0 && addInputButton.style.display === "inline") {
+			// todo : this is a hack way to detect if the editor is selected...
+			removeInputButton.style.display = "inline";
+		}
+
+		inputEditorRoot.innerHTML = "";
+		var inputSeperator = "";
+
+		for (var i = 0; i < inputEditors.length; i++) {
+			var spaceSpan = document.createElement("span");
+			spaceSpan.innerText = inputSeperator;
+			inputEditorRoot.appendChild(spaceSpan);
+
+			inputEditorRoot.appendChild(inputEditors[i].GetElement());
+
+			inputSeperator = ", ";	
+		}
+	}
+
+	var addInputButton = document.createElement("button");
+	addInputButton.title = "add input parameter"; // todo : localize
+	addInputButton.style.display = "none";
+	addInputButton.appendChild(iconUtils.CreateIcon("add"));
+	addInputButton.onclick = function() {
+		var inputExpression = CreateDefaultExpression("symbol");
+		expression.list.push(inputExpression);
+		createInputEditor(inputExpression, true);
+		updateInputEditorList();
+		parentEditor.NotifyUpdate();
+	}
+	span.appendChild(addInputButton);
+
+	var removeInputButton = document.createElement("button");
+	removeInputButton.title = "remove input parameter"; // todo : localize
+	removeInputButton.style.display = "none";
+	removeInputButton.appendChild(iconUtils.CreateIcon("delete")); // todo : different icon?
+	removeInputButton.onclick = function() {
+		expression.list = expression.list.slice(0, expression.list.length - 1);
+		inputEditors = inputEditors.slice(0, inputEditors.length - 1);
+		updateInputEditorList();
+		parentEditor.NotifyUpdate();
+	}
+	span.appendChild(removeInputButton);
+
+	var thatDoesSpan = document.createElement("span");
+	thatDoesSpan.innerText = " that does:"; // todo : localize
+	span.appendChild(thatDoesSpan);
+
 	this.GetElement = function() {
-		return div;
+		return span;
 	}
 
 	this.GetExpressionList = function() {
@@ -85,14 +137,26 @@ function FunctionInputEditor(expression, parentEditor) {
 	}
 
 	this.Select = function() {
+		addInputButton.style.display = "inline";
+		removeInputButton.style.display = inputEditors.length > 0 ? "inline" : "none";
+
 		for (var i = 0; i < inputEditors.length; i++) {
 			inputEditors[i].Select();
 		}
 	}
 
 	this.Deselect = function() {
+		addInputButton.style.display = "none";
+		removeInputButton.style.display = "none";
+
 		for (var i = 0; i < inputEditors.length; i++) {
 			inputEditors[i].Deselect();
 		}
 	}
+
+	// initialize
+	for (var i = 0; i < expression.list.length; i++) {
+		createInputEditor(expression.list[i], false);
+	}
+	updateInputEditorList();
 }
