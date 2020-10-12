@@ -1,4 +1,6 @@
 function TableEditor(expression, parentEditor, isInline) {
+	var self = this;
+
 	var div = document.createElement("div");
 	div.classList.add("actionEditor");
 
@@ -16,14 +18,39 @@ function TableEditor(expression, parentEditor, isInline) {
 	inputDescription.innerText = "make table containing entries:";
 	div.appendChild(inputDescription);
 
+	var entryRoot = document.createElement("div");
+	div.appendChild(entryRoot);
 	var entryEditors = [];
 
 	// todo : validate that input is correct?
 	for (var i = 1; i < expression.list.length; i += 2) {
 		var editor = new TableEntryEditor(expression.list[i], expression.list[i + 1], this);
 		entryEditors.push(editor);
-		div.appendChild(editor.GetElement());
+		entryRoot.appendChild(editor.GetElement());
 	}
+
+	var addEntryRootDiv = document.createElement("div");
+	addEntryRootDiv.classList.add("addOption");
+	div.appendChild(addEntryRootDiv);
+
+	var addEntryButton = document.createElement("button");
+	// todo localize!
+	addEntryButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " add entry";
+	addEntryButton.onclick = function() {
+		var nameExpression = { type: "symbol", value: ":X" }; // add default creator?
+		var valueExpression = CreateDefaultExpression("number");
+
+		expression.list.push(nameExpression);
+		expression.list.push(valueExpression);
+
+		var editor = new TableEntryEditor(nameExpression, valueExpression, self);
+		editor.Select();
+		entryEditors.push(editor);
+		entryRoot.appendChild(editor.GetElement());
+
+		parentEditor.NotifyUpdate();
+	}
+	addEntryRootDiv.appendChild(addEntryButton);
 
 	this.GetElement = function() {
 		return div;
