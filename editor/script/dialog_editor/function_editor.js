@@ -74,14 +74,7 @@ function FunctionInputEditor(expression, parentEditor) {
 		inputDescription.innerText = inputEditors.length > 0 ? "a function with input: " : "a function ";
 		inputDescription.style.display = inputEditors.length > 0 ? "block" : "inline";
 		thatDoesSpan.style.display = inputEditors.length > 0 ? "block" : "inline"
-
-		if (inputEditors.length <= 0 && removeInputButton.style.display === "inline") {
-			removeInputButton.style.display = "none";
-		}
-		else if (inputEditors.length > 0 && addInputButton.style.display === "inline") {
-			// todo : this is a hack way to detect if the editor is selected...
-			removeInputButton.style.display = "inline";
-		}
+		removeInputButton.disabled = inputEditors.length <= 0;
 
 		inputEditorRoot.innerHTML = "";
 		var inputSeperator = "";
@@ -140,7 +133,8 @@ function FunctionInputEditor(expression, parentEditor) {
 
 	this.Select = function() {
 		addInputButton.style.display = "inline";
-		removeInputButton.style.display = inputEditors.length > 0 ? "inline" : "none";
+		removeInputButton.style.display = "inline";
+		removeInputButton.disabled = inputEditors.length <= 0;
 
 		for (var i = 0; i < inputEditors.length; i++) {
 			inputEditors[i].Select();
