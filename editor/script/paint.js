@@ -12,7 +12,12 @@ function PaintTool(canvas, roomTool) {
 
 	var drawingId = "A";
 
-	var animationControl = null;
+	var animationControl = new AnimationControl({
+		framesDiv: document.getElementById("animationFrames"),
+		removeButton: document.getElementById("animationRemove"),
+		addButton: document.getElementById("animationAdd"),
+	});
+
 	var curDrawingFrameIndex = 0;
 
 	//paint canvas & context
@@ -184,7 +189,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
-		var animationControl = new AnimationControl(drawingId, { root: document.getElementById("animationOuter"), });
+		animationControl.ChangeDrawing(drawingId);
 
 		// wall UI
 		if (tile[drawingId].type === "TIL") {
@@ -544,14 +549,17 @@ function PaintTool(canvas, roomTool) {
 	});
 }
 
-function AnimationControl(id, controls) {
-	// TODO
+function AnimationControl(controls) {
+	var drawingId = null;
 
 	var animationThumbnailRenderer = CreateDrawingThumbnailRenderer();
 
 	function renderAnimationThumbnail(imgId, id, options, callback) {
 		function onRenderFinished(uri) {
-			document.getElementById(imgId).src = uri;
+			var img = document.createElement("img");
+			img.src = uri;
+			controls.framesDiv.appendChild(img);
+
 			if (callback) {
 				callback();
 			}
@@ -561,6 +569,8 @@ function AnimationControl(id, controls) {
 	}
 
 	function renderAnimationPreview(id) {
+		controls.framesDiv.innerHTML = "";
+
 		// console.log("RENDRE ANIM PREVIW");
 		renderAnimationThumbnail("animationThumbnailPreview", id, { isAnimated: true, },
 			function() {
@@ -569,6 +579,11 @@ function AnimationControl(id, controls) {
 						renderAnimationThumbnail("animationThumbnailFrame2", id, { frameIndex: 1, });
 					});
 			});
+	}
+
+	this.ChangeDrawing = function(id) {
+		drawingId = id;
+		renderAnimationPreview(drawingId);
 	}
 }
 
