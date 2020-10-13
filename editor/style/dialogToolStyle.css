@@ -564,4 +564,11 @@
 
 .tableEntryEditor {
 	margin-top: 5px;
+	margin-bottom: 5px;
+	padding: 5px;
+	background: #f5f5ff; /* todo : do I like this super light color? */
+}
+
+.selectedEditor.tableEntryEditor {
+	border: solid 2px #6767b2;/* #e8e8ff;*/
 }

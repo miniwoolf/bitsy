@@ -53,7 +53,7 @@ function nextObjectId(idList) {
 
 // TODO : continue using base 36???
 function sortedDrawingIdList() { // TODO : name?
-	return sortedBase36IdList(object);
+	return sortedBase36IdList(tile);
 }
 // TODO : add nextDrawingId()
 

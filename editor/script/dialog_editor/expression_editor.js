@@ -359,7 +359,9 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 						parameterInfo.types.concat(["list"]));
 
 					if (isEditable) {
-						parameterEditor.Select();
+						if (!parameterEditor.SkipAutoSelect) {
+							parameterEditor.Select();
+						}
 						parameterEditor.SetTypeEditable(editParameterTypes);
 					}
 
@@ -399,7 +401,9 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 				["number", "text", "boolean", "symbol", "list"]);
 
 			if (isEditable) {
-				parameterEditor.Select();
+				if (!parameterEditor.SkipAutoSelect) {
+					parameterEditor.Select();
+				}
 				parameterEditor.SetTypeEditable(editParameterTypes);
 			}
 

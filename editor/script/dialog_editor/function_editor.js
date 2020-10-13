@@ -41,6 +41,8 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 		function() {
 			inputEditor.Deselect();
 		});
+
+	this.SkipAutoSelect = true;
 }
 
 // todo : name: input vs parameter?

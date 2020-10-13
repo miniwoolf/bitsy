@@ -11,6 +11,8 @@ function PaintTool(canvas, roomTool) {
 	var drawPaintGrid = true;
 
 	var drawingId = "A";
+
+	var animationControl = null;
 	var curDrawingFrameIndex = 0;
 
 	//paint canvas & context
@@ -182,29 +184,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
-		if (tile[drawingId] && tile[drawingId].animation.isAnimated) {
-			document.getElementById("animatedCheckbox").checked = true;
-
-			if (curDrawingFrameIndex == 0)
-			{
-				document.getElementById("animationKeyframe1").className = "animationThumbnail left selected";
-				document.getElementById("animationKeyframe2").className = "animationThumbnail right unselected";
-			}
-			else if (curDrawingFrameIndex == 1)
-			{
-				document.getElementById("animationKeyframe1").className = "animationThumbnail left unselected";
-				document.getElementById("animationKeyframe2").className = "animationThumbnail right selected";
-			}
-
-			document.getElementById("animation").setAttribute("style","display:block;");
-			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
-			renderAnimationPreview(drawingId);
-		}
-		else {
-			document.getElementById("animatedCheckbox").checked = false;
-			document.getElementById("animation").setAttribute("style","display:none;");
-			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
-		}
+		var animationControl = new AnimationControl(drawingId, { root: document.getElementById("animationOuter"), });
 
 		// wall UI
 		if (tile[drawingId].type === "TIL") {
@@ -430,24 +410,24 @@ function PaintTool(canvas, roomTool) {
 	// todo : create new improved controls for this sometime (in seperate object?)
 	this.SetAnimated = function(isAnimated) {
 		if (isAnimated) {
-			addDrawingAnimation();
+			addAnimation();
 			document.getElementById("animation").setAttribute("style","display:block;");
 			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
 			renderAnimationPreview(drawingId);
 		}
 		else {
-			removeDrawingAnimation();
+			removeAnimation();
 			document.getElementById("animation").setAttribute("style","display:none;");
 			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
 		}
 	}
 
 	this.SelectAnimationFrame = function(frameIndex) {
-		curDrawingFrameIndex = 0;
+		curDrawingFrameIndex = frameIndex;
 		self.ReloadDrawing();
 	}
 
-	function addDrawingAnimation() {
+	function addAnimation() {
 		//set editor mode
 		curDrawingFrameIndex = 0;
 
@@ -474,7 +454,7 @@ function PaintTool(canvas, roomTool) {
 		resetAllAnimations();
 	}
 
-	function removeDrawingAnimation(drawingId) {
+	function removeAnimation() {
 		//mark tile as non-animated
 		tile[drawingId].animation.isAnimated = false;
 		tile[drawingId].animation.frameIndex = 0;
@@ -530,23 +510,6 @@ function PaintTool(canvas, roomTool) {
 		renderer.SetImageSource(sourceId, imageSource);
 	}
 
-	var animationThumbnailRenderer = CreateDrawingThumbnailRenderer();
-
-	function renderAnimationThumbnail(imgId, id, frameIndex) {
-		function onRenderFinished(uri) {
-			document.getElementById(imgId).src = uri;
-		};
-
-		animationThumbnailRenderer.Render(id, onRenderFinished, { frameIndex: frameIndex });
-	}
-
-	function renderAnimationPreview(id) {
-		// console.log("RENDRE ANIM PREVIW");
-		renderAnimationThumbnail("animationThumbnailPreview", id);
-		renderAnimationThumbnail("animationThumbnailFrame1", id, 0);
-		renderAnimationThumbnail("animationThumbnailFrame2", id, 1);
-	}
-
 	/* NAVIGATION */
 	function nextDrawing() {
 		var ids = sortedDrawingIdList();
@@ -579,6 +542,34 @@ function PaintTool(canvas, roomTool) {
 			renderAnimationPreview(drawingId);
 		}
 	});
+}
+
+function AnimationControl(id, controls) {
+	// TODO
+
+	var animationThumbnailRenderer = CreateDrawingThumbnailRenderer();
+
+	function renderAnimationThumbnail(imgId, id, options, callback) {
+		function onRenderFinished(uri) {
+			document.getElementById(imgId).src = uri;
+			if (callback) {
+				callback();
+			}
+		};
+
+		animationThumbnailRenderer.Render(id, onRenderFinished, options);
+	}
+
+	function renderAnimationPreview(id) {
+		// console.log("RENDRE ANIM PREVIW");
+		renderAnimationThumbnail("animationThumbnailPreview", id, { isAnimated: true, },
+			function() {
+				renderAnimationThumbnail("animationThumbnailFrame1", id, { frameIndex: 0, },
+					function() {
+						renderAnimationThumbnail("animationThumbnailFrame2", id, { frameIndex: 1, });
+					});
+			});
+	}
 }
 
 /*

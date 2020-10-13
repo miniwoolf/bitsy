@@ -128,7 +128,7 @@ function BooleanEditor(expression, parentEditor, isInline) {
 				input.appendChild(boolFalseOption);
 
 				input.onchange = function(event) {
-					expression.value = event.target.value;
+					expression.value = event.target.value === "YES";
 					parentEditor.NotifyUpdate();
 				}
 
@@ -136,7 +136,7 @@ function BooleanEditor(expression, parentEditor, isInline) {
 			},
 			function() {
 				return expression.value ? "yes" : "no"; // todo : localize
-			}
+			},
 		));
 }
 
@@ -534,6 +534,8 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 
 	var span = document.createElement("span");
 
+	this.SkipAutoSelect = false;
+
 	function UpdateEditor(type) {
 		curType = type;
 
@@ -555,6 +557,8 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 		}
 
 		editor = createExpressionEditor(expression, self, true, curType);
+
+		self.SkipAutoSelect = "SkipAutoSelect" in editor && editor.SkipAutoSelect;
 
 		span.appendChild(editor.GetElement());
 	}

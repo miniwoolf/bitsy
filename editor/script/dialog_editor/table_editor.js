@@ -20,6 +20,7 @@ function TableEditor(expression, parentEditor, isInline) {
 
 	var entryRoot = document.createElement("div");
 	div.appendChild(entryRoot);
+
 	var entryEditors = [];
 
 	// todo : validate that input is correct?
@@ -44,7 +45,6 @@ function TableEditor(expression, parentEditor, isInline) {
 		expression.list.push(valueExpression);
 
 		var editor = new TableEntryEditor(nameExpression, valueExpression, self);
-		editor.Select();
 		entryEditors.push(editor);
 		entryRoot.appendChild(editor.GetElement());
 
@@ -70,18 +70,39 @@ function TableEditor(expression, parentEditor, isInline) {
 		parentEditor.NotifyUpdate();
 	}
 
-	AddSelectionBehavior(
-		this,
-		function() {
-			for (var i = 0; i < entryEditors.length; i++) {
-				entryEditors[i].Select();
-			}
-		},
-		function() {
-			for (var i = 0; i < entryEditors.length; i++) {
-				entryEditors[i].Deselect();
-			}
-		});
+	this.ChildCount = function() {
+		return entryEditors.length;
+	}
+
+	this.IndexOfChild = function(childEditor) {
+		return entryEditors.indexOf(childEditor);
+	}
+
+	this.InsertChild = function(childEditor, index) {
+		entryEditors.splice(index, 0, childEditor);
+
+		entryRoot.innerHTML = "";
+		for (var i = 0; i < entryEditors.length; i++) {
+			entryRoot.appendChild(entryEditors[i].GetElement());
+		}
+
+		self.NotifyUpdate()
+	}
+
+	this.RemoveChild = function(childEditor) {
+		entryEditors.splice(entryEditors.indexOf(childEditor), 1);
+
+		entryRoot.innerHTML = "";
+		for (var i = 0; i < entryEditors.length; i++) {
+			entryRoot.appendChild(entryEditors[i].GetElement());
+		}
+
+		self.NotifyUpdate();
+	}
+
+	AddSelectionBehavior(this);
+
+	this.SkipAutoSelect = true;
 }
 
 // todo : needs style so it's ok to have inline math expressions inside these
@@ -89,16 +110,19 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	var div = document.createElement("div");
 	div.classList.add("tableEntryEditor");
 
+	var orderControls = new OrderControls(this, parentEditor);
+	div.appendChild(orderControls.GetElement());
+
 	var editValueType = false;
 	var toggleEditTypeButton = document.createElement("button");
 	toggleEditTypeButton.title = "toggle editing entry type";
-	toggleEditTypeButton.style.display = "none";
 	toggleEditTypeButton.appendChild(iconUtils.CreateIcon("settings"));
 	toggleEditTypeButton.onclick = function() {
 		editValueType = !editValueType;
 		valueEditor.SetTypeEditable(editValueType);
 	}
-	div.appendChild(toggleEditTypeButton);
+	var customControls = orderControls.GetCustomControlsContainer();
+	customControls.appendChild(toggleEditTypeButton);
 
 	var nameEditor = createExpressionEditor(nameExpression, this, true, "entry");
 	div.appendChild(nameEditor.GetElement());
@@ -127,15 +151,15 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 		parentEditor.NotifyUpdate();
 	}
 
-	this.Select = function() {
-		nameEditor.Select();
-		valueEditor.Select();
-		toggleEditTypeButton.style.display = "inline";
-	}
-
-	this.Deselect = function() {
-		nameEditor.Deselect();
-		valueEditor.Deselect();
-		toggleEditTypeButton.style.display = "none";
-	}
+	AddSelectionBehavior(
+		this,
+		function() {
+			nameEditor.Select();
+			valueEditor.Select();
+			valueEditor.SetTypeEditable(editValueType);
+		},
+		function() {
+			nameEditor.Deselect();
+			valueEditor.Deselect();
+		});
 }
