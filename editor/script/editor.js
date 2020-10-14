@@ -506,9 +506,6 @@ function resetGameData() {
 	updateFontSelectUI(); // hmm is this really the place for this?
 
 	paintTool.SelectDrawing("A");
-	markerTool.Clear(); // hacky -- should combine more of this stuff together
-	markerTool.SetRoom(curRoom);
-	markerTool.Refresh();
 	roomTool.drawEditMap();
 
 	events.Raise("game_data_change"); // TODO -- does this need to have a specific reset event or flag?
@@ -763,13 +760,9 @@ function start() {
 	roomTool = new RoomTool(canvas);
 	roomTool.listenEditEvents();
 	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
+	listenForRoomSelect(); // todo : hacky to have this be external to the tool, right?
 
-	paintTool = new PaintTool(document.getElementById("paint"),roomTool);
-
-	markerTool = new RoomMarkerTool(document.getElementById("markerCanvas1"), document.getElementById("markerCanvas2") );
-	console.log("MARKER TOOL " + markerTool);
-
-	roomTool.markers = markerTool;
+	paintTool = new PaintTool(document.getElementById("paint"), roomTool);
 
 	mapTool = new MapTool({
 		canvas : document.getElementById("map"),
@@ -789,8 +782,6 @@ function start() {
 		transitionEffectLeft : document.getElementById("mapTransitionEffectLeftSelect"),
 		transitionEffectRight : document.getElementById("mapTransitionEffectRightSelect"),
 	});
-
-	listenForRoomSelect();
 
 	//
 	drawingThumbnailCanvas = document.createElement("canvas");
@@ -821,8 +812,6 @@ function start() {
 
 	roomIndex = sortedRoomIdList().indexOf(curRoom);
 
-	markerTool.SetRoom(curRoom);
-
 	// load panel preferences
 	var prefs = getPanelPrefs();
 	localStorage.panel_prefs = JSON.stringify(prefs); // save loaded prefs
@@ -839,7 +828,6 @@ function start() {
 
 	//draw everything
 	paintTool.SelectDrawing("A");
-	markerTool.Refresh();
 	roomTool.drawEditMap();
 
 	updateRoomPaletteSelect(); //dumb to have to specify this here --- wrap up room UI method?
@@ -1058,8 +1046,6 @@ function on_edit_mode() {
 	roomTool.drawEditMap();
 	roomTool.listenEditEvents();
 
-	markerTool.RefreshKeepSelection();
-
 	reloadDialogUI();
 
 	updateInventoryUI();
@@ -1265,7 +1251,6 @@ function on_game_data_change() {
 	refreshGameData();
 
 	// ui stuff
-	markerTool.Refresh(); // wow I hope this doesn't cause bugs
 	updateRoomName();
 	refreshGameData();
 }
@@ -1293,8 +1278,6 @@ function on_game_data_change_core() {
 	updateInventoryUI();
 
 	updateFontSelectUI();
-
-	markerTool.SetRoom(curRoom);
 
 	// TODO -- start using this for more things
 	events.Raise("game_data_change");
@@ -1408,108 +1391,6 @@ function toggleVersionNotes(e) {
 		div.style.display = "none";
 	}
 	iconUtils.LoadIcon(document.getElementById("versionNotesCheckIcon"), e.target.checked ? "expand_more" : "expand_less");
-}
-
-/* MARKERS (exits & endings) */
-var markerTool;
-
-function startAddMarker() {
-	markerTool.StartAdd();
-}
-
-function cancelAddMarker() {
-	markerTool.CancelAdd();
-}
-
-function newExit() {
-	markerTool.AddExit(false);
-	roomTool.drawEditMap();
-}
-
-function newExitOneWay() {
-	markerTool.AddExit(true);
-	roomTool.drawEditMap();
-}
-
-function newEnding() {
-	markerTool.AddEnding();
-	roomTool.drawEditMap();
-}
-
-function duplicateMarker() {
-	markerTool.DuplicateSelected();
-	roomTool.drawEditMap(); // TODO : this should be triggered by an event really
-}
-
-function deleteMarker() {
-	markerTool.RemoveMarker();
-	roomTool.drawEditMap();
-}
-
-function prevMarker() {
-	markerTool.NextMarker();
-	roomTool.drawEditMap();
-}
-
-function nextMarker() {
-	markerTool.PrevMarker();
-	roomTool.drawEditMap();
-}
-
-function toggleMoveMarker1(e) {
-	markerTool.TogglePlacingFirstMarker(e.target.checked);
-}
-
-function selectMarkerRoom1() {
-	markerTool.SelectMarkerRoom1();
-}
-
-function toggleMoveMarker2(e) {
-	markerTool.TogglePlacingSecondMarker(e.target.checked);
-}
-
-function selectMarkerRoom2() {
-	markerTool.SelectMarkerRoom2();
-}
-
-function changeExitDirection() {
-	markerTool.ChangeExitLink();
-	roomTool.drawEditMap();
-}
-
-function onEffectTextChange(event) {
-	markerTool.ChangeEffectText(event.target.value);
-}
-
-function showMarkers() {
-	toggleRoomMarkers(true);
-}
-
-function hideMarkers() {
-	toggleRoomMarkers(false);
-}
-
-function toggleRoomMarkers(visible) {
-	if (visible) {
-		markerTool.Refresh();
-	}
-	roomTool.areMarkersVisible = visible;
-	roomTool.drawEditMap();
-	document.getElementById("roomMarkersCheck").checked = visible;
-	iconUtils.LoadIcon(document.getElementById("roomMarkersIcon"), visible ? "visibility" : "visibility_off");
-}
-
-function onChangeExitTransitionEffect(effectId, exitIndex) {
-	markerTool.ChangeExitTransitionEffect(effectId, exitIndex);
-}
-
-function toggleExitOptions(exitIndex, visibility) {
-	if (exitIndex == 0) {
-		// hacky way to keep these in syncs!!!
-		document.getElementById("exitOptionsToggleCheck1").checked = visibility;
-		document.getElementById("exitOptionsToggleCheck1_alt").checked = visibility;
-	}
-	markerTool.ToggleExitOptions(exitIndex, visibility);
 }
 
 // TODO : put helper method somewhere more.. helpful
@@ -1630,15 +1511,11 @@ function afterTogglePanel(id,visible) {
 
 // TODO : change into event!
 function afterShowPanel(id) {
-	if (id === "exitsPanel") {
-		showMarkers();
-	}
+	// todo : remove?
 }
 
 function afterHidePanel(id) {
-	if (id === "exitsPanel") {
-		hideMarkers();
-	}
+	// todo : remove?
 }
 
 // DEPRECATED

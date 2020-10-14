@@ -68,7 +68,7 @@ function RoomTool(canvas) {
 
 		var isEditingMarker = false;
 
-		if (self.areMarkersVisible) {
+		if (self.markers && self.areMarkersVisible) {
 			if (self.markers.IsPlacingMarker()) {
 				self.markers.PlaceMarker(x,y);
 				self.drawEditMap();
@@ -151,7 +151,7 @@ function RoomTool(canvas) {
 			return;
 		}
 
-		if (self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
+		if (self.markers && self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
 			// drag marker around
 			var off = getOffset(e);
 			off = mobileOffsetCorrection(off, e, (tilesize * roomsize * scale));
@@ -175,7 +175,9 @@ function RoomTool(canvas) {
 		isDragAddingTiles = false;
 		isDragDeletingTiles = false;
 
-		self.markers.EndDrag();
+		if (self.markers) {
+			self.markers.EndDrag();
+		}
 	}
 
 	function editTilesOnDrag(e) {
@@ -293,7 +295,7 @@ function RoomTool(canvas) {
 		}
 
 		//draw exits (and entrances) and endings
-		if (self.areMarkersVisible) {
+		if (self.areMarkersVisible && self.markers) {
 			var w = tilesize * scale;
 			var markerList = self.markers.GetMarkerList();
 
@@ -360,6 +362,8 @@ function listenForRoomSelect() {
 	});
 }
 
+// I don't like that this only functions correctly if listenForSelectRoom is run before all other events...
+// I need to add an "after_select_room" event...
 function selectRoom(roomId) {
 	// ok watch out this is gonna be hacky
 	var ids = sortedRoomIdList();
@@ -374,17 +378,8 @@ function selectRoom(roomId) {
 	if (nextRoomIndex != -1) {
 		roomIndex = nextRoomIndex;
 		curRoom = ids[roomIndex];
-		markerTool.SetRoom(curRoom);
 		roomTool.drawEditMap();
-		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
-
-		// todo : new finder
-		// paintExplorer.Refresh( paintTool.drawing.type, true /*doKeepOldThumbnails*/ );
-
-		// if (drawing.type === TileType.Tile) {
-		// 	updateWallCheckboxOnCurrentTile();
-		// }
 
 		updateRoomName();
 	}
@@ -465,12 +460,10 @@ function deleteRoom() {
 
 		events.Raise("delete_room", { id: roomId });
 
-		markerTool.Clear();
 		nextRoom();
 		roomTool.drawEditMap();
 		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
-		markerTool.Refresh();
 		// updateExitOptionsFromGameData();
 		//recreate exit options
 	}
@@ -480,7 +473,6 @@ function roomPaletteChange(event) {
 	var palId = event.target.value;
 	room[curRoom].pal = palId;
 	refreshGameData();
-	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
 	paintTool.UpdateCanvas();
 

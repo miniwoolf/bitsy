@@ -505,6 +505,8 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 		var hexPalette = getHexPalette(renderable);
 		var drawingFrameData = onRender(renderable, drawingThumbnailCtx, options);
 
+		var cacheId = options && options.cacheId ? options.cacheId : id;
+
 		// create encoder
 		var gifData = {
 			frames: drawingFrameData,
@@ -517,15 +519,15 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 		var encoder = new gif();
 
 		// cancel old encoder (if in progress already)
-		if (thumbnailRenderEncoders[id] != null) {
-			thumbnailRenderEncoders[id].cancel();
+		if (thumbnailRenderEncoders[cacheId] != null) {
+			thumbnailRenderEncoders[cacheId].cancel();
 		}
-		thumbnailRenderEncoders[id] = encoder;
+		thumbnailRenderEncoders[cacheId] = encoder;
 
 		// start encoding new GIF
 		encoder.encode(gifData, function(uri) {
 			// update cache
-			cache[id] = {
+			cache[cacheId] = {
 				uri : uri,
 				outOfDate : false
 			};
@@ -569,15 +571,11 @@ function CreateDrawingThumbnailRenderer() {
 		var palId = getRoomPal(curRoom);
 		var drawingFrameData = [];
 
-		// todo : more than two frames?
-		if (options.isAnimated || options.frameIndex == 0) {
-			drawTile(renderer.GetImage(til, palId, 0 /*frameIndex*/), 0, 0, ctx);
-			drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
-		}
-
-		if (options.isAnimated || options.frameIndex == 1) {
-			drawTile(renderer.GetImage(til, palId, 1 /*frameIndex*/), 0, 0, ctx);
-			drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
+		for (var i = 0; i < til.animation.frameCount; i++) {
+			if (options.isAnimated || options.frameIndex === i) {
+				drawTile(renderer.GetImage(til, palId, i), 0, 0, ctx);
+				drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
+			}
 		}
 
 		return drawingFrameData;

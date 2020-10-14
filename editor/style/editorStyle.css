@@ -348,34 +348,24 @@ span.controlBox {
 	flex-grow: 1;
 }
 
-#animation img {
-	width:64px;
-	height:64px;
-	margin:0px;
-	border: solid 2px #6767b2;
-	display:inline-block;
+.animationThumbnail {
+	width: 32px;
+	height: 32px;
+	background: #6767b2;
+	margin: 5px;
 	image-rendering: pixelated;
 }
 
-.animationThumbnail {
-	display:inline-block;
-	padding: 4px;
-	margin:0px;
-	margin-left:-4px; /*why?*/
-}
-
 .animationThumbnail.preview {
-	margin-right:10px;
+	margin-right: 10px;
 }
 
 .animationThumbnail.selected {
-	background: #6767b2;
-	color: white;
+	/* TODO */
 }
 
 .animationThumbnail.unselected {
-	background: #ccccff;
-	color: #6767b2;
+	/* TODO */
 }
 
 .left {

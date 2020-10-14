@@ -11,14 +11,25 @@ function PaintTool(canvas, roomTool) {
 	var drawPaintGrid = true;
 
 	var drawingId = "A";
-
-	var animationControl = new AnimationControl({
-		framesDiv: document.getElementById("animationFrames"),
-		removeButton: document.getElementById("animationRemove"),
-		addButton: document.getElementById("animationAdd"),
-	});
-
 	var curDrawingFrameIndex = 0;
+
+	var animationControl = new AnimationControl(
+		function(index) {
+			if (index != undefined && index != null) {
+				curDrawingFrameIndex = index;
+			}
+
+			if (curDrawingFrameIndex >= tile[drawingId].animation.frameCount) {
+				curDrawingFrameIndex = tile[drawingId].animation.frameCount - 1;
+			}
+
+			self.UpdateCanvas();
+		},
+		{
+			framesDiv: document.getElementById("animationFrames"),
+			removeButton: document.getElementById("animationRemove"),
+			addButton: document.getElementById("animationAdd"),
+		});
 
 	//paint canvas & context
 	canvas.width = tilesize * paint_scale;
@@ -93,9 +104,7 @@ function PaintTool(canvas, roomTool) {
 
 			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
-			if (isCurDrawingAnimated()) {
-				renderAnimationPreview(drawingId);
-			}
+			animationControl.RefreshFrame(curDrawingFrameIndex);
 		}
 	}
 
@@ -176,13 +185,11 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	function curDrawingData() {
-		var frameIndex = (isCurDrawingAnimated() ? curDrawingFrameIndex : 0);
-		return getFrameData(frameIndex);
+		return getFrameData(curDrawingFrameIndex);
 	}
 
-	// todo: assumes 2 frames
 	function curDrawingAltFrameData() {
-		var frameIndex = (curDrawingFrameIndex === 0 ? 1 : 0);
+		var frameIndex = Math.max(0, curDrawingFrameIndex - 1);
 		return getFrameData(frameIndex);
 	}
 
@@ -236,7 +243,6 @@ function PaintTool(canvas, roomTool) {
 		drawingId = e.id;
 		curDrawingFrameIndex = 0;
 		self.ReloadDrawing();
-		self.UpdateCanvas();
 	});
 
 	this.ToggleWall = function(checked) {
@@ -411,95 +417,6 @@ function PaintTool(canvas, roomTool) {
 		self.UpdateCanvas();
 	}
 
-	/* ANIMATION CONTROLS */
-	// todo : create new improved controls for this sometime (in seperate object?)
-	this.SetAnimated = function(isAnimated) {
-		if (isAnimated) {
-			addAnimation();
-			document.getElementById("animation").setAttribute("style","display:block;");
-			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_more");
-			renderAnimationPreview(drawingId);
-		}
-		else {
-			removeAnimation();
-			document.getElementById("animation").setAttribute("style","display:none;");
-			iconUtils.LoadIcon(document.getElementById("animatedCheckboxIcon"), "expand_less");
-		}
-	}
-
-	this.SelectAnimationFrame = function(frameIndex) {
-		curDrawingFrameIndex = frameIndex;
-		self.ReloadDrawing();
-	}
-
-	function addAnimation() {
-		//set editor mode
-		curDrawingFrameIndex = 0;
-
-		//mark tile as animated
-		tile[drawingId].animation.isAnimated = true;
-		tile[drawingId].animation.frameIndex = 0;
-		tile[drawingId].animation.frameCount = 2;
-
-		//add blank frame to tile (or restore removed animation)
-		if (tile[drawingId].cachedAnimation != null) {
-			restoreDrawingAnimation(tile[drawingId].drw, tile[drawingId].cachedAnimation);
-		}
-		else {
-			addNewFrameToDrawing(tile[drawingId].drw);
-		}
-
-		// TODO RENDERER : refresh images
-
-		//refresh data model
-		refreshGameData();
-		self.ReloadDrawing();
-
-		// reset animations
-		resetAllAnimations();
-	}
-
-	function removeAnimation() {
-		//mark tile as non-animated
-		tile[drawingId].animation.isAnimated = false;
-		tile[drawingId].animation.frameIndex = 0;
-		tile[drawingId].animation.frameCount = 0;
-
-		//remove all but the first frame of the tile
-		cacheDrawingAnimation(tile[drawingId], tile[drawingId].drw);
-		removeDrawingAnimation(tile[drawingId].drw);
-
-		// TODO RENDERER : refresh images
-
-		//refresh data model
-		refreshGameData();
-		self.ReloadDrawing();
-
-		// reset animations
-		resetAllAnimations();
-	}
-
-	function addNewFrameToDrawing(drwId) {
-		// copy first frame data into new frame
-		var imageSource = renderer.GetImageSource(drwId);
-		var firstFrame = imageSource[0];
-		var newFrame = [];
-		for (var y = 0; y < tilesize; y++) {
-			newFrame.push([]);
-			for (var x = 0; x < tilesize; x++) {
-				newFrame[y].push( firstFrame[y][x] );
-			}
-		}
-		imageSource.push( newFrame );
-		renderer.SetImageSource(drwId, imageSource);
-	}
-
-	function removeDrawingAnimation(drwId) {
-		var imageSource = renderer.GetImageSource(drwId);
-		var oldImageData = imageSource.slice(0);
-		renderer.SetImageSource( drwId, [ oldImageData[0] ] );
-	}
-
 	// let's us restore the animation during the session if the user wants it back
 	function cacheDrawingAnimation(drawing, sourceId) {
 		var imageSource = renderer.GetImageSource(sourceId);
@@ -539,51 +456,144 @@ function PaintTool(canvas, roomTool) {
 	}
 	this.PrevDrawing = prevDrawing;
 
-	events.Listen("palette_change", function(event) {
+	events.Listen("change_room_palette", function(event) {
 		self.UpdateCanvas();
+		animationControl.RefreshAll();
+	});
 
-		if (isCurDrawingAnimated()) {
-			// TODO -- this animation stuff needs to be moved in here I think?
-			renderAnimationPreview(drawingId);
-		}
+	events.Listen("select_room", function(event) {
+		self.UpdateCanvas();
+		animationControl.RefreshAll();
 	});
 }
 
-function AnimationControl(controls) {
+function AnimationControl(onSelectFrame, controls) {
 	var drawingId = null;
+	var previewImg = null;
+	var thumbnailImgList = [];
 
 	var animationThumbnailRenderer = CreateDrawingThumbnailRenderer();
 
-	function renderAnimationThumbnail(imgId, id, options, callback) {
+	function renderThumbnail(img, id, options) {
 		function onRenderFinished(uri) {
-			var img = document.createElement("img");
 			img.src = uri;
-			controls.framesDiv.appendChild(img);
-
-			if (callback) {
-				callback();
-			}
 		};
 
 		animationThumbnailRenderer.Render(id, onRenderFinished, options);
 	}
 
-	function renderAnimationPreview(id) {
-		controls.framesDiv.innerHTML = "";
+	function refreshFrame(frameIndex) {
+		renderThumbnail(previewImg, drawingId, { isAnimated: true, cacheId: "anim_" + drawingId + "_preview", });
 
-		// console.log("RENDRE ANIM PREVIW");
-		renderAnimationThumbnail("animationThumbnailPreview", id, { isAnimated: true, },
-			function() {
-				renderAnimationThumbnail("animationThumbnailFrame1", id, { frameIndex: 0, },
-					function() {
-						renderAnimationThumbnail("animationThumbnailFrame2", id, { frameIndex: 1, });
-					});
-			});
+		for (var i = 0; i < tile[drawingId].animation.frameCount; i++) {
+			if (frameIndex === undefined || frameIndex === null || frameIndex === i) {
+				console.log("REFRESH " + i);
+				var thumbnailImg = thumbnailImgList[i];
+				renderThumbnail(thumbnailImg, drawingId, { frameIndex: i, cacheId: "anim_" + drawingId + "_" + i, });
+			}
+		}
+	}
+
+	// todo : add animation caching back? or just replace with an undo/redo system?
+	function addNewFrameToDrawing() {
+		// copy last frame data into new frame
+		var prevFrameIndex = tile[drawingId].animation.frameCount - 1;
+		var imageSource = renderer.GetImageSource(drawingId);
+		var prevFrame = imageSource[prevFrameIndex];
+		var newFrame = [];
+		for (var y = 0; y < tilesize; y++) {
+			newFrame.push([]);
+			for (var x = 0; x < tilesize; x++) {
+				newFrame[y].push(prevFrame[y][x]);
+			}
+		}
+		imageSource.push(newFrame);
+		renderer.SetImageSource(drawingId, imageSource);
+
+		// update animation settings
+		tile[drawingId].animation.frameCount++;
+		tile[drawingId].animation.isAnimated = (tile[drawingId].animation.frameCount > 1);
+
+		//refresh data model
+		refreshGameData();
+
+		// add thumbnail
+		var newFrameIndex = tile[drawingId].animation.frameCount - 1;
+		createThumbnailImg(newFrameIndex);
+		refreshFrame(newFrameIndex);
+
+		// refresh paint UI
+		onSelectFrame(tile[drawingId].animation.frameCount - 1);
+
+		// reset animations
+		resetAllAnimations();
+	}
+
+	controls.addButton.onclick = addNewFrameToDrawing;
+
+	function removeLastFrameFromDrawing() {
+		if (tile[drawingId].animation.frameCount <= 1) {
+			return;
+		}
+
+		// remove last frame!
+		var imageSource = renderer.GetImageSource(drawingId);
+		renderer.SetImageSource(drawingId, imageSource.slice(0, imageSource.length - 1));
+
+		// update animation settings
+		tile[drawingId].animation.frameCount--;
+		tile[drawingId].animation.isAnimated = (tile[drawingId].animation.frameCount > 1);
+
+		//refresh data model
+		refreshGameData();
+
+		// remove thumbnail
+		controls.framesDiv.removeChild(thumbnailImgList[thumbnailImgList.length - 1]);
+		thumbnailImgList = thumbnailImgList.slice(0, thumbnailImgList.length - 1);
+		refreshFrame(0);
+
+		// refresh paint UI
+		onSelectFrame();
+
+		// reset animations
+		resetAllAnimations();
+	}
+
+	controls.removeButton.onclick = removeLastFrameFromDrawing;
+
+	function createThumbnailImg(index) {
+		var thumbnailImg = document.createElement("img");
+		thumbnailImg.classList.add("animationThumbnail");
+		thumbnailImg.onclick = function() { onSelectFrame(index); };
+		thumbnailImgList.push(thumbnailImg);
+		controls.framesDiv.appendChild(thumbnailImg);		
 	}
 
 	this.ChangeDrawing = function(id) {
 		drawingId = id;
-		renderAnimationPreview(drawingId);
+
+		controls.framesDiv.innerHTML = "";
+
+		previewImg = document.createElement("img");
+		previewImg.classList.add("animationThumbnail");
+		previewImg.classList.add("preview");
+		controls.framesDiv.appendChild(previewImg);
+
+		thumbnailImgList = [];
+
+		for (var i = 0; i < tile[drawingId].animation.frameCount; i++) {
+			createThumbnailImg(i);
+		}
+
+		refreshFrame();
+	}
+
+	this.RefreshFrame = function(index) {
+		refreshFrame(index);
+	}
+
+	this.RefreshAll = function() {
+		refreshFrame();
 	}
 }
 
