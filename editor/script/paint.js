@@ -15,17 +15,11 @@ function PaintTool(canvas, roomTool) {
 
 	var animationControl = new AnimationControl(
 		function(index) {
-			if (index != undefined && index != null) {
-				curDrawingFrameIndex = index;
-			}
-
-			if (curDrawingFrameIndex >= tile[drawingId].animation.frameCount) {
-				curDrawingFrameIndex = tile[drawingId].animation.frameCount - 1;
-			}
-
+			curDrawingFrameIndex = index;
 			self.UpdateCanvas();
 		},
 		{
+			previewDiv: document.getElementById("animationPreview"),
 			framesDiv: document.getElementById("animationFrames"),
 			removeButton: document.getElementById("animationRemove"),
 			addButton: document.getElementById("animationAdd"),
@@ -104,7 +98,7 @@ function PaintTool(canvas, roomTool) {
 
 			roomTool.drawEditMap(); // TODO : events instead of direct coupling
 
-			animationControl.RefreshFrame(curDrawingFrameIndex);
+			animationControl.RefreshCurFrame();
 		}
 	}
 
@@ -193,6 +187,12 @@ function PaintTool(canvas, roomTool) {
 		return getFrameData(frameIndex);
 	}
 
+	events.Listen("item_inventory_change", function(e) {
+		if (e.id === drawingId) {
+			document.getElementById("itemInventoryStartInput").value = e.count;
+		}
+	});
+
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
@@ -217,10 +217,24 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		if (tile[drawingId].type === "ITM") {
-			document.getElementById("showInventoryButton").setAttribute("style","display:inline-block;");
+			document.getElementById("itemInventoryStart").setAttribute("style","display:block;");
+			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
+			document.getElementById("itemInventoryStartInput").value = itemCount;
+			document.getElementById("itemInventoryStartInput").oninput = function(e) {
+				console.log(e.target.value);
+				if (e.target.value <= 0) {
+					delete tile[playerId].inventory[drawingId];
+				}
+				else {
+					tile[playerId].inventory[drawingId] = e.target.value;
+					refreshGameData();
+				}
+
+				events.Raise("item_inventory_change", { id: drawingId, count: e.target.value, });
+			};
 		}
 		else {
-			document.getElementById("showInventoryButton").setAttribute("style","display:none;");
+			document.getElementById("itemInventoryStart").setAttribute("style","display:none;");
 		}
 
 		updateDrawingNameUI(drawingId != "A");
@@ -241,7 +255,6 @@ function PaintTool(canvas, roomTool) {
 
 	events.Listen("select_drawing", function(e) {
 		drawingId = e.id;
-		curDrawingFrameIndex = 0;
 		self.ReloadDrawing();
 	});
 
@@ -373,10 +386,12 @@ function PaintTool(canvas, roomTool) {
 		if (isCurTileWall) {
 			document.getElementById("wallCheckbox").checked = true;
 			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_on");
+			document.getElementById("wallCheckboxText").innerText = "yes "; // todo : localize
 		}
 		else {
 			document.getElementById("wallCheckbox").checked = false;
 			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_off");
+			document.getElementById("wallCheckboxText").innerText = "no "; // todo : localize
 		}
 	}
 
@@ -469,6 +484,7 @@ function PaintTool(canvas, roomTool) {
 
 function AnimationControl(onSelectFrame, controls) {
 	var drawingId = null;
+	var frameIndex = 0;
 	var previewImg = null;
 	var thumbnailImgList = [];
 
@@ -487,7 +503,6 @@ function AnimationControl(onSelectFrame, controls) {
 
 		for (var i = 0; i < tile[drawingId].animation.frameCount; i++) {
 			if (frameIndex === undefined || frameIndex === null || frameIndex === i) {
-				console.log("REFRESH " + i);
 				var thumbnailImg = thumbnailImgList[i];
 				renderThumbnail(thumbnailImg, drawingId, { frameIndex: i, cacheId: "anim_" + drawingId + "_" + i, });
 			}
@@ -518,15 +533,18 @@ function AnimationControl(onSelectFrame, controls) {
 		refreshGameData();
 
 		// add thumbnail
-		var newFrameIndex = tile[drawingId].animation.frameCount - 1;
-		createThumbnailImg(newFrameIndex);
-		refreshFrame(newFrameIndex);
+		frameIndex = tile[drawingId].animation.frameCount - 1;
+		createThumbnailImg(frameIndex);
+		refreshFrame(frameIndex);
 
 		// refresh paint UI
-		onSelectFrame(tile[drawingId].animation.frameCount - 1);
+		thumbnailImgList[frameIndex].onclick();
 
 		// reset animations
 		resetAllAnimations();
+
+		controls.removeButton.style.display =
+			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
 	}
 
 	controls.addButton.onclick = addNewFrameToDrawing;
@@ -550,13 +568,21 @@ function AnimationControl(onSelectFrame, controls) {
 		// remove thumbnail
 		controls.framesDiv.removeChild(thumbnailImgList[thumbnailImgList.length - 1]);
 		thumbnailImgList = thumbnailImgList.slice(0, thumbnailImgList.length - 1);
-		refreshFrame(0);
+
+		if (frameIndex >= tile[drawingId].animation.frameCount) {
+			frameIndex = tile[drawingId].animation.frameCount - 1;
+		}
+
+		refreshFrame(frameIndex);
 
 		// refresh paint UI
-		onSelectFrame();
+		thumbnailImgList[frameIndex].onclick();
 
 		// reset animations
 		resetAllAnimations();
+
+		controls.removeButton.style.display =
+			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
 	}
 
 	controls.removeButton.onclick = removeLastFrameFromDrawing;
@@ -564,20 +590,35 @@ function AnimationControl(onSelectFrame, controls) {
 	function createThumbnailImg(index) {
 		var thumbnailImg = document.createElement("img");
 		thumbnailImg.classList.add("animationThumbnail");
-		thumbnailImg.onclick = function() { onSelectFrame(index); };
+		thumbnailImg.onclick = function() {
+			frameIndex = index;
+
+			for (var i = 0; i < thumbnailImgList.length; i++) {
+				if (i === frameIndex) {
+					thumbnailImgList[i].classList.add("selected");
+				}
+				else {
+					thumbnailImgList[i].classList.remove("selected");
+				}
+			}
+
+			onSelectFrame(frameIndex);
+		};
 		thumbnailImgList.push(thumbnailImg);
 		controls.framesDiv.appendChild(thumbnailImg);		
 	}
 
 	this.ChangeDrawing = function(id) {
 		drawingId = id;
+		frameIndex = 0;
 
+		controls.previewDiv.innerHTML = "";
 		controls.framesDiv.innerHTML = "";
 
 		previewImg = document.createElement("img");
 		previewImg.classList.add("animationThumbnail");
 		previewImg.classList.add("preview");
-		controls.framesDiv.appendChild(previewImg);
+		controls.previewDiv.appendChild(previewImg);
 
 		thumbnailImgList = [];
 
@@ -586,10 +627,15 @@ function AnimationControl(onSelectFrame, controls) {
 		}
 
 		refreshFrame();
+
+		thumbnailImgList[frameIndex].onclick();
+
+		controls.removeButton.style.display =
+			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
 	}
 
-	this.RefreshFrame = function(index) {
-		refreshFrame(index);
+	this.RefreshCurFrame = function() {
+		refreshFrame(frameIndex);
 	}
 
 	this.RefreshAll = function() {

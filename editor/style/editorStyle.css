@@ -348,24 +348,46 @@ span.controlBox {
 	flex-grow: 1;
 }
 
+#animationOuter {
+	max-width: 290px;
+	white-space: normal;
+	display: flex;
+}
+
+#animationButtons {
+	display: inline-block;
+}
+
 .animationThumbnail {
+	float: left;
 	width: 32px;
 	height: 32px;
-	background: #6767b2;
-	margin: 5px;
+	margin: 2px;
+	padding: 2px;
+	border: solid 2px #e8e8ff;
+	background: #e8e8ff;
 	image-rendering: pixelated;
 }
 
 .animationThumbnail.preview {
-	margin-right: 10px;
+	background: white;
+	border-color: white;
+	float: none;
 }
 
 .animationThumbnail.selected {
-	/* TODO */
+	border-color: #6767b2;
 }
 
-.animationThumbnail.unselected {
-	/* TODO */
+#animationRemove {
+	margin: 8px;
+	margin-right: 0px;
+}
+
+#animationAdd {
+	margin: 8px;
+	margin-left: 2px;
+	margin-right: 0px;
 }
 
 .left {

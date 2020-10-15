@@ -464,8 +464,6 @@ function deleteRoom() {
 		roomTool.drawEditMap();
 		paintTool.UpdateCanvas();
 		updateRoomPaletteSelect();
-		// updateExitOptionsFromGameData();
-		//recreate exit options
 	}
 }
 

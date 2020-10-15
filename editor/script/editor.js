@@ -500,7 +500,6 @@ function resetGameData() {
 	refreshGameData();
 
 	// TODO RENDERER : refresh images
-	updateExitOptionsFromGameData();
 	updateRoomName();
 	updateInventoryUI();
 	updateFontSelectUI(); // hmm is this really the place for this?
@@ -833,8 +832,8 @@ function start() {
 	updateRoomPaletteSelect(); //dumb to have to specify this here --- wrap up room UI method?
 	updateRoomName(); // init the room UI
 
-	document.getElementById("inventoryOptionItem").checked = true; // a bit hacky
 	updateInventoryUI();
+	listenForInventoryItemChanges();
 
 	// init color picker
 	colorPicker = new ColorPicker('colorPickerWheel', 'colorPickerSelect', 'colorPickerSliderThumb', 'colorPickerSliderBg', 'colorPickerHexText');
@@ -1319,12 +1318,9 @@ function updateFontDescriptionUI() {
 	}
 }
 
-function updateExitOptionsFromGameData() {
-	// TODO ???
-}
-
 function toggleWallUI(checked) {
 	iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), checked ? "wall_on" : "wall_off");
+	document.getElementById("wallCheckboxText").innerText = checked ? "yes " : "no "; // todo : localize
 }
 
 function filenameFromGameTitle() {

@@ -16,6 +16,13 @@ function updateInventoryUI() {
 	updateInventoryVariableUI();
 }
 
+function listenForInventoryItemChanges() {
+	// todo : this is kind of heavy handed..
+	events.Listen("item_inventory_change", function(e) {
+		updateInventoryItemUI();
+	});
+}
+
 function updateInventoryItemUI(){
 	var viewport = document.getElementById("inventoryItem");
 	viewport.innerHTML = "";
@@ -30,6 +37,8 @@ function updateInventoryItemUI(){
 			else {
 				playerEntry.inventory[id] = parseFloat(event.target.value);
 			}
+
+			events.Raise("item_inventory_change", { id: id, count: event.target.value });
 
 			if (!isPlayMode) {
 				refreshGameData();
