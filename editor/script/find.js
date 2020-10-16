@@ -8,6 +8,12 @@ TODO
 function FindTool(controls) {
 	var searchText = controls.searchInput.value;
 	var activeFilters = [];
+	var categories = {};
+
+	this.GetIconId = function(categoryName, id) {
+		var category = categories[categoryName];
+		return category.getIconId(category.categoryStore[id]);
+	}
 
 	controls.searchInput.onchange = function(e) {
 		searchText = e.target.value;
@@ -263,6 +269,8 @@ function FindTool(controls) {
 	});
 
 	function AddCategory(categoryInfo) {
+		categories[categoryInfo.name] = categoryInfo;
+
 		var categoryDiv = document.createElement("div");
 		categoryDiv.classList.add("findCategory");
 		controls.contentRoot.appendChild(categoryDiv);

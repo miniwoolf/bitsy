@@ -190,3 +190,8 @@ button:disabled {
 	background: #6767b2;
 	color:white;
 }
+
+.reverseColors {
+	background: #6767b2 !important;
+	color: white !important;
+}

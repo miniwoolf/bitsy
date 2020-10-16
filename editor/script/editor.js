@@ -761,7 +761,60 @@ function start() {
 	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
 	listenForRoomSelect(); // todo : hacky to have this be external to the tool, right?
 
-	paintTool = new PaintTool(document.getElementById("paint"), roomTool);
+	// todo : better organization
+	paintTool = new PaintTool({
+		canvas : document.getElementById("paint"),
+		editRoot : document.getElementById("paintEditRoot"),
+		typeButton : document.getElementById("paintType"),
+		nameInput : document.getElementById("drawingName"),
+		gridIcon : document.getElementById("paintGridIcon"),
+		dialogControl : document.getElementById("dialog"),
+		nav : {
+			prev : document.getElementById("paintPrev"),
+			next : document.getElementById("paintNext"),
+			add : document.getElementById("paintAdd"),
+			copy : document.getElementById("paintCopy"),
+			del : document.getElementById("paintDelete"),
+		},
+		add : {
+			container : document.getElementById("addDrawingOptions"),
+			tile : document.getElementById("paintAddTile"),
+			sprite : document.getElementById("paintAddSprite"),
+			item : document.getElementById("paintAddItem"),
+			exit : document.getElementById("paintAddExit"),
+			ending : document.getElementById("paintAddEnding"),
+			cancel : document.getElementById("paintAddCancel"),
+		},
+		settings : {
+			container : document.getElementById("tileSettings"),
+			wall : {
+				container : document.getElementById("wall"),
+				checkbox : document.getElementById("wallCheckbox"),
+				icon : document.getElementById("wallCheckboxIcon"),
+				text : document.getElementById("wallCheckboxText"),
+			},
+			inventory : {
+				container : document.getElementById("itemInventoryStart"),
+				input : document.getElementById("itemInventoryStartInput"),
+			},
+			exit : {
+				destination : document.getElementById("exitDestination"),
+				transitionEffect : document.getElementById("exitTransitionEffect"),
+				transitionSelect : document.getElementById("exitTransitionEffectSelect"),
+			},
+			lock : {
+				container : document.getElementById("lockSettings"),
+				itemInput : document.getElementById("lockItemInput"),
+				tollInput : document.getElementById("lockTollInput"),
+			},
+		},
+		animation : {
+			previewDiv: document.getElementById("animationPreview"),
+			framesDiv: document.getElementById("animationFrames"),
+			removeButton: document.getElementById("animationRemove"),
+			addButton: document.getElementById("animationAdd"),
+		},
+	});
 
 	mapTool = new MapTool({
 		canvas : document.getElementById("map"),

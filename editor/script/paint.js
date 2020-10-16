@@ -2,7 +2,7 @@
 	PAINT
 */
 
-function PaintTool(canvas, roomTool) {
+function PaintTool(controls) {
 	var self = this; // feels a bit hacky
 
 	var paint_scale = 32;
@@ -18,26 +18,21 @@ function PaintTool(canvas, roomTool) {
 			curDrawingFrameIndex = index;
 			self.UpdateCanvas();
 		},
-		{
-			previewDiv: document.getElementById("animationPreview"),
-			framesDiv: document.getElementById("animationFrames"),
-			removeButton: document.getElementById("animationRemove"),
-			addButton: document.getElementById("animationAdd"),
-		});
+		controls.animation);
 
 	//paint canvas & context
-	canvas.width = tilesize * paint_scale;
-	canvas.height = tilesize * paint_scale;
-	var ctx = canvas.getContext("2d");
+	controls.canvas.width = tilesize * paint_scale;
+	controls.canvas.height = tilesize * paint_scale;
+	var ctx = controls.canvas.getContext("2d");
 
 	// paint events
-	canvas.addEventListener("mousedown", onMouseDown);
-	canvas.addEventListener("mousemove", onMouseMove);
-	canvas.addEventListener("mouseup", onMouseUp);
-	canvas.addEventListener("mouseleave", onMouseUp);
-	canvas.addEventListener("touchstart", onTouchStart);
-	canvas.addEventListener("touchmove", onTouchMove);
-	canvas.addEventListener("touchend", onTouchEnd);
+	controls.canvas.addEventListener("mousedown", onMouseDown);
+	controls.canvas.addEventListener("mousemove", onMouseMove);
+	controls.canvas.addEventListener("mouseup", onMouseUp);
+	controls.canvas.addEventListener("mouseleave", onMouseUp);
+	controls.canvas.addEventListener("touchstart", onTouchStart);
+	controls.canvas.addEventListener("touchmove", onTouchMove);
+	controls.canvas.addEventListener("touchend", onTouchEnd);
 
 	// TODO : 
 	function onMouseDown(e) {
@@ -96,8 +91,6 @@ function PaintTool(canvas, roomTool) {
 
 			events.Raise("change_drawing", { id: drawingId });
 
-			roomTool.drawEditMap(); // TODO : events instead of direct coupling
-
 			animationControl.RefreshCurFrame();
 		}
 	}
@@ -119,10 +112,36 @@ function PaintTool(canvas, roomTool) {
 		onMouseUp();
 	}
 
+	controls.nameInput.oninput = function(e) {
+		var str = controls.nameInput.value;
+		var til = tile[drawingId];
+		var oldName = til.name;
+
+		if (str.length > 0) {
+			til.name = str;
+		}
+		else {
+			til.name = null;
+		}
+
+		updateNamesFromCurData(); // todo : does this even work anymore?
+
+		// make sure items referenced in scripts update their names
+		if (til.type === TileType.Item) {
+			// console.log("SWAP ITEM NAMES");
+			// todo : re-implement -- update item names in scripts!
+			updateInventoryItemUI(); // todo : use event instead?
+		}
+
+		refreshGameData();
+
+		events.Raise("change_drawing_name", { id: til.id, name: til.name });
+	}
+
 	this.UpdateCanvas = function() {
 		//background
 		ctx.fillStyle = "rgb("+getPal(curPal())[0][0]+","+getPal(curPal())[0][1]+","+getPal(curPal())[0][2]+")";
-		ctx.fillRect(0,0,canvas.width,canvas.height);
+		ctx.fillRect(0, 0, controls.canvas.width, controls.canvas.height);
 
 		//pixel color
 		var colorIndex = tile[drawingId].col;
@@ -189,7 +208,7 @@ function PaintTool(canvas, roomTool) {
 
 	events.Listen("item_inventory_change", function(e) {
 		if (e.id === drawingId) {
-			document.getElementById("itemInventoryStartInput").value = e.count;
+			controls.settings.inventory.input.value = e.count;
 		}
 	});
 
@@ -198,29 +217,33 @@ function PaintTool(canvas, roomTool) {
 		// animation UI
 		animationControl.ChangeDrawing(drawingId);
 
+		var hasSettings = false;
+
 		// wall UI
 		if (tile[drawingId].type === "TIL") {
-			document.getElementById("wall").setAttribute("style", "display:block;");
+			hasSettings = true;
+			controls.settings.wall.container.setAttribute("style", "display:block;");
 			updateWallCheckboxOnCurrentTile();
 		}
 		else {
-			document.getElementById("wall").setAttribute("style", "display:none;");
+			controls.settings.wall.container.setAttribute("style", "display:none;");
 		}
 
 		// dialog UI
 		if (drawingId === "A" || tile[drawingId].type === "TIL") {
-			document.getElementById("dialog").setAttribute("style", "display:none;");
+			controls.dialogControl.setAttribute("style", "display:none;");
 		}
 		else {
-			document.getElementById("dialog").setAttribute("style", "display:block;");
+			controls.dialogControl.setAttribute("style", "display:block;");
 			reloadDialogUI();
 		}
 
 		if (tile[drawingId].type === "ITM") {
-			document.getElementById("itemInventoryStart").setAttribute("style","display:block;");
+			hasSettings = true;
+			controls.settings.inventory.container.setAttribute("style","display:block;");
 			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
-			document.getElementById("itemInventoryStartInput").value = itemCount;
-			document.getElementById("itemInventoryStartInput").oninput = function(e) {
+			controls.settings.inventory.input.value = itemCount;
+			controls.settings.inventory.input.oninput = function(e) {
 				console.log(e.target.value);
 				if (e.target.value <= 0) {
 					delete tile[playerId].inventory[drawingId];
@@ -234,10 +257,34 @@ function PaintTool(canvas, roomTool) {
 			};
 		}
 		else {
-			document.getElementById("itemInventoryStart").setAttribute("style","display:none;");
+			controls.settings.inventory.container.setAttribute("style","display:none;");
 		}
 
-		updateDrawingNameUI(drawingId != "A");
+		if (tile[drawingId].type === "EXT") {
+			hasSettings = true;
+			controls.settings.exit.destination.style.display = "block";
+			controls.settings.exit.transitionEffect.style.display = "block";
+			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
+			controls.settings.exit.transitionSelect.value = effectId;
+		}
+		else {
+			controls.settings.exit.destination.style.display = "none";
+			controls.settings.exit.transitionEffect.style.display = "none";
+		}
+
+		if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
+			hasSettings = true;
+			controls.settings.lock.container.style.display = "block";
+			controls.settings.lock.itemInput.value = tile[drawingId].lockItem;
+			controls.settings.lock.tollInput.value = tile[drawingId].lockToll;
+		}
+		else {
+			controls.settings.lock.container.style.display = "none";
+		}
+
+		controls.settings.container.style.display = hasSettings ? "block" : "none";
+
+		updateDrawingNameUI();
 
 		var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
 		for (var i = 0; i < disableForAvatarElements.length; i++) {
@@ -246,6 +293,12 @@ function PaintTool(canvas, roomTool) {
 
 		// update paint canvas
 		self.UpdateCanvas();
+
+		if (findTool) {
+			var typeIconId = findTool.GetIconId("drawing", drawingId);
+			controls.typeButton.innerHTML = "";
+			controls.typeButton.appendChild(iconUtils.CreateIcon(typeIconId));			
+		}
 	}
 
 	// TODO : remove this after moving everything to events
@@ -290,7 +343,9 @@ function PaintTool(canvas, roomTool) {
 		return tile[drawingId];
 	}
 
-	this.NewDrawing = function(type, imageData) {
+	var lastAddType = "TIL";
+
+	function NewDrawing(type, imageData) {
 		var nextId = nextObjectId(sortedBase36IdList(tile)); // TODO : helper function?
 		createTile(nextId, type, { drawingData:imageData });
 		refreshGameData();
@@ -301,16 +356,73 @@ function PaintTool(canvas, roomTool) {
 		// TODO : hack... replace with event hookup
 		if (type === "ITM") {
 			updateInventoryItemUI();
+			updateLockItemOptions();
 		}
+
+		lastAddType = type;
 	}
 
-	// TODO : hacky global document stuff
-	this.ShowNewDrawingControls = function(isVisible) {
-		document.getElementById("paintEditRoot").style.display = isVisible ? "none" : "block";
-		document.getElementById("addDrawingOptions").style.display = isVisible ? "flex" : "none";
+	var isAddVisible = false;
+
+	function ShowNewDrawingControls(isVisible) {
+		controls.editRoot.style.display = isVisible ? "none" : "block";
+		controls.add.container.style.display = isVisible ? "flex" : "none";
+		controls.nameInput.disabled = isVisible;
+		controls.nav.prev.disabled = isVisible;
+		controls.nav.next.disabled = isVisible;
+		controls.nav.copy.disabled = isVisible;
+		controls.nav.del.disabled = isVisible;
+
+		if (isVisible) {
+			controls.nav.add.classList.add("reverseColors");
+		}
+		else {
+			controls.nav.add.classList.remove("reverseColors");
+		}
+
+		isAddVisible = isVisible;
 	}
 
-	this.DuplicateDrawing = function() {
+	controls.nav.add.onclick = function() {
+		if (isAddVisible) {
+			NewDrawing(lastAddType);
+			ShowNewDrawingControls(false);
+		}
+		else {
+			ShowNewDrawingControls(true);
+		}
+	};
+
+	controls.add.tile.onclick = function() {
+		NewDrawing("TIL");
+		ShowNewDrawingControls(false);
+	};
+
+	controls.add.sprite.onclick = function() {
+		NewDrawing("SPR");
+		ShowNewDrawingControls(false);
+	};
+
+	controls.add.item.onclick = function() {
+		NewDrawing("ITM");
+		ShowNewDrawingControls(false);
+	};
+
+	controls.add.exit.onclick = function() {
+		NewDrawing("EXT");
+		ShowNewDrawingControls(false);
+	};
+
+	controls.add.ending.onclick = function() {
+		NewDrawing("END");
+		ShowNewDrawingControls(false);
+	};
+
+	controls.add.cancel.onclick = function() {
+		ShowNewDrawingControls(false);
+	};
+
+	function DuplicateDrawing() {
 		var sourceImageData = renderer.GetImageSource(getRenderId());
 
 		var type = tile[drawingId].type;
@@ -321,7 +433,7 @@ function PaintTool(canvas, roomTool) {
 			tileIsWall = tile[drawingId].isWall;
 		}
 
-		this.NewDrawing(type, sourceImageData);
+		NewDrawing(type, sourceImageData);
 
 		// HACKY
 		// tiles have extra data to copy
@@ -331,9 +443,10 @@ function PaintTool(canvas, roomTool) {
 			self.ReloadDrawing();
 		}
 	}
+	controls.nav.copy.onclick = DuplicateDrawing;
 
 	// TODO - may need to extract this for different tools beyond the paint tool (put it in core.js?)
-	this.DeleteDrawing = function() {
+	function DeleteDrawing() {
 		if (getDrawingType() == TileType.Avatar) {
 			alert("You can't delete the player! :(");
 			return;
@@ -360,8 +473,9 @@ function PaintTool(canvas, roomTool) {
 			// TODO : replace these things with events!
 			refreshGameData();
 			// TODO RENDERER : refresh images
-			roomTool.drawEditMap();
 			updateInventoryItemUI();
+
+			updateLockItemOptions();
 
 			nextDrawing();
 
@@ -370,6 +484,7 @@ function PaintTool(canvas, roomTool) {
 			// self.explorer.ChangeSelection(drawingId);
 		}
 	}
+	controls.nav.del.onclick = DeleteDrawing;
 
 	function updateWallCheckboxOnCurrentTile() {
 		var isCurTileWall = false;
@@ -384,14 +499,14 @@ function PaintTool(canvas, roomTool) {
 		}
 
 		if (isCurTileWall) {
-			document.getElementById("wallCheckbox").checked = true;
-			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_on");
-			document.getElementById("wallCheckboxText").innerText = "yes "; // todo : localize
+			controls.settings.wall.checkbox.checked = true;
+			iconUtils.LoadIcon(controls.settings.wall.icon, "wall_on");
+			controls.settings.wall.text.innerText = "yes "; // todo : localize
 		}
 		else {
-			document.getElementById("wallCheckbox").checked = false;
-			iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), "wall_off");
-			document.getElementById("wallCheckboxText").innerText = "no "; // todo : localize
+			controls.settings.wall.checkbox.checked = false;
+			iconUtils.LoadIcon(controls.settings.wall.icon, "wall_off");
+			controls.settings.wall.text.innerText = "no "; // todo : localize
 		}
 	}
 
@@ -412,23 +527,24 @@ function PaintTool(canvas, roomTool) {
 		var til = tile[drawingId];
 
 		if (til.id === "A") { // hacky
-			document.getElementById("drawingName").value = "avatar"; // TODO: localize
+			controls.nameInput.value = "avatar"; // TODO: localize
 		}
 		else if (til.name != null) {
-			document.getElementById("drawingName").value = til.name;
+			controls.nameInput.value = til.name;
 		}
 		else {
-			document.getElementById("drawingName").value = "";
+			controls.nameInput.value = "";
 		}
 
-		document.getElementById("drawingName").placeholder = getCurPaintModeStr() + " " + til.id;
+		// todo : fix?
+		controls.nameInput.placeholder = getCurPaintModeStr() + " " + til.id;
 
-		document.getElementById("drawingName").readOnly = til.id === "A";
+		controls.nameInput.readOnly = til.id === "A";
 	}
 
 	this.SetPaintGrid = function(isVisible) {
 		drawPaintGrid = isVisible;
-		iconUtils.LoadIcon(document.getElementById("paintGridIcon"), isVisible ? "visibility" : "visibility_off");
+		iconUtils.LoadIcon(controls.gridIcon, isVisible ? "visibility" : "visibility_off");
 		self.UpdateCanvas();
 	}
 
@@ -457,6 +573,7 @@ function PaintTool(canvas, roomTool) {
 		self.SelectDrawing(ids[index]);
 	}
 	this.NextDrawing = nextDrawing;
+	controls.nav.next.onclick = nextDrawing;
 
 	function prevDrawing() {
 		var ids = sortedDrawingIdList();
@@ -470,6 +587,53 @@ function PaintTool(canvas, roomTool) {
 		self.SelectDrawing(ids[index]);
 	}
 	this.PrevDrawing = prevDrawing;
+	controls.nav.prev.onclick = prevDrawing;
+
+	// exit transition controls
+	controls.settings.exit.transitionSelect.onchange = function(e) {
+		if (tile[drawingId].type === "EXT") {
+			if (e.target.value === "none") {
+				tile[drawingId].transition_effect = null;
+			}
+			else {
+				tile[drawingId].transition_effect = e.target.value;
+			}
+
+			refreshGameData();
+		}
+	};
+
+	// exit & ending lock controls
+	function updateLockItemOptions() {
+		controls.settings.lock.itemInput.innerHTML = "";
+
+		// todo : share this logic?
+		for (id in tile) {
+			if (tile[id].type === "ITM") {
+				var itemOption = document.createElement("option");
+				itemOption.innerText = id;
+				itemOption.value = id;
+				
+				controls.settings.lock.itemInput.appendChild(itemOption);
+			}
+		}
+	}
+
+	updateLockItemOptions();
+
+	controls.settings.lock.itemInput.onchange = function(e) {
+		if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
+			tile[drawingId].lockItem = e.target.value;
+			refreshGameData();
+		}
+	};
+
+	controls.settings.lock.tollInput.onchange = function(e) {
+		if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
+			tile[drawingId].lockToll = e.target.value;
+			refreshGameData();
+		}
+	};
 
 	events.Listen("change_room_palette", function(event) {
 		self.UpdateCanvas();
@@ -668,142 +832,10 @@ function getDrawingTypeFromId(drawingId) {
  GLOBAL UI HOOKS
  TODO : someday I'll get rid of these, right? who knows...
 */
-
-function on_toggle_animated() {
-	paintTool.SetAnimated(document.getElementById("animatedCheckbox").checked);
-}
-
-function on_paint_frame1() {
-	paintTool.SelectAnimationFrame(0);
-}
-
-function on_paint_frame2() {
-	paintTool.SelectAnimationFrame(1);
-}
-
-function next() {
-	paintTool.NextDrawing();
-}
-
-function prev() {
-	paintTool.PrevDrawing();
-}
-
 function on_toggle_wall(e) {
 	paintTool.ToggleWall(e.target.checked);
 }
 
-function newDrawing() {
-	paintTool.ShowNewDrawingControls(true);
-}
-
-// TODO : these global hookups are weird to me...
-// I think maybe the buttons should be generated by the tool
-function newTile() {
-	paintTool.NewDrawing("TIL");
-	paintTool.ShowNewDrawingControls(false);
-}
-
-function newSprite() {
-	paintTool.NewDrawing("SPR");
-	paintTool.ShowNewDrawingControls(false);
-}
-
-function newItem() {
-	paintTool.NewDrawing("ITM");
-	paintTool.ShowNewDrawingControls(false);
-}
-
-function cancelNewDrawing() {
-	paintTool.ShowNewDrawingControls(false);
-}
-
-function duplicateDrawing() {
-	paintTool.DuplicateDrawing();
-}
-
-function deleteDrawing() {
-	paintTool.DeleteDrawing();
-}
-
 function togglePaintGrid(e) {
 	paintTool.SetPaintGrid(e.target.checked);
-}
-
-function on_drawing_name_change() {
-	var str = document.getElementById("drawingName").value;
-	var til = paintTool.GetCurTile();
-	var oldName = til.name;
-
-	if (str.length > 0) {
-		til.name = str;
-	}
-	else {
-		til.name = null;
-	}
-
-	updateNamesFromCurData()
-
-	// make sure items referenced in scripts update their names
-	if (til.type === TileType.Item) {
-		// console.log("SWAP ITEM NAMES");
-
-		var ItemNameSwapVisitor = function() {
-			var didSwap = false;
-			this.DidSwap = function() { return didSwap; };
-
-			this.Visit = function(node) {
-				// console.log("VISIT!");
-				// console.log(node);
-
-				if (node.type != "function" || node.name != "item") {
-					return; // not the right type of node
-				}
-				
-				if (node.arguments.length <= 0 || node.arguments[0].type != "literal") {
-					return; // no argument available
-				}
-
-				if (node.arguments[0].value === oldName) { // do swap
-					node.arguments[0].value = newName;
-					didSwap = true;
-				}
-			};
-		};
-
-		var newName = til.name;
-
-		if (newName === null || newName === undefined) {
-			newName = til.id;
-		}
-
-		if (oldName === null || oldName === undefined) {
-			oldName = til.id;
-		}
-
-		if (newName != oldName) {
-			for (dlgId in dialog) {
-				var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
-				var visitor = new ItemNameSwapVisitor();
-
-				dialogScript.VisitAll(visitor);
-
-				if (visitor.DidSwap()) {
-					var newDialog = dialogScript.Serialize();
-
-					if (newDialog.indexOf("\n") > -1) {
-						newDialog = '"""\n' + newDialog + '\n"""';
-					}
-
-					dialog[dlgId].src = newDialog;
-				}
-			}
-		}
-
-		updateInventoryItemUI();
-	}
-
-	refreshGameData();
-
-	events.Raise("change_drawing_name", { id: til.id, name: til.name });
 }

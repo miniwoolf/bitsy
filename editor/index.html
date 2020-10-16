@@ -131,13 +131,6 @@
 					<!-- todo : localize -->
 					<span>map</span>
 				</label>
-
-				<!-- todo : deprecate exit tool -->
-				<!-- <input type="checkbox" value="exitsPanel" id="exitsCheck" onclick="togglePanelAnimated(event);" />
-				<label title="show / hide exits & endings window" for="exitsCheck">
-					<span class="bitsy_icon icon_space_right">exits_endings</span>
-					<span class="localize marker_tool_name">exits & endings</span>
-				</label> -->
 				
 				<input type="checkbox" value="colorsPanel" id="colorsCheck" onclick="togglePanelAnimated(event);"  checked/>
 				<label title="show / hide color palette window" for="colorsCheck">
@@ -578,7 +571,7 @@
 								<div title="select transition effect" class="controlBox">
 									<span class="bitsy_icon">transition_effect</span>
 									<span class="localize exit_transition_label">transition effect</span>: 
-									<select id="exitTransitionEffectSelect" onchange="onChangeExitTransitionEffect(event.target.value, 0);">
+									<select id="exitTransitionEffectSelectOld" onchange="onChangeExitTransitionEffect(event.target.value, 0);">
 										<option value="none">none</option>
 										<option value="fade_w">fade (white)</option>
 										<option value="fade_b">fade (black)</option>
@@ -637,42 +630,53 @@
 					</div>
 
 					<div id="paintNavigationControls" class="navControl">
-						<input title="a name to refer to this drawing" type="text" id="drawingName" class="textInputField" onchange="on_drawing_name_change();" size="10"></input>
+						<button id="paintType" title="change type (current: TODO)">
+							<span class="bitsy_icon">avatar</span>
+						</button>
 
 						<span class="spacer"></span>
 
-						<button title="previous drawing" class="color0" onclick="prev();">
+						<input title="a name to refer to this drawing" type="text" id="drawingName" class="textInputField" size="10"></input>
+
+						<span class="spacer"></span>
+
+						<button id="paintPrev" title="previous drawing" class="color0">
 							<span class="bitsy_icon">previous</span>
 						</button>
-						<button title="next drawing" class="color0" onclick="next();">
+						<button id="paintNext" title="next drawing" class="color0">
 							<span class="bitsy_icon">next</span>
 						</button>
 
 						<span class="spacer"></span>
 
-						<button title="add drawing" class="color0" onclick="newDrawing();">
+						<button id="paintAdd" title="add drawing" class="color0">
 							<span class="bitsy_icon">add</span>
 						</button>
-						<button title="duplicate drawing" class="color0 disableForAvatar" onclick="duplicateDrawing();">
+						<button id="paintCopy" title="duplicate drawing" class="color0 disableForAvatar">
 							<span class="bitsy_icon">copy</span>
 						</button>
-						<button title="delete drawing" class="color0 disableForAvatar" onclick="deleteDrawing();">
+						<button id="paintDelete" title="delete drawing" class="color0 disableForAvatar">
 							<span class="bitsy_icon">delete</span>
 						</button>
 					</div>
 
 					<div id="addDrawingOptions" class="controlBox" style="display: none; flex-direction: column; min-width: 256px; min-height: 256px;">
-						<button title="add two-way exit" onclick="newTile();">
-							<span class="bitsy_icon">add</span> <span>tile</span> <!-- TODO :localize -->
+						<button id="paintAddTile" title="add tile">
+							<span class="bitsy_icon">tile</span> <span>tile</span> <!-- TODO :localize -->
 						</button>
-						<button title="add one-way exit" onclick="newSprite();">
-							<span class="bitsy_icon">add</span> <span>sprite</span> <!-- TODO :localize -->
+						<button id="paintAddSprite" title="add sprite">
+							<span class="bitsy_icon">sprite</span> <span>sprite</span> <!-- TODO :localize -->
 						</button>
-						<button title="add ending" onclick="newItem();">
-							<span class="bitsy_icon">add</span> <span>item</span> <!-- TODO :localize -->
+						<button id="paintAddItem" title="add item">
+							<span class="bitsy_icon">item</span> <span>item</span> <!-- TODO :localize -->
 						</button>
-						<!-- TODO : need a general cancel button style -->
-						<button title="cancel" style="background: #6767b2; color: white;" onclick="cancelNewDrawing();">
+						<button id="paintAddExit" title="add exit">
+							<span class="bitsy_icon">exit_one_way</span> <span>exit</span> <!-- TODO :localize -->
+						</button>
+						<button id="paintAddEnding" title="add ending">
+							<span class="bitsy_icon">ending</span> <span>ending</span> <!-- TODO :localize -->
+						</button>
+						<button id="paintAddCancel" class="reverseColors" title="cancel">
 							<span class="bitsy_icon">cancel</span> <span class="localize action_cancel">cancel</span>
 						</button>
 					</div>
@@ -707,7 +711,7 @@
 							</div>
 						</div>
 
-						<div id="drawingSettings" class="controlBox">
+						<div id="tileSettings" class="controlBox">
 							<div id="wall" title="is this tile a wall?">
 								<span class="localize wall_toggle">wall</span> : 
 								<input type="checkbox" id="wallCheckbox" onchange="on_toggle_wall(event);">
@@ -723,6 +727,39 @@
 								<button id="showInventoryButton" title="show inventory" onclick="showPanel('inventoryPanel', 'paintPanel');">
 									<span class="bitsy_icon">open_tool</span>
 								</button>
+							</div>
+
+							<!-- todo : localize -->
+							<div id="exitDestination">
+								exit : go to
+								<select id="exitDestinationRoomSelect"></select>
+								at
+								<input id="exitDestinationInputX" type="number" min="0" max="15" style="width:6ch;"></input>
+								,
+								<input id="exitDestinationInputY" type="number" min="0" max="15" style="width:6ch;"></input>
+							</div>
+
+							<!-- todo : localize -->
+							<div id="exitTransitionEffect">
+								transition effect : 
+								<select id="exitTransitionEffectSelect">
+									<option value="none">none</option>
+									<option value="fade_w">fade (white)</option>
+									<option value="fade_b">fade (black)</option>
+									<option value="wave">wave</option>
+									<option value="tunnel">tunnel</option>
+									<option value="slide_u">slide up</option>
+									<option value="slide_d">slide down</option>
+									<option value="slide_l">slide left</option>
+									<option value="slide_r">slide right</option>
+								</select>
+							</div>
+
+							<!-- todo : localize -->
+							<div id="lockSettings">
+								lock : 
+								<select id="lockItemInput"></select> <!-- TODO -->
+								<input id="lockTollInput" type="number"></input> <!-- TODO -->
 							</div>
 						</div>
 
