@@ -15,9 +15,10 @@ function FindTool(controls) {
 		return category.getIconId(category.categoryStore[id]);
 	};
 
-	this.GetDisplayName = function(categoryName, id) {
+	// todo : is forceDefault *really* how I want to do this?
+	this.GetDisplayName = function(categoryName, id, forceDefault) {
 		var category = categories[categoryName];
-		return category.getCaption(category.categoryStore[id]);
+		return category.getCaption(category.categoryStore[id], forceDefault);
 	};
 
 	// keep UI in sync
@@ -88,10 +89,10 @@ function FindTool(controls) {
 		name: "drawing",
 		categoryStore: tile,
 		// todo : store in category object?
-		getCaption: function(til) {
+		getCaption: function(til, forceDefault) {
 			var caption = "";
 
-			if (til.name != null) {
+			if (til.name != null && !forceDefault) {
 				caption = til.name;
 			}
 			else {

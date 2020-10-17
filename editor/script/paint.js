@@ -513,22 +513,10 @@ function PaintTool(controls) {
 		}
 	}
 
-	function getCurPaintModeStr() {
-		var drawingType = getDrawingType();
-		if (drawingType == TileType.Sprite || drawingType == TileType.Avatar) {
-			return localization.GetStringOrFallback("sprite_label", "sprite");
-		}
-		else if (drawingType == TileType.Item) {
-			return localization.GetStringOrFallback("item_label", "item");
-		}
-		else if (drawingType == TileType.Tile) {
-			return localization.GetStringOrFallback("tile_label", "tile");
-		}
-	}
-
 	function updateDrawingNameUI() {
 		var til = tile[drawingId];
 
+		// todo : simplify?
 		if (til.id === "A") { // hacky
 			controls.nameInput.value = "avatar"; // TODO: localize
 		}
@@ -539,8 +527,10 @@ function PaintTool(controls) {
 			controls.nameInput.value = "";
 		}
 
-		// todo : fix?
-		controls.nameInput.placeholder = getCurPaintModeStr() + " " + til.id;
+		// will this safety conditional bite me?
+		if (findTool) {
+			controls.nameInput.placeholder = findTool.GetDisplayName("drawing", drawingId, true);
+		}
 
 		controls.nameInput.readOnly = til.id === "A";
 	}
@@ -618,6 +608,10 @@ function PaintTool(controls) {
 					},
 					filterId : "item",
 					toolId : "paintPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select lock item for " + findTool.GetDisplayName("drawing", drawingId) + "...";
+					},
 				});
 
 			controls.settings.lock.itemInput.appendChild(lockItemSelect.GetElement());
