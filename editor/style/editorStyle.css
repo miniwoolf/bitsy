@@ -524,6 +524,14 @@ span.controlBox {
 	display: flex;
 }
 
+#findSelect {
+	display: flex;
+}
+
+#findSelectMessage {
+	flex-grow: 1;
+}
+
 .thumbnailDefaultName {
 	color : #ccccff;
 }
@@ -595,4 +603,22 @@ span.controlBox {
 	fill: #6f6f6f;
 	margin: 4px;
 	margin-right: 6px;
+}
+
+.selectControl {
+	display: inline-flex;
+}
+
+.selectControl img {
+	width: 27px;
+	height: 27px;
+}
+
+.selectControl select {
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.selectControl button {
+	margin-bottom: 0px;
 }

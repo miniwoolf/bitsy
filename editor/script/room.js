@@ -315,6 +315,44 @@ function RoomTool(canvas) {
 			events.Raise("change_room_palette", { id: curRoom, palId: event.id });
 		}
 	});
+
+	var paletteSelect;
+	function updateRoomPaletteSelect() {
+		if (!paletteSelect && findTool) {
+			paletteSelect = findTool.CreateSelectControl(
+				"palette",
+				{
+					onSelectChange : function(id) {
+						room[curRoom].pal = id;
+						refreshGameData();
+
+						// todo : can these listen to the even instead?
+						roomTool.drawEditMap();
+						paintTool.UpdateCanvas();
+
+						events.Raise("change_room_palette", { id: curRoom, palId: id });
+					},
+					toolId : "roomPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						// todo : get actual room name
+						return "select colors for " + findTool.GetDisplayName("room", curRoom) + "...";
+					},
+				});
+
+			// todo : pass in control root via constructor
+			document.getElementById("roomPaletteSelect").appendChild(paletteSelect.GetElement());
+		}
+
+		if (paletteSelect) {
+			paletteSelect.SetSelection(room[curRoom].pal);
+		}
+	}
+
+	this.Update = function() {
+		self.drawEditMap();
+		updateRoomPaletteSelect();
+	}
 } // RoomTool()
 
 /* 
@@ -362,6 +400,7 @@ function listenForRoomSelect() {
 	});
 }
 
+// todo : definitely move inside of tooL!
 // I don't like that this only functions correctly if listenForSelectRoom is run before all other events...
 // I need to add an "after_select_room" event...
 function selectRoom(roomId) {
@@ -378,13 +417,14 @@ function selectRoom(roomId) {
 	if (nextRoomIndex != -1) {
 		roomIndex = nextRoomIndex;
 		curRoom = ids[roomIndex];
-		roomTool.drawEditMap();
-		updateRoomPaletteSelect();
 
-		updateRoomName();
+		roomTool.Update(); // todo : input id?
+		updateRoomName(); // todo : move inside of tool?
 	}
 }
 
+// todo : put controls inside room tool and hook this up there!
+// todo : move inside of tool?
 function nextRoom() {
 	var ids = sortedRoomIdList();
 	var nextIndex = (roomIndex + 1) % ids.length;
@@ -463,18 +503,7 @@ function deleteRoom() {
 		nextRoom();
 		roomTool.drawEditMap();
 		paintTool.UpdateCanvas();
-		updateRoomPaletteSelect();
 	}
-}
-
-function roomPaletteChange(event) {
-	var palId = event.target.value;
-	room[curRoom].pal = palId;
-	refreshGameData();
-	roomTool.drawEditMap();
-	paintTool.UpdateCanvas();
-
-	events.Raise("change_room_palette", { id: curRoom, palId: palId });
 }
 
 function toggleMapGrid(e) {

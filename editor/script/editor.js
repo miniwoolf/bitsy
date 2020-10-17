@@ -714,8 +714,6 @@ function isPortraitOrientation() {
 
 function start() {
 	events.Listen("game_data_change", function(event) {
-		updatePaletteOptionsFromGameData();
-
 		// TODO -- over time I can move more things in here
 		// on the other hand this is still sort of global thing that we don't want TOO much of
 
@@ -878,11 +876,10 @@ function start() {
 		}
 	}
 
+	// todo : refactor to remove these...
 	//draw everything
 	paintTool.SelectDrawing("A");
-	roomTool.drawEditMap();
-
-	updateRoomPaletteSelect(); //dumb to have to specify this here --- wrap up room UI method?
+	roomTool.Update();
 	updateRoomName(); // init the room UI
 
 	updateInventoryUI();
@@ -897,7 +894,6 @@ function start() {
 	});
 	events.Listen("palette_list_change", function(event) {
 		refreshGameData();
-		updatePaletteOptionsFromGameData();
 	});
 
 	//unsupported feature stuff
@@ -1001,6 +997,10 @@ function start() {
 		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),
 		filterDialogCheck : document.getElementById("findFilterDialogCheck"),
 		filterCurRoomCheck : document.getElementById("findFilterCurRoomCheck"),
+		selectRoot : document.getElementById("findSelect"),
+		selectCancelButton : document.getElementById("findSelectCancel"),
+		selectConfirmButton : document.getElementById("findSelectConfirm"),
+		selectMessage : document.getElementById("findSelectMessage"),
 	});
 
 	initLanguageOptions();
@@ -1166,45 +1166,8 @@ function toggleFontDataVisibility(e) {
 var colorPicker = null;
 var paletteTool = null;
 
-function updateRoomPaletteSelect() {
-	var palOptions = document.getElementById("roomPaletteSelect").options;
-	for (i in palOptions) {
-		var o = palOptions[i];
-		// console.log(o);
-		if (o.value === curPal()) {
-			o.selected = true;
-		}
-	}
-}
-
 function changeColorPickerIndex(index) {
 	paletteTool.changeColorPickerIndex(index);
-}
-
-function updatePaletteOptionsFromGameData() {
-	if (curRoom == null) {
-		return;
-	}
-
-	var select = document.getElementById("roomPaletteSelect");
-
-	// first, remove all current options
-	var i;
-	for(i = select.options.length - 1 ; i >= 0 ; i--) {
-		select.remove(i);
-	}
-
-	// then, add an option for each room
-	var paletteLabel = localization.GetStringOrFallback("palette_label", "palette");
-	for (palId in palette) {
-		if (palId != "default") {
-			var option = document.createElement("option");
-			option.text = palette[palId].name ? palette[palId].name : paletteLabel + " " + palId;
-			option.value = palId;
-			option.selected = ( palId === room[ curRoom ].pal );
-			select.add(option);
-		}
-	}
 }
 
 function prevPalette() {
@@ -1225,11 +1188,6 @@ function duplicatePalette() {
 
 function deletePalette() {
 	paletteTool.DeleteSelected();
-}
-
-function paintExplorerFilterChange( e ) {
-	console.log("paint explorer filter : " + e.target.value);
-	// paintExplorer.Refresh( paintTool.drawing.type, true, e.target.value );
 }
 
 // TODO : move THIS into paint.js
@@ -1564,7 +1522,9 @@ function afterShowPanel(id) {
 }
 
 function afterHidePanel(id) {
-	// todo : remove?
+	if (id === "findPanel" && findTool) {
+		findTool.CancelSelect();
+	}
 }
 
 // DEPRECATED

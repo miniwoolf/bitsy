@@ -13,7 +13,24 @@ function FindTool(controls) {
 	this.GetIconId = function(categoryName, id) {
 		var category = categories[categoryName];
 		return category.getIconId(category.categoryStore[id]);
-	}
+	};
+
+	this.GetDisplayName = function(categoryName, id) {
+		var category = categories[categoryName];
+		return category.getCaption(category.categoryStore[id]);
+	};
+
+	// keep UI in sync
+	events.Listen("change_find_filter", function(e) {
+		if (searchText != e.searchText) {
+			searchText = e.searchText;
+			controls.searchInput.value = searchText;
+		}
+
+		if (activeFilters.toString() != e.activeFilters.toString()) {
+			activeFilters = e.activeFilters;
+		}
+	});
 
 	controls.searchInput.onchange = function(e) {
 		searchText = e.target.value;
@@ -40,6 +57,10 @@ function FindTool(controls) {
 
 			events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
 		}
+
+		events.Listen("change_find_filter", function(e) {
+			filterCheck.checked = e.activeFilters.indexOf(filterId) != -1;
+		});
 	}
 
 	CreateFilterToggleHandler("avatar", controls.filterAvatarCheck);
@@ -115,26 +136,26 @@ function FindTool(controls) {
 
 			return iconId;
 		},
-		includedInFilter: function(til) {
+		includedInFilter: function(til, filters) {
 			var result = false;
 
 			if (til.type === "SPR") {
-				result = activeFilters.indexOf(til.id === "A" ? "avatar" : "sprite") != -1;
+				result = filters.indexOf(til.id === "A" ? "avatar" : "sprite") != -1;
 			}
 			else if (til.type === "TIL") {
-				result = activeFilters.indexOf("tile") != -1;
+				result = filters.indexOf("tile") != -1;
 			}
 			else if (til.type === "ITM") {
-				result = activeFilters.indexOf("item") != -1;
+				result = filters.indexOf("item") != -1;
 			}
 			else if (til.type === "EXT") {
-				result = activeFilters.indexOf("exit") != -1;
+				result = filters.indexOf("exit") != -1;
 			}
 			else if (til.type === "END") {
-				result = activeFilters.indexOf("ending") != -1;
+				result = filters.indexOf("ending") != -1;
 			}
 
-			if (result && activeFilters.indexOf("cur_room") != -1) {
+			if (result && filters.indexOf("cur_room") != -1) {
 				if (til.type === "TIL") {
 					var tileInRoom = false;
 
@@ -184,10 +205,10 @@ function FindTool(controls) {
 		categoryStore: room,
 		getCaption: function(r) { return r.name ? r.name : "room " + r.id; }, // TODO : localize
 		getIconId: function(r) { return "room"; },
-		includedInFilter: function(r) { 
-			var result = activeFilters.indexOf("room") != -1;
+		includedInFilter: function(r, filters) { 
+			var result = filters.indexOf("room") != -1;
 
-			if (result && activeFilters.indexOf("cur_room") != -1) {
+			if (result && filters.indexOf("cur_room") != -1) {
 				result = r.id === curRoom;
 			}
 
@@ -209,8 +230,8 @@ function FindTool(controls) {
 		categoryStore: map,
 		getCaption: function(m) { return m.name ? m.name : "map " + m.id; }, // TODO : localize
 		getIconId: function(m) { return "room"; }, // TODO : real icon
-		includedInFilter: function(m) {
-			return activeFilters.indexOf("cur_room") === -1 && activeFilters.indexOf("map") != -1;
+		includedInFilter: function(m, filters) {
+			return filters.indexOf("cur_room") === -1 && filters.indexOf("map") != -1;
 		},
 		selectEventId: "select_map",
 		toolId: "mapPanel",
@@ -227,10 +248,10 @@ function FindTool(controls) {
 		categoryStore: palette,
 		getCaption: function(pal) { return pal.name ? pal.name : "palette " + pal.id; }, // TODO : localize
 		getIconId: function(pal) { return "colors"; },
-		includedInFilter: function(pal) {
-			var result = activeFilters.indexOf("palette") != -1;
+		includedInFilter: function(pal, filters) {
+			var result = filters.indexOf("palette") != -1;
 
-			if (result && activeFilters.indexOf("cur_room") != -1) {
+			if (result && filters.indexOf("cur_room") != -1) {
 				result = pal.id === room[curRoom].pal;
 			}
 
@@ -259,8 +280,8 @@ function FindTool(controls) {
 			}
 		}, // TODO : localize
 		getIconId: function(dlg) { return "dialog"; },
-		includedInFilter: function(dlg) {
-			return activeFilters.indexOf("cur_room") === -1 && activeFilters.indexOf("dialog") != -1;
+		includedInFilter: function(dlg, filters) {
+			return filters.indexOf("cur_room") === -1 && filters.indexOf("dialog") != -1;
 		},
 		selectEventId: "select_dialog",
 		toolId: "dialogPanel",
@@ -281,7 +302,11 @@ function FindTool(controls) {
 
 		function createOnClick(id) {
 			return function() {
-				if (id === selectedId) {
+				if (isSelectMode) {
+					selectChoiceId = id; // todo : redundant?
+					onSelectFunc(selectChoiceId);
+				}
+				else if (id === selectedId) {
 					showPanel(categoryInfo.toolId, "findPanel");
 				}
 				else {
@@ -367,9 +392,9 @@ function FindTool(controls) {
 					var categoryItem = categoryInfo.categoryStore[id];
 					var caption = categoryInfo.getCaption(categoryItem);
 					var includedInSearch = searchText === null || searchText.length <= 0 || caption.indexOf(searchText) != -1;
-					var isVisible = includedInSearch && categoryInfo.includedInFilter(categoryItem);
+					var isVisible = includedInSearch && categoryInfo.includedInFilter(categoryItem, activeFilters);
 					// todo : switch to use a style?
-					document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";				
+					document.getElementById(getThumbId(id)).style.display = isVisible ? "inline-block" : "none";
 				}
 			}
 		}
@@ -450,7 +475,7 @@ function FindTool(controls) {
 			refreshThumbs();
 		});
 
-		events.Listen("change_find_filter", function() {
+		events.Listen("change_find_filter", function(e) {
 			updateVisibility();
 		});
 
@@ -496,6 +521,159 @@ function FindTool(controls) {
 	}
 
 	events.Raise("change_find_filter", { searchText: searchText, activeFilters: activeFilters });
+
+	/* SELECT CONTROL */
+	var isSelectMode = false;
+	var onSelectFunc = null; // todo : names?
+	var preSelectState = {
+		searchText : "",
+		activeFilters : [],
+		prevId : null,
+		filterVisible : false,
+	};
+	controls.selectRoot.style.display = "none";
+
+	function StartSelectMode(message, prevId, filterId, onSelect) {
+		preSelectState.filterVisible = controls.filterVisibleCheck.checked;
+		preSelectState.searchText = searchText;
+		preSelectState.activeFilters = activeFilters;
+		preSelectState.prevId = prevId;
+
+		controls.selectRoot.style.display = "flex";
+		controls.filterVisibleCheck.checked = false;
+		controls.filterVisibleCheck.disabled = true; // todo : hide instead?
+		controls.filterRoot.style.display = "none";
+
+		events.Raise("change_find_filter", { searchText: "", activeFilters: [filterId] });
+
+		controls.selectMessage.innerText = message;
+
+		onSelectFunc = onSelect;
+		isSelectMode = true;
+	}
+
+	function FinishSelectMode(isConfirmed) {
+		controls.selectRoot.style.display = "none";
+		controls.filterVisibleCheck.checked = preSelectState.filterVisible;
+		controls.filterVisibleCheck.disabled = false;
+		controls.filterRoot.style.display = preSelectState.filterVisible ? "block" : "none";
+
+		events.Raise("change_find_filter", { searchText: preSelectState.searchText, activeFilters: preSelectState.activeFilters });
+
+		if (!isConfirmed && onSelectFunc) {
+			onSelectFunc(preSelectState.prevId);
+		}
+
+		onSelectFunc = null;
+		isSelectMode = false;
+	}
+
+	controls.selectCancelButton.onclick = function() { FinishSelectMode(false); };
+	controls.selectConfirmButton.onclick = function() { FinishSelectMode(true); };
+
+	this.CancelSelect = function() {
+		if (isSelectMode) {
+			FinishSelectMode(false);
+		}
+	}
+
+	this.CreateSelectControl = function(categoryName, options) {
+		var category = categories[categoryName];
+		var filterId = options && options.filterId ? options.filterId : categoryName;
+		var toolId = options && options.toolId ? options.toolId : null;
+
+		var span = document.createElement("span");
+		span.classList.add("selectControl");
+
+		// var icon = document.createElement("span");
+		// span.appendChild(icon);
+
+		var thumb = document.createElement("img");
+		span.appendChild(thumb);
+
+		var select = document.createElement("select");
+		select.onchange = function() {
+			updateSelection(select.value);
+		};
+		span.appendChild(select);
+
+		var findButton = document.createElement("button");
+		findButton.appendChild(iconUtils.CreateIcon("search"));
+		findButton.onclick = function() {
+			// todo : localize
+			var message = options && options.getSelectMessage ? options.getSelectMessage() : "selecting...";
+			StartSelectMode(message, select.value, filterId, updateSelection);
+			showPanel("findPanel", toolId);
+		};
+		span.appendChild(findButton);
+
+		var editButton = document.createElement("button");
+		editButton.appendChild(iconUtils.CreateIcon("open_tool"));
+		editButton.onclick = function() {
+			var selectedId = select.value;
+			if (selectedId) {
+				showPanel(category.toolId, toolId);
+				events.Raise(category.selectEventId, { id: selectedId });
+			}
+		}
+		span.appendChild(editButton);
+
+		function updateSelection(id) {
+			select.value = id;
+
+			var thumbCache = category.thumbnailRenderer.GetCacheEntry(id);
+
+			if (thumbCache.uri != null) {
+				thumb.src = thumbCache.uri;
+				// else?
+			}
+
+			// if (iconUtils) {
+			// 	icon.innerHTML = "";
+			// 	var iconId = category.getIconId(category.categoryStore[id]);
+			// 	icon.appendChild(iconUtils.CreateIcon(iconId));
+			// }
+
+			if (options && options.onSelectChange) {
+				options.onSelectChange(id);
+			}
+		}
+
+		function updateOptions() {
+			var tempValue = select.value;
+			select.innerHTML = "";
+
+			console.log("UPDATE? " + categoryName);
+
+			for (var id in category.categoryStore) {
+				var categoryItem = category.categoryStore[id];
+
+				// todo : stop duplicating this...
+				var isExcluded = category.idExclusionList && category.idExclusionList.indexOf(id) != -1;
+
+				if (!isExcluded && category.includedInFilter(categoryItem, [filterId])) {
+					var option = document.createElement("option");
+					option.value = id;
+					option.innerText = category.getCaption(categoryItem);
+					select.appendChild(option);
+
+					console.log(id);
+				}
+			}
+
+			if (tempValue) {
+				updateSelection(tempValue);	
+			}
+		}
+
+		updateOptions();
+
+		return {
+			GetElement : function() { return span; },
+			UpdateOptions : updateOptions,
+			SetSelection : updateSelection,
+		};
+	}
 }
 
 function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {

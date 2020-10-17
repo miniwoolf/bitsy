@@ -329,12 +329,10 @@
 
 					<div class="controlBox">
 						<div>
-							<span class="controlBox">
+							<span style="display: inline-flex;"> <!--  class="controlBox"> -->
 								<span class="bitsy_icon icon_space_right">colors</span>
-								<span class="localize palette_tool_name">colors</span>: 
-								<select title="select color palette for room" id="roomPaletteSelect" onchange="roomPaletteChange(event);">
-									<option value="0">palette 0</option> <!-- other options are added dynamically -->
-								</select>
+								<!-- <span class="localize palette_tool_name">colors</span>: -->
+								<span id="roomPaletteSelect"></span>
 							</span>
 
 							<span style="float: right;">
@@ -758,7 +756,7 @@
 							<!-- todo : localize -->
 							<div id="lockSettings">
 								lock : 
-								<select id="lockItemInput"></select> <!-- TODO -->
+								<span id="lockItemInput"></span> <!-- TODO -->
 								<input id="lockTollInput" type="number"></input> <!-- TODO -->
 							</div>
 						</div>
@@ -779,6 +777,19 @@
 							<span class="bitsy_icon icon_large icon_space_right">search</span>
 							<span>find</span> <!-- TODO : localize -->
 						</div>
+					</div>
+
+					<div id="findSelect" class="controlBox">
+						<!-- todo :  localize -->
+						<span id="findSelectMessage">selecting...</span>
+						<button id="findSelectCancel">
+							<span>cancel</span>
+							<span class="bitsy_icon">cancel</span>
+						</button>
+						<button id="findSelectConfirm">
+							<span>ok</span>
+							<span class="bitsy_icon">checkmark</span>
+						</button>
 					</div>
 
 					<div id="findSearchBox">
