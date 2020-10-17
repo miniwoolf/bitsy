@@ -622,3 +622,13 @@ span.controlBox {
 .selectControl button {
 	margin-bottom: 0px;
 }
+
+.paintSetting {
+	display: flex;
+	line-height: 100%;
+	align-items: center;
+}
+
+.paintSetting input[type=number] {
+	width: 50px; /* todo : non px version? */
+}

@@ -597,7 +597,8 @@ function PaintTool(controls) {
 	};
 
 	var lockItemSelect;
-	function UpdateLockSettingControls(isVisible) {
+	var UpdateLockSettingControls;
+	UpdateLockSettingControls = function (isVisible) {
 		if (!lockItemSelect && findTool) {
 			lockItemSelect = findTool.CreateSelectControl(
 				"drawing",
@@ -612,6 +613,7 @@ function PaintTool(controls) {
 						// todo : localize
 						return "select lock item for " + findTool.GetDisplayName("drawing", drawingId) + "...";
 					},
+					// showDropdown : false, // todo : show or not?
 				});
 
 			controls.settings.lock.itemInput.appendChild(lockItemSelect.GetElement());
@@ -619,22 +621,59 @@ function PaintTool(controls) {
 			controls.settings.lock.tollInput.onchange = function(e) {
 				if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
 					tile[drawingId].lockToll = e.target.value;
+
+					if (e.target.value < 1) {
+						controls.settings.lock.typeSelect.value = 0;
+						UpdateLockSettingControls(true);
+					}
+
 					refreshGameData();
 				}
 			};
+
+			controls.settings.lock.typeSelect.onchange = function(e) {
+				if (e.target.value > -1) {
+					tile[drawingId].lockToll = e.target.value;
+
+					if (tile[drawingId].lockItem === null) {
+						// todo : how to pick the starting item?
+						tile[drawingId].lockItem = "1";
+					}
+				}
+				else {
+					tile[drawingId].lockToll = 0;
+					tile[drawingId].lockItem = null;
+				}
+
+				UpdateLockSettingControls(true);
+
+				refreshGameData();
+			}
 		}
 
 		if (!isVisible) {
 			controls.settings.lock.container.style.display = "none";
 		}
 		else {
-			controls.settings.lock.container.style.display = "block";
+			controls.settings.lock.container.style.display = "flex";
 
-			if (lockItemSelect) {
-				lockItemSelect.SetSelection(tile[drawingId].lockItem);
+			if (tile[drawingId].lockItem === null) {
+				controls.settings.lock.typeSelect.value = -1;
+				controls.settings.lock.itemInput.style.display = "none";
+				controls.settings.lock.tollContainer.style.display = "none";
 			}
+			else {
+				controls.settings.lock.typeSelect.value = Math.min(1, tile[drawingId].lockToll);
 
-			controls.settings.lock.tollInput.value = tile[drawingId].lockToll;
+				controls.settings.lock.tollContainer.style.display =
+					tile[drawingId].lockToll <= 0 ? "none" : "inline";
+				controls.settings.lock.tollInput.value = tile[drawingId].lockToll;
+
+				controls.settings.lock.itemInput.style.display = "inline";
+				if (lockItemSelect) {
+					lockItemSelect.SetSelection(tile[drawingId].lockItem);
+				}
+			}
 		}
 	}
 

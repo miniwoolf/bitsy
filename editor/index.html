@@ -754,11 +754,19 @@
 							</div>
 
 							<!-- todo : localize -->
-							<div id="lockSettings">
+							<div id="lockSettings" class="paintSetting">
 								<span class="bitsy_icon">item</span>
-								lock : 
-								<span id="lockItemInput"></span> <!-- TODO -->
-								<input id="lockTollInput" type="number"></input> <!-- TODO -->
+								<span style="margin-right: 5px;">lock: </span>
+								<select id="lockTypeSelect" style="margin-right: 5px;">
+									<option value="-1">open</option>
+									<option value="0">item</option>
+									<option value="1">toll</option>
+								</select>
+								<span id="lockToll">
+									<input id="lockTollInput" type="number"></input>
+									<span style="margin-right: 5px; margin-left: 5px;"> of </span>
+								</span>
+								<span id="lockItemInput"></span>
 							</div>
 						</div>
 

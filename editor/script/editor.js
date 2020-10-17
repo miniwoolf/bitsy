@@ -802,7 +802,9 @@ function start() {
 			},
 			lock : {
 				container : document.getElementById("lockSettings"),
+				typeSelect : document.getElementById("lockTypeSelect"),
 				itemInput : document.getElementById("lockItemInput"),
+				tollContainer : document.getElementById("lockToll"),
 				tollInput : document.getElementById("lockTollInput"),
 			},
 		},

@@ -578,18 +578,25 @@ function FindTool(controls) {
 		}
 	}
 
+	// todo : still not sure what the right combo of buttons and iteractions is..
 	this.CreateSelectControl = function(categoryName, options) {
 		var category = categories[categoryName];
 		var filterId = options && options.filterId ? options.filterId : categoryName;
 		var toolId = options && options.toolId ? options.toolId : null;
+		var showDropdown = options && options.hasOwnProperty("showDropdown") ? options.showDropdown : true;
 
 		var span = document.createElement("span");
 		span.classList.add("selectControl");
 
 		var thumb = document.createElement("img");
+		thumb.onclick = function() {
+			showDropdown = !showDropdown;
+			select.style.display = showDropdown ? "inline" : "none";
+		}
 		span.appendChild(thumb);
 
 		var select = document.createElement("select");
+		select.style.display = showDropdown ? "inline" : "none";
 		select.onchange = function() {
 			updateSelection(select.value);
 		};
@@ -651,8 +658,6 @@ function FindTool(controls) {
 			var tempValue = select.value;
 			select.innerHTML = "";
 
-			console.log("UPDATE? " + categoryName);
-
 			for (var id in category.categoryStore) {
 				var categoryItem = category.categoryStore[id];
 
@@ -664,8 +669,6 @@ function FindTool(controls) {
 					option.value = id;
 					option.innerText = category.getCaption(categoryItem);
 					select.appendChild(option);
-
-					console.log(id);
 				}
 			}
 
