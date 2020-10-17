@@ -586,9 +586,6 @@ function FindTool(controls) {
 		var span = document.createElement("span");
 		span.classList.add("selectControl");
 
-		// var icon = document.createElement("span");
-		// span.appendChild(icon);
-
 		var thumb = document.createElement("img");
 		span.appendChild(thumb);
 
@@ -620,20 +617,30 @@ function FindTool(controls) {
 		span.appendChild(editButton);
 
 		function updateSelection(id) {
+			if (!(id in category.categoryStore)) {
+				return; // it's not great if we have invalid IDs being selected
+			}
+
 			select.value = id;
 
 			var thumbCache = category.thumbnailRenderer.GetCacheEntry(id);
 
-			if (thumbCache.uri != null) {
+			if (!thumbCache.outOfDate) {
 				thumb.src = thumbCache.uri;
-				// else?
 			}
+			else {
+				// todo : what if you switch selection before the render is done?
+				var onRenderFinish = function(uri) {
+					thumb.src = uri;
+				}
 
-			// if (iconUtils) {
-			// 	icon.innerHTML = "";
-			// 	var iconId = category.getIconId(category.categoryStore[id]);
-			// 	icon.appendChild(iconUtils.CreateIcon(iconId));
-			// }
+				var renderOptions = {};
+				if (category.getRenderOptions) {
+					renderOptions = category.getRenderOptions(category.categoryStore[id]);
+				}
+
+				category.thumbnailRenderer.Render(id, onRenderFinish, renderOptions);
+			}
 
 			if (options && options.onSelectChange) {
 				options.onSelectChange(id);
@@ -728,7 +735,7 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 		if (!cache[id]) {
 			cache[id] = {
 				uri : null,
-				outOfDate : true
+				outOfDate : true,
 			};
 		}
 

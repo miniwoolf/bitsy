@@ -2099,7 +2099,7 @@ function createTile(id, type, options) {
 			x : valueOrDefault(options.destX, null), // exit only
 			y : valueOrDefault(options.destY, null), // exit only
 		},
-		lockItem : valueOrDefault(options.lockId, null), // exit & ending only
+		lockItem : valueOrDefault(options.lockItem, null), // exit & ending only
 		lockToll : valueOrDefault(options.lockToll, 0), // exit & ending only
 	};
 }

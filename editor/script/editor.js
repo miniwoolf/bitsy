@@ -1266,7 +1266,7 @@ function on_game_data_change() {
 }
 
 function on_game_data_change_core() {
-	console.log(document.getElementById("game_data").value);
+	// console.log(document.getElementById("game_data").value);
 
 	clearGameData();
 	var version = parseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data

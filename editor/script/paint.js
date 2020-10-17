@@ -527,7 +527,7 @@ function PaintTool(controls) {
 			controls.nameInput.value = "";
 		}
 
-		// will this safety conditional bite me?
+		// will this safety conditional bite me? can I have the find tool load earlier?
 		if (findTool) {
 			controls.nameInput.placeholder = findTool.GetDisplayName("drawing", drawingId, true);
 		}
