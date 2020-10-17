@@ -728,18 +728,29 @@
 							</div>
 
 							<!-- todo : localize -->
-							<div id="exitDestination">
-								exit : go to
-								<select id="exitDestinationRoomSelect"></select>
-								at
-								<input id="exitDestinationInputX" type="number" min="0" max="15" style="width:6ch;"></input>
-								,
-								<input id="exitDestinationInputY" type="number" min="0" max="15" style="width:6ch;"></input>
+							<div id="exitDestination" style="margin-bottom: 5px;">
+								<div class="paintSetting">
+									<span class="bitsy_icon" style="margin-right: 5px;">exit_one_way</span>
+									<span style="margin-right: 5px;">exit:</span>
+								</div>
+								<div class="paintSetting">
+									<span class="bitsy_icon" style="margin-right: 5px;">room</span>
+									<span style="margin-right: 5px;">room:</span>
+									<span id="exitDestinationRoomSelect"></span>
+								</div>
+								<div class="paintSetting">
+									<span class="bitsy_icon" style="margin-right: 5px;">set_exit_location</span>
+									<span style="margin-right: 5px;">pos:</span>
+									<input id="exitDestinationInputX" type="number" min="0" max="15"></input>
+									<span style="margin-left: 5px; margin-right: 5px;">,</span>
+									<input id="exitDestinationInputY" type="number" min="0" max="15"></input>
+								</div>
 							</div>
 
 							<!-- todo : localize -->
-							<div id="exitTransitionEffect">
-								transition effect : 
+							<div id="exitTransitionEffect" class="paintSetting">
+								<span class="bitsy_icon" style="margin-right: 5px;">transition_effect</span>
+								<span style="margin-right: 5px;">transition effect: </span>
 								<select id="exitTransitionEffectSelect">
 									<option value="none">none</option>
 									<option value="fade_w">fade (white)</option>
@@ -755,7 +766,7 @@
 
 							<!-- todo : localize -->
 							<div id="lockSettings" class="paintSetting">
-								<span class="bitsy_icon">item</span>
+								<span class="bitsy_icon" style="margin-right: 5px;">item</span>
 								<span style="margin-right: 5px;">lock: </span>
 								<select id="lockTypeSelect" style="margin-right: 5px;">
 									<option value="-1">open</option>
@@ -763,8 +774,8 @@
 									<option value="1">toll</option>
 								</select>
 								<span id="lockToll">
-									<input id="lockTollInput" type="number"></input>
-									<span style="margin-right: 5px; margin-left: 5px;"> of </span>
+									<input id="lockTollInput" type="number" min="0"></input>
+									<span style="margin-right: 5px; margin-left: 5px;">of</span>
 								</span>
 								<span id="lockItemInput"></span>
 							</div>

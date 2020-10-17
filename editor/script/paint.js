@@ -262,14 +262,10 @@ function PaintTool(controls) {
 
 		if (tile[drawingId].type === "EXT") {
 			hasSettings = true;
-			controls.settings.exit.destination.style.display = "block";
-			controls.settings.exit.transitionEffect.style.display = "block";
-			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
-			controls.settings.exit.transitionSelect.value = effectId;
+			UpdateExitSettingControls(true);
 		}
 		else {
-			controls.settings.exit.destination.style.display = "none";
-			controls.settings.exit.transitionEffect.style.display = "none";
+			UpdateExitSettingControls(false);
 		}
 
 		if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
@@ -596,6 +592,53 @@ function PaintTool(controls) {
 		}
 	};
 
+	// exit destination controls
+	var exitRoomSelect;
+	controls.settings.exit.xInput.onchange = function(e) {
+		tile[drawingId].dest.x = e.target.value;
+		refreshGameData();
+	};
+	controls.settings.exit.yInput.onchange = function(e) {
+		tile[drawingId].dest.y = e.target.value;
+		refreshGameData();
+	};
+
+	function UpdateExitSettingControls(isVisible) {
+		controls.settings.exit.destination.style.display = isVisible ? "block" : "none";
+		controls.settings.exit.transitionEffect.style.display = isVisible ? "flex" : "none";
+
+		if (!exitRoomSelect && findTool) {
+			exitRoomSelect = findTool.CreateSelectControl(
+				"room",
+				{
+					onSelectChange : function(id) {
+						tile[drawingId].dest.room = id;
+						refreshGameData();
+					},
+					toolId : "paintPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select destination room for " + findTool.GetDisplayName("drawing", drawingId) + "...";
+					},
+				});
+
+			controls.settings.exit.roomSelect.appendChild(exitRoomSelect.GetElement());
+		}
+
+		if (isVisible) {
+			if (exitRoomSelect) {
+				exitRoomSelect.SetSelection(tile[drawingId].dest.room);
+			}
+
+			controls.settings.exit.xInput.value = tile[drawingId].dest.x;
+			controls.settings.exit.yInput.value = tile[drawingId].dest.y;
+
+			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
+			controls.settings.exit.transitionSelect.value = effectId;
+		}
+	}
+
+	// lock controls
 	var lockItemSelect;
 	var UpdateLockSettingControls;
 	UpdateLockSettingControls = function (isVisible) {

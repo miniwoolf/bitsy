@@ -2096,8 +2096,8 @@ function createTile(id, type, options) {
 		transition_effect : valueOrDefault(options.transition_effect, null), // exit only
 		dest : {
 			room : valueOrDefault(options.destRoom, null), // exit only
-			x : valueOrDefault(options.destX, null), // exit only
-			y : valueOrDefault(options.destY, null), // exit only
+			x : valueOrDefault(options.destX, 0), // exit only
+			y : valueOrDefault(options.destY, 0), // exit only
 		},
 		lockItem : valueOrDefault(options.lockItem, null), // exit & ending only
 		lockToll : valueOrDefault(options.lockToll, 0), // exit & ending only

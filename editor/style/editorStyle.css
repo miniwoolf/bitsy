@@ -627,8 +627,10 @@ span.controlBox {
 	display: flex;
 	line-height: 100%;
 	align-items: center;
+	margin-bottom: 5px;
+	margin-top: 5px;
 }
 
 .paintSetting input[type=number] {
-	width: 50px; /* todo : non px version? */
+	width: 6ch;
 }
