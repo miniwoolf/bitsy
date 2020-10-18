@@ -626,6 +626,11 @@ function PaintTool(controls) {
 		}
 
 		if (isVisible) {
+			// todo : localize
+			controls.settings.exit.description.innerText = "exit to " + 
+				findTool.GetDisplayName("room", tile[drawingId].dest.room) + 
+				" (" + tile[drawingId].dest.x + ", " + tile[drawingId].dest.y + ")";
+
 			if (exitRoomSelect) {
 				exitRoomSelect.SetSelection(tile[drawingId].dest.room);
 			}

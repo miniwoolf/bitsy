@@ -797,6 +797,7 @@ function start() {
 			},
 			exit : {
 				destination : document.getElementById("exitDestination"),
+				description : document.getElementById("exitDestinationDescription"),
 				roomSelect : document.getElementById("exitDestinationRoomSelect"),
 				xInput : document.getElementById("exitDestinationInputX"),
 				yInput : document.getElementById("exitDestinationInputY"),
