@@ -28,17 +28,6 @@ function RoomTool(canvas) {
 	// render flags
 	this.drawMapGrid = true;
 	this.drawCollisionMap = false;
-	this.areMarkersVisible = false;
-
-	this.markers = null;
-
-	var isDisabledExternally = false;
-	events.Listen("disable_room_tool", function() {
-		isDisabledExternally = true;
-	});
-	events.Listen("enable_room_tool", function() {
-		isDisabledExternally = false;
-	});
 
 	function getDrawingType() {
 		return getDrawingTypeFromId(drawingId);
@@ -47,41 +36,22 @@ function RoomTool(canvas) {
 	function onMouseDown(e) {
 		e.preventDefault();
 
-		var isDisabledTemp = isDisabledExternally; // hack to exit early if disabled at START of mouse down
-
 		var off = getOffset(e);
 		off = mobileOffsetCorrection(off, e, (tilesize * roomsize *scale));
 		var x = Math.floor( off.x / (tilesize*scale) );
 		var y = Math.floor( off.y / (tilesize*scale) );
-		// console.log(x + " " + y);
-
-		events.Raise("click_room", { roomId : curRoom, x : x, y : y });
-
-		if (isDisabledTemp) {
-			return;
-		}
 
 		if( self.editDrawingAtCoordinateCallback != null && e.altKey ) {
 			self.editDrawingAtCoordinateCallback(x,y); // "eye dropper"
 			return;
 		}
 
-		var isEditingMarker = false;
-
-		if (self.markers && self.areMarkersVisible) {
-			if (self.markers.IsPlacingMarker()) {
-				self.markers.PlaceMarker(x,y);
-				self.drawEditMap();
-				isEditingMarker = true;
-			}
-			else if (self.markers.TrySelectMarkerAtLocation(x,y)) {
-				self.markers.StartDrag(x,y);
-				self.drawEditMap();
-				isEditingMarker = true;
-			}
+		if (onSelectBehavior != null) {
+			onSelectBehavior.OnSelect(curRoom, x, y);
+			return;
 		}
 
-		if (!isEditingMarker && drawingId != null) {
+		if (drawingId != null) {
 			//add tiles/sprites to map
 			if (getDrawingType() == TileType.Tile) {
 				if (room[curRoom].tilemap[y][x] === "0") {
@@ -147,37 +117,21 @@ function RoomTool(canvas) {
 	}
 
 	function onMouseMove(e) {
-		if (isDisabledExternally) {
+		if (onSelectBehavior != null) {
 			return;
 		}
 
-		if (self.markers && self.markers.GetSelectedMarker() != null && self.markers.IsDraggingMarker()) {
-			// drag marker around
-			var off = getOffset(e);
-			off = mobileOffsetCorrection(off, e, (tilesize * roomsize * scale));
-			var x = Math.floor(off.x / (tilesize*scale));
-			var y = Math.floor(off.y / (tilesize*scale));
-
-			self.markers.ContinueDrag(x,y);
-			self.drawEditMap();
-		}
-		else {
-			editTilesOnDrag(e);
-		}
+		editTilesOnDrag(e);
 	}
 
 	function onMouseUp(e) {
-		if (isDisabledExternally) {
+		if (onSelectBehavior != null) {
 			return;
 		}
 
 		editTilesOnDrag(e);
 		isDragAddingTiles = false;
 		isDragDeletingTiles = false;
-
-		if (self.markers) {
-			self.markers.EndDrag();
-		}
 	}
 
 	function editTilesOnDrag(e) {
@@ -294,18 +248,8 @@ function RoomTool(canvas) {
 			}
 		}
 
+		// TODO : new version of this!
 		//draw exits (and entrances) and endings
-		if (self.areMarkersVisible && self.markers) {
-			var w = tilesize * scale;
-			var markerList = self.markers.GetMarkerList();
-
-			for (var i = 0; i < markerList.length; i++) {
-				var marker = markerList[i]; // todo name
-				marker.Draw(ctx,curRoom,w,self.markers.GetSelectedMarker() == marker);
-			}
-
-			ctx.globalAlpha = 1;
-		}
 	}
 
 	events.Listen("palette_change", function(event) {
@@ -352,6 +296,23 @@ function RoomTool(canvas) {
 	this.Update = function() {
 		self.drawEditMap();
 		updateRoomPaletteSelect();
+	}
+
+	var onSelectBehavior = null;
+	this.OnSelectLocation = function(onSelect, onFinish) {
+		if (onSelectBehavior != null) {
+			onSelectBehavior.OnFinish();
+		}
+
+		onSelectBehavior = {
+			OnSelect : onSelect,
+			OnFinish : function() {
+				onFinish();
+				onSelectBehavior = null;
+			}
+		};
+
+		return onSelectBehavior;
 	}
 } // RoomTool()
 

@@ -600,6 +600,31 @@ function PaintTool(controls) {
 		controls.settings.exit.pos.style.display = e.target.checked ? "flex" : "none";
 	};
 
+	var onMove = null;
+	controls.settings.exit.moveToggle.onchange = function(e) {
+		if (e.target.checked) {
+			if (roomTool) {
+				onMove = roomTool.OnSelectLocation(
+					function(roomId, x, y) {
+						tile[drawingId].dest.room = roomId;
+						tile[drawingId].dest.x = x;
+						tile[drawingId].dest.y = y;
+
+						UpdateExitSettingControls(true);
+
+						refreshGameData();
+					},
+					function() {
+						controls.settings.exit.moveToggle.checked = false;
+						onMove = null;
+					});
+			}
+		}
+		else if (onMove != null) {
+			onMove.OnFinish();
+		}
+	}
+
 	controls.settings.exit.xInput.onchange = function(e) {
 		tile[drawingId].dest.x = e.target.value;
 		UpdateExitDescription();
