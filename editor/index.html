@@ -732,13 +732,24 @@
 								<div class="paintSetting">
 									<span class="bitsy_icon" style="margin-right: 5px;">exit_one_way</span>
 									<span id="exitDestinationDescription" style="margin-right: 5px;">exit to ___</span>
+
+									<input type="checkbox" id="toggleEditExit" />
+									<label for="toggleEditExit" title="edit coordinates">
+										<span class="bitsy_icon">edit</span>
+									</label>
+
+									<input type="checkbox" id="toggleMoveExit" />
+									<label for="toggleMoveExit" title="click to place exit in current room">
+										<span class="bitsy_icon">set_exit_location</span>
+										<span class="localize marker_move">move</span>
+									</label>
 								</div>
-								<div class="paintSetting">
+								<div id="exitDestinationRoom" class="paintSetting">
 									<span class="bitsy_icon" style="margin-right: 5px;">room</span>
 									<span style="margin-right: 5px;">room:</span>
 									<span id="exitDestinationRoomSelect"></span>
 								</div>
-								<div class="paintSetting">
+								<div id="exitDestinationPos" class="paintSetting">
 									<span class="bitsy_icon" style="margin-right: 5px;">set_exit_location</span>
 									<span style="margin-right: 5px;">pos:</span>
 									<input id="exitDestinationInputX" type="number" min="0" max="15"></input>

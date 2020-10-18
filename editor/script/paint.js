@@ -594,14 +594,30 @@ function PaintTool(controls) {
 
 	// exit destination controls
 	var exitRoomSelect;
+
+	controls.settings.exit.editToggle.onchange = function(e) {
+		controls.settings.exit.room.style.display = e.target.checked ? "flex" : "none";
+		controls.settings.exit.pos.style.display = e.target.checked ? "flex" : "none";
+	};
+
 	controls.settings.exit.xInput.onchange = function(e) {
 		tile[drawingId].dest.x = e.target.value;
+		UpdateExitDescription();
 		refreshGameData();
 	};
+
 	controls.settings.exit.yInput.onchange = function(e) {
 		tile[drawingId].dest.y = e.target.value;
+		UpdateExitDescription();
 		refreshGameData();
 	};
+
+	function UpdateExitDescription() {
+		// todo : localize
+		controls.settings.exit.description.innerText = "exit to " + 
+			findTool.GetDisplayName("room", tile[drawingId].dest.room) + 
+			" (" + tile[drawingId].dest.x + ", " + tile[drawingId].dest.y + ")";
+	}
 
 	function UpdateExitSettingControls(isVisible) {
 		controls.settings.exit.destination.style.display = isVisible ? "block" : "none";
@@ -613,6 +629,7 @@ function PaintTool(controls) {
 				{
 					onSelectChange : function(id) {
 						tile[drawingId].dest.room = id;
+						UpdateExitDescription();
 						refreshGameData();
 					},
 					toolId : "paintPanel",
@@ -626,10 +643,10 @@ function PaintTool(controls) {
 		}
 
 		if (isVisible) {
-			// todo : localize
-			controls.settings.exit.description.innerText = "exit to " + 
-				findTool.GetDisplayName("room", tile[drawingId].dest.room) + 
-				" (" + tile[drawingId].dest.x + ", " + tile[drawingId].dest.y + ")";
+			UpdateExitDescription();
+
+			controls.settings.exit.room.style.display = controls.settings.exit.editToggle.checked ? "flex" : "none";
+			controls.settings.exit.pos.style.display = controls.settings.exit.editToggle.checked ? "flex" : "none";
 
 			if (exitRoomSelect) {
 				exitRoomSelect.SetSelection(tile[drawingId].dest.room);

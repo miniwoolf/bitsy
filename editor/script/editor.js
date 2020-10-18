@@ -798,7 +798,11 @@ function start() {
 			exit : {
 				destination : document.getElementById("exitDestination"),
 				description : document.getElementById("exitDestinationDescription"),
+				editToggle : document.getElementById("toggleEditExit"),
+				moveToggle : document.getElementById("toggleMoveExit"),
+				room : document.getElementById("exitDestinationRoom"),
 				roomSelect : document.getElementById("exitDestinationRoomSelect"),
+				pos : document.getElementById("exitDestinationPos"),
 				xInput : document.getElementById("exitDestinationInputX"),
 				yInput : document.getElementById("exitDestinationInputY"),
 				transitionEffect : document.getElementById("exitTransitionEffect"),
