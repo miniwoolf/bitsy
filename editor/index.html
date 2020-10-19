@@ -710,18 +710,21 @@
 						</div>
 
 						<div id="tileSettings" class="controlBox">
-							<div id="wall" title="is this tile a wall?">
-								<span class="localize wall_toggle">wall</span> : 
+							<div id="wall" class="paintSetting" title="is this tile a wall?">
+								<span id="wallCheckboxIcon" class="bitsy_icon" style="margin-right: 5px;">wall_off</span>
+								<span class="localize wall_toggle">wall</span>
+								<span style="margin-right: 5px;">:</span> 
 								<input type="checkbox" id="wallCheckbox" onchange="on_toggle_wall(event);">
 								<label title="make tile an impassible wall" for="wallCheckbox">
 									<span id="wallCheckboxText">no </span>
-									<span id="wallCheckboxIcon" class="bitsy_icon">wall_off</span>
 								</label>
 							</div>
 
-							<div id="itemInventoryStart" title="how many of this item does the player start with?">
-								<span class="localize inventory_tool_name">inventory</span> : 
-								<input type="number" id="itemInventoryStartInput" style="width:50px;" />
+							<div id="itemInventoryStart" class="paintSetting" title="how many of this item does the player start with?">
+								<span class="bitsy_icon" style="margin-right: 5px;">item</span>
+								<span class="localize inventory_tool_name">inventory</span>
+								<span style="margin-right: 5px;">:</span>
+								<input type="number" id="itemInventoryStartInput" style="margin-right: 5px;" />
 								<button id="showInventoryButton" title="show inventory" onclick="showPanel('inventoryPanel', 'paintPanel');">
 									<span class="bitsy_icon">open_tool</span>
 								</button>

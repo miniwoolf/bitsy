@@ -634,3 +634,7 @@ span.controlBox {
 .paintSetting input[type=number] {
 	width: 6ch;
 }
+
+.paintSetting input[type=checkbox] + label {
+	margin: 0px;
+}

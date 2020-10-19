@@ -222,7 +222,7 @@ function PaintTool(controls) {
 		// wall UI
 		if (tile[drawingId].type === "TIL") {
 			hasSettings = true;
-			controls.settings.wall.container.setAttribute("style", "display:block;");
+			controls.settings.wall.container.setAttribute("style", "display:flex;");
 			updateWallCheckboxOnCurrentTile();
 		}
 		else {
@@ -240,7 +240,7 @@ function PaintTool(controls) {
 
 		if (tile[drawingId].type === "ITM") {
 			hasSettings = true;
-			controls.settings.inventory.container.setAttribute("style","display:block;");
+			controls.settings.inventory.container.setAttribute("style","display:flex;");
 			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
 			controls.settings.inventory.input.value = itemCount;
 			controls.settings.inventory.input.oninput = function(e) {
