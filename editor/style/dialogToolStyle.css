@@ -566,3 +566,12 @@
 .selectedEditor.tableEntryEditor {
 	border: solid 2px #6767b2;/* #e8e8ff;*/
 }
+
+.dialogControlTop {
+	display: flex;
+	align-items: center;
+}
+
+.expandingSpacer {
+	flex-grow: 100;
+}

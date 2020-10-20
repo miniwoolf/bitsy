@@ -282,7 +282,9 @@ function FindTool(controls) {
 		}, // TODO : localize
 		getIconId: function(dlg) { return "dialog"; },
 		includedInFilter: function(dlg, filters) {
-			return filters.indexOf("cur_room") === -1 && filters.indexOf("dialog") != -1;
+			return (filters.indexOf("cur_room") === -1
+				&& filters.indexOf("dialog") != -1
+				&& (dlg.id != titleDialogId || filters.indexOf("no_title") === -1));
 		},
 		selectEventId: "select_dialog",
 		toolId: "dialogPanel",
@@ -534,7 +536,7 @@ function FindTool(controls) {
 	};
 	controls.selectRoot.style.display = "none";
 
-	function StartSelectMode(message, prevId, filterId, onSelect) {
+	function StartSelectMode(message, prevId, filters, onSelect) {
 		preSelectState.filterVisible = controls.filterVisibleCheck.checked;
 		preSelectState.searchText = searchText;
 		preSelectState.activeFilters = activeFilters;
@@ -545,7 +547,7 @@ function FindTool(controls) {
 		controls.filterVisibleCheck.disabled = true; // todo : hide instead?
 		controls.filterRoot.style.display = "none";
 
-		events.Raise("change_find_filter", { searchText: "", activeFilters: [filterId] });
+		events.Raise("change_find_filter", { searchText: "", activeFilters: filters });
 
 		controls.selectMessage.innerText = message;
 
@@ -581,22 +583,19 @@ function FindTool(controls) {
 	// todo : still not sure what the right combo of buttons and iteractions is..
 	this.CreateSelectControl = function(categoryName, options) {
 		var category = categories[categoryName];
-		var filterId = options && options.filterId ? options.filterId : categoryName;
+		var filters = options && options.filters ? options.filters : [categoryName];
 		var toolId = options && options.toolId ? options.toolId : null;
-		var showDropdown = options && options.hasOwnProperty("showDropdown") ? options.showDropdown : true;
+		var hasNoneOption = options && options.hasNoneOption;
 
 		var span = document.createElement("span");
 		span.classList.add("selectControl");
 
-		var thumb = document.createElement("img");
-		thumb.onclick = function() {
-			showDropdown = !showDropdown;
-			select.style.display = showDropdown ? "inline" : "none";
+		if (category.thumbnailRenderer) {
+			var thumb = document.createElement("img");
+			span.appendChild(thumb);
 		}
-		span.appendChild(thumb);
 
 		var select = document.createElement("select");
-		select.style.display = showDropdown ? "inline" : "none";
 		select.onchange = function() {
 			updateSelection(select.value);
 		};
@@ -607,46 +606,54 @@ function FindTool(controls) {
 		findButton.onclick = function() {
 			// todo : localize
 			var message = options && options.getSelectMessage ? options.getSelectMessage() : "selecting...";
-			StartSelectMode(message, select.value, filterId, updateSelection);
+			StartSelectMode(message, select.value, filters, updateSelection);
 			showPanel("findPanel", toolId);
 		};
 		span.appendChild(findButton);
 
-		var editButton = document.createElement("button");
-		editButton.appendChild(iconUtils.CreateIcon("open_tool"));
-		editButton.onclick = function() {
+		function tryOpenTool() {
 			var selectedId = select.value;
 			if (selectedId) {
 				showPanel(category.toolId, toolId);
 				events.Raise(category.selectEventId, { id: selectedId });
 			}
 		}
+
+		var editButton = document.createElement("button");
+		editButton.appendChild(iconUtils.CreateIcon("open_tool"));
+		editButton.onclick = tryOpenTool;
 		span.appendChild(editButton);
 
 		function updateSelection(id) {
-			if (!(id in category.categoryStore)) {
+			if (id === "null") {
+				id = null;
+			}
+
+			if (!(id in category.categoryStore) && id != null) {
 				return; // it's not great if we have invalid IDs being selected
 			}
 
 			select.value = id;
 
-			var thumbCache = category.thumbnailRenderer.GetCacheEntry(id);
+			if (category.thumbnailRenderer && id != null) {
+				var thumbCache = category.thumbnailRenderer.GetCacheEntry(id);
 
-			if (!thumbCache.outOfDate) {
-				thumb.src = thumbCache.uri;
-			}
-			else {
-				// todo : what if you switch selection before the render is done?
-				var onRenderFinish = function(uri) {
-					thumb.src = uri;
+				if (!thumbCache.outOfDate) {
+					thumb.src = thumbCache.uri;
 				}
+				else {
+					// todo : what if you switch selection before the render is done?
+					var onRenderFinish = function(uri) {
+						thumb.src = uri;
+					}
 
-				var renderOptions = {};
-				if (category.getRenderOptions) {
-					renderOptions = category.getRenderOptions(category.categoryStore[id]);
+					var renderOptions = {};
+					if (category.getRenderOptions) {
+						renderOptions = category.getRenderOptions(category.categoryStore[id]);
+					}
+
+					category.thumbnailRenderer.Render(id, onRenderFinish, renderOptions);
 				}
-
-				category.thumbnailRenderer.Render(id, onRenderFinish, renderOptions);
 			}
 
 			if (options && options.onSelectChange) {
@@ -658,13 +665,20 @@ function FindTool(controls) {
 			var tempValue = select.value;
 			select.innerHTML = "";
 
+			if (hasNoneOption) {
+				var option = document.createElement("option");
+				option.value = null;
+				option.innerText = "none"; // todo : localize!
+				select.appendChild(option);
+			}
+
 			for (var id in category.categoryStore) {
 				var categoryItem = category.categoryStore[id];
 
 				// todo : stop duplicating this...
 				var isExcluded = category.idExclusionList && category.idExclusionList.indexOf(id) != -1;
 
-				if (!isExcluded && category.includedInFilter(categoryItem, [filterId])) {
+				if (!isExcluded && category.includedInFilter(categoryItem, filters)) {
 					var option = document.createElement("option");
 					option.value = id;
 					option.innerText = category.getCaption(categoryItem);
@@ -683,6 +697,7 @@ function FindTool(controls) {
 			GetElement : function() { return span; },
 			UpdateOptions : updateOptions,
 			SetSelection : updateSelection,
+			OpenTool : tryOpenTool,
 		};
 	}
 }

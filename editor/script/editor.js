@@ -413,46 +413,6 @@ function deleteDialog() {
 	}
 }
 
-// TODO : move into the paint tool
-var paintDialogWidget = null;
-function reloadDialogUI() {
-	var dialogContent = document.getElementById("dialog");
-	dialogContent.innerHTML = "";
-
-	var til = paintTool.GetCurTile();
-
-	// clean up previous widget
-	if (paintDialogWidget) {
-		paintDialogWidget.OnDestroy();
-		delete paintDialogWidget;
-	}
-
-	paintDialogWidget = dialogTool.CreateWidget(
-		"dialog",
-		"paintPanel",
-		til.dlg,
-		true,
-		function(id) {
-			til.dlg = id;
-		},
-		{
-			CreateFromEmptyTextBox: true,
-			OnCreateNewDialog: function(id) {
-				til.dlg = id;
-				refreshGameData();
-			},
-			GetDefaultName: function() {
-				var desc = paintTool.drawing.getNameOrDescription(); // todo : fix!!!
-				return CreateDefaultName(desc + " dialog", dialog, true); // todo : localize
-			}, // todo : localize
-		});
-	dialogContent.appendChild(paintDialogWidget.GetElement());
-
-	if (alwaysShowDrawingDialog && dialog[til.dlg]) {
-		events.Raise("select_dialog", { id: til.dlg, insertNextToId: null, showIfHidden: false });
-	}
-}
-
 // hacky - assumes global paintTool object
 function getCurDialogId() {
 	return paintTool.drawing.getDialogId();
@@ -1107,8 +1067,6 @@ function on_edit_mode() {
 
 	roomTool.drawEditMap();
 	roomTool.listenEditEvents();
-
-	reloadDialogUI();
 
 	updateInventoryUI();
 
@@ -2094,7 +2052,6 @@ function on_change_language_inner(language) {
 
 	localization.ChangeLanguage(language);
 	updateInventoryUI();
-	reloadDialogUI();
 	hackyUpdatePlaceholderText();
 
 	// update title in new language IF the user hasn't made any changes to the default title
@@ -2250,37 +2207,6 @@ function updateTextDirectionSelectUI() {
 		var option = textDirSelect.options[i];
 		option.selected = (option.value === textDirection);
 	}
-}
-
-/* UTILS (todo : move into utils.js after merge) */
-function CreateDefaultName(defaultNamePrefix, objectStore, ignoreNumberIfFirstName) {
-	if (ignoreNumberIfFirstName === undefined || ignoreNumberIfFirstName === null) {
-		ignoreNumberIfFirstName = false;
-	}
-
-	var nameCount = ignoreNumberIfFirstName ? -1 : 0; // hacky :(
-	for (id in objectStore) {
-		if (objectStore[id].name) {
-			if (objectStore[id].name.indexOf(defaultNamePrefix) === 0) {
-				var nameCountStr = objectStore[id].name.slice(defaultNamePrefix.length);
-
-				var nameCountInt = 0;
-				if (nameCountStr.length > 0) {
-					nameCountInt = parseInt(nameCountStr);
-				}
-
-				if (!isNaN(nameCountInt) && nameCountInt > nameCount) {
-					nameCount = nameCountInt;
-				}
-			}
-		}
-	}
-
-	if (ignoreNumberIfFirstName && nameCount < 0) {
-		return defaultNamePrefix;
-	}
-
-	return defaultNamePrefix + " " + (nameCount + 1);
 }
 
 /* DOCS */

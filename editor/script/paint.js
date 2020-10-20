@@ -231,11 +231,10 @@ function PaintTool(controls) {
 
 		// dialog UI
 		if (drawingId === "A" || tile[drawingId].type === "TIL") {
-			controls.dialogControl.setAttribute("style", "display:none;");
+			UpdateDialogControl(false);
 		}
 		else {
-			controls.dialogControl.setAttribute("style", "display:block;");
-			reloadDialogUI();
+			UpdateDialogControl(true);
 		}
 
 		if (tile[drawingId].type === "ITM") {
@@ -697,7 +696,7 @@ function PaintTool(controls) {
 						tile[drawingId].lockItem = id;
 						refreshGameData();
 					},
-					filterId : "item",
+					filters : ["item"],
 					toolId : "paintPanel",
 					getSelectMessage : function() {
 						// todo : localize
@@ -765,6 +764,23 @@ function PaintTool(controls) {
 				}
 			}
 		}
+	}
+
+	var dialogControl = null;
+	function UpdateDialogControl(isVisible) {
+		controls.dialogControl.style.display = isVisible ? "block" : "none";
+
+		if (!dialogControl) {
+			dialogControl = new DialogControl("paintPanel");
+			controls.dialogControl.appendChild(dialogControl.GetElement());
+		}
+
+		dialogControl.SetDrawing(drawingId);
+
+		// todo : refactor?
+		// if (alwaysShowDrawingDialog && dialog[til.dlg]) {
+		// 	events.Raise("select_dialog", { id: til.dlg, insertNextToId: null, showIfHidden: false });
+		// }
 	}
 
 	events.Listen("change_room_palette", function(event) {

@@ -1656,14 +1656,14 @@ function serializeWorld(skipFonts) {
 		if (type != "TIL" && tile[id].dlg != null) {
 			worldStr += "DLG " + tile[id].dlg + "\n";
 		}
-		if (type != "TIL" && tile[id].stp != null) {
-			worldStr += "STP " + tile[id].stp + "\n";
+		if (type != "TIL" && tile[id].tickDlgId != null) {
+			worldStr += "TIK " + tile[id].tickDlgId + "\n";
 		}
-		if (type != "TIL" && tile[id].key != null) {
-			worldStr += "KEY " + tile[id].key + "\n";
+		if (type != "TIL" && tile[id].knockDlgId != null) {
+			worldStr += "NOK " + tile[id].knockDlgId + "\n";
 		}
-		if (type != "TIL" && tile[id].hit != null) {
-			worldStr += "HIT " + tile[id].hit + "\n";
+		if (type != "TIL" && tile[id].buttonDownDlgId != null) {
+			worldStr += "BTN " + tile[id].buttonDownDlgId + "\n";
 		}
 		if (type === "SPR" && id === playerId && tile[id].inventory != null) {
 			for (itemId in tile[id].inventory) {
@@ -2087,9 +2087,9 @@ function createTile(id, type, options) {
 			frameCount : renderer.GetFrameCount(drwId),
 		},
 		dlg: valueOrDefault(options.dlg, null), // dialog ID (NOTE: tiles don't use this)
-		stp: valueOrDefault(options.stp, null),
-		key: valueOrDefault(options.key, null),
-		hit: valueOrDefault(options.hit, null),
+		tickDlgId: valueOrDefault(options.tickDlgId, null),
+		knockDlgId: valueOrDefault(options.knockDlgId, null),
+		buttonDownDlgId: valueOrDefault(options.buttonDownDlgId, null),
 		inventory : inventory, // starting inventory (player only)
 		isWall : isWall, // wall tile? (tile only)
 		isUnique : isUnique, // only one instance allowed? (player only)
@@ -2143,14 +2143,17 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === "DLG" && type != "TIL") {
 			options.dlg = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "STP" && type != "TIL") {
-			options.stp = getId(lines[i]);
+		else if (getType(lines[i]) === "TIK" && type != "TIL") {
+			options.tickDlgId = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "KEY" && type != "TIL") {
-			options.key = getId(lines[i]);
+		else if (getType(lines[i]) === "NOK" && type != "TIL") {
+			options.knockDlgId = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "HIT" && type != "TIL") {
-			options.hit = getId(lines[i]);
+		else if (getType(lines[i]) === "BTN" && type != "TIL") { // todo : name ok? or: BND? BTD? BDN?
+			options.buttonDownDlgId = getId(lines[i]);
+		}
+		else if (getType(lines[i]) === "BUP" && type != "TIL") {
+			// todo ... "BUTTON UP"
 		}
 		else if (getType(lines[i]) === "POS" && type === "SPR") {
 			/* STARTING POSITION */
@@ -2237,6 +2240,15 @@ function parseDrawing(lines, i) {
 	return { i:i, drawingData:frameList };
 }
 
+// todo : name of function?
+function createScript(id, name, script) {
+	return {
+		id : id,
+		name : name,
+		src : script,
+	};
+}
+
 function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 	var id = getId(lines[i]);
 	id = backCompatPrefix + id;
@@ -2279,11 +2291,7 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 
 	i++;
 
-	dialog[id] = {
-		id: id,
-		src: script,
-		name: null,
-	};
+	dialog[id] = createScript(id, null, script);
 
 	if (compatibilityFlags.convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
