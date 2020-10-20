@@ -56,13 +56,30 @@ function DialogControl(parentPanelId) {
 				id: selectedDialogId(),
 				insertNextToId: parentPanelId,
 			});
+
+		showPanel("dialogPanel", parentPanelId);
 	};
 	controlDiv.appendChild(openButton);
 
 	var editorDiv = document.createElement("div");
 	editorDiv.style.display = "flex";
 	editorDiv.style.marginTop = "5px";
+	editorDiv.classList.add("dialogBoxContainer");
 	div.appendChild(editorDiv);
+
+	// todo : improve styling of this
+	var textArea = document.createElement("textarea");
+	textArea.cols = 32;
+	textArea.rows = 2;
+	textArea.oninput = function(e) {
+		// todo : delete empty dialogs?
+		var curDlgId = selectedDialogId();
+		if (curDlgId != null) {
+			// todo : ADD wrapping dialog block for multiline scripts
+			dialog[curDlgId].src = e.target.value;
+		}
+	}
+	editorDiv.appendChild(textArea);
 
 	var dialogIdSelectRoot = document.createElement("div");
 	dialogIdSelectRoot.style.display = "none";
@@ -118,6 +135,12 @@ function DialogControl(parentPanelId) {
 	function setSelectedEvent(id) {
 		curEventId = id;
 		labelTextSpan.innerText = dialogEventTypes[curEventId].name;
+
+		// todo : strip off the outer dialog block stuff
+		var curDlgId = selectedDialogId();
+		if (curDlgId != null) {
+			textArea.value = dialog[curDlgId].src;
+		}
 	}
 
 	function UpdateDialogIdSelectOptions() {

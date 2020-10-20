@@ -577,19 +577,19 @@ function updateInput() {
 		function tryMovePlayer(direction) {
 			if (player().key != null) {
 				queueScript(
-					player().key,
+					player().btn,
 					player(),
 					function(result) {
 						if (result != false) {
 							movePlayer(direction);
 						}
-						queueKeyDownScripts(direction);
+						queueButtonDownScripts(direction);
 					},
 					[directionToKeyName(direction)]);
 			}
 			else {
 				movePlayer(direction);
-				queueKeyDownScripts(direction);
+				queueButtonDownScripts(direction);
 			}
 		}
 
@@ -629,8 +629,8 @@ function updateScriptQueue() {
 		if (animationCounter === 0) {
 			for (var i in spriteInstances) {
 				var spr = spriteInstances[i];
-				if (spr.stp != null) {
-					queueScript(spr.stp, spr, function() {});
+				if (spr.tik != null) {
+					queueScript(spr.tik, spr, function() {});
 				}
 			}
 		}
@@ -1019,11 +1019,11 @@ function movePlayer(direction) {
 	return !result.collision;
 }
 
-function queueKeyDownScripts(direction) {
+function queueButtonDownScripts(direction) {
 	for (var i in spriteInstances) {
 		var spr = spriteInstances[i];
 		if (spr.key != null && (spr.key in dialog)) {
-			queueScript(spr.key, spr, function() {}, [directionToKeyName(direction)]);
+			queueScript(spr.btn, spr, function() {}, [directionToKeyName(direction)]);
 		}
 	}
 }
@@ -1044,12 +1044,12 @@ function move(instance, direction, canEnterNeighborRoom) {
 		// queue collision scripts
 		// TODO : should these go at the back of the line or the front?
 
-		if (dialog[instance.hit]) {
-			queueScript(instance.hit, instance, function() {}, [other]);
+		if (dialog[instance.nok]) {
+			queueScript(instance.nok, instance, function() {}, [other]);
 		}
 
-		if (spr != null && dialog[spr.hit]) {
-			queueScript(spr.hit, spr, function() {}, [instance]);
+		if (spr != null && dialog[spr.nok]) {
+			queueScript(spr.nok, spr, function() {}, [instance]);
 		}
 	}
 	else {
@@ -1199,9 +1199,9 @@ function createSpriteInstance(instanceId, location) {
 	instance.SetSecret("instanceId", instanceId);
 	instance.SetSecret("isValid", true); // todo : actually use this..
 	instance.SetSecret("dlg", definition.dlg); // todo : longer names for private entries?
-	instance.SetSecret("stp", definition.stp);
-	instance.SetSecret("key", definition.key);
-	instance.SetSecret("hit", definition.hit);
+	instance.SetSecret("tik", definition.tickDlgId);
+	instance.SetSecret("nok", definition.knockDlgId);
+	instance.SetSecret("btn", definition.buttonDownDlgId);
 	instance.SetSecret("transition_effect", definition.transition_effect); // exit only
 	instance.SetSecret("dest", definition.dest); // exit only // todo : rename "out"?
 	instance.SetSecret("lockCondition", definition.lock); // exit & ending only (todo : rename definition field?)
