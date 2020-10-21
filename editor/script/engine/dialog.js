@@ -49,19 +49,25 @@ var DialogRenderer = function() {
 	};
 
 	this.ClearTextbox = function() {
-		if(context == null) return;
+		if (context == null) {
+			return;
+		}
 
 		//create new image none exists
-		if(textboxInfo.img == null)
-			textboxInfo.img = context.createImageData(textboxInfo.width*scale, textboxInfo.height*scale);
+		if (textboxInfo.img == null) {
+			textboxInfo.img = context.createImageData(
+				textboxInfo.width * scale,
+				textboxInfo.height * scale);
+		}
 
-		// fill text box with black
-		for (var i=0;i<textboxInfo.img.data.length;i+=4)
-		{
-			textboxInfo.img.data[i+0]=0;
-			textboxInfo.img.data[i+1]=0;
-			textboxInfo.img.data[i+2]=0;
-			textboxInfo.img.data[i+3]=255;
+		var textboxColor = color.GetColor(COLOR_INDEX.TEXTBOX);
+
+		// fill text box with background color
+		for (var i = 0; i < textboxInfo.img.data.length; i += 4) {
+			textboxInfo.img.data[i + 0] = textboxColor[0];
+			textboxInfo.img.data[i + 1] = textboxColor[1];
+			textboxInfo.img.data[i + 2] = textboxColor[2];
+			textboxInfo.img.data[i + 3] = textboxColor[3];
 		}
 	};
 
@@ -140,6 +146,8 @@ var DialogRenderer = function() {
 	}
 
 	function drawTextboxIcon(imgData, top, left) {
+		var textColor = color.GetColor(COLOR_INDEX.TEXT);
+
 		for (var y = 0; y < 3; y++) {
 			for (var x = 0; x < 5; x++) {
 				var i = (y * 5) + x;
@@ -148,10 +156,13 @@ var DialogRenderer = function() {
 					for (var sy = 0; sy < scale; sy++) {
 						for (var sx = 0; sx < scale; sx++) {
 							var pxl = 4 * ( ((top+(y*scale)+sy) * (textboxInfo.width*scale)) + (left+(x*scale)+sx) );
-							textboxInfo.img.data[pxl+0] = 255;
-							textboxInfo.img.data[pxl+1] = 255;
-							textboxInfo.img.data[pxl+2] = 255;
-							textboxInfo.img.data[pxl+3] = 255;
+
+							if (textColor[3] > 0) {
+								textboxInfo.img.data[pxl + 0] = textColor[0];
+								textboxInfo.img.data[pxl + 1] = textColor[1];
+								textboxInfo.img.data[pxl + 2] = textColor[2];
+								textboxInfo.img.data[pxl + 3] = 255;
+							}
 						}
 					}
 				}
@@ -176,20 +187,22 @@ var DialogRenderer = function() {
 
 		var debug_r = Math.random() * 255;
 
+		var charColor = color.GetColor(char.color);
+
 		for (var y = 0; y < char.height; y++) {
 			for (var x = 0; x < char.width; x++) {
 
 				var i = (y * char.width) + x;
-				if ( charData[i] == 1 ) {
+				if (charData[i] == 1 && charColor[3] > 0) {
 
 					//scaling nonsense
 					for (var sy = 0; sy < text_scale; sy++) {
 						for (var sx = 0; sx < text_scale; sx++) {
 							var pxl = 4 * ( ((top+(y*text_scale)+sy) * (textboxInfo.width*scale)) + (left+(x*text_scale)+sx) );
-							textboxInfo.img.data[pxl+0] = char.color.r;
-							textboxInfo.img.data[pxl+1] = char.color.g;
-							textboxInfo.img.data[pxl+2] = char.color.b;
-							textboxInfo.img.data[pxl+3] = char.color.a;
+							textboxInfo.img.data[pxl + 0] = charColor[0];
+							textboxInfo.img.data[pxl + 1] = charColor[1];
+							textboxInfo.img.data[pxl + 2] = charColor[2];
+							textboxInfo.img.data[pxl + 3] = 255;
 						}
 					}
 				}
@@ -536,7 +549,7 @@ var DialogBuffer = function() {
 	function DialogChar(effectList) {
 		this.effectList = effectList.slice(); // clone effect list (since it can change between chars)
 
-		this.color = { r:255, g:255, b:255, a:255 };
+		this.color = COLOR_INDEX.TEXT;
 		this.offset = { x:0, y:0 }; // in pixels (screen pixels?)
 
 		this.col = 0;
@@ -974,17 +987,9 @@ var TextEffects = new Map();
 
 var RainbowEffect = function() {
 	this.DoEffect = function(char, time) {
-		// console.log("RAINBOW!!!");
-		// console.log(char);
-		// console.log(char.color);
-		// console.log(char.col);
-
-		var h = Math.abs( Math.sin( (time / 600) - (char.col / 8) ) );
-		var rgb = hslToRgb( h, 1, 0.5 );
-		char.color.r = rgb[0];
-		char.color.g = rgb[1];
-		char.color.b = rgb[2];
-		char.color.a = 255;
+		var startIndex = COLOR_INDEX.RAINBOW_START;
+		var len = (COLOR_INDEX.RAINBOW_END - COLOR_INDEX.RAINBOW_START) + 1;
+		char.color = startIndex + (char.col % len);
 	}
 };
 TextEffects["RBW"] = new RainbowEffect();
@@ -992,13 +997,7 @@ TextEffects["RBW"] = new RainbowEffect();
 var ColorEffect = function() {
 	this.DoEffect = function(char, time, parameters) {
 		var index = parameters[0];
-		var pal = getPal(curPal());
-		var color = pal[parseInt(index)];
-		// console.log(color);
-		char.color.r = color[0];
-		char.color.g = color[1];
-		char.color.b = color[2];
-		char.color.a = 255;
+		char.color = COLOR_INDEX.BACKGROUND + index;
 	}
 };
 TextEffects["CLR"] = new ColorEffect();
@@ -1036,6 +1035,7 @@ TextEffects["SHK"] = new ShakyEffect();
   - use input and output? or properties for char?
   - need a special environment to avoid things like dialog and exits
   - is this the name I want?
+  // TODO : redo this!
 */
 var CustomEffect = function() {
 	this.DoEffect = function(char, time, parameters) {
@@ -1057,12 +1057,10 @@ var CustomEffect = function() {
 };
 TextEffects["TFX"] = new CustomEffect();
 
+// todo : do I still need this?
 var DebugHighlightEffect = function() {
 	this.DoEffect = function(char) {
-		char.color.r = 255;
-		char.color.g = 255;
-		char.color.b = 0;
-		char.color.a = 255;
+		char.color = COLOR_INDEX.RAINBOW_START;
 	}
 }
 TextEffects["_debug_highlight"] = new DebugHighlightEffect();

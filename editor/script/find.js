@@ -265,7 +265,6 @@ function FindTool(controls) {
 		changeNameEventId: "change_palette_name",
 		refreshThumbEventIdList: ["palette_change"],
 		thumbnailRenderer: CreatePaletteThumbnailRenderer(),
-		idExclusionList: ["default"],
 	});
 
 	AddCategory({

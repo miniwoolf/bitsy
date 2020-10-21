@@ -340,7 +340,13 @@ function PaintTool(controls) {
 
 	function NewDrawing(type, imageData) {
 		var nextId = nextObjectId(sortedBase36IdList(tile)); // TODO : helper function?
-		createTile(nextId, type, { drawingData:imageData });
+
+		var tileOptions = {
+			drawingData: imageData,
+			destRoom: type === "EXT" ? "0" : null, // what if there's no room "0"?
+		};
+
+		createTile(nextId, type, tileOptions);
 		refreshGameData();
 
 		events.Raise("add_drawing", { id: nextId });

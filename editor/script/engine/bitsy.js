@@ -61,17 +61,7 @@ var palette = {};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
 
-function initPalettes() {
-	palette = { //start off with a default palette
-		"default" : {
-			id : "default",
-			name : "default",
-			colors : [[0,0,0],[255,255,255],[255,255,255]],
-		},
-	};
-}
-initPalettes();
-var curPalId = "default";
+var curPalId = null;
 
 // Instances
 var spriteInstances = {};
@@ -153,8 +143,6 @@ function clearGameData() {
 	palette = {};
 	isEnding = false; //todo - correct place for this?
 	variable = {};
-
-	initPalettes();
 
 	// TODO RENDERER : clear data?
 
@@ -482,9 +470,12 @@ function update() {
 }
 
 function updateRender() {
+	updateColorCycle();
+
 	// clear the screen!
-	ctx.fillStyle = "rgb(" + getPal(curPalId)[0][0] + "," + getPal(curPalId)[0][1] + "," + getPal(curPalId)[0][2] + ")";
-	ctx.fillRect(0,0,canvas.width,canvas.height);
+	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
+	ctx.fillStyle = "rgb(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 	if (transition.IsTransitionActive()) {
 		// transitions take over everything!
@@ -697,6 +688,17 @@ function updateAnimation() {
 		// reset counter
 		animationCounter = 0;
 
+	}
+}
+
+var colorCycleCounter = 0;
+var colorCycleTime = 100; // todo : is this the speed I want?
+function updateColorCycle() {
+	colorCycleCounter += deltaTime;
+
+	if (colorCycleCounter >= colorCycleTime) {
+		color.Cycle();
+		colorCycleCounter = 0;
 	}
 }
 
@@ -1106,7 +1108,9 @@ function updateLockState(spr) {
 	}
 }
 
+// todo : is this the best place to init these modules?
 var transition = new TransitionManager();
+var color = new Color();
 
 function movePlayerThroughExit(ext) {
 	var GoToDest = function() {
@@ -1166,7 +1170,9 @@ function initRoom(roomId) {
 
 	nextInstanceId++;
 
+	// todo : remove curPalId?
 	curPalId = room[roomId].pal;
+	color.LoadPalette(palette[curPalId]);
 }
 
 function createSpriteLocation(id, x, y) {
@@ -1348,7 +1354,7 @@ function player() {
 // Sort of a hack for legacy palette code (when it was just an array)
 function getPal(id) {
 	if (palette[id] === undefined) {
-		id = "default";
+		return []; // is this going to break things?
 	}
 
 	return palette[ id ].colors;
@@ -1527,19 +1533,17 @@ function serializeWorld(skipFonts) {
 	}
 	/* PALETTE */
 	for (id in palette) {
-		if (id != "default") {
-			worldStr += "PAL " + id + "\n";
-			if( palette[id].name != null )
-				worldStr += "NAME " + palette[id].name + "\n";
-			for (i in getPal(id)) {
-				for (j in getPal(id)[i]) {
-					worldStr += getPal(id)[i][j];
-					if (j < 2) worldStr += ",";
-				}
-				worldStr += "\n";
+		worldStr += "PAL " + id + "\n";
+		if( palette[id].name != null )
+			worldStr += "NAME " + palette[id].name + "\n";
+		for (i in getPal(id)) {
+			for (j in getPal(id)[i]) {
+				worldStr += getPal(id)[i][j];
+				if (j < 2) worldStr += ",";
 			}
 			worldStr += "\n";
 		}
+		worldStr += "\n";
 	}
 	/* ROOM */
 	for (id in room) {
@@ -1595,7 +1599,7 @@ function serializeWorld(skipFonts) {
 				}
 			}
 		}
-		if (room[id].pal != null && room[id].pal != "default") {
+		if (room[id].pal != null) {
 			/* PALETTE */
 			worldStr += "PAL " + room[id].pal + "\n";
 		}
@@ -1995,11 +1999,22 @@ function parseRoom(lines, i, compatibilityFlags) {
 	return i;
 }
 
-function parsePalette(lines,i) { //todo this has to go first right now :(
+function createPalette(id, name, colors) {
+	return {
+		id : id,
+		name : name,
+		colors : colors,
+		indexOffset : COLOR_INDEX.BACKGROUND,
+	};
+}
+
+function parsePalette(lines, i) { //todo this has to go first right now :(
 	var id = getId(lines[i]);
 	i++;
+
 	var colors = [];
 	var name = null;
+
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		var args = lines[i].split(" ");
 		if (args[0] === "NAME") {
@@ -2012,13 +2027,12 @@ function parsePalette(lines,i) { //todo this has to go first right now :(
 			});
 			colors.push(col);
 		}
+
 		i++;
 	}
-	palette[id] = {
-		id : id,
-		name : name,
-		colors : colors
-	};
+
+	palette[id] = createPalette(id, name, colors);
+
 	return i;
 }
 
@@ -2392,15 +2406,18 @@ function drawRoom(room, options) {
 	var context = getOptionOrDefault("context", ctx);
 	var frameIndex = getOptionOrDefault("frameIndex", null);
 	var drawInstances = getOptionOrDefault("drawInstances", true);
-	var paletteId = getOptionOrDefault("palId", curPalId);
 
-	if (paletteId === null || (!paletteId in palette)) {
-		paletteId = "default";
+	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
+
+	// todo : currently this is my hacky way of keeping rendering working in the editor...
+	if (options && options.palId) {
+		backgroundColor = getPal(options.palId)[0];
 	}
 
-	//clear screen
-	context.fillStyle = "rgb(" + getPal(paletteId)[0][0] + "," + getPal(paletteId)[0][1] + "," + getPal(paletteId)[0][2] + ")";
-	context.fillRect(0,0,canvas.width,canvas.height);
+	// todo : why are we doing this twice per frame?
+	// clear screen
+	context.fillStyle = "rgb(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
+	context.fillRect(0, 0, canvas.width, canvas.height);
 
 	if (room === undefined && room === null) {
 		// protect against invalid rooms
@@ -2419,7 +2436,8 @@ function drawRoom(room, options) {
 				}
 				else {
 					// console.log(id);
-					drawTile(renderer.GetImage(tile[id], paletteId, frameIndex), j, i, context);
+					// todo : FIX THE PALETTE INDEX STUFF!
+					drawTile(renderer.GetImage(tile[id], "0", frameIndex), j, i, context);
 				}
 			}
 		}
@@ -2429,7 +2447,7 @@ function drawRoom(room, options) {
 		// draw sprite instances
 		for (var id in spriteInstances) {
 			var instance = spriteInstances[id];
-			var img = renderer.GetImage(instance, paletteId, frameIndex);
+			var img = renderer.GetImage(instance, "0", frameIndex);
 			drawTile(img, instance.x, instance.y, context);
 		}
 	}
@@ -2438,14 +2456,14 @@ function drawRoom(room, options) {
 		for (var i = 0; i < room.sprites.length; i++) {
 			var location = room.sprites[i];
 			var definition = tile[location.id];
-			var img = renderer.GetImage(definition, paletteId, frameIndex);
+			var img = renderer.GetImage(definition, "0", frameIndex);
 			drawTile(img, location.x, location.y, context);
 		}
 	}
 }
 
 function getRoomPal(roomId) {
-	var defaultId = "default";
+	var defaultId = null; // todo : refactor to simplify this?
 
 	if (roomId == null) {
 		return defaultId;

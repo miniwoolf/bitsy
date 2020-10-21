@@ -1,3 +1,83 @@
+var COLOR_INDEX = {
+	TEXTBOX : 0,
+	TEXT : 1,
+	RAINBOW_START : 2,
+	RAINBOW_END : 11,
+	TRANSPARENT : 12,
+	BACKGROUND : 13,
+	TILE : 14,
+	SPRITE : 15,
+};
+
+function Color() {
+	// active palette colors
+	var palette = [];
+	var paletteSize = 16;
+
+	var colorCycleOffset = 0;
+	var colorCycleMin = 2;
+	var colorCycleLen = 10;
+
+	// set palette to default colors
+	function ResetPalette() {
+		palette = [];
+
+		// text box colors
+		palette.push([0,0,0,255]);
+		palette.push([255,255,255,255]);
+
+		// rainbow colors
+		for (var i = 0; i < colorCycleLen; i++) {
+			var h = (i / colorCycleLen);
+			var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
+			palette.push(rbwColor);
+		}
+
+		// transparent
+		palette.push([0,0,0,0]);
+
+		// default tile colors
+		palette.push([0,0,0,255]);
+		palette.push([255,255,255,255]);
+		palette.push([255,255,255,255]);
+	}
+
+	this.LoadPalette = function(pal) {
+		ResetPalette();
+
+		if (pal != undefined && pal != null) {
+			for (var i = 0; i < pal.colors.length; i++) {
+				var index = (i + pal.indexOffset) % paletteSize;
+				var alpha = (index === COLOR_INDEX.TRANSPARENT) ? 0 : 255;
+				palette[index] = pal.colors[i].concat([alpha]);
+			}
+		}
+	};
+
+	this.GetColor = function(index) {
+		if (index >= colorCycleMin && index < (colorCycleMin + colorCycleLen)) {
+			index -= colorCycleMin;
+			index = (index + colorCycleOffset) % colorCycleLen;
+			index += colorCycleMin;
+		}
+
+		// todo : handle index out of bounds?
+
+		return palette[index];
+	};
+
+	this.Cycle = function() {
+		colorCycleOffset--;
+
+		if (colorCycleOffset < 0) {
+			colorCycleOffset = colorCycleLen - 1;
+		}
+	}
+
+	ResetPalette();
+}
+
+// TODO : put these loose functions in the color module
 //hex-to-rgb method borrowed from stack overflow
 function hexToRgb(hex) {
 	// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")

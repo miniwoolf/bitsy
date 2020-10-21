@@ -436,7 +436,7 @@ function newRoom() {
 	var roomId = nextRoomId();
 
 	var palIdList = sortedPaletteIdList();
-	var palId = palIdList.length > 0 ? palIdList[0] : "default";
+	var palId = palIdList.length > 0 ? palIdList[0] : null;
 
 	room[roomId] = createRoom(roomId, palId);
 	refreshGameData();

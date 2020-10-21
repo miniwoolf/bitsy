@@ -14,8 +14,8 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 		// update name field
 		var palettePlaceholderName = localization.GetStringOrFallback("palette_label", "palette");
 		document.getElementById(nameFieldId).placeholder = palettePlaceholderName + " " + GetSelectedId();
-		var name = palette[ GetSelectedId() ].name;
-		if( name ) {
+		var pal = palette[GetSelectedId()];
+		if (pal && pal.name) {
 			document.getElementById(nameFieldId).value = name;
 		}
 		else {
@@ -27,12 +27,12 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 
 	events.Listen("game_data_change", function(event) {
 		// make sure we have valid palette id
-		if (palette[curPaletteId] === undefined || curPaletteId === "default") {
+		if (palette[curPaletteId] === undefined) {
 			if (sortedPaletteIdList().length > 0) {
 				curPaletteId = sortedPaletteIdList()[0];
 			}
 			else {
-				curPaletteId = "default";
+				curPaletteId = null;
 			}
 		}
 
@@ -115,15 +115,12 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 		// create new palette and save the data
 		var id = nextPaletteId();
 
-		// todo : need a shared create method in the engine!
-		palette[ id ] = {
-			id: id,
-			name : null,
-			colors : [
+		var randomColors = [
 			hslToRgb(Math.random(), 1.0, 0.5),
 			hslToRgb(Math.random(), 1.0, 0.5),
-			hslToRgb(Math.random(), 1.0, 0.5) ],
-		};
+			hslToRgb(Math.random(), 1.0, 0.5) ];
+
+		palette[id] = createPalette(id, null, randomColors);
 
 		events.Raise("add_palette", { id: id });
 		events.Raise("select_palette", { id: id });
@@ -131,19 +128,17 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 	}
 
 	this.AddDuplicate = function() {
-		var sourcePalette = palette[curPaletteId] === undefined ? palette["default"] : palette[curPaletteId];
+		var sourcePalette = palette[curPaletteId] === undefined ? null : palette[curPaletteId];
 		var curColors = sourcePalette.colors;
 
 		var id = nextPaletteId();
-		palette[ id ] = {
-			id: id,
-			name : null,
-			colors : [],
-		};
+		var dupeColors = [];
 
 		for (var i = 0; i < curColors.length; i++) {
-			palette[id].colors.push(curColors[i].slice());
+			dupeColors.push(curColors[i].slice());
 		}
+
+		palette[id] = createPalette(id, null, dupeColors);
 
 		events.Raise("add_palette", { id: id });
 		events.Raise("select_palette", { id: id });
@@ -176,28 +171,26 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 	}
 
 	function GetSelectedId() {
-		if (sortedPaletteIdList().length <= 0) {
-			return "default";
-		}
-		else {
-			return curPaletteId;
-		}
+		return curPaletteId;
 	}
 	this.GetSelectedId = GetSelectedId;
 
 	this.ChangeSelectedPaletteName = function(name) {
 		var pal = palette[ GetSelectedId() ];
-		if(name.length > 0) {
-			pal.name = name;
-		}
-		else {
-			pal.name = null;
-		}
 
-		updateNamesFromCurData() // TODO ... this should really be an event?
+		if (pal) {
+			if(name.length > 0) {
+				pal.name = name;
+			}
+			else {
+				pal.name = null;
+			}
 
-		events.Raise("change_palette_name", { id: pal.id, name: pal.name });
-		events.Raise("palette_list_change");
+			updateNamesFromCurData() // TODO ... this should really be an event?
+
+			events.Raise("change_palette_name", { id: pal.id, name: pal.name });
+			events.Raise("palette_list_change");
+		}
 	}
 
 	// init yourself

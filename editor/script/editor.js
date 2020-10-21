@@ -72,9 +72,9 @@ function sortedDialogIdList() {
 	return sortedBase36IdList(keyObj);
 }
 
+// todo : do I still need this?
 function sortedPaletteIdList() {
 	var keyList = Object.keys(palette);
-	keyList.splice(keyList.indexOf("default"), 1);
 	var keyObj = {};
 	for (var i = 0; i < keyList.length; i++) {
 		keyObj[keyList[i]] = {};
