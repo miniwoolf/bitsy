@@ -784,7 +784,7 @@ function CreateDrawingThumbnailRenderer() {
 
 		for (var i = 0; i < til.animation.frameCount; i++) {
 			if (options.isAnimated || options.frameIndex === i) {
-				drawTile(renderer.GetImage(til, palId, i), 0, 0, ctx);
+				drawTile(renderer.GetRenderedTile(til, i), 0, 0, ctx);
 				drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
 			}
 		}

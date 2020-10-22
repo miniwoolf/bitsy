@@ -72,6 +72,14 @@ function MapTool(controls) {
 		var colors = palette[palId].colors;
 
 		function hexFromPal(i) {
+			// todo : is this the best way to handle this?
+			if (i < 0) {
+				i = 0;
+			}
+			else if (i >= colors.length) {
+				i = colors.length - 1;
+			}
+
 			return rgbToHex(colors[i][0], colors[i][1], colors[i][2])
 		}
 

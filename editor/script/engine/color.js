@@ -54,16 +54,21 @@ function Color() {
 		}
 	};
 
-	this.GetColor = function(index) {
+	function GetColorIndex(index) {
+		// todo : handle index out of bounds?
+
 		if (index >= colorCycleMin && index < (colorCycleMin + colorCycleLen)) {
 			index -= colorCycleMin;
 			index = (index + colorCycleOffset) % colorCycleLen;
 			index += colorCycleMin;
 		}
 
-		// todo : handle index out of bounds?
+		return index;
+	}
+	this.GetColorIndex = GetColorIndex;
 
-		return palette[index];
+	this.GetColor = function(index) {
+		return palette[GetColorIndex(index)];
 	};
 
 	this.Cycle = function() {

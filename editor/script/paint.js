@@ -87,7 +87,7 @@ function PaintTool(controls) {
 			refreshGameData();
 
 			// hacky way to force drawing to re-render
-			renderer.SetImageSource(getRenderId(), getImageSource());
+			renderer.SetTileSource(getRenderId(), getTileSource());
 
 			events.Raise("change_drawing", { id: drawingId });
 
@@ -139,14 +139,15 @@ function PaintTool(controls) {
 	}
 
 	this.UpdateCanvas = function() {
+		var backgroundColor = color.GetColor(tile[drawingId].colorOffset + tile[drawingId].bgc);
+		var foregroundColor = color.GetColor(tile[drawingId].colorOffset + tile[drawingId].col);
+
 		//background
-		ctx.fillStyle = "rgb("+getPal(curPal())[0][0]+","+getPal(curPal())[0][1]+","+getPal(curPal())[0][2]+")";
+		ctx.fillStyle = "rgb("+ backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
 		ctx.fillRect(0, 0, controls.canvas.width, controls.canvas.height);
 
 		//pixel color
-		var colorIndex = tile[drawingId].col;
-		var color = getPal(curPal())[colorIndex];
-		ctx.fillStyle = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
+		ctx.fillStyle = "rgb(" + foregroundColor[0] + "," + foregroundColor[1] + "," + foregroundColor[2] + ")";
 
 		//draw pixels
 		for (var x = 0; x < 8; x++) {
@@ -177,12 +178,12 @@ function PaintTool(controls) {
 		}
 	}
 
-	function getImageSource() {
-		return renderer.GetImageSource(tile[drawingId].drw);
+	function getTileSource() {
+		return renderer.GetTileSource(tile[drawingId].drw);
 	}
 
 	function getFrameData(frameIndex) {
-		return getImageSource()[frameIndex];
+		return getTileSource()[frameIndex];
 	}
 
 	function getRenderId() {
@@ -425,7 +426,7 @@ function PaintTool(controls) {
 	};
 
 	function DuplicateDrawing() {
-		var sourceImageData = renderer.GetImageSource(getRenderId());
+		var sourceImageData = renderer.GetTileSource(getRenderId());
 
 		var type = tile[drawingId].type;
 
@@ -544,17 +545,17 @@ function PaintTool(controls) {
 
 	// let's us restore the animation during the session if the user wants it back
 	function cacheDrawingAnimation(drawing, sourceId) {
-		var imageSource = renderer.GetImageSource(sourceId);
+		var imageSource = renderer.GetTileSource(sourceId);
 		var oldImageData = imageSource.slice(0);
 		drawing.cachedAnimation = [ oldImageData[1] ]; // ah the joys of javascript
 	}
 
 	function restoreDrawingAnimation(sourceId, cachedAnimation) {
-		var imageSource = renderer.GetImageSource(sourceId);
+		var imageSource = renderer.GetTileSource(sourceId);
 		for (f in cachedAnimation) {
 			imageSource.push( cachedAnimation[f] );
 		}
-		renderer.SetImageSource(sourceId, imageSource);
+		renderer.SetTileSource(sourceId, imageSource);
 	}
 
 	/* NAVIGATION */
@@ -831,7 +832,7 @@ function AnimationControl(onSelectFrame, controls) {
 	function addNewFrameToDrawing() {
 		// copy last frame data into new frame
 		var prevFrameIndex = tile[drawingId].animation.frameCount - 1;
-		var imageSource = renderer.GetImageSource(drawingId);
+		var imageSource = renderer.GetTileSource(drawingId);
 		var prevFrame = imageSource[prevFrameIndex];
 		var newFrame = [];
 		for (var y = 0; y < tilesize; y++) {
@@ -841,7 +842,7 @@ function AnimationControl(onSelectFrame, controls) {
 			}
 		}
 		imageSource.push(newFrame);
-		renderer.SetImageSource(drawingId, imageSource);
+		renderer.SetTileSource(drawingId, imageSource);
 
 		// update animation settings
 		tile[drawingId].animation.frameCount++;
@@ -873,8 +874,8 @@ function AnimationControl(onSelectFrame, controls) {
 		}
 
 		// remove last frame!
-		var imageSource = renderer.GetImageSource(drawingId);
-		renderer.SetImageSource(drawingId, imageSource.slice(0, imageSource.length - 1));
+		var imageSource = renderer.GetTileSource(drawingId);
+		renderer.SetTileSource(drawingId, imageSource.slice(0, imageSource.length - 1));
 
 		// update animation settings
 		tile[drawingId].animation.frameCount--;

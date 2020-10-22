@@ -27,7 +27,10 @@ var TransitionManager = function() {
 		}
 
 		drawRoom(room[startRoom]);
-		var startPalette = getPal(curPalId);
+
+		// todo : THIS IS BROKEN!
+		var startPalette = getPal(room[startRoom].pal);
+
 		var startImage = new PostProcessImage( ctx.getImageData(0,0,canvas.width,canvas.height) ); // TODO : don't use global ctx?
 		transitionStart = new TransitionInfo(startImage, startPalette, startX, startY);
 
@@ -43,7 +46,10 @@ var TransitionManager = function() {
 		onInitNextRoom(endRoom);
 
 		drawRoom(room[endRoom]);
-		var endPalette = getPal(curPalId);
+
+		// todo : THIS IS BROKEN!
+		var endPalette = getPal(room[endRoom].pal);
+
 		var endImage = new PostProcessImage( ctx.getImageData(0,0,canvas.width,canvas.height) );
 		transitionEnd = new TransitionInfo(endImage, endPalette, endX, endY);
 

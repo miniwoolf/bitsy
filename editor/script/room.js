@@ -195,18 +195,11 @@ function RoomTool(canvas) {
 		canvas.addEventListener("touchmove", onTouchMove);
 		canvas.addEventListener("touchend", onTouchEnd);
 
-		mapEditAnimationLoop =
-			setInterval( function() {
-				if (!isPlayMode) {
-					animationCounter = animationTime + 1; // hack
-					updateAnimation();
-					self.drawEditMap();
-				}
-				else {
-					console.log("BLINKY BUG :(");
-					self.unlistenEditEvents(); // hacky attempt to prevent blinky bug (not sure what the real cause is)
-				}
-			}, animationTime ); // update animation in map mode
+		// todo : is this causing an animation speed up?
+		mapEditAnimationLoop = setInterval(function() {
+			renderOnlyUpdate({ drawInstances: false, });
+			self.drawEditMap();
+		});
 	}
 
 	this.unlistenEditEvents = function() {
@@ -218,13 +211,10 @@ function RoomTool(canvas) {
 		canvas.removeEventListener("touchmove", onTouchMove);
 		canvas.removeEventListener("touchend", onTouchEnd);
 
-		clearInterval( mapEditAnimationLoop );
+		clearInterval(mapEditAnimationLoop);
 	}
 
 	this.drawEditMap = function() {
-		//draw map
-		drawRoom(room[curRoom], { drawInstances: false, palId: curPal(), });
-
 		//draw grid
 		if (self.drawMapGrid) {
 			ctx.fillStyle = getContrastingColor();
@@ -269,6 +259,9 @@ function RoomTool(canvas) {
 					onSelectChange : function(id) {
 						room[curRoom].pal = id;
 						refreshGameData();
+
+						// refresh the room palette & rerender everything
+						initRoom(curRoom);
 
 						// todo : can these listen to the even instead?
 						roomTool.drawEditMap();
@@ -378,6 +371,7 @@ function selectRoom(roomId) {
 	if (nextRoomIndex != -1) {
 		roomIndex = nextRoomIndex;
 		curRoom = ids[roomIndex];
+		initRoom(curRoom);
 
 		roomTool.Update(); // todo : input id?
 		updateRoomName(); // todo : move inside of tool?

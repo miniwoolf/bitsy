@@ -61,8 +61,6 @@ var palette = {};
 var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
 var playerId = "A";
 
-var curPalId = null;
-
 // Instances
 var spriteInstances = {};
 var nextInstanceId = 0;
@@ -221,6 +219,8 @@ function load_game(game_data, startWithTitle) {
 	scriptInterpreter.ResetEnvironment(); // ensures variables are reset -- is this the best way?
 	scriptNext.Reset();
 
+	renderer.ResetRenderCache();
+
 	parseWorld(game_data);
 
 	spriteInstances[0] = createAvatarInstance();
@@ -255,6 +255,9 @@ function load_game(game_data, startWithTitle) {
 	dialogRenderer.SetFont(font);
 
 	// setInterval(updateLoadingScreen, 300); // hack test
+
+	colorCycleCounter = 0;
+	animationCounter = 0;
 
 	onready(startWithTitle);
 }
@@ -312,7 +315,7 @@ function onready(startWithTitle) {
 
 	window.onblur = input.onblur;
 
-	update_interval = setInterval(update,16);
+	update_interval = setInterval(update, 16);
 
 	if (startWithTitle) { // used by editor 
 		startTitle();
@@ -469,7 +472,7 @@ function update() {
 	input.resetTapReleased();
 }
 
-function updateRender() {
+function updateRender(renderOptions) {
 	updateColorCycle();
 
 	// clear the screen!
@@ -484,7 +487,7 @@ function updateRender() {
 	else {
 		if (!isNarrating && !isEnding) {
 			updateAnimation();
-			drawRoom(room[curRoom]);
+			drawRoom(room[curRoom], renderOptions);
 		}
 
 		if (dialogBuffer.IsActive()) {
@@ -492,6 +495,15 @@ function updateRender() {
 			dialogBuffer.Update(deltaTime);
 		}
 	}
+}
+
+function renderOnlyUpdate(renderOptions) {
+	var curTime = Date.now();
+	deltaTime = curTime - prevTime;
+
+	updateRender(renderOptions);
+
+	prevTime = curTime;
 }
 
 function updateInput() {
@@ -692,7 +704,7 @@ function updateAnimation() {
 }
 
 var colorCycleCounter = 0;
-var colorCycleTime = 100; // todo : is this the speed I want?
+var colorCycleTime = 80; // todo : is this the speed I want?
 function updateColorCycle() {
 	colorCycleCounter += deltaTime;
 
@@ -1170,9 +1182,9 @@ function initRoom(roomId) {
 
 	nextInstanceId++;
 
-	// todo : remove curPalId?
-	curPalId = room[roomId].pal;
-	color.LoadPalette(palette[curPalId]);
+	var palId = room[roomId].pal;
+	color.LoadPalette(palette[palId]);
+	renderer.ResetRenderCache();
 }
 
 function createSpriteLocation(id, x, y) {
@@ -1196,6 +1208,7 @@ function createSpriteInstance(instanceId, location) {
 	instance.Set("TYPE", definition.type, { externalKey: "type", isReadOnly: true, }); // todo : "long" names ok?
 	instance.Set("NAME", definition.name, { externalKey: "name" }); // todo : should also be read only?
 	instance.Set("DRW", definition.drw, { externalKey: "drw" });
+	instance.Set("BGC", definition.bgc, { externalKey: "bgc" });
 	instance.Set("COL", definition.col, { externalKey: "col" });
 	instance.Set("X", location.x, { externalKey: "x" });
 	instance.Set("Y", location.y, { externalKey: "y" });
@@ -1204,6 +1217,7 @@ function createSpriteInstance(instanceId, location) {
 
 	instance.SetSecret("instanceId", instanceId);
 	instance.SetSecret("isValid", true); // todo : actually use this..
+	instance.SetSecret("colorOffset", definition.colorOffset);
 	instance.SetSecret("dlg", definition.dlg); // todo : longer names for private entries?
 	instance.SetSecret("tik", definition.tickDlgId);
 	instance.SetSecret("nok", definition.knockDlgId);
@@ -1460,8 +1474,6 @@ function parseWorld(file) {
 		}
 	}
 
-	renderer.SetPalettes(palette);
-
 	scriptCompatibility(compatibilityFlags);
 
 	return versionNumber;
@@ -1646,6 +1658,10 @@ function serializeWorld(skipFonts) {
 			/* NAME */
 			worldStr += "NAME " + tile[id].name + "\n";
 		}
+		if (tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
+			/* BACKGROUND COLOR OVERRIDE */
+			worldStr += "BGC " + tile[id].bgc + "\n";
+		}
 		if (tile[id].col != null && tile[id].col != undefined) {
 			var defaultColor = type === "TIL" ? 1 : 2;
 			if (tile[id].col != defaultColor) {
@@ -1720,7 +1736,7 @@ function serializeWorld(skipFonts) {
 }
 
 function serializeDrawing(drwId) {
-	var imageSource = renderer.GetImageSource(drwId);
+	var imageSource = renderer.GetTileSource(drwId);
 	var drwStr = "";
 	for (f in imageSource) {
 		for (y in imageSource[f]) {
@@ -2072,7 +2088,7 @@ function createDrawing(id, sourceDrawingData) {
 		drawingData = copyDrawingData(sourceDrawingData);
 	}
 
-	renderer.SetImageSource(id, drawingData);
+	renderer.SetTileSource(id, drawingData);
 }
 
 // TODO : refactor so this follows pattern of other create* methods?
@@ -2094,6 +2110,8 @@ function createTile(id, type, options) {
 		type: type, // default behavior: is it a sprite, item, or tile?
 		name : valueOrDefault(options.name, null), // user-supplied name
 		drw: drwId, // drawing ID
+		colorOffset: COLOR_INDEX.BACKGROUND, // color offset start for global palette
+		bgc: valueOrDefault(options.bgc, 0), // background color index
 		col: valueOrDefault(options.col, (type === "TIL" ? 1 : 2)), // color index
 		animation : { // animation data // TODO: figure out how this works with instances
 			isAnimated : (renderer.GetFrameCount(drwId) > 1),
@@ -2143,6 +2161,10 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === "COL") {
 			/* COLOR OFFSET INDEX */
 			options.col = parseInt(getId(lines[i]));
+		}
+		else if (getType(lines[i]) === "BGC") {
+			/* BACKGROUND COLOR OFFSET INDEX */
+			options.bgc = parseInt(getId(lines[i]));
 		}
 		else if (getType(lines[i]) === "WAL" && type === "TIL") {
 			// only tiles set their initial collision mode
@@ -2409,11 +2431,6 @@ function drawRoom(room, options) {
 
 	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
 
-	// todo : currently this is my hacky way of keeping rendering working in the editor...
-	if (options && options.palId) {
-		backgroundColor = getPal(options.palId)[0];
-	}
-
 	// todo : why are we doing this twice per frame?
 	// clear screen
 	context.fillStyle = "rgb(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
@@ -2437,7 +2454,7 @@ function drawRoom(room, options) {
 				else {
 					// console.log(id);
 					// todo : FIX THE PALETTE INDEX STUFF!
-					drawTile(renderer.GetImage(tile[id], "0", frameIndex), j, i, context);
+					drawTile(renderer.GetRenderedTile(tile[id], frameIndex), j, i, context);
 				}
 			}
 		}
@@ -2447,7 +2464,7 @@ function drawRoom(room, options) {
 		// draw sprite instances
 		for (var id in spriteInstances) {
 			var instance = spriteInstances[id];
-			var img = renderer.GetImage(instance, "0", frameIndex);
+			var img = renderer.GetRenderedTile(instance, frameIndex);
 			drawTile(img, instance.x, instance.y, context);
 		}
 	}
@@ -2456,7 +2473,7 @@ function drawRoom(room, options) {
 		for (var i = 0; i < room.sprites.length; i++) {
 			var location = room.sprites[i];
 			var definition = tile[location.id];
-			var img = renderer.GetImage(definition, "0", frameIndex);
+			var img = renderer.GetRenderedTile(definition, frameIndex);
 			drawTile(img, location.x, location.y, context);
 		}
 	}

@@ -596,7 +596,7 @@ var DialogBuffer = function() {
 	function DialogDrawingChar(drawingId, effectList) {
 		Object.assign(this, new DialogChar(effectList));
 
-		var imageData = renderer.GetImageSource(drawingId)[0];
+		var imageData = renderer.GetTileSource(drawingId)[0];
 		var imageDataFlat = [];
 		for (var i = 0; i < imageData.length; i++) {
 			// console.log(imageData[i]);

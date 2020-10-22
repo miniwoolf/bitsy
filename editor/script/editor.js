@@ -1063,7 +1063,11 @@ function on_edit_mode() {
 	// TODO I should really do more to separate the editor's game-data from the engine's game-data
 	parseWorld(document.getElementById("game_data").value); //reparse world to account for any changes during gameplay
 
+	animationCounter = 0;
+	colorCycleCounter = 0;
+
 	curRoom = sortedRoomIdList()[roomIndex]; //restore current room to pre-play state
+	initRoom(curRoom);
 
 	roomTool.drawEditMap();
 	roomTool.listenEditEvents();
