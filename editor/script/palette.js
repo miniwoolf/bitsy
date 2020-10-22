@@ -3,23 +3,125 @@ TODO:
 - is PaletteTool the best name?
 - should it create its own color picker?
 */
-function PaletteTool(colorPicker,labelIds,nameFieldId) {
+
+// todo : localize
+var PaletteColorDescriptions = [
+	{ name: "textbox color", },
+	{ name: "text color", },
+	{ name: "rainbow color 1", },
+	{ name: "rainbow color 2", },
+	{ name: "rainbow color 3", },
+	{ name: "rainbow color 4", },
+	{ name: "rainbow color 5", },
+	{ name: "rainbow color 6", },
+	{ name: "rainbow color 7", },
+	{ name: "rainbow color 8", },
+	{ name: "rainbow color 9", },
+	{ name: "rainbow color 10", },
+	{ name: "transparent", },
+	{
+		name: "background color",
+		title: "pick background color",
+		icon: "room",
+	},
+	{
+		name: "tile color",
+		title: "pick tile color",
+		icon: "tile",
+	},
+	{
+		name: "sprite color",
+		title: "pick sprite color",
+		icon: "sprite",
+	},
+];
+
+function PaletteTool(colorPicker, controls) {
 	var self = this;
 
 	var colorPickerIndex = 0;
 
 	var curPaletteId = sortedPaletteIdList()[0];
 
+	controls.addButton.onclick = function() {
+		var pal = palette[GetSelectedId()];
+		var nextIndex = pal.colors.length;
+		var shiftedIndex = color.ShiftedColorIndex(nextIndex, pal.indexOffset);
+		pal.colors.push(color.GetDefaultColor(shiftedIndex).slice(0,3));
+		colorPickerIndex = nextIndex;
+		refreshGameData();
+		UpdatePaletteUI();
+	};
+
+	controls.deleteButton.onclick = function() {
+		var pal = palette[GetSelectedId()];
+		pal.colors.pop();
+		colorPickerIndex = pal.colors.length - 1;
+		refreshGameData();
+		UpdatePaletteUI();
+	};
+
+	function AppendColorSelectInput(form, index, shiftedIndex) {
+		var description = shiftedIndex < PaletteColorDescriptions.length ?
+			PaletteColorDescriptions[shiftedIndex] : null;
+
+		var colorInput = document.createElement("input");
+		colorInput.type = "radio";
+		colorInput.name = "colorPalette";
+		colorInput.id = "colorSelect_" + index;
+		form.appendChild(colorInput);
+
+		if (index === colorPickerIndex) {
+			colorInput.checked = true;
+		}
+
+		colorInput.onclick = function() {
+			changeColorPickerIndex(index);
+		};
+
+		var colorLabel = document.createElement("label");
+		colorLabel.setAttribute("for", colorInput.id);
+		form.appendChild(colorLabel);
+
+		if (description && description.title) {
+			colorLabel.title = description.title;
+		}
+
+		var iconSpan = iconUtils.CreateIcon(description && description.icon ? description.icon : "colors");
+		iconSpan.classList.add("icon_space_right");
+		colorLabel.appendChild(iconSpan);
+
+		var textSpan = document.createElement("span");
+		textSpan.innerText = description ? description.name : "color " + shiftedIndex; // todo : localize
+		colorLabel.appendChild(textSpan);
+
+		return colorLabel;
+	}
+
+	var labelElements = [];
+
 	function UpdatePaletteUI() {
 		// update name field
 		var palettePlaceholderName = localization.GetStringOrFallback("palette_label", "palette");
-		document.getElementById(nameFieldId).placeholder = palettePlaceholderName + " " + GetSelectedId();
+
+		controls.nameInput.placeholder = palettePlaceholderName + " " + GetSelectedId();
+
 		var pal = palette[GetSelectedId()];
+
 		if (pal && pal.name) {
-			document.getElementById(nameFieldId).value = name;
+			controls.nameInput.value = name;
 		}
 		else {
-			document.getElementById(nameFieldId).value = "";
+			controls.nameInput.value = "";
+		}
+
+		labelElements = [];
+		controls.colorSelectForm.innerHTML = "";
+
+		for (var i = 0; i < pal.colors.length; i++) {
+			var shiftedIndex = color.ShiftedColorIndex(i, pal.indexOffset);
+			var label = AppendColorSelectInput(controls.colorSelectForm, i, shiftedIndex);
+			labelElements.push(label);
 		}
 
 		updateColorPickerUI();
@@ -52,24 +154,22 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 		var rgbColor = {r:r, g:g, b:b};
 
 		var rgbColorStr = "rgb(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + ")";
-		var hsvColor = RGBtoHSV( rgbColor );
-		document.getElementById( labelIds[ index ] ).style.background = rgbColorStr;
+		var hsvColor = RGBtoHSV(rgbColor);
 
-		document.getElementById(labelIds[ index ])
-			.setAttribute("class", hsvColor.v < 0.5 ? "colorPaletteLabelDark" : "colorPaletteLabelLight");
+		labelElements[index].style.background = rgbColorStr;
+		labelElements[index].setAttribute("class", hsvColor.v < 0.5 ? "colorPaletteLabelDark" : "colorPaletteLabelLight");
 	}
 
 	// public
 	function updateColorPickerUI() {
-		var color0 = getPal(GetSelectedId())[ 0 ];
-		var color1 = getPal(GetSelectedId())[ 1 ];
-		var color2 = getPal(GetSelectedId())[ 2 ];
+		var pal = palette[GetSelectedId()];
 
-		updateColorPickerLabel(0, color0[0], color0[1], color0[2] );
-		updateColorPickerLabel(1, color1[0], color1[1], color1[2] );
-		updateColorPickerLabel(2, color2[0], color2[1], color2[2] );
+		for (var i = 0; i < pal.colors.length; i++) {
+			var color = pal.colors[i];
+			updateColorPickerLabel(i, color[0], color[1], color[2]);
+		}
 
-		changeColorPickerIndex( colorPickerIndex );
+		changeColorPickerIndex(colorPickerIndex);
 	}
 	this.updateColorPickerUI = updateColorPickerUI;
 
@@ -78,7 +178,7 @@ function PaletteTool(colorPicker,labelIds,nameFieldId) {
 		getPal(GetSelectedId())[ colorPickerIndex ][ 1 ] = event.rgbColor.g;
 		getPal(GetSelectedId())[ colorPickerIndex ][ 2 ] = event.rgbColor.b;
 
-		updateColorPickerLabel(colorPickerIndex, event.rgbColor.r, event.rgbColor.g, event.rgbColor.b );
+		updateColorPickerLabel(colorPickerIndex, event.rgbColor.r, event.rgbColor.g, event.rgbColor.b);
 
 		if (event.isMouseUp && !events.IsEventActive("game_data_change")) {
 			events.Raise("palette_change", { id: curPaletteId }); // TODO -- try including isMouseUp and see if we can update more stuff live

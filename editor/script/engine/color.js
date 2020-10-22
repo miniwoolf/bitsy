@@ -18,36 +18,48 @@ function Color() {
 	var colorCycleMin = 2;
 	var colorCycleLen = 10;
 
+    function CreateDefaultPalette() {
+        var palette = [];
+
+        // text box colors
+        palette.push([0,0,0,255]);
+        palette.push([255,255,255,255]);
+
+        // rainbow colors
+        for (var i = 0; i < colorCycleLen; i++) {
+            var h = (i / colorCycleLen);
+            var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
+            palette.push(rbwColor);
+        }
+
+        // transparent
+        palette.push([0,0,0,0]);
+
+        // default tile colors
+        palette.push([0,0,0,255]);
+        palette.push([255,255,255,255]);
+        palette.push([255,255,255,255]);
+
+        return palette;
+    }
+
 	// set palette to default colors
 	function ResetPalette() {
-		palette = [];
-
-		// text box colors
-		palette.push([0,0,0,255]);
-		palette.push([255,255,255,255]);
-
-		// rainbow colors
-		for (var i = 0; i < colorCycleLen; i++) {
-			var h = (i / colorCycleLen);
-			var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
-			palette.push(rbwColor);
-		}
-
-		// transparent
-		palette.push([0,0,0,0]);
-
-		// default tile colors
-		palette.push([0,0,0,255]);
-		palette.push([255,255,255,255]);
-		palette.push([255,255,255,255]);
+		palette = CreateDefaultPalette();
 	}
+
+    // todo : name?
+    function ShiftedColorIndex(index, indexOffset) {
+        return (index + indexOffset) % paletteSize;
+    }
+    this.ShiftedColorIndex = ShiftedColorIndex;
 
 	this.LoadPalette = function(pal) {
 		ResetPalette();
 
 		if (pal != undefined && pal != null) {
 			for (var i = 0; i < pal.colors.length; i++) {
-				var index = (i + pal.indexOffset) % paletteSize;
+				var index = ShiftedColorIndex(i, pal.indexOffset);
 				var alpha = (index === COLOR_INDEX.TRANSPARENT) ? 0 : 255;
 				palette[index] = pal.colors[i].concat([alpha]);
 			}
@@ -78,6 +90,10 @@ function Color() {
 			colorCycleOffset = colorCycleLen - 1;
 		}
 	}
+
+    this.GetDefaultColor = function(index) {
+        return CreateDefaultPalette()[index];
+    }
 
 	ResetPalette();
 }

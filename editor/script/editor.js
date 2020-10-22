@@ -856,12 +856,26 @@ function start() {
 	listenForInventoryItemChanges();
 
 	// init color picker
-	colorPicker = new ColorPicker('colorPickerWheel', 'colorPickerSelect', 'colorPickerSliderThumb', 'colorPickerSliderBg', 'colorPickerHexText');
-	document.getElementById("colorPaletteOptionBackground").checked = true;
-	paletteTool = new PaletteTool(colorPicker,["colorPaletteLabelBackground", "colorPaletteLabelTile", "colorPaletteLabelSprite"],"paletteName");
+	colorPicker = new ColorPicker(
+		'colorPickerWheel', // todo : replace IDs with elements!
+		'colorPickerSelect',
+		'colorPickerSliderThumb',
+		'colorPickerSliderBg',
+		'colorPickerHexText');
+
+	paletteTool = new PaletteTool(
+		colorPicker,
+		{
+			colorSelectForm : document.getElementById("colorPaletteForm"),
+			nameInput : document.getElementById("paletteName"),
+			addButton : document.getElementById("addPaletteColor"),
+			deleteButton : document.getElementById("deletePaletteColor"),
+		});
+
 	events.Listen("palette_change", function(event) {
 		refreshGameData();
 	});
+
 	events.Listen("palette_list_change", function(event) {
 		refreshGameData();
 	});
@@ -1137,10 +1151,6 @@ function toggleFontDataVisibility(e) {
 /* PALETTE STUFF */
 var colorPicker = null;
 var paletteTool = null;
-
-function changeColorPickerIndex(index) {
-	paletteTool.changeColorPickerIndex(index);
-}
 
 function prevPalette() {
 	paletteTool.SelectPrev();
