@@ -12,7 +12,7 @@ var DialogRenderer = function() {
 
 	// TODO : refactor this eventually? remove everything from struct.. avoid the defaults?
 	var textboxInfo = {
-		img : null,
+		textureId : null,
 		width : 104,
 		height : 8+4+2+6, //8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
 		top : 12,
@@ -28,7 +28,7 @@ var DialogRenderer = function() {
 	this.SetFont = function(f) {
 		font = f;
 		textboxInfo.height = (textboxInfo.padding_vert * 3) + (relativeFontHeight() * 2) + textboxInfo.arrow_height;
-		textboxInfo.img = context.createImageData(textboxInfo.width*scale, textboxInfo.height*scale);
+		textboxInfo.textureId = bitsyTextureCreate(textboxInfo.width * scale, textboxInfo.height * scale);
 	}
 
 	function textScale() {
@@ -43,32 +43,16 @@ var DialogRenderer = function() {
 		return Math.ceil( font.getHeight() * textboxInfo.font_scale );
 	}
 
-	var context = null;
-	this.AttachContext = function(c) {
-		context = c;
-	};
-
 	this.ClearTextbox = function() {
-		if (context == null) {
-			return;
-		}
-
 		//create new image none exists
-		if (textboxInfo.img == null) {
-			textboxInfo.img = context.createImageData(
-				textboxInfo.width * scale,
-				textboxInfo.height * scale);
+		if (textboxInfo.textureId == null) {
+			textboxInfo.textureId = bitsyTextureCreate(textboxInfo.width * scale, textboxInfo.height * scale);
 		}
 
 		var textboxColor = color.GetColor(COLOR_INDEX.TEXTBOX);
 
 		// fill text box with background color
-		for (var i = 0; i < textboxInfo.img.data.length; i += 4) {
-			textboxInfo.img.data[i + 0] = textboxColor[0];
-			textboxInfo.img.data[i + 1] = textboxColor[1];
-			textboxInfo.img.data[i + 2] = textboxColor[2];
-			textboxInfo.img.data[i + 3] = textboxColor[3];
-		}
+		bitsyTextureFill(textboxInfo.textureId, textboxColor[0], textboxColor[1], textboxColor[2], textboxColor[3]);
 	};
 
 	var isCentered = false;
@@ -77,17 +61,25 @@ var DialogRenderer = function() {
 	};
 
 	this.DrawTextbox = function() {
-		if(context == null) return;
 		if (isCentered) {
-			context.putImageData(textboxInfo.img, textboxInfo.left*scale, ((height/2)-(textboxInfo.height/2))*scale);
+			bitsyCanvasPutTexture(
+				textboxInfo.textureId,
+				textboxInfo.left * scale,
+				((height / 2) - (textboxInfo.height / 2)) * scale);
 		}
 		else if (player().y < roomsize/2) {
 			//bottom
-			context.putImageData(textboxInfo.img, textboxInfo.left*scale, (height-textboxInfo.bottom-textboxInfo.height)*scale);
+			bitsyCanvasPutTexture(
+				textboxInfo.textureId,
+				textboxInfo.left * scale,
+				(height - textboxInfo.bottom - textboxInfo.height) * scale);
 		}
 		else {
 			//top
-			context.putImageData(textboxInfo.img, textboxInfo.left*scale, textboxInfo.top*scale);
+			bitsyCanvasPutTexture(
+				textboxInfo.textureId,
+				textboxInfo.left * scale,
+				textboxInfo.top * scale);
 		}
 	};
 
@@ -134,14 +126,14 @@ var DialogRenderer = function() {
 		var top = (textboxInfo.height - 5);
 		var left = (textboxInfo.width / 2) - Math.floor((choiceCount * 5) / 2);
 		for (var i = 0; i < choiceCount; i++) {
-			drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top * scale, left * scale);
+			drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top, left);
 			left += 5;
 		}
 	}
 
 	function drawArrow(arrowImgData, isLeftSide) {
-		var top = (textboxInfo.height - 5) * scale;
-		var left = isLeftSide ? (4 * scale) : ((textboxInfo.width - (5 + 4)) * scale);
+		var top = (textboxInfo.height - 5);
+		var left = isLeftSide ? (4) : (textboxInfo.width - (5 + 4));
 		drawTextboxIcon(arrowImgData, top, left);
 	}
 
@@ -152,19 +144,15 @@ var DialogRenderer = function() {
 			for (var x = 0; x < 5; x++) {
 				var i = (y * 5) + x;
 				if (imgData[i] == 1) {
-					//scaling nonsense
-					for (var sy = 0; sy < scale; sy++) {
-						for (var sx = 0; sx < scale; sx++) {
-							var pxl = 4 * ( ((top+(y*scale)+sy) * (textboxInfo.width*scale)) + (left+(x*scale)+sx) );
-
-							if (textColor[3] > 0) {
-								textboxInfo.img.data[pxl + 0] = textColor[0];
-								textboxInfo.img.data[pxl + 1] = textColor[1];
-								textboxInfo.img.data[pxl + 2] = textColor[2];
-								textboxInfo.img.data[pxl + 3] = 255;
-							}
-						}
-					}
+					bitsyTextureSetPixel(
+						textboxInfo.textureId,
+						left + x,
+						top + y,
+						scale,
+						textColor[0],
+						textColor[1],
+						textColor[2],
+						255);
 				}
 			}
 		}
@@ -182,8 +170,10 @@ var DialogRenderer = function() {
 
 		var charData = char.bitmap;
 
-		var top = (4 * scale) + (row * 2 * scale) + (row * font.getHeight() * text_scale) + Math.floor( char.offset.y );
-		var left = (4 * scale) + (leftPos * text_scale) + Math.floor( char.offset.x );
+		var textToRoomScaleRatio = scale / text_scale; 
+
+		var top = (4 * textToRoomScaleRatio) + (row * 2 * textToRoomScaleRatio) + (row * font.getHeight()) + Math.floor(char.offset.y);
+		var left = (4 * textToRoomScaleRatio) + (leftPos) + Math.floor(char.offset.x);
 
 		var debug_r = Math.random() * 255;
 
@@ -191,22 +181,18 @@ var DialogRenderer = function() {
 
 		for (var y = 0; y < char.height; y++) {
 			for (var x = 0; x < char.width; x++) {
-
 				var i = (y * char.width) + x;
 				if (charData[i] == 1 && charColor[3] > 0) {
-
-					//scaling nonsense
-					for (var sy = 0; sy < text_scale; sy++) {
-						for (var sx = 0; sx < text_scale; sx++) {
-							var pxl = 4 * ( ((top+(y*text_scale)+sy) * (textboxInfo.width*scale)) + (left+(x*text_scale)+sx) );
-							textboxInfo.img.data[pxl + 0] = charColor[0];
-							textboxInfo.img.data[pxl + 1] = charColor[1];
-							textboxInfo.img.data[pxl + 2] = charColor[2];
-							textboxInfo.img.data[pxl + 3] = 255;
-						}
-					}
+					bitsyTextureSetPixel(
+						textboxInfo.textureId,
+						left + x,
+						top + y,
+						text_scale,
+						charColor[0],
+						charColor[1],
+						charColor[2],
+						255);
 				}
-
 			}
 		}
 	};

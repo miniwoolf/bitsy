@@ -48,11 +48,6 @@ TODO choices
 	- what if you put long running stuff inside a choice option?
 */
 
-var xhr; // TODO : remove
-var canvas;
-var context; // TODO : remove if safe?
-var ctx;
-
 var map = {};
 var room = {};
 var tile = {};
@@ -110,9 +105,9 @@ function updateNamesFromCurData() {
 
 /* VERSION */
 var version = {
-	major: 7, // major changes
-	minor: 2, // smaller changes
-	devBuildPhase: "RELEASE",
+	major: 8, // major changes
+	minor: 0, // smaller changes
+	devBuildPhase: "DEV",
 };
 function getEngineVersion() {
 	return version.major + "." + version.minor;
@@ -194,22 +189,8 @@ var onGameReset = null;
 
 var isPlayerEmbeddedInEditor = false;
 
-var renderer = new Renderer(tilesize, scale);
-
-function getGameNameFromURL() {
-	var game = window.location.hash.substring(1);
-	// console.log("game name --- " + game);
-	return game;
-}
-
-function attachCanvas(c) {
-	canvas = c;
-	canvas.width = width * scale;
-	canvas.height = width * scale;
-	ctx = canvas.getContext("2d");
-	dialogRenderer.AttachContext(ctx);
-	renderer.AttachContext(ctx);
-}
+var renderer = new Renderer(roomsize, tilesize, scale);
+var renderContext;
 
 var curGameData = null;
 function load_game(game_data, startWithTitle) {
@@ -220,6 +201,7 @@ function load_game(game_data, startWithTitle) {
 	scriptNext.Reset();
 
 	renderer.ResetRenderCache();
+	renderContext = renderer.CreateContext();
 
 	parseWorld(game_data);
 
@@ -278,9 +260,9 @@ function reset_cur_game() {
 
 var update_interval = null;
 function onready(startWithTitle) {
-	if(startWithTitle === undefined || startWithTitle === null) startWithTitle = true;
-
-	clearInterval(loading_interval);
+	if (startWithTitle === undefined || startWithTitle === null) {
+		startWithTitle = true;
+	}
 
 	input = new InputManager();
 
@@ -366,91 +348,6 @@ function stopGame() {
 	clearInterval(update_interval);
 }
 
-/* loading animation */
-var loading_anim_data = [
-	[
-		0,1,1,1,1,1,1,0,
-		0,0,1,1,1,1,0,0,
-		0,0,1,1,1,1,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,1,0,0,1,0,0,
-		0,0,1,0,0,1,0,0,
-		0,1,1,1,1,1,1,0,
-	],
-	[
-		0,1,1,1,1,1,1,0,
-		0,0,1,0,0,1,0,0,
-		0,0,1,1,1,1,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,1,0,0,1,0,0,
-		0,0,1,1,1,1,0,0,
-		0,1,1,1,1,1,1,0,
-	],
-	[
-		0,1,1,1,1,1,1,0,
-		0,0,1,0,0,1,0,0,
-		0,0,1,0,0,1,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,1,1,1,1,0,0,
-		0,0,1,1,1,1,0,0,
-		0,1,1,1,1,1,1,0,
-	],
-	[
-		0,1,1,1,1,1,1,0,
-		0,0,1,0,0,1,0,0,
-		0,0,1,0,0,1,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,0,1,1,0,0,0,
-		0,0,1,1,1,1,0,0,
-		0,0,1,1,1,1,0,0,
-		0,1,1,1,1,1,1,0,
-	],
-	[
-		0,0,0,0,0,0,0,0,
-		1,0,0,0,0,0,0,1,
-		1,1,1,0,0,1,1,1,
-		1,1,1,1,1,0,0,1,
-		1,1,1,1,1,0,0,1,
-		1,1,1,0,0,1,1,1,
-		1,0,0,0,0,0,0,1,
-		0,0,0,0,0,0,0,0,
-	]
-];
-var loading_anim_frame = 0;
-var loading_anim_speed = 500;
-var loading_interval = null;
-
-function loadingAnimation() {
-	//create image
-	var loadingAnimImg = ctx.createImageData(8*scale, 8*scale);
-	//draw image
-	for (var y = 0; y < 8; y++) {
-		for (var x = 0; x < 8; x++) {
-			var i = (y * 8) + x;
-			if (loading_anim_data[loading_anim_frame][i] == 1) {
-				//scaling nonsense
-				for (var sy = 0; sy < scale; sy++) {
-					for (var sx = 0; sx < scale; sx++) {
-						var pxl = 4 * ( (((y*scale)+sy) * (8*scale)) + ((x*scale)+sx) );
-						loadingAnimImg.data[pxl+0] = 255;
-						loadingAnimImg.data[pxl+1] = 255;
-						loadingAnimImg.data[pxl+2] = 255;
-						loadingAnimImg.data[pxl+3] = 255;
-					}
-				}
-			}
-		}
-	}
-	//put image on canvas
-	ctx.putImageData(loadingAnimImg,scale*(width/2 - 4),scale*(height/2 - 4));
-	//update frame
-	loading_anim_frame++;
-	if (loading_anim_frame >= 5) loading_anim_frame = 0;
-}
-
 function update() {
 	var curTime = Date.now();
 	deltaTime = curTime - prevTime;
@@ -475,10 +372,9 @@ function update() {
 function updateRender(renderOptions) {
 	updateColorCycle();
 
-	// clear the screen!
+	// clear the screen! // todo : can I avoid the duplicate clears?
 	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
-	ctx.fillStyle = "rgb(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	bitsyCanvasClear(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
 
 	if (transition.IsTransitionActive()) {
 		// transitions take over everything!
@@ -2411,30 +2307,21 @@ function parseFlag(lines, i) {
 	return i;
 }
 
-function drawTile(img,x,y,context) {
-	if (!context) { //optional pass in context; otherwise, use default
-		context = ctx;
-	}
-	// NOTE: images are now canvases, instead of raw image data (for chrome performance reasons)
-	context.drawImage(img,x*tilesize*scale,y*tilesize*scale,tilesize*scale,tilesize*scale);
-}
-
 function drawRoom(room, options) {
 	function getOptionOrDefault(optionId, defaultValue) {
 		var doesOptionExist = (options != undefined && options != null) && (options[optionId] != undefined && options[optionId] != null);
 		return doesOptionExist ? options[optionId] : defaultValue;
 	}
 
-	var context = getOptionOrDefault("context", ctx);
+	var context = getOptionOrDefault("context", renderContext);
 	var frameIndex = getOptionOrDefault("frameIndex", null);
 	var drawInstances = getOptionOrDefault("drawInstances", true);
 
-	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
+	var renderOptions = { frameIndex: frameIndex, };
 
 	// todo : why are we doing this twice per frame?
 	// clear screen
-	context.fillStyle = "rgb(" + backgroundColor[0] + "," + backgroundColor[1] + "," + backgroundColor[2] + ")";
-	context.fillRect(0, 0, canvas.width, canvas.height);
+	context.Clear();
 
 	if (room === undefined && room === null) {
 		// protect against invalid rooms
@@ -2454,7 +2341,7 @@ function drawRoom(room, options) {
 				else {
 					// console.log(id);
 					// todo : FIX THE PALETTE INDEX STUFF!
-					drawTile(renderer.GetRenderedTile(tile[id], frameIndex), j, i, context);
+					context.DrawTile(id, j, i, renderOptions);
 				}
 			}
 		}
@@ -2464,8 +2351,7 @@ function drawRoom(room, options) {
 		// draw sprite instances
 		for (var id in spriteInstances) {
 			var instance = spriteInstances[id];
-			var img = renderer.GetRenderedTile(instance, frameIndex);
-			drawTile(img, instance.x, instance.y, context);
+			context.DrawSprite(instance, instance.x, instance.y, renderOptions);
 		}
 	}
 	else {
@@ -2473,8 +2359,7 @@ function drawRoom(room, options) {
 		for (var i = 0; i < room.sprites.length; i++) {
 			var location = room.sprites[i];
 			var definition = tile[location.id];
-			var img = renderer.GetRenderedTile(definition, frameIndex);
-			drawTile(img, location.x, location.y, context);
+			context.DrawSprite(definition, location.x, location.y, renderOptions);
 		}
 	}
 }

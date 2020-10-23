@@ -710,8 +710,8 @@ function start() {
 	}
 	localization = new Localization();
 
-	//game canvas & context (also the map editor)
-	attachCanvas( document.getElementById("game") );
+	//game canvas & context
+	bitsyCanvasAttach(document.getElementById("game"), width * scale);
 
 	//init tool controllers
 	roomTool = new RoomTool(canvas);

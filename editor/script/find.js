@@ -784,7 +784,10 @@ function CreateDrawingThumbnailRenderer() {
 
 		for (var i = 0; i < til.animation.frameCount; i++) {
 			if (options.isAnimated || options.frameIndex === i) {
-				drawTile(renderer.GetRenderedTile(til, i), 0, 0, ctx);
+				var renderedTile = renderer.GetRenderedTile(til, i);
+				var hackTileTexture = textureCache[renderedTile].canvas; // todo : RENDER HACK
+				ctx.drawImage(hackTileTexture, 0, 0, tilesize * scale, tilesize * scale);
+
 				drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
 			}
 		}

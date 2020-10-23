@@ -1,3 +1,8 @@
+/* TODO
+- are the rainbow colors right? try reverse engineering from old fx?
+- do I actually want automatic color cycling?
+*/
+
 var COLOR_INDEX = {
 	TEXTBOX : 0,
 	TEXT : 1,

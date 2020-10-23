@@ -16,6 +16,9 @@ what other methods do I need to move into this class? exit stuff??
 function RoomTool(canvas) {
 	var self = this; // feels a bit hacky
 
+	// todo : RENDER HACK
+	var ctx = context; // hacky to grab the global context like this :(
+
 	var drawingId = "A";
 	events.Listen("select_drawing", function(event) {
 		drawingId = event.id;
@@ -197,7 +200,8 @@ function RoomTool(canvas) {
 
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
-			renderOnlyUpdate({ drawInstances: false, });
+			var editorRenderContext = renderer.CreateContext(); // todo : RENDER HACK
+			renderOnlyUpdate({ drawInstances: false, context: editorRenderContext, });
 			self.drawEditMap();
 		});
 	}
