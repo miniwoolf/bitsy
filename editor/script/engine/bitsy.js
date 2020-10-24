@@ -190,7 +190,6 @@ var onGameReset = null;
 var isPlayerEmbeddedInEditor = false;
 
 var renderer = new Renderer(roomsize, tilesize, scale);
-var renderContext;
 
 var curGameData = null;
 function load_game(game_data, startWithTitle) {
@@ -201,7 +200,6 @@ function load_game(game_data, startWithTitle) {
 	scriptNext.Reset();
 
 	renderer.ResetRenderCache();
-	renderContext = renderer.CreateContext();
 
 	parseWorld(game_data);
 
@@ -370,20 +368,21 @@ function update() {
 }
 
 function updateRender(renderOptions) {
-	updateColorCycle();
-
-	// clear the screen! // todo : can I avoid the duplicate clears?
-	var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
-	bitsyCanvasClear(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
-
 	if (transition.IsTransitionActive()) {
 		// transitions take over everything!
 		transition.UpdateTransition(deltaTime);
 	}
 	else {
+		updateColorCycle();
+
 		if (!isNarrating && !isEnding) {
 			updateAnimation();
 			drawRoom(room[curRoom], renderOptions);
+		}
+		else {
+			// for title and ending just clear the screen!
+			var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
+			bitsyCanvasClear(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
 		}
 
 		if (dialogBuffer.IsActive()) {
@@ -895,9 +894,11 @@ function movePlayer(direction) {
 		var destRoom = map[mapLocation.id].map[mapLocation.y + dy][mapLocation.x + dx];
 		var destX = player().x - (dx * roomsize);
 		var destY = player().y - (dy * roomsize);
+		var prevX = player().x - dx;
+		var prevY = player().y - dy;
 
 		if (transition_effect) {
-			transition.BeginTransition(player().room, player().x, player().y, destRoom, destX, destY, transition_effect, initRoom);
+			transition.BeginTransition(player().room, prevX, prevY, destRoom, destX, destY, transition_effect, initRoom);
 			transition.UpdateTransition(0);
 		}
 		else {
@@ -1079,6 +1080,7 @@ function initRoom(roomId) {
 	nextInstanceId++;
 
 	var palId = room[roomId].pal;
+	color.StorePalette();
 	color.LoadPalette(palette[palId]);
 	renderer.ResetRenderCache();
 }
@@ -2313,15 +2315,16 @@ function drawRoom(room, options) {
 		return doesOptionExist ? options[optionId] : defaultValue;
 	}
 
-	var context = getOptionOrDefault("context", renderContext);
 	var frameIndex = getOptionOrDefault("frameIndex", null);
 	var drawInstances = getOptionOrDefault("drawInstances", true);
 
 	var renderOptions = { frameIndex: frameIndex, };
 
+	var renderTarget = options && options.target ? options.target : renderer.CreateScreenTarget();
+
 	// todo : why are we doing this twice per frame?
 	// clear screen
-	context.Clear();
+	renderTarget.Clear();
 
 	if (room === undefined && room === null) {
 		// protect against invalid rooms
@@ -2341,7 +2344,7 @@ function drawRoom(room, options) {
 				else {
 					// console.log(id);
 					// todo : FIX THE PALETTE INDEX STUFF!
-					context.DrawTile(id, j, i, renderOptions);
+					renderTarget.DrawTile(id, j, i, renderOptions);
 				}
 			}
 		}
@@ -2351,7 +2354,7 @@ function drawRoom(room, options) {
 		// draw sprite instances
 		for (var id in spriteInstances) {
 			var instance = spriteInstances[id];
-			context.DrawSprite(instance, instance.x, instance.y, renderOptions);
+			renderTarget.DrawSprite(instance, instance.x, instance.y, renderOptions);
 		}
 	}
 	else {
@@ -2359,7 +2362,7 @@ function drawRoom(room, options) {
 		for (var i = 0; i < room.sprites.length; i++) {
 			var location = room.sprites[i];
 			var definition = tile[location.id];
-			context.DrawSprite(definition, location.x, location.y, renderOptions);
+			renderTarget.DrawSprite(definition, location.x, location.y, renderOptions);
 		}
 	}
 }

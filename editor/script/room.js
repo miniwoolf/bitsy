@@ -200,8 +200,7 @@ function RoomTool(canvas) {
 
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
-			var editorRenderContext = renderer.CreateContext(); // todo : RENDER HACK
-			renderOnlyUpdate({ drawInstances: false, context: editorRenderContext, });
+			renderOnlyUpdate({ drawInstances: false, });
 			self.drawEditMap();
 		});
 	}

@@ -1,3 +1,7 @@
+/* TODO
+ - sprite batching?
+*/
+
 function Renderer(roomsize, tilesize, scale) {
 
 var cache = {
@@ -113,8 +117,7 @@ this.ResetRenderCache = function() {
 	resetAllTextures();
 }
 
-/* RENDER Context */
-function RenderContext() {
+function ScreenRenderTarget() {
 	var width = roomsize * tilesize * scale;
 	var height = roomsize * tilesize * scale;
 	var tileIncrement = tilesize * scale;
@@ -140,12 +143,11 @@ function RenderContext() {
 	};
 }
 
-this.CreateContext = function() {
-	return new RenderContext();
+this.CreateScreenTarget = function() {
+	return new ScreenRenderTarget();
 }
 
-// todo : name?
-function PaletteIndexRenderContext() {
+function PaletteIndexBufferRenderTarget() {
 	var width = roomsize * tilesize;
 	var height = roomsize * tilesize;
 
@@ -163,10 +165,13 @@ function PaletteIndexRenderContext() {
 		var backgroundIndex = color.GetColorIndex(drawing.colorOffset + drawing.bgc);
 		var foregroundIndex = color.GetColorIndex(drawing.colorOffset + drawing.col);
 
+		var top = y * tilesize;
+		var left = x * tilesize;
+
 		for (var dy = 0; dy < tilesize; dy++) {
 			for (var dx = 0; dx < tilesize; dx++) {
 				// todo : catch index out of bounds?
-				var pixelIndex = (width * (y + dy)) + (x + dx);
+				var pixelIndex = (width * (top + dy)) + (left + dx);
 
 				if (frameData[dy][dx] === 1 && foregroundIndex != COLOR_INDEX.TRANSPARENT) {
 					pixelData[pixelIndex] = foregroundIndex;
@@ -185,10 +190,17 @@ function PaletteIndexRenderContext() {
 	this.DrawSprite = function(sprite, x, y, options) {
 		Draw(sprite, x, y, options);
 	};
+
+	this.Width = width;
+	this.Height = height;
+
+	this.GetPixel = function(x, y) {
+		return pixelData[(y * width) + x];
+	};
 }
 
-this.CreatePaletteIndexContext = function() {
-	return new PaletteIndexRenderContext();
+this.CreateBufferTarget = function() {
+	return new PaletteIndexBufferRenderTarget();
 }
 
 } // Renderer()

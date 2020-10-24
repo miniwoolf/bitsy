@@ -14,53 +14,61 @@ var COLOR_INDEX = {
 	SPRITE : 15,
 };
 
+var PALETTE_ID = {
+	ACTIVE : 0,
+	PREV : 1,
+	CLEAR : 2,
+};
+
 function Color() {
 	// active palette colors
-	var palette = [];
 	var paletteSize = 16;
+	var palettes = {};
 
 	var colorCycleOffset = 0;
 	var colorCycleMin = 2;
 	var colorCycleLen = 10;
 
-    function CreateDefaultPalette() {
-        var palette = [];
+	function CreateDefaultPalette() {
+		var palette = [];
 
-        // text box colors
-        palette.push([0,0,0,255]);
-        palette.push([255,255,255,255]);
+		// text box colors
+		palette.push([0,0,0,255]);
+		palette.push([255,255,255,255]);
 
-        // rainbow colors
-        for (var i = 0; i < colorCycleLen; i++) {
-            var h = (i / colorCycleLen);
-            var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
-            palette.push(rbwColor);
-        }
+		// rainbow colors
+		for (var i = 0; i < colorCycleLen; i++) {
+			var h = (i / colorCycleLen);
+			var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
+			palette.push(rbwColor);
+		}
 
-        // transparent
-        palette.push([0,0,0,0]);
+		// transparent
+		palette.push([0,0,0,0]);
 
-        // default tile colors
-        palette.push([0,0,0,255]);
-        palette.push([255,255,255,255]);
-        palette.push([255,255,255,255]);
+		// default tile colors
+		palette.push([0,0,0,255]);
+		palette.push([255,255,255,255]);
+		palette.push([255,255,255,255]);
 
-        return palette;
-    }
-
-	// set palette to default colors
-	function ResetPalette() {
-		palette = CreateDefaultPalette();
+		return palette;
 	}
 
-    // todo : name?
-    function ShiftedColorIndex(index, indexOffset) {
-        return (index + indexOffset) % paletteSize;
-    }
-    this.ShiftedColorIndex = ShiftedColorIndex;
+	// set palette to default colors
+	function ResetPalette(id) {
+		palettes[id ? id : PALETTE_ID.ACTIVE] = CreateDefaultPalette();
+	}
 
-	this.LoadPalette = function(pal) {
-		ResetPalette();
+	// todo : name?
+	function ShiftedColorIndex(index, indexOffset) {
+		return (index + indexOffset) % paletteSize;
+	}
+	this.ShiftedColorIndex = ShiftedColorIndex;
+
+	this.LoadPalette = function(pal, id) {
+		ResetPalette(id);
+
+		var palette = palettes[id ? id : PALETTE_ID.ACTIVE];
 
 		if (pal != undefined && pal != null) {
 			for (var i = 0; i < pal.colors.length; i++) {
@@ -68,6 +76,23 @@ function Color() {
 				var alpha = (index === COLOR_INDEX.TRANSPARENT) ? 0 : 255;
 				palette[index] = pal.colors[i].concat([alpha]);
 			}
+		}
+	};
+
+	// todo : NAME?
+	this.StorePalette = function() {
+		palettes[PALETTE_ID.PREV] = palettes[PALETTE_ID.ACTIVE];
+	};
+
+	// todo : this name is weird too
+	this.UpdateClearPalette = function(paletteId, clearIndex) {
+		console.log("CLEAR PAL");
+
+		palettes[PALETTE_ID.CLEAR] = [];
+
+		// todo : hardcoded 16?
+		for (var i = 0; i < 16; i++) {
+			palettes[PALETTE_ID.CLEAR].push(palettes[paletteId][clearIndex]);
 		}
 	};
 
@@ -84,9 +109,21 @@ function Color() {
 	}
 	this.GetColorIndex = GetColorIndex;
 
-	this.GetColor = function(index) {
+	function GetColor(index, id) {
+		var palette = palettes[id ? id : PALETTE_ID.ACTIVE];
 		return palette[GetColorIndex(index)];
 	};
+	this.GetColor = GetColor;
+
+	this.LerpColor = function(index, paletteIdA, paletteIdB, delta) {
+		var colorA = GetColor(index, paletteIdA);
+		var colorB = GetColor(index, paletteIdB);
+
+		return [colorA[0] + ((colorB[0] - colorA[0]) * delta),
+			colorA[1] + ((colorB[1] - colorA[1]) * delta),
+			colorA[2] + ((colorB[2] - colorA[2]) * delta),
+			colorA[3] + ((colorB[3] - colorA[3]) * delta)];
+	}
 
 	this.Cycle = function() {
 		colorCycleOffset--;
@@ -96,9 +133,9 @@ function Color() {
 		}
 	}
 
-    this.GetDefaultColor = function(index) {
-        return CreateDefaultPalette()[index];
-    }
+	this.GetDefaultColor = function(index) {
+		return CreateDefaultPalette()[index];
+	}
 
 	ResetPalette();
 }
@@ -120,32 +157,32 @@ function hexToRgb(hex) {
 	} : null;
 }
 function componentToHex(c) {
-    var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
+	var hex = c.toString(16);
+	return hex.length == 1 ? "0" + hex : hex;
 }
 function rgbToHex(r, g, b) {
-    return "#" + componentToHex(Math.floor(r)) + componentToHex(Math.floor(g)) + componentToHex(Math.floor(b));
+	return "#" + componentToHex(Math.floor(r)) + componentToHex(Math.floor(g)) + componentToHex(Math.floor(b));
 }
 
 function hslToHex(h,s,l) {
-    var rgbArr = hslToRgb(h,s,l);
-    return rgbToHex( Math.floor(rgbArr[0]), Math.floor(rgbArr[1]), Math.floor(rgbArr[2]) );
+	var rgbArr = hslToRgb(h,s,l);
+	return rgbToHex( Math.floor(rgbArr[0]), Math.floor(rgbArr[1]), Math.floor(rgbArr[2]) );
 }
 
 function hexToHsl(hex) {
-    var rgb = hexToRgb(hex);
-    return rgbToHsl(rgb.r, rgb.g, rgb.b);
+	var rgb = hexToRgb(hex);
+	return rgbToHsl(rgb.r, rgb.g, rgb.b);
 }
 
 // really just a vector distance
 function colorDistance(a1,b1,c1,a2,b2,c2) {
-    return Math.sqrt( Math.pow(a1 - a2, 2) + Math.pow(b1 - b2, 2) + Math.pow(c1 - c2, 2) );
+	return Math.sqrt( Math.pow(a1 - a2, 2) + Math.pow(b1 - b2, 2) + Math.pow(c1 - c2, 2) );
 }
 
 function hexColorDistance(hex1,hex2) {
-    var color1 = hexToRgb(hex1);
-    var color2 = hexToRgb(hex2);
-    return rgbColorDistance(color1.r, color1.g, color1.b, color2.r, color2.g, color2.b);
+	var color1 = hexToRgb(hex1);
+	var color2 = hexToRgb(hex2);
+	return rgbColorDistance(color1.r, color1.g, color1.b, color2.r, color2.g, color2.b);
 }
 
 
@@ -156,28 +193,28 @@ function hexColorDistance(hex1,hex2) {
  * h, s, v
 */
 function HSVtoRGB(h, s, v) {
-    var r, g, b, i, f, p, q, t;
-    if (arguments.length === 1) {
-        s = h.s, v = h.v, h = h.h;
-    }
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-        case 0: r = v, g = t, b = p; break;
-        case 1: r = q, g = v, b = p; break;
-        case 2: r = p, g = v, b = t; break;
-        case 3: r = p, g = q, b = v; break;
-        case 4: r = t, g = p, b = v; break;
-        case 5: r = v, g = p, b = q; break;
-    }
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
+	var r, g, b, i, f, p, q, t;
+	if (arguments.length === 1) {
+		s = h.s, v = h.v, h = h.h;
+	}
+	i = Math.floor(h * 6);
+	f = h * 6 - i;
+	p = v * (1 - s);
+	q = v * (1 - f * s);
+	t = v * (1 - (1 - f) * s);
+	switch (i % 6) {
+		case 0: r = v, g = t, b = p; break;
+		case 1: r = q, g = v, b = p; break;
+		case 2: r = p, g = v, b = t; break;
+		case 3: r = p, g = q, b = v; break;
+		case 4: r = t, g = p, b = v; break;
+		case 5: r = v, g = p, b = q; break;
+	}
+	return {
+		r: Math.round(r * 255),
+		g: Math.round(g * 255),
+		b: Math.round(b * 255)
+	};
 }
 
 /* accepts parameters
@@ -186,27 +223,27 @@ function HSVtoRGB(h, s, v) {
  * r, g, b
 */
 function RGBtoHSV(r, g, b) {
-    if (arguments.length === 1) {
-        g = r.g, b = r.b, r = r.r;
-    }
-    var max = Math.max(r, g, b), min = Math.min(r, g, b),
-        d = max - min,
-        h,
-        s = (max === 0 ? 0 : d / max),
-        v = max / 255;
+	if (arguments.length === 1) {
+		g = r.g, b = r.b, r = r.r;
+	}
+	var max = Math.max(r, g, b), min = Math.min(r, g, b),
+		d = max - min,
+		h,
+		s = (max === 0 ? 0 : d / max),
+		v = max / 255;
 
-    switch (max) {
-        case min: h = 0; break;
-        case r: h = (g - b) + d * (g < b ? 6: 0); h /= 6 * d; break;
-        case g: h = (b - r) + d * 2; h /= 6 * d; break;
-        case b: h = (r - g) + d * 4; h /= 6 * d; break;
-    }
+	switch (max) {
+		case min: h = 0; break;
+		case r: h = (g - b) + d * (g < b ? 6: 0); h /= 6 * d; break;
+		case g: h = (b - r) + d * 2; h /= 6 * d; break;
+		case b: h = (r - g) + d * 4; h /= 6 * d; break;
+	}
 
-    return {
-        h: h,
-        s: s,
-        v: v
-    };
+	return {
+		h: h,
+		s: s,
+		v: v
+	};
 }
 
 // source : https://gist.github.com/mjackson/5311256
@@ -225,23 +262,23 @@ function hslToRgb(h, s, l) {
   var r, g, b;
 
   if (s == 0) {
-    r = g = b = l; // achromatic
+	r = g = b = l; // achromatic
   } else {
-    function hue2rgb(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    }
+	function hue2rgb(p, q, t) {
+	  if (t < 0) t += 1;
+	  if (t > 1) t -= 1;
+	  if (t < 1/6) return p + (q - p) * 6 * t;
+	  if (t < 1/2) return q;
+	  if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+	  return p;
+	}
 
-    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    var p = 2 * l - q;
+	var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+	var p = 2 * l - q;
 
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
+	r = hue2rgb(p, q, h + 1/3);
+	g = hue2rgb(p, q, h);
+	b = hue2rgb(p, q, h - 1/3);
   }
 
   return [ Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255) ];
@@ -261,22 +298,22 @@ function hslToRgb(h, s, l) {
  * @return  {Array}           The HSL representation
  */
 function rgbToHsl(r, g, b){
-    r /= 255, g /= 255, b /= 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2;
+	r /= 255, g /= 255, b /= 255;
+	var max = Math.max(r, g, b), min = Math.min(r, g, b);
+	var h, s, l = (max + min) / 2;
 
-    if(max == min){
-        h = s = 0; // achromatic
-    }else{
-        var d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch(max){
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
+	if(max == min){
+		h = s = 0; // achromatic
+	}else{
+		var d = max - min;
+		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+		switch(max){
+			case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+			case g: h = (b - r) / d + 2; break;
+			case b: h = (r - g) / d + 4; break;
+		}
+		h /= 6;
+	}
 
-    return [h, s, l];
+	return [h, s, l];
 }
