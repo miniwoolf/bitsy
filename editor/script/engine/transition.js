@@ -255,21 +255,22 @@ var TransitionManager = function() {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
-		pixelEffectFunc : function(start,end,pixelX,pixelY,delta) {
+		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = -1 * Math.floor(start.Buffer.Height * delta);
 			var slidePixelY = pixelY + pixelOffset;
 
 			var colorDelta = clampLerp(delta, 0.4);
+			var palIndex;
 
 			if (slidePixelY >= 0) {
-				var palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
 			}
 			else {
 				slidePixelY += start.Buffer.Height;
-				var palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
 			}
+
+			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
 		}
 	});
 
@@ -277,21 +278,22 @@ var TransitionManager = function() {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
-		pixelEffectFunc : function(start,end,pixelX,pixelY,delta) {
+		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = Math.floor(start.Buffer.Height * delta);
 			var slidePixelY = pixelY + pixelOffset;
 
 			var colorDelta = clampLerp(delta, 0.4);
+			var palIndex;
 
 			if (slidePixelY < start.Buffer.Height) {
-				var palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
 			}
 			else {
 				slidePixelY -= start.Buffer.Height;
-				var palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
 			}
+
+			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
 		}
 	});
 
@@ -304,16 +306,17 @@ var TransitionManager = function() {
 			var slidePixelX = pixelX + pixelOffset;
 
 			var colorDelta = clampLerp(delta, 0.4);
+			var palIndex;
 
 			if (slidePixelX >= 0) {
-				var palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
 			}
 			else {
 				slidePixelX += start.Buffer.Width;
-				var palIndex = end.Buffer.GetPixel(slidePixelX, pixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = end.Buffer.GetPixel(slidePixelX, pixelY);
 			}
+
+			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
 		}
 	});
 
@@ -326,16 +329,17 @@ var TransitionManager = function() {
 			var slidePixelX = pixelX + pixelOffset;
 
 			var colorDelta = clampLerp(delta, 0.4);
+			var palIndex;
 
 			if (slidePixelX < start.Buffer.Width) {
-				var palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+				palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
 			}
 			else {
 				slidePixelX -= start.Buffer.Width;
 				var palIndex = end.Buffer.GetPixel(slidePixelX, pixelY);
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
 			}
+
+			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
 		}
 	});
 
