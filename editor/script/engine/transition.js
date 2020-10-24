@@ -97,14 +97,14 @@ var TransitionManager = function() {
 		if (step != prevStep) {
 			for (var y = 0; y < transitionStart.Buffer.Height; y++) {
 				for (var x = 0; x < transitionStart.Buffer.Width; x++) {
-					var color = transitionEffects[curEffect].pixelEffectFunc(
+					var effectColor = transitionEffects[curEffect].pixelEffectFunc(
 						transitionStart,
 						transitionEnd,
 						x,
 						y,
 						(step / maxStep));
 
-					bitsyTextureSetPixel(transitionTextureId, x, y, scale, color[0], color[1], color[2], 255);
+					bitsyTextureSetPixel(transitionTextureId, x, y, scale, effectColor[0], effectColor[1], effectColor[2], 255);
 				}
 			}
 
@@ -345,13 +345,14 @@ var TransitionManager = function() {
 		return deltaOut;
 	}
 
-	// TODO : WIP
+	// todo : this sort of works but also breaks -- palIndex === undefined - why?
+	// TODO : WIP // TODO : do I really want to bring this back?
 	// this.RegisterTransitionEffect("fuzz", {
 	// 	showPlayerStart : true,
 	// 	showPlayerEnd : true,
 	// 	duration : 1500,
-	// 	pixelEffectFunc : function(start,end,pixelX,pixelY,delta) {
-	// 		var curImage = delta <= 0.5 ? start : end;
+	// 	pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
+	// 		var curScreen = delta <= 0.5 ? start : end;
 	// 		var sampleSize = delta <= 0.5 ? (2 + Math.floor(14 * (delta/0.5))) : (16 - Math.floor(14 * ((delta-0.5)/0.5)));
 
 	// 		var palIndex = 0;
@@ -375,8 +376,7 @@ var TransitionManager = function() {
 	// 			var backgroundValue = 0.4;
 	// 			for (var y = sampleY; y < sampleY + sampleSize; y++) {
 	// 				for (var x = sampleX; x < sampleX + sampleSize; x++) {
-	// 					var color = curImage.Image.GetPixel(x,y)
-	// 					var palIndex = PostProcessUtilities.GetColorPalIndex(color,curImage.Palette);
+	// 					palIndex = curScreen.Buffer.GetPixel(x, y);
 	// 					if (palIndex != -1) {
 	// 						if (paletteCount[palIndex]) {
 	// 							paletteCount[palIndex] += (palIndex != 0) ? foregroundValue : backgroundValue;
@@ -399,12 +399,12 @@ var TransitionManager = function() {
 	// 			frameState.preCalcSampleValues[[sampleX,sampleY]] = palIndex;
 	// 		}
 
-	// 		return PostProcessUtilities.GetPalColor(curImage.Palette,palIndex);
+	// 		return color.GetColor(palIndex, curScreen.PaletteId);
 	// 	},
 	// 	frameState : { // ok this is hacky but it's for performance ok
 	// 		time : -1,
 	// 		preCalcSampleValues : {}
-	// 	}
+	// 	},
 	// });
 }; // TransitionManager()
 
