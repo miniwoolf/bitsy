@@ -381,8 +381,7 @@ function updateRender(renderOptions) {
 		}
 		else {
 			// for title and ending just clear the screen!
-			var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
-			bitsyCanvasClear(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+			bitsyCanvasClear(COLOR_INDEX.BACKGROUND);
 		}
 
 		if (dialogBuffer.IsActive()) {
@@ -1080,8 +1079,9 @@ function initRoom(roomId) {
 	nextInstanceId++;
 
 	var palId = room[roomId].pal;
-	color.StorePalette();
-	color.LoadPalette(palette[palId]);
+	color.StoreRoomPalette();
+	color.LoadRoomPalette(palette[palId]);
+	color.UpdateSystemPalette();
 	renderer.ResetRenderCache();
 }
 

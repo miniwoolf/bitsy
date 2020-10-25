@@ -49,10 +49,8 @@ var DialogRenderer = function() {
 			textboxInfo.textureId = bitsyTextureCreate(textboxInfo.width * scale, textboxInfo.height * scale);
 		}
 
-		var textboxColor = color.GetColor(COLOR_INDEX.TEXTBOX);
-
 		// fill text box with background color
-		bitsyTextureFill(textboxInfo.textureId, textboxColor[0], textboxColor[1], textboxColor[2], textboxColor[3]);
+		bitsyTextureFill(textboxInfo.textureId, COLOR_INDEX.TEXTBOX);
 	};
 
 	var isCentered = false;
@@ -138,21 +136,11 @@ var DialogRenderer = function() {
 	}
 
 	function drawTextboxIcon(imgData, top, left) {
-		var textColor = color.GetColor(COLOR_INDEX.TEXT);
-
 		for (var y = 0; y < 3; y++) {
 			for (var x = 0; x < 5; x++) {
 				var i = (y * 5) + x;
 				if (imgData[i] == 1) {
-					bitsyTextureSetPixel(
-						textboxInfo.textureId,
-						left + x,
-						top + y,
-						scale,
-						textColor[0],
-						textColor[1],
-						textColor[2],
-						255);
+					bitsyTextureSetPixel(textboxInfo.textureId, left + x, top + y, scale, COLOR_INDEX.TEXT);
 				}
 			}
 		}
@@ -177,21 +165,11 @@ var DialogRenderer = function() {
 
 		var debug_r = Math.random() * 255;
 
-		var charColor = color.GetColor(char.color);
-
 		for (var y = 0; y < char.height; y++) {
 			for (var x = 0; x < char.width; x++) {
 				var i = (y * char.width) + x;
-				if (charData[i] == 1 && charColor[3] > 0) {
-					bitsyTextureSetPixel(
-						textboxInfo.textureId,
-						left + x,
-						top + y,
-						text_scale,
-						charColor[0],
-						charColor[1],
-						charColor[2],
-						255);
+				if (charData[i] == 1 && !bitsyPaletteIsTransparent(char.color)) {
+					bitsyTextureSetPixel(textboxInfo.textureId, left + x, top + y, text_scale, char.color);
 				}
 			}
 		}

@@ -9,8 +9,6 @@ var TransitionManager = function() {
 	var prevStep = -1; // used to avoid running post-process effect constantly
 
 	this.BeginTransition = function(startRoom, startX, startY, endRoom, endX, endY, effectName, onInitNextRoom) {
-		// console.log("--- START ROOM TRANSITION ---");
-
 		curEffect = effectName;
 
 		var tmpRoom = player().room;
@@ -27,8 +25,6 @@ var TransitionManager = function() {
 			player().x = -1;
 			player().y = -1;
 		}
-
-		console.log(player().x);
 
 		var startBuffer = renderer.CreateBufferTarget();
 		drawRoom(room[startRoom], { target: startBuffer, });
@@ -48,7 +44,7 @@ var TransitionManager = function() {
 
 		var endBuffer = renderer.CreateBufferTarget();
 		drawRoom(room[endRoom], { target: endBuffer, });
-		transitionEnd = new TransitionInfo(endBuffer, PALETTE_ID.ACTIVE, endX, endY);
+		transitionEnd = new TransitionInfo(endBuffer, PALETTE_ID.ROOM, endX, endY);
 
 		var textureSize = roomsize * tilesize * scale;
 		transitionTextureId = bitsyTextureCreate(textureSize, textureSize);
@@ -63,7 +59,7 @@ var TransitionManager = function() {
 
 		// set palette for clearing screen
 		if ("clearIndex" in transitionEffects[curEffect]) {
-			color.UpdateClearPalette(PALETTE_ID.PREV, transitionEffects[curEffect].clearIndex);
+			color.CreateFadePalette(transitionEffects[curEffect].clearIndex);
 		}
 	}
 
@@ -76,6 +72,8 @@ var TransitionManager = function() {
 
 		bitsyTextureRelease(transitionTextureId);
 		transitionTextureId = null;
+
+		color.UpdateSystemPalette();
 
 		if (transitionCompleteCallback != null) {
 			transitionCompleteCallback();
@@ -95,16 +93,18 @@ var TransitionManager = function() {
 		var step = Math.floor(transitionDelta * maxStep);
 
 		if (step != prevStep) {
+			transitionEffects[curEffect].onStep(transitionStart, transitionEnd, (step / maxStep));
+
 			for (var y = 0; y < transitionStart.Buffer.Height; y++) {
 				for (var x = 0; x < transitionStart.Buffer.Width; x++) {
-					var effectColor = transitionEffects[curEffect].pixelEffectFunc(
+					var effectColorIndex = transitionEffects[curEffect].pixelEffectFunc(
 						transitionStart,
 						transitionEnd,
 						x,
 						y,
 						(step / maxStep));
 
-					bitsyTextureSetPixel(transitionTextureId, x, y, scale, effectColor[0], effectColor[1], effectColor[2], 255);
+					bitsyTextureSetPixel(transitionTextureId, x, y, scale, effectColorIndex);
 				}
 			}
 
@@ -139,25 +139,31 @@ var TransitionManager = function() {
 	this.RegisterTransitionEffect("none", {
 		showPlayerStart : false,
 		showPlayerEnd : false,
+		onStep : function() {},
 		pixelEffectFunc : function() {},
 	});
+
+	function onStepFade(start, end, delta) {
+		var palIdA = delta < 0.5 ? start.PaletteId : PALETTE_ID.FADE;
+		var palIdB = delta < 0.5 ? PALETTE_ID.FADE : end.PaletteId;
+
+		delta = delta < 0.5 ? (delta / 0.5) : ((delta - 0.5) / 0.5); // hacky
+
+		color.UpdateSystemPalette(palIdA, palIdB, delta);
+	}
+
+	function pixelEffectFade(start, end, pixelX, pixelY, delta) {
+		var curBuffer = delta < 0.5 ? start.Buffer : end.Buffer;
+		return curBuffer.GetPixel(pixelX, pixelY);
+	}
 
 	this.RegisterTransitionEffect("fade_w", { // TODO : have it linger on full white briefly?
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 750,
 		clearIndex : COLOR_INDEX.TEXT,
-		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
-			var curBuffer = delta < 0.5 ? start.Buffer : end.Buffer;
-			var palIndex = curBuffer.GetPixel(pixelX, pixelY);
-
-			var palIdA = delta < 0.5 ? start.PaletteId : PALETTE_ID.CLEAR;
-			var palIdB = delta < 0.5 ? PALETTE_ID.CLEAR : end.PaletteId;
-
-			delta = delta < 0.5 ? (delta / 0.5) : ((delta - 0.5) / 0.5); // hacky
-
-			return color.LerpColor(palIndex, palIdA, palIdB, delta);
-		}
+		onStep : onStepFade,
+		pixelEffectFunc : pixelEffectFade,
 	});
 
 	this.RegisterTransitionEffect("fade_b", {
@@ -165,24 +171,18 @@ var TransitionManager = function() {
 		showPlayerEnd : true,
 		duration : 750,
 		clearIndex : COLOR_INDEX.TEXTBOX,
-		// duplicate of previous effect!
-		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
-			var curBuffer = delta < 0.5 ? start.Buffer : end.Buffer;
-			var palIndex = curBuffer.GetPixel(pixelX, pixelY);
-
-			var palIdA = delta < 0.5 ? start.PaletteId : PALETTE_ID.CLEAR;
-			var palIdB = delta < 0.5 ? PALETTE_ID.CLEAR : end.PaletteId;
-
-			delta = delta < 0.5 ? (delta / 0.5) : ((delta - 0.5) / 0.5); // hacky
-
-			return color.LerpColor(palIndex, palIdA, palIdB, delta);
-		}
+		onStep : onStepFade,
+		pixelEffectFunc : pixelEffectFade,
 	});
 
 	this.RegisterTransitionEffect("wave", {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
+		onStep : function(start, end, delta) {
+			var curPalId = delta < 0.5 ? start.PaletteId : end.PaletteId;
+			color.UpdateSystemPalette(curPalId);
+		},
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var waveDelta = delta < 0.5 ? delta / 0.5 : 1 - ((delta - 0.5) / 0.5);
 
@@ -199,17 +199,29 @@ var TransitionManager = function() {
 			}
 
 			var curBuffer = delta < 0.5 ? start.Buffer : end.Buffer;
-			var palIndex = curBuffer.GetPixel(pixelX, pixelY);
-			var curPalId = delta < 0.5 ? start.PaletteId : end.PaletteId;
-			return color.GetColor(palIndex, curPalId);
-		}
+			return curBuffer.GetPixel(pixelX, pixelY);
+		},
 	});
 
 	this.RegisterTransitionEffect("tunnel", {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
+		onStep : function(start, end, delta) {
+			if (delta <= 0.4) {
+				color.UpdateSystemPalette(start.PaletteId);
+			}
+			else if (delta <= 0.6) {
+				var paletteDelta = (delta - 0.4) / 0.2;
+				color.UpdateSystemPalette(start.PaletteId, end.PaletteId, paletteDelta);
+			}
+			else {
+				color.UpdateSystemPalette(end.PaletteId);
+			}
+		},
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
+			var palIndex = COLOR_INDEX.TEXTBOX;
+
 			if (delta <= 0.4) {
 				var tunnelDelta = 1 - (delta / 0.4);
 
@@ -217,20 +229,17 @@ var TransitionManager = function() {
 				var yDist = start.PlayerCenter.y - pixelY;
 				var dist = Math.sqrt((xDist * xDist) + (yDist * yDist));
 
+				var palIndex = COLOR_INDEX.TEXTBOX;
+
 				if (dist > start.Buffer.Width * tunnelDelta) {
-					var palIndex = COLOR_INDEX.TEXTBOX;
-					return color.GetColor(palIndex, start.PaletteId);
+					// do nothing
 				}
 				else {
-					var palIndex = start.Buffer.GetPixel(pixelX, pixelY);
-					return color.GetColor(palIndex, start.PaletteId);
+					palIndex = start.Buffer.GetPixel(pixelX, pixelY);
 				}
 			}
-			else if (delta <= 0.6)
-			{
-				var colorDelta = (delta - 0.4) / 0.2;
-				var palIndex = COLOR_INDEX.TEXTBOX;
-				return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
+			else if (delta <= 0.6) {
+				return COLOR_INDEX.TEXTBOX;
 			}
 			else {
 				var tunnelDelta = (delta - 0.6) / 0.4;
@@ -240,107 +249,96 @@ var TransitionManager = function() {
 				var dist = Math.sqrt((xDist * xDist) + (yDist * yDist));
 
 				if (dist > end.Buffer.Width * tunnelDelta) {
-					var palIndex = COLOR_INDEX.TEXTBOX;
-					return color.GetColor(palIndex, end.PaletteId);
+					// do nothing
 				}
 				else {
-					var palIndex = end.Buffer.GetPixel(pixelX, pixelY);
-					return color.GetColor(palIndex, end.PaletteId);
+					palIndex = end.Buffer.GetPixel(pixelX, pixelY);
 				}
 			}
-		}
+
+			return palIndex;
+		},
 	});
+
+	function onStepSlide(start, end, delta) {
+		var paletteDelta = clampLerp(delta, 0.4);
+		color.UpdateSystemPalette(start.PaletteId, end.PaletteId, paletteDelta);
+	}
 
 	this.RegisterTransitionEffect("slide_u", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
+		onStep: onStepSlide,
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = -1 * Math.floor(start.Buffer.Height * delta);
 			var slidePixelY = pixelY + pixelOffset;
 
-			var colorDelta = clampLerp(delta, 0.4);
-			var palIndex;
-
 			if (slidePixelY >= 0) {
-				palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
+				return start.Buffer.GetPixel(pixelX, slidePixelY);
 			}
 			else {
 				slidePixelY += start.Buffer.Height;
-				palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
+				return end.Buffer.GetPixel(pixelX, slidePixelY);
 			}
-
-			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
-		}
+		},
 	});
 
 	this.RegisterTransitionEffect("slide_d", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
+		onStep: onStepSlide,
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = Math.floor(start.Buffer.Height * delta);
 			var slidePixelY = pixelY + pixelOffset;
 
-			var colorDelta = clampLerp(delta, 0.4);
-			var palIndex;
-
 			if (slidePixelY < start.Buffer.Height) {
-				palIndex = start.Buffer.GetPixel(pixelX, slidePixelY);
+				return start.Buffer.GetPixel(pixelX, slidePixelY);
 			}
 			else {
 				slidePixelY -= start.Buffer.Height;
-				palIndex = end.Buffer.GetPixel(pixelX, slidePixelY);
+				return end.Buffer.GetPixel(pixelX, slidePixelY);
 			}
-
-			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
-		}
+		},
 	});
 
 	this.RegisterTransitionEffect("slide_l", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
+		onStep: onStepSlide,
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = -1 * Math.floor(start.Buffer.Width * delta);
 			var slidePixelX = pixelX + pixelOffset;
 
-			var colorDelta = clampLerp(delta, 0.4);
-			var palIndex;
-
 			if (slidePixelX >= 0) {
-				palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
+				return start.Buffer.GetPixel(slidePixelX, pixelY);
 			}
 			else {
 				slidePixelX += start.Buffer.Width;
-				palIndex = end.Buffer.GetPixel(slidePixelX, pixelY);
+				return end.Buffer.GetPixel(slidePixelX, pixelY);
 			}
-
-			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
-		}
+		},
 	});
 
 	this.RegisterTransitionEffect("slide_r", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
+		onStep: onStepSlide,
 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
 			var pixelOffset = Math.floor(start.Buffer.Width * delta);
 			var slidePixelX = pixelX + pixelOffset;
 
-			var colorDelta = clampLerp(delta, 0.4);
-			var palIndex;
-
 			if (slidePixelX < start.Buffer.Width) {
-				palIndex = start.Buffer.GetPixel(slidePixelX, pixelY);
+				return start.Buffer.GetPixel(slidePixelX, pixelY);
 			}
 			else {
 				slidePixelX -= start.Buffer.Width;
-				var palIndex = end.Buffer.GetPixel(slidePixelX, pixelY);
+				return end.Buffer.GetPixel(slidePixelX, pixelY);
 			}
-
-			return color.LerpColor(palIndex, start.PaletteId, end.PaletteId, colorDelta);
-		}
+		},
 	});
 
 	function clampLerp(deltaIn, clampDuration) {

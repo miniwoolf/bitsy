@@ -22,26 +22,17 @@ function renderTileFrame(drawing, frameOverride) {
 function createTextureFromTileSource(tileSource, bgcIndex, colIndex) {
 	var textureId = bitsyTextureCreate(tilesize * scale, tilesize * scale);
 
-	var backgroundColor = color.GetColor(bgcIndex);
-	var foregroundColor = color.GetColor(colIndex);
+	var foregroundColorIndex = color.GetColorIndex(colIndex);
+	var backgroundColorIndex = color.GetColorIndex(bgcIndex);
+	if (bitsyPaletteIsTransparent(foregroundColorIndex)) {
+		foregroundColorIndex = backgroundColorIndex;
+	}
 
 	for (var y = 0; y < tilesize; y++) {
 		for (var x = 0; x < tilesize; x++) {
 			var px = tileSource[y][x];
-
-			var r = backgroundColor[0];
-			var g = backgroundColor[1];
-			var b = backgroundColor[2];
-			var a = backgroundColor[3];
-
-			if (px === 1 && foregroundColor[3] > 0) {
-				r = foregroundColor[0];
-				g = foregroundColor[1];
-				b = foregroundColor[2];
-				a = foregroundColor[3];
-			}
-
-			bitsyTextureSetPixel(textureId, x, y, scale, r, g, b, a);
+			var colorIndex = (px === 1) ? foregroundColorIndex : backgroundColorIndex;
+			bitsyTextureSetPixel(textureId, x, y, scale, colorIndex);
 		}
 	}
 
@@ -123,8 +114,7 @@ function ScreenRenderTarget() {
 	var tileIncrement = tilesize * scale;
 
 	this.Clear = function() {
-		var backgroundColor = color.GetColor(COLOR_INDEX.BACKGROUND);
-		bitsyCanvasClear(backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+		bitsyCanvasClear(COLOR_INDEX.BACKGROUND);
 	};
 
 	function Draw(drawing, x, y, options) {

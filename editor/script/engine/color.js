@@ -15,9 +15,9 @@ var COLOR_INDEX = {
 };
 
 var PALETTE_ID = {
-	ACTIVE : 0,
+	ROOM : 0,
 	PREV : 1,
-	CLEAR : 2,
+	FADE : 2,
 };
 
 function Color() {
@@ -55,8 +55,8 @@ function Color() {
 	}
 
 	// set palette to default colors
-	function ResetPalette(id) {
-		palettes[id ? id : PALETTE_ID.ACTIVE] = CreateDefaultPalette();
+	function ResetRoomPalette() {
+		palettes[PALETTE_ID.ROOM] = CreateDefaultPalette();
 	}
 
 	// todo : name?
@@ -65,10 +65,10 @@ function Color() {
 	}
 	this.ShiftedColorIndex = ShiftedColorIndex;
 
-	this.LoadPalette = function(pal, id) {
-		ResetPalette(id);
+	this.LoadRoomPalette = function(pal) {
+		ResetRoomPalette();
 
-		var palette = palettes[id ? id : PALETTE_ID.ACTIVE];
+		var palette = palettes[PALETTE_ID.ROOM];
 
 		if (pal != undefined && pal != null) {
 			for (var i = 0; i < pal.colors.length; i++) {
@@ -79,22 +79,48 @@ function Color() {
 		}
 	};
 
-	// todo : NAME?
-	this.StorePalette = function() {
-		palettes[PALETTE_ID.PREV] = palettes[PALETTE_ID.ACTIVE];
+	this.StoreRoomPalette = function() {
+		palettes[PALETTE_ID.PREV] = palettes[PALETTE_ID.ROOM];
 	};
 
-	// todo : this name is weird too
-	this.UpdateClearPalette = function(paletteId, clearIndex) {
-		console.log("CLEAR PAL");
+	this.CreateFadePalette = function(clearIndex) {
+		palettes[PALETTE_ID.FADE] = [];
 
-		palettes[PALETTE_ID.CLEAR] = [];
-
-		// todo : hardcoded 16?
-		for (var i = 0; i < 16; i++) {
-			palettes[PALETTE_ID.CLEAR].push(palettes[paletteId][clearIndex]);
+		for (var i = 0; i < paletteSize; i++) {
+			palettes[PALETTE_ID.FADE].push(palettes[PALETTE_ID.PREV][clearIndex]);
 		}
 	};
+
+	function UpdateSystemPalette(paletteIdA, paletteIdB, delta) {
+		bitsyPaletteRequestSize(paletteSize); // todo : do this on every update?
+
+		if (paletteIdA === undefined || paletteIdA === null) {
+			paletteIdA = PALETTE_ID.ROOM;
+		}
+
+		if (paletteIdB != undefined && paletteIdB != null && delta != undefined && delta != null) {
+			for (var i = 0; i < paletteSize; i++) {
+				var colorA = palettes[paletteIdA][i];
+				var colorB = palettes[paletteIdB][i];
+				var deltaColor = LerpColor(colorA, colorB, delta);
+				bitsyPaletteSetColor(i, deltaColor[0], deltaColor[1], deltaColor[2], deltaColor[3]);
+			}
+		}
+		else {
+			for (var i = 0; i < paletteSize; i++) {
+				var color = palettes[paletteIdA][i];
+				bitsyPaletteSetColor(i, color[0], color[1], color[2], color[3]);
+			}
+		}
+	}
+	this.UpdateSystemPalette = UpdateSystemPalette;
+
+	function LerpColor(colorA, colorB, delta) {
+		return [colorA[0] + ((colorB[0] - colorA[0]) * delta),
+			colorA[1] + ((colorB[1] - colorA[1]) * delta),
+			colorA[2] + ((colorB[2] - colorA[2]) * delta),
+			colorA[3] + ((colorB[3] - colorA[3]) * delta)];
+	}
 
 	function GetColorIndex(index) {
 		// todo : handle index out of bounds?
@@ -110,20 +136,10 @@ function Color() {
 	this.GetColorIndex = GetColorIndex;
 
 	function GetColor(index, id) {
-		var palette = palettes[id ? id : PALETTE_ID.ACTIVE];
+		var palette = palettes[id ? id : PALETTE_ID.ROOM];
 		return palette[GetColorIndex(index)];
 	};
 	this.GetColor = GetColor;
-
-	this.LerpColor = function(index, paletteIdA, paletteIdB, delta) {
-		var colorA = GetColor(index, paletteIdA);
-		var colorB = GetColor(index, paletteIdB);
-
-		return [colorA[0] + ((colorB[0] - colorA[0]) * delta),
-			colorA[1] + ((colorB[1] - colorA[1]) * delta),
-			colorA[2] + ((colorB[2] - colorA[2]) * delta),
-			colorA[3] + ((colorB[3] - colorA[3]) * delta)];
-	}
 
 	this.Cycle = function() {
 		colorCycleOffset--;
@@ -137,7 +153,8 @@ function Color() {
 		return CreateDefaultPalette()[index];
 	}
 
-	ResetPalette();
+	ResetRoomPalette();
+	UpdateSystemPalette();
 }
 
 // TODO : put these loose functions in the color module

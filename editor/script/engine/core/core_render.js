@@ -1,8 +1,12 @@
 // todo : should these really be free floating globals?
 var canvas;
 var context;
+
 var textureCache = {};
 var nextTextureId = 0;
+
+// todo : move max palette size into here?
+var paletteMemory = [];
 
 function bitsyCanvasAttach(canvasIn, renderSize) {
 	canvas = canvasIn;
@@ -11,8 +15,9 @@ function bitsyCanvasAttach(canvasIn, renderSize) {
 	context = canvas.getContext("2d");
 }
 
-function bitsyCanvasClear(r, g, b) {
-	context.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+function bitsyCanvasClear(colorIndex) {
+	var color = paletteMemory[colorIndex];
+	context.fillStyle = "rgb(" + color[0] + "," + color[1] + "," + color[2] + ")";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -43,29 +48,31 @@ function bitsyTextureCreate(width, height) {
 }
 
 // todo : revisit how I handle pixel scaling?
-function bitsyTextureSetPixel(textureId, x, y, scale, r, g, b, a) {
+function bitsyTextureSetPixel(textureId, x, y, scale, colorIndex) {
 	var img = textureCache[textureId].img;
+	var color = paletteMemory[colorIndex];
 
 	for (var sy = 0; sy < scale; sy++) {
 		for (var sx = 0; sx < scale; sx++) {
 			var pxl = (((y * scale) + sy) * img.width * 4) + (((x * scale) + sx) * 4);
 
-			img.data[pxl + 0] = r;
-			img.data[pxl + 1] = g;
-			img.data[pxl + 2] = b;
-			img.data[pxl + 3] = a;
+			img.data[pxl + 0] = color[0];
+			img.data[pxl + 1] = color[1];
+			img.data[pxl + 2] = color[2];
+			img.data[pxl + 3] = color[3];
 		}
 	}
 }
 
-function bitsyTextureFill(textureId, r, g, b, a) {
+function bitsyTextureFill(textureId, colorIndex) {
 	var img = textureCache[textureId].img;
+	var color = paletteMemory[colorIndex];
 
 	for (var i = 0; i < img.data.length; i += 4) {
-		img.data[i + 0] = r;
-		img.data[i + 1] = g;
-		img.data[i + 2] = b;
-		img.data[i + 3] = a;
+		img.data[i + 0] = color[0];
+		img.data[i + 1] = color[1];
+		img.data[i + 2] = color[2];
+		img.data[i + 3] = color[3];
 	}
 }
 
@@ -85,4 +92,21 @@ function bitsyTextureCommit(textureId) {
 
 function bitsyTextureRelease(textureId) {
 	delete textureCache[textureId];
+}
+
+// todo : return success or fail bool?
+function bitsyPaletteRequestSize(size) {
+	paletteMemory = [];
+
+	for (var i = 0; i < size; i++) {
+		paletteMemory.push([0, 0, 0, 255]);
+	}
+}
+
+function bitsyPaletteSetColor(index, r, g, b, a) {
+	paletteMemory[index] = [r, g, b, a];
+}
+
+function bitsyPaletteIsTransparent(index) {
+	return paletteMemory[index][3] === 0;
 }
