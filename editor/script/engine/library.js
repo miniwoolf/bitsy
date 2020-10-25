@@ -57,7 +57,8 @@ function createCoreLibrary(parent) {
 	// todo : make sure rooms remember their original pal id and reset to it
 	lib.Set("PAL", function(parameters, onReturn) {
 		var palId = parameters[0];
-		color.LoadPalette(palette[palId]);
+		color.LoadRoomPalette(palette[palId]);
+		color.UpdateSystemPalette();
 		renderer.ResetRenderCache();
 		onReturn(null); // todo : replace all nulls with false? return palette id?
 	});
