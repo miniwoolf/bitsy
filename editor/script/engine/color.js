@@ -36,12 +36,26 @@ function Color() {
 		palette.push([0,0,0,255]);
 		palette.push([255,255,255,255]);
 
-		// rainbow colors
-		for (var i = 0; i < colorCycleLen; i++) {
-			var h = (i / colorCycleLen);
-			var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
-			palette.push(rbwColor);
-		}
+		// NOTE: I'm keeping this comment to illustrate how I calculated the rainbow colors!
+		// for (var i = 0; i < colorCycleLen; i++) {
+		// 	var h = Math.sin((Math.PI * (i / (colorCycleLen + 1))) / 2);
+		// 	console.log("RAINBOW HUE " + i + " -- " + h);
+		// 	var rbwColor = hslToRgb(h, 1, 0.5).concat([255]);
+		// 	console.log("RAINBOW HUE [" + rbwColor[0] + "," + rbwColor[1] + "," + rbwColor[2] + "," + rbwColor[3] + "]");
+		// 	palette.push(rbwColor);
+		// }
+
+		// precalculated rainbow colors
+		palette.push([255,0,0,255]);
+		palette.push([255,217,0,255]);
+		palette.push([78,255,0,255]);
+		palette.push([0,255,125,255]);
+		palette.push([0,192,255,255]);
+		palette.push([0,18,255,255]);
+		palette.push([136,0,255,255]);
+		palette.push([255,0,242,255]);
+		palette.push([255,0,138,255]);
+		palette.push([255,0,61,255]);
 
 		// transparent
 		palette.push([0,0,0,0]);

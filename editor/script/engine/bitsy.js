@@ -598,7 +598,7 @@ function updateAnimation() {
 }
 
 var colorCycleCounter = 0;
-var colorCycleTime = 80; // todo : is this the speed I want?
+var colorCycleTime = 80; // todo : is this the speed I want? (closest to the original speed would be ~71)
 function updateColorCycle() {
 	colorCycleCounter += deltaTime;
 
