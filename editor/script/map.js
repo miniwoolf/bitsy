@@ -252,10 +252,10 @@ function MapTool(controls) {
 		var nextId = nextObjectHexId(sortedHexIdList(map));
 
 		map[nextId] = createMap(nextId);
-		map[nextId].transition_effect_left = "slide_l";
-		map[nextId].transition_effect_right = "slide_r";
-		map[nextId].transition_effect_up = "slide_u";
-		map[nextId].transition_effect_down = "slide_d";
+		map[nextId].transition_effect_left = "SLL";
+		map[nextId].transition_effect_right = "SLR";
+		map[nextId].transition_effect_up = "SLU";
+		map[nextId].transition_effect_down = "SLD";
 
 		refreshGameData();
 

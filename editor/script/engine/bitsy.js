@@ -1758,7 +1758,7 @@ function parseMap(lines, i) {
 		else if (getType(lines[i]) === "NAME") {
 			var name = lines[i].split(/\s(.+)/)[1]; // todo : make helper function?
 			map[id].name = name;
-			// TODO : add to global name registry?			
+			// TODO : add to global name registry?
 		}
 
 		i++;
@@ -2322,7 +2322,6 @@ function drawRoom(room, options) {
 
 	var renderTarget = options && options.target ? options.target : renderer.CreateScreenTarget();
 
-	// todo : why are we doing this twice per frame?
 	// clear screen
 	renderTarget.Clear();
 
@@ -2336,14 +2335,11 @@ function drawRoom(room, options) {
 		for (j in room.tilemap[i]) {
 			var id = room.tilemap[i][j];
 			if (id != "0") {
-				//console.log(id);
 				if (tile[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
 					id = "0";
 					room.tilemap[i][j] = id;
 				}
 				else {
-					// console.log(id);
-					// todo : FIX THE PALETTE INDEX STUFF!
 					renderTarget.DrawTile(id, j, i, renderOptions);
 				}
 			}

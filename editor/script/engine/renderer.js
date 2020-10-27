@@ -13,7 +13,7 @@ var debugRenderCount = 0;
 
 function renderTileFrame(drawing, frameOverride) {
 	var frameIndex = getFrameIndex(drawing, frameOverride);
-	var frameSource = cache.source[drawing.id][frameIndex];
+	var frameSource = cache.source[drawing.drw][frameIndex];
 	var backgroundIndex = drawing.colorOffset + drawing.bgc;
 	var colorIndex = drawing.colorOffset + drawing.col;
 	return createTextureFromTileSource(frameSource, backgroundIndex, colorIndex);
@@ -135,7 +135,7 @@ function ScreenRenderTarget() {
 
 this.CreateScreenTarget = function() {
 	return new ScreenRenderTarget();
-}
+};
 
 function PaletteIndexBufferRenderTarget() {
 	var width = roomsize * tilesize;
@@ -191,6 +191,46 @@ function PaletteIndexBufferRenderTarget() {
 
 this.CreateBufferTarget = function() {
 	return new PaletteIndexBufferRenderTarget();
+};
+
+function TilemapBufferRenderTarget() {
+	var width = roomsize;
+	var height = roomsize;
+
+	var tilemapData = [];
+
+	this.Clear = function() {
+		for (var i = 0; i < width * height; i++) {
+			tilemapData.push({ drw: "0", col: 0, bgc: 0, });
+		}
+	};
+
+	function Draw(drawing, x, y, options) {
+		tilemapData[(parseInt(y) * width) + parseInt(x)] = {
+			drw: drawing.drw,
+			col: drawing.col,
+			bgc: drawing.bgc,
+		};
+	}
+
+	this.DrawTile = function(tileId, x, y, options) {
+		Draw(tile[tileId], x, y, options);
+	};
+
+	this.DrawSprite = function(sprite, x, y, options) {
+		Draw(sprite, x, y, options);
+	};
+
+	this.Width = width;
+	this.Height = height;
+
+	this.GetTile = function(x, y) {
+		return tilemapData[(y * width) + x];
+	};
 }
+
+this.CreateTileBufferTarget = function() {
+	return new TilemapBufferRenderTarget();
+};
 
 } // Renderer()

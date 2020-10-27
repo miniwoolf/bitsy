@@ -328,35 +328,35 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 var transitionTypes = [
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_fade_w", "fade (white)"); },
-		id: "fade_w",
+		id: "FDW",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_fade_b", "fade (black)"); },
-		id: "fade_b",
+		id: "FDB",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_wave", "wave"); },
-		id: "wave",
+		id: "WVE",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_tunnel", "tunnel"); },
-		id: "tunnel",
+		id: "TNL",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_slide_u", "slide up"); },
-		id: "slide_u",
+		id: "SLU",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_slide_d", "slide down"); },
-		id: "slide_d",
+		id: "SLD",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_slide_l", "slide left"); },
-		id: "slide_l",
+		id: "SLL",
 	},
 	{
 		GetName: function() { return localization.GetStringOrFallback("transition_slide_r", "slide right"); },
-		id: "slide_r",
+		id: "SLR",
 	},
 ];
 

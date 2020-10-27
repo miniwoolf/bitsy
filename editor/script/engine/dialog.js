@@ -1018,7 +1018,7 @@ var CustomEffect = function() {
 					char.color.g = result[1];
 					char.color.b = result[2];
 					char.offset.x = result[3];
-					char.offset.y = result[4];					
+					char.offset.y = result[4];
 				});
 		}
 	};

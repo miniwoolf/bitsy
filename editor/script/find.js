@@ -813,7 +813,7 @@ function CreateRoomThumbnailRenderer() {
 			hexPalette.push(hexStr);
 		}
 
-		return hexPalette;		
+		return hexPalette;
 	}
 
 	var onRender = function(r, ctx, options) {
@@ -839,7 +839,7 @@ function CreatePaletteThumbnailRenderer() {
 			hexPalette.push(hexStr);
 		}
 
-		return hexPalette;		
+		return hexPalette;
 	}
 
 	var onRender = function(obj, ctx, options) {

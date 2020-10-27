@@ -1,4 +1,6 @@
 var TransitionManager = function() {
+	var curEffect = null;
+
 	var transitionStart = null;
 	var transitionEnd = null;
 	var transitionTextureId = null;
@@ -8,14 +10,21 @@ var TransitionManager = function() {
 	var frameRate = 8; // cap the FPS
 	var prevStep = -1; // used to avoid running post-process effect constantly
 
-	this.BeginTransition = function(startRoom, startX, startY, endRoom, endX, endY, effectName, onInitNextRoom) {
-		curEffect = effectName;
+	this.BeginTransition = function(startRoom, startX, startY, endRoom, endX, endY, effectId, onInitNextRoom) {
+		curEffect = null;
+
+		if (effectId in transitionEffects) {
+			curEffect = transitionEffects[effectId];
+		}
+		else if (effectId in dialog) {
+			curEffect = CreateCustomEffect(effectId);
+		}
 
 		var tmpRoom = player().room;
 		var tmpX = player().x;
 		var tmpY = player().y;
 
-		if (transitionEffects[curEffect].showPlayerStart) {
+		if (curEffect.showPlayerStart) {
 			player().room = startRoom;
 			player().x = startX;
 			player().y = startY;
@@ -26,11 +35,11 @@ var TransitionManager = function() {
 			player().y = -1;
 		}
 
-		var startBuffer = renderer.CreateBufferTarget();
+		var startBuffer = (curEffect.type === EffectType.Tile) ? renderer.CreateTileBufferTarget() : renderer.CreateBufferTarget();
 		drawRoom(room[startRoom], { target: startBuffer, });
 		transitionStart = new TransitionInfo(startBuffer, PALETTE_ID.PREV, startX, startY);
 
-		if (transitionEffects[curEffect].showPlayerEnd) {
+		if (curEffect.showPlayerEnd) {
 			player().room = endRoom;
 			player().x = endX;
 			player().y = endY;
@@ -42,7 +51,7 @@ var TransitionManager = function() {
 
 		onInitNextRoom(endRoom);
 
-		var endBuffer = renderer.CreateBufferTarget();
+		var endBuffer = (curEffect.type === EffectType.Tile) ? renderer.CreateTileBufferTarget() : renderer.CreateBufferTarget();
 		drawRoom(room[endRoom], { target: endBuffer, });
 		transitionEnd = new TransitionInfo(endBuffer, PALETTE_ID.ROOM, endX, endY);
 
@@ -58,12 +67,14 @@ var TransitionManager = function() {
 		player().y = tmpY;
 
 		// set palette for clearing screen
-		if ("clearIndex" in transitionEffects[curEffect]) {
-			color.CreateFadePalette(transitionEffects[curEffect].clearIndex);
+		if ("clearIndex" in curEffect) {
+			color.CreateFadePalette(curEffect.clearIndex);
 		}
 	}
 
 	function EndTransition() {
+		curEffect = null;
+
 		isTransitioning = false;
 		transitionTime = 0;
 		transitionStart = null;
@@ -78,7 +89,7 @@ var TransitionManager = function() {
 		if (transitionCompleteCallback != null) {
 			transitionCompleteCallback();
 		}
-		transitionCompleteCallback = null;		
+		transitionCompleteCallback = null;
 	}
 
 	this.UpdateTransition = function(dt) {
@@ -88,33 +99,70 @@ var TransitionManager = function() {
 
 		transitionTime += dt;
 
-		var transitionDelta = transitionTime / transitionEffects[curEffect].duration;
-		var maxStep = Math.floor(frameRate * (transitionEffects[curEffect].duration / 1000));
+		var transitionDelta = transitionTime / curEffect.duration;
+		var maxStep = Math.floor(frameRate * (curEffect.duration / 1000));
 		var step = Math.floor(transitionDelta * maxStep);
 
 		if (step != prevStep) {
-			transitionEffects[curEffect].onStep(transitionStart, transitionEnd, (step / maxStep));
-
-			for (var y = 0; y < transitionStart.Buffer.Height; y++) {
-				for (var x = 0; x < transitionStart.Buffer.Width; x++) {
-					var effectColorIndex = transitionEffects[curEffect].pixelEffectFunc(
-						transitionStart,
-						transitionEnd,
-						x,
-						y,
-						(step / maxStep));
-
-					bitsyTextureSetPixel(transitionTextureId, x, y, scale, effectColorIndex);
-				}
+			if ("type" in curEffect && curEffect.type === EffectType.Tile) {
+				UpdateTileEffect(curEffect, step, maxStep);
 			}
-
-			bitsyCanvasPutTexture(transitionTextureId, 0, 0);
+			else {
+				UpdatePixelEffect(curEffect, step, maxStep);
+			}
 		}
 
 		prevStep = step;
 
-		if (transitionTime >= transitionEffects[curEffect].duration) {
+		if (transitionTime >= curEffect.duration) {
 			EndTransition();
+		}
+	}
+
+	// todo : pass in other parameters?
+	function UpdatePixelEffect(effect, step, maxStep) {
+		effect.onStep(transitionStart, transitionEnd, (step / maxStep));
+
+		for (var y = 0; y < transitionStart.Buffer.Height; y++) {
+			for (var x = 0; x < transitionStart.Buffer.Width; x++) {
+
+				var effectColorIndex = effect.pixelEffectFunc(
+					transitionStart,
+					transitionEnd,
+					x,
+					y,
+					(step / maxStep));
+
+				bitsyTextureSetPixel(transitionTextureId, x, y, scale, effectColorIndex);
+			}
+		}
+
+		bitsyCanvasPutTexture(transitionTextureId, 0, 0);
+	}
+
+	function UpdateTileEffect(effect, step, maxStep) {
+		renderer.ResetRenderCache();
+
+		// kind of hacky way to allow drawing to empty spaces during transitions
+		var emptyTile = [[]];
+		for (var y = 0; y < tilesize; y++) {
+			emptyTile[0].push([]);
+			for (var x = 0; x < tilesize; x++) {
+				emptyTile[0][y].push(0);
+			}
+		}
+		renderer.SetTileSource("0", emptyTile);
+
+		effect.onStep(transitionStart, transitionEnd, (step / maxStep));
+
+		var screenTarget = renderer.CreateScreenTarget();
+		screenTarget.Clear();
+
+		for (var y = 0; y < transitionStart.Buffer.Height; y++) {
+			for (var x = 0; x < transitionStart.Buffer.Width; x++) {
+				var drawing = effect.tileEffectFunc(transitionStart, transitionEnd, x, y, step);
+				screenTarget.DrawSprite(drawing, x, y);
+			}
 		}
 	}
 
@@ -131,12 +179,12 @@ var TransitionManager = function() {
 	}
 
 	var transitionEffects = {};
-	var curEffect = "none";
 	this.RegisterTransitionEffect = function(name, effect) {
 		transitionEffects[name] = effect;
 	}
 
-	this.RegisterTransitionEffect("none", {
+	// todo : name?
+	this.RegisterTransitionEffect("NONE", {
 		showPlayerStart : false,
 		showPlayerEnd : false,
 		onStep : function() {},
@@ -157,7 +205,7 @@ var TransitionManager = function() {
 		return curBuffer.GetPixel(pixelX, pixelY);
 	}
 
-	this.RegisterTransitionEffect("fade_w", { // TODO : have it linger on full white briefly?
+	this.RegisterTransitionEffect("FDW", { // TODO : have it linger on full white briefly?
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 750,
@@ -166,7 +214,7 @@ var TransitionManager = function() {
 		pixelEffectFunc : pixelEffectFade,
 	});
 
-	this.RegisterTransitionEffect("fade_b", {
+	this.RegisterTransitionEffect("FDB", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 750,
@@ -175,7 +223,8 @@ var TransitionManager = function() {
 		pixelEffectFunc : pixelEffectFade,
 	});
 
-	this.RegisterTransitionEffect("wave", {
+	// todo : name? WVY? WAV?
+	this.RegisterTransitionEffect("WVE", {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
@@ -203,7 +252,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("tunnel", {
+	this.RegisterTransitionEffect("TNL", {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
@@ -265,7 +314,7 @@ var TransitionManager = function() {
 		color.UpdateSystemPalette(start.PaletteId, end.PaletteId, paletteDelta);
 	}
 
-	this.RegisterTransitionEffect("slide_u", {
+	this.RegisterTransitionEffect("SLU", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -284,7 +333,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("slide_d", {
+	this.RegisterTransitionEffect("SLD", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -303,7 +352,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("slide_l", {
+	this.RegisterTransitionEffect("SLL", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -322,7 +371,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("slide_r", {
+	this.RegisterTransitionEffect("SLR", {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -340,6 +389,99 @@ var TransitionManager = function() {
 			}
 		},
 	});
+
+	// NOTE: Custom pixel effects are currently too slow with my script interpreter... going to try something else
+	// function CreateCustomEffect(dlgId) {
+	// 	var script = dialog[dlgId];
+
+	// 	var effect = {
+	// 		showPlayerStart : false,
+	// 		showPlayerEnd : true,
+	// 		duration : 1000,
+	// 		onStep : function(start, end, delta) {
+	// 			color.UpdateSystemPalette(start.PaletteId, end.PaletteId, delta);
+	// 		},
+	// 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
+	// 			var colorIndex = COLOR_INDEX.BACKGROUND;
+
+	// 			scriptNext.RunCallback(script, null, [], function(result) {
+	// 				colorIndex += result;
+	// 			});
+
+	// 			return colorIndex;
+	// 		},
+	// 	};
+
+	// 	return effect;
+	// }
+
+	var EffectType = {
+		Pixel : 0,
+		Tile : 0,
+	};
+
+	function CreateCustomEffect(dlgId) {
+		var script = dialog[dlgId];
+
+		function CreateTileInfoTable(tileInfo) {
+			var table = new Table();
+			table.Set("DRW", tileInfo.drw);
+			table.Set("COL", tileInfo.col);
+			table.Set("BGC", tileInfo.bgc);
+			return table;
+		}
+
+		var effect = {
+			type : EffectType.Tile,
+			showPlayerStart : false,
+			showPlayerEnd : true,
+			duration : 1000,
+			onStep : function(start, end, delta) {
+				color.UpdateSystemPalette(start.PaletteId, end.PaletteId, delta);
+			},
+			tileEffectFunc : function(start, end, tileX, tileY, step) {
+				var result = {
+					drw: "0",
+					col: 0,
+					bgc: 0,
+					colorOffset: COLOR_INDEX.BACKGROUND,
+					animation: { isAnimated: false, frameIndex: 0, frameCount: 1, },
+				};
+
+				var startTile = CreateTileInfoTable(start.Buffer.GetTile(tileX, tileY));
+				var endTile = CreateTileInfoTable(end.Buffer.GetTile(tileX, tileY));
+
+				scriptNext.RunCallback(
+					script,
+					null,
+					[tileX, tileY, startTile, endTile, step], // param order?
+					function(out) {
+						if (out) {
+							if (out.Has("DRW")) {
+								result.drw = out.Get("DRW");
+							}
+
+							if (out.Has("COL")) {
+								result.col = out.Get("COL");
+							}
+
+							if (out.Has("BGC")) {
+								result.bgc = out.Get("BGC");
+							}
+						}
+					});
+
+				if (result.drw in tile) {
+					// todo : will this cause any bugs to access the global animation state?
+					result.animation = tile[result.drw].animation;
+				}
+
+				return result;
+			},
+		};
+
+		return effect;
+	}
 
 	function clampLerp(deltaIn, clampDuration) {
 		var clampOffset = (1.0 - clampDuration) / 2;
