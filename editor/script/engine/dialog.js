@@ -385,6 +385,7 @@ var DialogBuffer = function() {
 		charIndex = 0;
 		activeTextEffects = [];
 		onDialogEndCallbacks = [];
+		isNextSpaceSuppressed = false;
 	};
 
 	function DoNextChar() {
@@ -698,44 +699,61 @@ var DialogBuffer = function() {
 		}
 	}
 
+	var isNextSpaceSuppressed = false;
+
 	this.AddDrawing = function(drawingId) {
 		var drawingChar = new DialogDrawingChar(drawingId, activeTextEffects);
-		AddWordCharArray([drawingChar]);
+		AddWordCharArray([drawingChar], !isNextSpaceSuppressed);
+
+		isNextSpaceSuppressed = false;
 	}
 
-	this.AddText = function(textStr) {
-		console.log("ADD TEXT " + textStr);
+	this.AddText = function(textStr, suppressWhitespace) {
+		if (suppressWhitespace === undefined ||suppressWhitespace === null) {
+			suppressWhitespace = false;
+		}
 
-		// add text to page buffer, one word at a time
-		var words = textStr.split(" ");
+		// add text to page buffer, one line and word at a time
+		var lines = textStr.split("\n");
 
-		for (var i = 0; i < words.length; i++) {
-			var word = words[i];
-			if (arabicHandler.ContainsArabicCharacters(word)) {
-				word = arabicHandler.ShapeArabicCharacters(word);
+		for (var i = 0; i < lines.length; i++) {
+			if (i > 0) {
+				AddLinebreak();
 			}
 
-			var wordCharArray = CreateCharArray(word, activeTextEffects);
-			var prependSpaceChar = i != 0;
+			var words = lines[i].split(" ");
 
-			AddWordCharArray(wordCharArray, prependSpaceChar);
+			for (var j = 0; j < words.length; j++) {
+				var word = words[j];
+
+				if (arabicHandler.ContainsArabicCharacters(word)) {
+					word = arabicHandler.ShapeArabicCharacters(word);
+				}
+
+				var wordCharArray = CreateCharArray(word, activeTextEffects);
+				var prependSpaceChar = i > 0 || j > 0 || (!suppressWhitespace && !isNextSpaceSuppressed);
+
+				AddWordCharArray(wordCharArray, prependSpaceChar);
+			}
 		}
+
+		isNextSpaceSuppressed = suppressWhitespace;
 	};
 
 	// todo... share stuff with AddText?
 	this.AddWord = function(wordStr) {
-		console.log("ADD WORD TO BUFFER " + wordStr);
-
 		if (arabicHandler.ContainsArabicCharacters(wordStr)) {
 			wordStr = arabicHandler.ShapeArabicCharacters(wordStr);
 		}
 
 		var wordCharArray = CreateCharArray(wordStr, activeTextEffects);
 
-		AddWordCharArray(wordCharArray, true);
+		AddWordCharArray(wordCharArray, !isNextSpaceSuppressed);
+
+		isNextSpaceSuppressed = false;
 	}
 
-	this.AddLinebreak = function() {
+	function AddLinebreak() {
 		// TODO : decide if this is the right behavior
 		// // Ensure there is a row to mark as finished
 		if (!IsActive() || LastPage().rows.length + 1 > maxRowCount) {
@@ -749,6 +767,7 @@ var DialogBuffer = function() {
 			LastRow().isFinished = true;
 		}
 	}
+	this.AddLinebreak = AddLinebreak;
 
 	this.AddPagebreak = function() {
 		// TODO : decide if this is the right behavior

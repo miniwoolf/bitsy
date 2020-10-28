@@ -43,8 +43,26 @@ function createCoreLibrary(parent) {
 
 	/* TODO: missing old functions
 		- exit (EXT)
-		- item (ITM)
 	*/
+
+	// todo : allow name as input
+	lib.Set("ITM", function(parameters, onReturn) {
+		var itemId = parameters[0];
+
+		var curItemCount = player().inventory[itemId] ? player().inventory[itemId] : 0;
+
+		if (parameters.length > 1) {
+			// TODO : is it a good idea to force inventory to be >= 0?
+			player().inventory[itemId] = Math.max(0, parseInt(parameters[1]));
+			curItemCount = player().inventory[itemId];
+
+			if (onInventoryChanged != null) {
+				onInventoryChanged(itemId);
+			}
+		}
+
+		onReturn(curItemCount);
+	});
 
 	lib.Set("END", function(parameters, onReturn) {
 		// todo very global / hacky?
@@ -149,17 +167,18 @@ function valueToString(value) {
 function createDialogLibrary(dialogBuffer, parent) {
 	var lib = new Table(parent);
 
-	/* todo
-		missing old func:
-		- printX (DRW) -- correct name?
-	*/
-
 	lib.Set("SAY", function(parameters, onReturn) {
 		// todo : is this the right implementation of say?
 		// todo : hacky to force into a string with concatenation?
 		// todo : nicer way to print tables
 		// todo : new way to convert bools etc to string
 		dialogBuffer.AddText(valueToString(parameters[0]));
+		dialogBuffer.AddScriptReturn(onReturn);
+	});
+
+	// todo : should it be the drawing ID or tile ID?
+	lib.Set("DRW", function(parameters, onReturn) {
+		dialogBuffer.AddDrawing(parameters[0]);
 		dialogBuffer.AddScriptReturn(onReturn);
 	});
 

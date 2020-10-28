@@ -153,7 +153,7 @@ function serializePaired(expressionList, indentDepth) {
 
 // todo : should "SAY" be inline? "PG"?
 function isInlineFunction(symbol) {
-	return ["BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR"].indexOf(symbol) != -1;
+	return ["BR", "PG", "WVY", "/WVY", "SHK", "/SHK", "RBW", "/RBW", "CLR", "/CLR", "DRW"].indexOf(symbol) != -1;
 }
 this.IsInlineFunction = isInlineFunction;
 
@@ -665,7 +665,7 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 		else {
 			if (expression.list[i].type === "string") {
 				if (buffer) {
-					buffer.AddText(expression.list[i].value);
+					buffer.AddText(expression.list[i].value, true /*suppressSpaces*/);
 				}
 
 				result = null;
