@@ -472,7 +472,7 @@ function updateInput() {
 		}
 
 		function tryMovePlayer(direction) {
-			if (player().key != null) {
+			if (player().btn != null) {
 				queueScript(
 					player().btn,
 					player(),
@@ -628,12 +628,12 @@ function getSpriteAt(x, y) {
 	return null;
 }
 
-function getImpassableSpritesAt(x, y) {
+function getAllSpritesAt(x, y) {
 	var spriteList = [];
 
 	for (var id in spriteInstances) {
 		var instance = spriteInstances[id];
-		if (instance.wal && instance.x === x && instance.y === y) {
+		if (instance.x === x && instance.y === y) {
 			spriteList.push(instance);
 		}
 	}
@@ -852,16 +852,9 @@ function movePlayer(direction) {
 	}
 
 	var result = move(player(), direction, true);
+	var spr = result.collidedWith;
 
 	var didPlayerMoveThisFrame = !result.collision;
-	
-	// first sprite is the one you talk to (if multiple overlap)
-	var spr = null;
-	for (var i = 0; i < result.collidedWith.length && spr === null; i++) {
-		if (result.collidedWith[i].type === "SPR") {
-			spr = result.collidedWith[i];
-		}
-	}
 
 	var ext = getExit(player().x, player().y);
 	var end = getEnding(player().x, player().y);
@@ -992,45 +985,56 @@ function move(instance, direction, canEnterNeighborRoom) {
 	var x = instance.x + (direction === Direction.Left ? -1 : 0) + (direction === Direction.Right ? 1 : 0);
 	var y = instance.y + (direction === Direction.Up ? -1 : 0) + (direction === Direction.Down ? 1 : 0);
 
-	var collisionInstances = [];
+	var collision = false;
+	var collisionSprite = null;
+	var knockIntoInstances = [];
 
 	if (isRoomEdgeWall(x, y, curRoom, canEnterNeighborRoom)) {
 		// todo : is it ok that the coordinates will be OUTSIDE the room? (0,-1) for example?
-		collisionInstances.push(createRoomWallCollisionInstance(x, y));
+		knockIntoInstances.push(createRoomWallCollisionInstance(x, y));
+		collision = true;
 	}
 
 	if (isWall(x, y, curRoom)) {
 		var tileId = getTile(x, y);
-		collisionInstances.push(createTileCollisionInstance(tileId, x, y));
+		knockIntoInstances.push(createTileCollisionInstance(tileId, x, y));
+		collision = true;
 	}
 
-	collisionInstances = collisionInstances.concat(getImpassableSpritesAt(x, y));
+	var spritesAtDestination = getAllSpritesAt(x, y);
+	knockIntoInstances = knockIntoInstances.concat(spritesAtDestination);
 
-	var collision = collisionInstances.length > 0;
+	for (var i = 0; i < spritesAtDestination.length; i++) {
+		if (spritesAtDestination[i].wal) {
+			collision = true;
 
-	if (collision) {
-		console.log(collisionInstances);
-		for (var i = 0; i < collisionInstances.length; i++) {
-			var other = collisionInstances[i];
-
-			if (dialog[instance.nok]) {
-				queueScript(instance.nok, instance, function() {}, [other]);
-			}
-
-			if (other != null && other.nok) {
-				var knockDlgId = other.nok;
-				if (dialog[knockDlgId]) {
-					queueScript(knockDlgId, other, function() {}, [instance]);
-				}
+			// store first collideable sprite for dialog purposes
+			if (collisionSprite === null && spritesAtDestination[i].type === "SPR") {
+				collisionSprite = spritesAtDestination[i];
 			}
 		}
 	}
-	else {
+
+
+	// queue knock into scripts
+	for (var i = 0; i < knockIntoInstances.length; i++) {
+		var other = knockIntoInstances[i];
+
+		if (instance.nok && dialog[instance.nok]) {
+			queueScript(instance.nok, instance, function() {}, [other]);
+		}
+
+		if (other.nok && dialog[other.nok]) {
+			queueScript(other.nok, other, function() {}, [instance]);
+		}
+	}
+
+	if (!collision) {
 		instance.x = x;
 		instance.y = y;
 	}
 
-	return { collision: collision, collidedWith: collisionInstances, };
+	return { collision: collision, collidedWith: collisionSprite, };
 }
 
 function keyNameToDirection(keyName) {
@@ -1334,8 +1338,7 @@ function getEnding(x, y) {
 	return null;
 }
 
-function getTile(x,y) {
-	// console.log(x + " " + y);
+function getTile(x, y) {
 	var t = getRoom().tilemap[y][x];
 	return t;
 }

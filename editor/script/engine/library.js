@@ -327,16 +327,9 @@ function createSpriteLibrary(contextInstance, parent) {
 	// move a sprite instance (with collisions)
 	lib.Set("HOP", function(parameters, onReturn) {
 		// todo : allow moving the current sprite if no parameters? that would mean putting the reference param last
-		var result = false;
-
+		// todo : check that the instance is a valid object instance!
 		var instance = parameters[0];
-
-		if (instance.id === "A") {
-			result = movePlayer(keyNameToDirection(parameters[1]));
-		}
-		else {
-			result = !move(instance, keyNameToDirection(parameters[1])).collision;
-		}
+		var result = !move(instance, keyNameToDirection(parameters[1])).collision;
 
 		onReturn(result);
 	});
