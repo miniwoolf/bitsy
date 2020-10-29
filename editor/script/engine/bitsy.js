@@ -628,6 +628,19 @@ function getSpriteAt(x, y) {
 	return null;
 }
 
+function getImpassableSpritesAt(x, y) {
+	var spriteList = [];
+
+	for (var id in spriteInstances) {
+		var instance = spriteInstances[id];
+		if (instance.wal && instance.x === x && instance.y === y) {
+			spriteList.push(instance);
+		}
+	}
+
+	return spriteList;
+}
+
 var Direction = {
 	None : -1,
 	Up : 0,
@@ -841,7 +854,14 @@ function movePlayer(direction) {
 	var result = move(player(), direction, true);
 
 	var didPlayerMoveThisFrame = !result.collision;
-	var spr = result.collidedWith;
+	
+	// first sprite is the one you talk to (if multiple overlap)
+	var spr = null;
+	for (var i = 0; i < result.collidedWith.length && spr === null; i++) {
+		if (result.collidedWith[i].type === "SPR") {
+			spr = result.collidedWith[i];
+		}
+	}
 
 	var ext = getExit(player().x, player().y);
 	var end = getEnding(player().x, player().y);
@@ -938,28 +958,71 @@ function queueButtonDownScripts(direction) {
 	}
 }
 
+function createTileCollisionInstance(tileId, x, y) {
+	var definition = tile[tileId];
+	var instance = new Table();
+
+	instance.Set("ID", definition.id, { isReadOnly: true, });
+	instance.Set("TYPE", definition.type, { isReadOnly: true, }); // todo : "long" names ok?
+	instance.Set("NAME", definition.name, { isReadOnly: true, });
+	instance.Set("DRW", definition.drw, { isReadOnly: true, });
+	instance.Set("BGC", definition.bgc, { isReadOnly: true, });
+	instance.Set("COL", definition.col, { isReadOnly: true, });
+	instance.Set("X", x, { isReadOnly: true, });
+	instance.Set("Y", y, { isReadOnly: true, });
+	instance.Set("WAL", true, { isReadOnly: true, });
+
+	return instance;
+}
+
+function createRoomWallCollisionInstance(x, y) {
+	var instance = new Table();
+
+	// todo : is WAL the right type? or ROOM? or what?
+	instance.Set("TYPE", "WAL", { isReadOnly: true, }); // todo : "long" names ok?
+
+	instance.Set("X", x, { isReadOnly: true, });
+	instance.Set("Y", y, { isReadOnly: true, });
+	instance.Set("WAL", true, { isReadOnly: true, });
+
+	return instance;
+}
+
 function move(instance, direction, canEnterNeighborRoom) {
 	var x = instance.x + (direction === Direction.Left ? -1 : 0) + (direction === Direction.Right ? 1 : 0);
 	var y = instance.y + (direction === Direction.Up ? -1 : 0) + (direction === Direction.Down ? 1 : 0);
 
-	// TODO: handle collisions with things other than sprites?
-	var spr = null;
+	var collisionInstances = [];
 
-	var collision = (spr = getSpriteAt(x, y)) || isWall(x, y, curRoom, canEnterNeighborRoom);
+	if (isRoomEdgeWall(x, y, curRoom, canEnterNeighborRoom)) {
+		// todo : is it ok that the coordinates will be OUTSIDE the room? (0,-1) for example?
+		collisionInstances.push(createRoomWallCollisionInstance(x, y));
+	}
+
+	if (isWall(x, y, curRoom)) {
+		var tileId = getTile(x, y);
+		collisionInstances.push(createTileCollisionInstance(tileId, x, y));
+	}
+
+	collisionInstances = collisionInstances.concat(getImpassableSpritesAt(x, y));
+
+	var collision = collisionInstances.length > 0;
 
 	if (collision) {
-		// todo : shoudl I provide more info about walls? what about the screen edges?
-		var other = spr ? spr : { type : "TIL" };
+		console.log(collisionInstances);
+		for (var i = 0; i < collisionInstances.length; i++) {
+			var other = collisionInstances[i];
 
-		// queue collision scripts
-		// TODO : should these go at the back of the line or the front?
+			if (dialog[instance.nok]) {
+				queueScript(instance.nok, instance, function() {}, [other]);
+			}
 
-		if (dialog[instance.nok]) {
-			queueScript(instance.nok, instance, function() {}, [other]);
-		}
-
-		if (spr != null && dialog[spr.nok]) {
-			queueScript(spr.nok, spr, function() {}, [instance]);
+			if (other != null && other.nok) {
+				var knockDlgId = other.nok;
+				if (dialog[knockDlgId]) {
+					queueScript(knockDlgId, other, function() {}, [instance]);
+				}
+			}
 		}
 	}
 	else {
@@ -967,7 +1030,7 @@ function move(instance, direction, canEnterNeighborRoom) {
 		instance.y = y;
 	}
 
-	return { collision: collision, collidedWith: spr };
+	return { collision: collision, collidedWith: collisionInstances, };
 }
 
 function keyNameToDirection(keyName) {
@@ -1110,8 +1173,9 @@ function createSpriteInstance(instanceId, location) {
 	instance.Set("COL", definition.col, { externalKey: "col" });
 	instance.Set("X", location.x, { externalKey: "x" });
 	instance.Set("Y", location.y, { externalKey: "y" });
-	instance.Set("LCK", false, { externalKey: "lck" });
-	// other possibilities: WAL, SPD, ANM, ???
+	instance.Set("LCK", false, { externalKey: "lck" }); // todo : name LOK instead?
+	instance.Set("WAL", definition.isWall, { externalKey: "wal" });
+	// other possibilities: SPD, ANM, ???
 
 	instance.SetSecret("instanceId", instanceId);
 	instance.SetSecret("isValid", true); // todo : actually use this..
@@ -1170,21 +1234,38 @@ function getItemIndex(x, y) {
 	return -1;
 }
 
-function isWall(x, y, roomId, canEnterNeighborRoom) {
+function isRoomEdgeWall(x, y, roomId, canEnterNeighborRoom) {
+	var blocked = false;
+
 	if (roomId == undefined || roomId == null) {
 		roomId = curRoom;
 	}
 
 	if (x < 0 || x >= roomsize || y < 0 || y >= roomsize) {
 		var mapLocation = room[roomId].mapLocation;
+
 		if (canEnterNeighborRoom && mapLocation.id != null) {
 			var mapX = mapLocation.x + (x < 0 ? -1 : 0) + (x >= roomsize ? 1 : 0);
 			var mapY = mapLocation.y + (y < 0 ? -1 : 0) + (y >= roomsize ? 1 : 0);
-			return mapX < 0 || mapX >= mapsize || mapY < 0 || mapY >= mapsize || map[mapLocation.id].map[mapY][mapX] === "0";
+
+			blocked = mapX < 0 || mapX >= mapsize ||
+				mapY < 0 || mapY >= mapsize || map[mapLocation.id].map[mapY][mapX] === "0";
 		}
 		else {
-			return true;
+			blocked = true;
 		}
+	}
+
+	return blocked;
+}
+
+function isWall(x, y, roomId) {
+	if (roomId == undefined || roomId == null) {
+		roomId = curRoom;
+	}
+
+	if (x < 0 || x >= roomsize || y < 0 || y >= roomsize) {
+		return false;
 	}
 
 	var tileId = getTile(x, y);
@@ -2001,6 +2082,15 @@ function createTile(id, type, options) {
 	var isWall = type === "TIL" && options.isWall != undefined ? options.isWall : null;
 	var isUnique = isPlayer;
 
+	var isWall = false;
+
+	if (type === "TIL" && options.isWall != undefined) {
+		isWall = options.isWall;
+	}
+	else if (type === "SPR") {
+		isWall = true;
+	}
+
 	createDrawing(drwId, options.drawingData);
 
 	tile[id] = {
@@ -2021,7 +2111,7 @@ function createTile(id, type, options) {
 		knockDlgId: valueOrDefault(options.knockDlgId, null),
 		buttonDownDlgId: valueOrDefault(options.buttonDownDlgId, null),
 		inventory : inventory, // starting inventory (player only)
-		isWall : isWall, // wall tile? (tile only)
+		isWall : isWall, // does this tile block sprites from entering?
 		isUnique : isUnique, // only one instance allowed? (player only)
 		transition_effect : valueOrDefault(options.transition_effect, null), // exit only
 		dest : {

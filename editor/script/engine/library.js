@@ -41,10 +41,6 @@ function createInstanceEnvironment(instance, parent) {
 function createCoreLibrary(parent) {
 	var lib = new Table(parent);
 
-	/* TODO: missing old functions
-		- exit (EXT)
-	*/
-
 	// todo : allow name as input
 	lib.Set("ITM", function(parameters, onReturn) {
 		var itemId = parameters[0];
@@ -62,23 +58,6 @@ function createCoreLibrary(parent) {
 		}
 
 		onReturn(curItemCount);
-	});
-
-	lib.Set("END", function(parameters, onReturn) {
-		// todo very global / hacky?
-		isEnding = true;
-		isNarrating = true;
-		dialogRenderer.SetCentered(true);
-		onReturn(null);
-	});
-
-	// todo : make sure rooms remember their original pal id and reset to it
-	lib.Set("PAL", function(parameters, onReturn) {
-		var palId = parameters[0];
-		color.LoadRoomPalette(palette[palId]);
-		color.UpdateSystemPalette();
-		renderer.ResetRenderCache();
-		onReturn(null); // todo : replace all nulls with false? return palette id?
 	});
 
 	// todo : what about OTHER one parameter math functions? cos? sin? etc...
@@ -217,6 +196,94 @@ function createDialogLibrary(dialogBuffer, parent) {
 	return lib;
 }
 
+function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
+	var lib = new Table(parent);
+
+	lib.Set("PAL", function(parameters, onReturn) {
+		var palId = parameters[0];
+
+		// todo -- should there be a helper function that combines these three functions?
+		color.LoadRoomPalette(palette[palId]);
+		color.UpdateSystemPalette();
+		renderer.ResetRenderCache();
+
+		onReturn(null); // todo : replace all nulls with false? return palette id?
+	});
+
+	// todo : allow names instead of IDs
+	lib.Set("EXT", function(parameters, onReturn) {
+		var destRoom = parameters[0];
+		var destX = parseInt(parameters[1]);
+		var destY = parseInt(parameters[2]);
+		var transitionEffect = parameters.length >= 4 ? parameters[3] : null;
+		var waitForInput = parameters.length >= 5 ? parameters[4] : true;
+
+		function beginExit() {
+			// todo : share some of this logic with regular exits?
+			if (transitionEffect != null) {
+				transition.BeginTransition(
+					player().room,
+					player().x,
+					player().y,
+					destRoom,
+					destX,
+					destY,
+					transitionEffect,
+					initRoom);
+
+				transition.UpdateTransition(0);			
+			}
+			else {
+				initRoom(destRoom);
+			}
+
+			player().room = destRoom;
+			player().x = destX;
+			player().y = destY;
+			curRoom = destRoom;
+
+			// TODO : this doesn't play nice with pagebreak because it thinks the dialog is finished!
+			if (transition.IsTransitionActive()) {
+				transition.OnTransitionComplete(function() { onReturn(null); });
+			}
+			else {
+				onReturn(null);
+			}
+		}
+
+		if (waitForInput && dialogBuffer) {
+			dialogBuffer.AddPagebreak();
+			dialogBuffer.AddScriptReturn(beginExit);
+		}
+		else {
+			beginExit();
+		}
+	});
+
+	lib.Set("END", function(parameters, onReturn) {
+		var waitForInput = parameters.length >= 1 ? parameters[0] : true;
+
+		function beginEnding() {
+			// todo very global / hacky?
+			isEnding = true;
+			isNarrating = true;
+			dialogRenderer.SetCentered(true);
+
+			onReturn(null);
+		}
+
+		if (waitForInput) {
+			dialogBuffer.AddPagebreak();
+			dialogBuffer.AddScriptReturn(beginEnding);			
+		}
+		else {
+			beginEnding();
+		}
+	});
+
+	return lib;
+}
+
 function createSpriteLibrary(contextInstance, parent) {
 	var lib = new Table(parent);
 
@@ -338,8 +405,9 @@ this.CreateScriptEnvironment = function(variable, dialogBuffer, instance) {
 	var globalEnv = createGlobalEnvironment(variable);
 	var coreLibrary = createCoreLibrary(globalEnv);
 	var dialogLibrary = createDialogLibrary(dialogBuffer, coreLibrary);
-	var spriteLibrary = createSpriteLibrary(instance, dialogLibrary);
-	var mathLibrary = createMathLibrary(spriteLibrary);
+	var roomLibrary = createRoomLibrary(dialogBuffer, dialogRenderer, dialogLibrary);
+	var spriteLibrary = createSpriteLibrary(instance, roomLibrary);
+	var mathLibrary = createMathLibrary(spriteLibrary); // todo : why is this one last?
 	var instanceEnv = createInstanceEnvironment(instance, mathLibrary);
 
 	return instanceEnv;

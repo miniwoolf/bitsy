@@ -658,6 +658,12 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 	// todo : what if no buffer is available?
 	var buffer = environment.Get("DIALOG_BUFFER", true);
 
+	function incrementAndEval(value) {
+		result = value;
+		i++;
+		evalNext();
+	}
+
 	evalNext = function() {
 		if (i >= expression.list.length) {
 			onReturn(result);
@@ -666,23 +672,23 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 			if (expression.list[i].type === "string") {
 				if (buffer) {
 					buffer.AddText(expression.list[i].value, true /*suppressSpaces*/);
+					buffer.AddScriptReturn(function() { incrementAndEval(null); });
 				}
-
-				result = null;
-				i++;
-				evalNext();
+				else {
+					incrementAndEval(null);
+				}
 			}
 			else if (expression.list[i].type != "list") {
 				if (buffer) {
 					buffer.AddWord(serializeAtom(expression.list[i].value, expression.list[i].type));
+					buffer.AddScriptReturn(function() { incrementAndEval(null); });
 				}
-
-				result = null;
-				i++;
-				evalNext();
+				else {
+					incrementAndEval(null);
+				}
 			}
 			else {
-				eval(expression.list[i], environment, function(value) { result = value; i++; evalNext(); });
+				eval(expression.list[i], environment, incrementAndEval);
 			}
 		}
 	}
