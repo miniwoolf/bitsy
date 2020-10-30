@@ -1402,34 +1402,6 @@
 							<span class="localize game_settings">game settings</span>
 						</div>
 						<div class="controlBox">
-							<span class="localize option_page_color">html page color:</span>
-							<br/>
-							<input title="pick background color for exported html page" type="color" value="#ffffff" id="pageColor" onchange="on_change_color_page();" autocomplete="off">
-						</div>
-						<div class="controlBox">
-							<form>
-								<span class="localize option_window_size">game window size:</span>
-								<br/>
-								<input type="radio" name="export size" value="full" onclick="chooseExportSizeFull();" id="exportSizeOptionFull" checked>
-								<label title="game window resizes to fill page (mobile friendly)" for="exportSizeOptionFull" class="left">
-									<span class="bitsy_icon">pagesize_full</span>
-									<span class="localize option_full_size">full page</span>
-								</label>
-
-								<input type="radio" name="export size" value="fixed" onclick="chooseExportSizeFixed();" id="exportSizeOptionFixed">
-								<label title="game window stays a fixed size" for="exportSizeOptionFixed" class="right">
-									<span class="bitsy_icon">pagesize_fixed</span>
-									<span class="localize option_fixed_size">fixed size</span>
-								</label>
-
-								<div style="margin-top:5px;">
-									<span class="controlBox" id="exportSizeFixedInputSpan" style="display:none;">
-										<input type="number" min="0" value="512" style="width:60px;" id="exportSizeFixedInput"> px
-									</span>
-								</div>
-							</form>
-						</div>
-						<div class="controlBox">
 							<span class="localize font_label">font</span>:
 							<select id="fontSelect" onchange="on_change_font(event);">
 								<option value="ascii_small" class="localize font_ascii_small">ASCII Small</option>
@@ -1479,6 +1451,38 @@
 							<div style="font-size: 80%">
 								<span class="localize text_direction_description">Option for languages that read right to left</span>
 							</div>
+						</div>
+						<div>
+							<!-- todo : localize -->
+							<span>export settings</span>
+						</div>
+						<div class="controlBox">
+							<span class="localize option_page_color">html page color:</span>
+							<br/>
+							<input title="pick background color for exported html page" type="color" value="#ffffff" id="pageColor" onchange="on_change_color_page();" autocomplete="off">
+						</div>
+						<div class="controlBox">
+							<form>
+								<span class="localize option_window_size">game window size:</span>
+								<br/>
+								<input type="radio" name="export size" value="full" onclick="chooseExportSizeFull();" id="exportSizeOptionFull" checked>
+								<label title="game window resizes to fill page (mobile friendly)" for="exportSizeOptionFull" class="left">
+									<span class="bitsy_icon">pagesize_full</span>
+									<span class="localize option_full_size">full page</span>
+								</label>
+
+								<input type="radio" name="export size" value="fixed" onclick="chooseExportSizeFixed();" id="exportSizeOptionFixed">
+								<label title="game window stays a fixed size" for="exportSizeOptionFixed" class="right">
+									<span class="bitsy_icon">pagesize_fixed</span>
+									<span class="localize option_fixed_size">fixed size</span>
+								</label>
+
+								<div style="margin-top:5px;">
+									<span class="controlBox" id="exportSizeFixedInputSpan" style="display:none;">
+										<input type="number" min="0" value="512" style="width:60px;" id="exportSizeFixedInput"> px
+									</span>
+								</div>
+							</form>
 						</div>
 					</div>
 				</div>

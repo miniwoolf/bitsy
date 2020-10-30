@@ -471,29 +471,38 @@ function updateInput() {
 			curPlayerDirection = Direction.None;
 		}
 
-		function tryMovePlayer(direction) {
+		function tryButtonDownActions(keyName, isButtonHeld, afterButtonPressFunc) {
 			if (player().btn != null) {
 				queueScript(
 					player().btn,
 					player(),
 					function(result) {
-						if (result != false) {
-							movePlayer(direction);
+						// todo : should I also consider the return value?
+						if (!player().lck && afterButtonPressFunc) {
+							afterButtonPressFunc();
 						}
-						queueButtonDownScripts(direction);
+
+						queueButtonDownScripts(keyName, isButtonHeld);
 					},
-					[directionToKeyName(direction)]);
+					[keyName, isButtonHeld]);
 			}
 			else {
-				movePlayer(direction);
-				queueButtonDownScripts(direction);
+				if (!player().lck && afterButtonPressFunc) {
+					afterButtonPressFunc();
+				}
+
+				queueButtonDownScripts(keyName, isButtonHeld);
 			}
 		}
 
 		if (curPlayerDirection != Direction.None) {
 			if (curPlayerDirection != prevPlayerDirection) {
 				// new direction!
-				tryMovePlayer(curPlayerDirection);
+				tryButtonDownActions(
+					directionToKeyName(curPlayerDirection),
+					false,
+					function() { movePlayer(curPlayerDirection); });
+
 				playerHoldToMoveTimer = 500;
 			}
 			else {
@@ -501,10 +510,29 @@ function updateInput() {
 				playerHoldToMoveTimer -= deltaTime;
 
 				if (playerHoldToMoveTimer <= 0) {
-					tryMovePlayer(curPlayerDirection);
+					tryButtonDownActions(
+						directionToKeyName(curPlayerDirection),
+						true,
+						function() { movePlayer(curPlayerDirection); });
+
 					playerHoldToMoveTimer = 150;
 				}
 			}
+		}
+
+		/* OKAY BUTTON INPUT */
+		if (input.isKeyDown(key.enter) || input.isKeyDown(key.space) || input.isTapReleased()) {
+			if (!isOkayButtonDown) {
+				isOkayButtonDown = true;
+
+				// todo : is this the keycode I want?
+				// todo : should I implement held actions for this button?
+				// todo : what if this sets off a dialog -- do I need to reset the okay button?
+				tryButtonDownActions("OK", false);
+			}
+		}
+		else {
+			isOkayButtonDown = false;
 		}
 	}
 }
@@ -651,6 +679,8 @@ var Direction = {
 
 var curPlayerDirection = Direction.None;
 var playerHoldToMoveTimer = 0;
+
+var isOkayButtonDown = false;
 
 var InputManager = function() {
 	var self = this;
@@ -942,11 +972,11 @@ function movePlayer(direction) {
 	return !result.collision;
 }
 
-function queueButtonDownScripts(direction) {
+function queueButtonDownScripts(keyName, isButtonHeld) {
 	for (var i in spriteInstances) {
 		var spr = spriteInstances[i];
-		if (spr.key != null && (spr.key in dialog)) {
-			queueScript(spr.btn, spr, function() {}, [directionToKeyName(direction)]);
+		if (spr.id != "A" && spr.btn != null && (spr.btn in dialog)) {
+			queueScript(spr.btn, spr, function() {}, [keyName, isButtonHeld]);
 		}
 	}
 }
@@ -2528,13 +2558,20 @@ function startEndingDialog(ending) {
 		});
 }
 
-function startItemDialog(itemInstance, dialogCallback) {
-	var dialogId = itemInstance.dlg;
-	if (dialog[dialogId]) {
-		queueScript(dialogId, itemInstance, dialogCallback);
+function startItemDialog(itemInstance, callback) {
+	var tryCallback = function() {
+		if (!itemInstance.lck && callback) {
+			callback();
+		}
+	};
+
+	var itemDlgId = itemInstance.dlg;
+
+	if (dialog[itemDlgId]) {
+		queueScript(itemDlgId, itemInstance, tryCallback);
 	}
 	else {
-		dialogCallback();
+		tryCallback();
 	}
 }
 
