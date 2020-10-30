@@ -478,7 +478,7 @@ function updateInput() {
 					player(),
 					function(result) {
 						// todo : should I also consider the return value?
-						if (!player().lck && afterButtonPressFunc) {
+						if (!player().lok && afterButtonPressFunc) {
 							afterButtonPressFunc();
 						}
 
@@ -487,7 +487,7 @@ function updateInput() {
 					[keyName, isButtonHeld]);
 			}
 			else {
-				if (!player().lck && afterButtonPressFunc) {
+				if (!player().lok && afterButtonPressFunc) {
 					afterButtonPressFunc();
 				}
 
@@ -1100,9 +1100,9 @@ function directionToKeyName(direction) {
 function updateLockState(spr) {
 	if ("lockItem" in spr && spr.lockItem != null) {
 		var itemCount = spr.lockItem in player().inventory ? player().inventory[spr.lockItem] : 0;
-		spr.lck = !(itemCount > 0 && itemCount >= spr.lockToll);
+		spr.lok = !(itemCount > 0 && itemCount >= spr.lockToll);
 
-		if (!spr.lck) {
+		if (!spr.lok) {
 			player().inventory[spr.lockItem] -= spr.lockToll;
 
 			// show inventory change in UI
@@ -1140,14 +1140,14 @@ function movePlayerThroughExit(ext) {
 			ext.dlg,
 			ext,
 			function(result) {
-				if (!ext.lck) {
+				if (!ext.lok) {
 					GoToDest();
 				}
 			});
 	}
 	else {
 		// todo : move this check inside of GoToDest?
-		if (!ext.lck) {
+		if (!ext.lok) {
 			GoToDest();
 		}
 	}
@@ -1207,7 +1207,7 @@ function createSpriteInstance(instanceId, location) {
 	instance.Set("COL", definition.col, { externalKey: "col" });
 	instance.Set("X", location.x, { externalKey: "x" });
 	instance.Set("Y", location.y, { externalKey: "y" });
-	instance.Set("LCK", false, { externalKey: "lck" }); // todo : name LOK instead?
+	instance.Set("LOK", false, { externalKey: "lok" });
 	instance.Set("WAL", definition.isWall, { externalKey: "wal" });
 	// other possibilities: SPD, ANM, ???
 
@@ -1709,7 +1709,7 @@ function serializeWorld(skipFonts) {
 			worldStr += "FX " + tile[id].transition_effect + "\n";
 		}
 		if ((type === "EXT" || type === "END") && tile[id].lockItem != null) {
-			worldStr += "LCK " + tile[id].lockItem;
+			worldStr += "LOK " + tile[id].lockItem;
 			if (tile[id].lockToll > 0) {
 				worldStr += " " + tile[id].lockToll;
 			}
@@ -2244,7 +2244,7 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === "FX" && type === "EXT") {
 			options.transition_effect = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "LCK" && (type === "EXT" || type === "END")) {
+		else if (getType(lines[i]) === "LOK" && (type === "EXT" || type === "END")) {
 			options.lockItem = getId(lines[i]);
 			var tollArg = tryGetArg(lines[i], 2);
 			options.lockToll = Math.max(0, parseInt(tollArg != null ? tollArg : 0));
@@ -2546,7 +2546,7 @@ function startEndingDialog(ending) {
 			dialogBuffer.OnDialogEnd(function() {
 				isNarrating = false;
 
-				if (ending.lck) {
+				if (ending.lok) {
 					isEnding = false;
 				}
 			});
@@ -2560,7 +2560,7 @@ function startEndingDialog(ending) {
 
 function startItemDialog(itemInstance, callback) {
 	var tryCallback = function() {
-		if (!itemInstance.lck && callback) {
+		if (!itemInstance.lok && callback) {
 			callback();
 		}
 	};
