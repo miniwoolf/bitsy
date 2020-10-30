@@ -545,11 +545,7 @@ function isScriptQueueBusy() {
 }
 
 function updateScriptQueue() {
-	// SRIPT NEXT
-	// TODO : make this real!
-	// trigger animation step scripts
-	// TODO : will have to be re-written after merging objects
-	// TODO : instead of immediately triggering scripts, put them in a queue
+	// animation frame tick scripts
 	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
 		if (animationCounter === 0) {
 			for (var i in spriteInstances) {
@@ -621,7 +617,6 @@ function updateAnimation() {
 
 		// reset counter
 		animationCounter = 0;
-
 	}
 }
 
