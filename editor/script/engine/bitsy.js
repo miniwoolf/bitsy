@@ -555,7 +555,7 @@ function updateScriptQueue() {
 			for (var i in spriteInstances) {
 				var spr = spriteInstances[i];
 				if (spr.tik != null) {
-					queueScript(spr.tik, spr, function() {});
+					queueScript(spr.tik, spr, function() {}, [spr.animation.frameIndex]);
 				}
 			}
 		}
@@ -2209,7 +2209,7 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === "BTN" && type != "TIL") { // todo : name ok? or: BND? BTD? BDN?
 			options.buttonDownDlgId = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "BUP" && type != "TIL") {
+		else if (getType(lines[i]) === "BUP" && type != "TIL") { // todo : name? BNU? RLS?
 			// todo ... "BUTTON UP"
 		}
 		else if (getType(lines[i]) === "POS" && type === "SPR") {
