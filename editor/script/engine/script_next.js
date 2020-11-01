@@ -384,42 +384,6 @@ function parse(tokens, list) {
 	return list;
 }
 
-// TODO : consider using this generalized method?
-// function evalList(expression, environment, startIndex, onIncrement, onNext, onLast) {
-// 	var i = startIndex;
-// 	var evalNext;
-//
-// 	evalNext = function() {
-// 		if (i >= expression.list.length) {
-// 			onLast();
-// 		}
-// 		else {
-// 			eval(expression.list[i], environment, function(value) {
-// 				onNext(value);
-// 				i = onIncrement(i);
-// 				evalNext();
-// 			});
-// 		}
-// 	}
-//
-// 	evalNext();
-// }
-//
-// TODO : example of how this would be used:
-// var values = [];
-// evalList(expression, environment,
-// 	0,
-// 	function(i) { return i + 1; },
-// 	function(value) { values.push(value); },
-// 	function() {
-// 		if (values[0] instanceof Function) {
-// 			values[0](values.slice(1), environment, onReturn);
-// 		}
-// 		// else: then what?
-// 	});
-//
-// TODO : it also would need a special case for the SymNext.DialogStart operator
-
 function evalList(expression, environment, onReturn) {
 	var i = 0;
 	var values = [];
@@ -430,7 +394,10 @@ function evalList(expression, environment, onReturn) {
 			if (values[0] instanceof Function) {
 				values[0](values.slice(1), onReturn);
 			}
-			// else: then what?
+			else {
+				// empty or undefined list
+				onReturn(false);
+			}
 		}
 		else {
 			eval(expression.list[i], environment, function(value) {
@@ -445,19 +412,20 @@ function evalList(expression, environment, onReturn) {
 }
 
 function eval(expression, environment, onReturn) {
-	if (expression.type === "number" || expression.type === "string" || expression.type === "boolean") {
+	if (expression === undefined || environment === undefined || onReturn === undefined) {
+		PrintError("invalid expression", onReturn);
+	}
+	else if (expression.type === "number" || expression.type === "string" || expression.type === "boolean") {
 		onReturn(expression.value);
 	}
 	else if (expression.type === "symbol") {
 		onReturn(environment.Get(expression.value));
 	}
-	else if (expression.type === "list") {
-		if (expression.list[0].value in special) {
-			special[expression.list[0].value](expression, environment, onReturn);
-		}
-		else {
-			evalList(expression, environment, onReturn);
-		}
+	else if (expression.type === "list" && expression.list.length > 0 && (expression.list[0].value in special)) {
+		special[expression.list[0].value](expression, environment, onReturn);
+	}
+	else {
+		evalList(expression, environment, onReturn);
 	}
 }
 
@@ -470,7 +438,12 @@ var special = {
 			expression.index = 1;
 		}
 
-		eval(expression.list[expression.index], environment, onReturn);
+		if (expression.index >= expression.list.length) {
+			PrintError("not enough items in SEQ", onReturn);
+		}
+		else {
+			eval(expression.list[expression.index], environment, onReturn);
+		}
 	},
 	"CYC": function(expression, environment, onReturn) {
 		if ("index" in expression) {
@@ -480,7 +453,12 @@ var special = {
 			expression.index = 1;
 		}
 
-		eval(expression.list[expression.index], environment, onReturn);
+		if (expression.index >= expression.list.length) {
+			PrintError("not enough items in CYC", onReturn);
+		}
+		else {
+			eval(expression.list[expression.index], environment, onReturn);
+		}
 	},
 	"SHF": function(expression, environment, onReturn) {
 		if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
@@ -497,7 +475,14 @@ var special = {
 			}
 		}
 
-		eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
+		var shuffleIndex = expression.shuffle[expression.index];
+
+		if (shuffleIndex >= expression.list.index) {
+			PrintError("not enough items in SHF", onReturn);
+		}
+		else {
+			eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
+		}
 	},
 	"PIK" : function(expression, environment, onReturn) {
 		var i = 1;
@@ -527,12 +512,14 @@ var special = {
 					evalNext();
 				});
 			}
-			else {
-				// todo : need to do anything here???
-			}
 		};
 
-		evalNext();
+		if (expression.list.length >= 3) {
+			evalNext();
+		}
+		else {
+			PrintError("not enough items in PIK", onReturn);
+		}
 	},
 	"IF": function(expression, environment, onReturn) {
 		var result = null;
@@ -541,7 +528,7 @@ var special = {
 
 		evalNext = function() {
 			if (i >= expression.list.length) {
-				onReturn(null);
+				onReturn(false);
 			}
 			else if (i + 1 >= expression.list.length) {
 				eval(expression.list[i], environment, onReturn);
@@ -563,15 +550,25 @@ var special = {
 	},
 	// todo : more creative name for functions? rename to routine? RN? RTN?
 	"FN": function(expression, environment, onReturn) {
+		var error = null;
+
 		// initialize parameter names
 		var parameterNames = [];
-		if (expression.list.length >= 2 && expression.list[1].type === "list") {
-			var parameterList = expression.list[1];
-			for (var i = 0; i < parameterList.list.length; i++) {
-				if (parameterList.list[i].type === "symbol") {
-					parameterNames.push(parameterList.list[i].value);
+		if (expression.list.length >= 2) {
+			if (expression.list[1].type === "list") {
+				var parameterList = expression.list[1];
+				for (var i = 0; i < parameterList.list.length; i++) {
+					if (parameterList.list[i].type === "symbol") {
+						parameterNames.push(parameterList.list[i].value);
+					}
 				}
 			}
+			else {
+				error = "FN input is not list";
+			}
+		}
+		else {
+			error = "FN input list is missing";
 		}
 
 		var result = function(parameters, onReturn) {
@@ -584,7 +581,7 @@ var special = {
 			}
 
 			// every expression after the parameter list is a statement in the function
-			var result = null;
+			var result = false;
 			var i = 2;
 			var evalNext;
 
@@ -604,16 +601,35 @@ var special = {
 			evalNext();
 		};
 
-		onReturn(result);
+		if (error === null && expression.list.length < 3) {
+			error = "FN body is empty";
+		}
+
+		if (error != null) {
+			PrintError(error, onReturn);
+		}
+		else {
+			onReturn(result);
+		}
 	},
 	// todo : name? LET instead?
 	"SET": function(expression, environment, onReturn) {
-		// todo : assumes the right number of list elements, etc.
-		eval(expression.list[2], environment, function(value) {
+		function setValue(value) {
 			// todo : what about local variables?
 			environment.SetGlobal(expression.list[1].value, value);
-			onReturn(null);
-		});
+			onReturn(false);
+		}
+
+		if (expression.list.length < 2 || expression.list[1].type != "symbol") {
+			PrintError("SET symbol is missing", onReturn);
+		}
+		else if (expression.list.length < 3) {
+			// no value provided - set to false
+			setValue(false);
+		}
+		else {
+			eval(expression.list[2], environment, setValue);
+		}
 	},
 	"TBL": function(expression, environment, onReturn) {
 		var table = new Table();
@@ -629,18 +645,21 @@ var special = {
 					var name = expression.list[i].value.slice(1);
 					i++;
 
-					// TODO : what if there's an out-of-index error?
-					eval(expression.list[i], environment, function(value) {
-						table.Set(name, value);
-						i++;
-						evalNext();
-					});
+					if (i >= expression.list.length) {
+						PrintError("TBL entry value is missing", onReturn);
+					}
+					else {
+						eval(expression.list[i], environment, function(value) {
+							table.Set(name, value);
+							i++;
+							evalNext();
+						});
+					}
 				}
 				else {
 					// for now, skip invalid syntax
 					// TODO : decide whether to allow a lua-like "list" form
-					i++;
-					evalNext();
+					PrintError("TBL entry name is missing", onReturn);
 				}
 			}
 		}
@@ -651,7 +670,7 @@ var special = {
 
 // hacky?
 special[SymNext.DialogStart] = function(expression, environment, onReturn) {
-	var result = null;
+	var result = false;
 	var i = 1;
 	var evalNext;
 
@@ -672,19 +691,19 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 			if (expression.list[i].type === "string") {
 				if (buffer) {
 					buffer.AddText(expression.list[i].value, true /*suppressSpaces*/);
-					buffer.AddScriptReturn(function() { incrementAndEval(null); });
+					buffer.AddScriptReturn(function() { incrementAndEval(false); });
 				}
 				else {
-					incrementAndEval(null);
+					incrementAndEval(false);
 				}
 			}
 			else if (expression.list[i].type != "list") {
 				if (buffer) {
 					buffer.AddWord(serializeAtom(expression.list[i].value, expression.list[i].type));
-					buffer.AddScriptReturn(function() { incrementAndEval(null); });
+					buffer.AddScriptReturn(function() { incrementAndEval(false); });
 				}
 				else {
-					incrementAndEval(null);
+					incrementAndEval(false);
 				}
 			}
 			else {
@@ -697,32 +716,40 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 };
 
 special[SymNext.Entry] = function(expression, environment, onReturn) {
-	if (expression.list.length < 3) {
-		onReturn(null); // not enough arguments!
+	if (expression.list.length < 2) {
+		PrintError("no TBL to get entry from", onReturn);
 	}
+	else if (expression.list.length < 3 || expression.list[2].type != "symbol") {
+		PrintError("entry name is missing", onReturn);
+	}
+	else {
+		var key = expression.list[2].value;
 
-	var key = expression.list[2].value;
-
-	eval(expression.list[1], environment, function(table) {
-		// todo : handle null / invalid tables
-		if (expression.list.length >= 4) {
-			eval(expression.list[3], environment, function(value) {
-				table.Set(key, value);
-				onReturn(value);
-			});
-		}
-		else if (table.Has(key)) {
-			onReturn(table.Get(key));
-		}
-		else {
-			onReturn(null); // no value!
-		}
-	});
+		eval(expression.list[1], environment, function(table) {
+			if (!IsATable(table)) {
+				PrintError("expected a TBL", onReturn);
+			}
+			else if (expression.list.length >= 4) {
+				eval(expression.list[3], environment, function(value) {
+					table.Set(key, value);
+					onReturn(value);
+				});
+			}
+			else if (table.Has(key)) {
+				onReturn(table.Get(key));
+			}
+			else {
+				onReturn(false); // no value!
+			}
+		});
+	}
 };
 
 } // ScriptNext
 
 function Table(parent) {
+	this["_is_table_"] = true;
+
 	var entries = {};
 	var keyList = []; // maintained in insertion order
 	var readOnlyEntries = {}; // todo : is this the best way to keep track of this?
@@ -825,3 +852,22 @@ function Table(parent) {
 		};
 	})(this);
 } // Table
+
+function PrintError(message, onReturn) {
+	message = "ERR: " + message;
+	console.log(message);
+
+	if (isPlayerEmbeddedInEditor && dialogBuffer) {
+		dialogBuffer.AddTextEffect("_debug_error");
+		dialogBuffer.AddText(message);
+		dialogBuffer.RemoveTextEffect("_debug_error");
+		dialogBuffer.AddScriptReturn(function() { onReturn(false); });
+	}
+	else if (onReturn) {
+		onReturn(false);
+	}
+}
+
+function IsATable(x) {
+	return x != undefined && x != null && (typeof(x) === "object") && x["_is_table_"];
+}

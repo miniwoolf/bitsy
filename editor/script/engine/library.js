@@ -82,7 +82,7 @@ function createCoreLibrary(parent) {
 
 		evalNext = function() {
 			if (i >= keys.length) {
-				onReturn(null);
+				onReturn(false);
 			}
 			else {
 				var k = keys[i];
@@ -177,12 +177,12 @@ function createDialogLibrary(dialogBuffer, parent) {
 	function addTextEffect(id) {
 		lib.Set(id, function(parameters, onReturn) {
 			dialogBuffer.AddTextEffect(id, parameters);
-			onReturn(null);
+			onReturn(false);
 		});
 
 		lib.Set("/" + id, function(parameters, onReturn) {
 			dialogBuffer.RemoveTextEffect(id);
-			onReturn(null);
+			onReturn(false);
 		});
 	};
 
@@ -207,7 +207,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 		color.UpdateSystemPalette();
 		renderer.ResetRenderCache();
 
-		onReturn(null); // todo : replace all nulls with false? return palette id?
+		onReturn(false); // todo : return palette id?
 	});
 
 	// todo : allow names instead of IDs
@@ -244,10 +244,10 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 
 			// TODO : this doesn't play nice with pagebreak because it thinks the dialog is finished!
 			if (transition.IsTransitionActive()) {
-				transition.OnTransitionComplete(function() { onReturn(null); });
+				transition.OnTransitionComplete(function() { onReturn(false); });
 			}
 			else {
-				onReturn(null);
+				onReturn(false);
 			}
 		}
 
@@ -269,7 +269,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 			isNarrating = true;
 			dialogRenderer.SetCentered(true);
 
-			onReturn(null);
+			onReturn(false);
 		}
 
 		if (waitForInput) {
@@ -321,7 +321,7 @@ function createSpriteLibrary(contextInstance, parent) {
 			delete spriteInstances[parameters[0].instanceId];
 		}
 
-		onReturn(null);
+		onReturn(false);
 	});
 
 	// move a sprite instance (with collisions)

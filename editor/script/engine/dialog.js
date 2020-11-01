@@ -1044,12 +1044,13 @@ var CustomEffect = function() {
 };
 TextEffects["TFX"] = new CustomEffect();
 
-// todo : do I still need this?
-var DebugHighlightEffect = function() {
+var DebugErrorEffect = function() {
 	this.DoEffect = function(char) {
 		char.color = COLOR_INDEX.RAINBOW_START;
+		char.offset.x = 0;
+		char.offset.y = 0;
 	}
 }
-TextEffects["_debug_highlight"] = new DebugHighlightEffect();
+TextEffects["_debug_error"] = new DebugErrorEffect();
 
 } // Dialog()
