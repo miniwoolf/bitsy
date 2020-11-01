@@ -31,10 +31,7 @@ function createGlobalEnvironment(variableStore) {
 
 function createInstanceEnvironment(instance, parent) {
 	var env = new Table(parent);
-
-	// todo : name? THIS? SELF? I? something else?
-	env.Set("ME", instance);
-
+	env.Set("THIS", instance);
 	return env;
 }
 
@@ -126,18 +123,31 @@ function createCoreLibrary(parent) {
 // todo : is this the right place for this?
 function valueToString(value) {
 	var str = "";
+
+	console.log(typeof value);
+
 	if (typeof value === "function") {
 		str += "FN";
 	}
-	else if (value instanceof Table) { // todo : some other way to detect tables??
-		// todo : smarter to string for tables later on (include name, id, type, etc)
-		str += "TBL";
+	else if (IsATable(value)) {
+		if (value.Has("NAME")) {
+			str += valueToString(value.Get("NAME"));
+		}
+		else if (value.Has("TYPE") && value.Has("ID")) {
+			str += valueToString(value.Get("TYPE")) + " " + valueToString(value.Get("ID"));
+		}
+		else {
+			str += "TBL";
+		}
 	}
-	else if (typeof value === "boolean") {
-		str += value ? "YES" : "NO";
+	else if ((typeof value === "boolean") || value === undefined || value === null) {
+		str += (value ? "YES" : "NO");
+	}
+	else if ((typeof value === "string") || (typeof value === "number")) {
+		str += value;
 	}
 	else {
-		str += value;
+		str += "NO";
 	}
 
 	return str;

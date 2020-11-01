@@ -21,9 +21,6 @@ X transitions?
 - what should happen if you immediately land on an exit, ending, or item when entering a new room via the map??
 
 TODO new exits & endings (& portals?)
-- new locks
-- fix bug with ending dialog (doesn't start at correct time)
-- prototype portals?
 - instead of portals: exits that go to exits
 	- OUT ROOMID EXITID
 	- that way when the dest exit moves, the exit still points at the right location
@@ -32,13 +29,8 @@ TODO new exits & endings (& portals?)
 	- can differentiate via version number (before or after 8.0)
 
 TODO new object/sprite system
-- rename object storage to sprite or tile?
-- move player instance into global instance holder
-- remove exit and ending instances now that they are sprites?
 - replace all the literal type strings "EXT" etc with an enum?
-- do I want to retire the property handler?
-- fix room transitions: need to draw object instances for correct room on either side of transition
-	- also: add a "new / init" script event?
+- also: add a "new / init" script event?
 
 TODO choices
 - action button support in input system

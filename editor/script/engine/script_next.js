@@ -760,11 +760,16 @@ function Table(parent) {
 		return isSecret ? key : SymNext.Entry + key;
 	}
 
+	function hasInternalKey(internalKey) {
+		return entries.hasOwnProperty(internalKey) &&
+			entries[internalKey] != false && entries[internalKey] != null && entries[internalKey] != undefined;
+	}
+
 	this.Has = function(key, isSecret) {
 		var hasEntry = false;
 		var internalKey = GetInternalKey(key, isSecret);
 
-		if (entries.hasOwnProperty(internalKey)) {
+		if (hasInternalKey(internalKey)) {
 			hasEntry = true;
 		}
 		else if (hasParent && parent.Has(key, isSecret)) {
@@ -778,7 +783,7 @@ function Table(parent) {
 		var value = false;
 		var internalKey = GetInternalKey(key, isSecret);
 
-		if (entries.hasOwnProperty(internalKey)) {
+		if (hasInternalKey(internalKey)) {
 			value = entries[internalKey];
 		}
 		else if (hasParent && parent.Has(key, isSecret)) {
@@ -795,7 +800,7 @@ function Table(parent) {
 		var externalKey = options && options.externalKey ? options.externalKey : null;
 
 		var internalKey = GetInternalKey(key, isSecret);
-		var hasInternalEntry = entries.hasOwnProperty(internalKey);
+		var hasInternalEntry = hasInternalKey(internalKey);
 
 		if ((!hasInternalEntry || readOnlyEntries[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
 			parent.Set(key, value, options);
