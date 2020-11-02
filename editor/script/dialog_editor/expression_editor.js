@@ -162,7 +162,7 @@ var expressionDescriptionMap = {
 };
 
 // hacky?
-expressionDescriptionMap[SymNext.Entry] = {
+expressionDescriptionMap[SYM_KEY.ENTRY] = {
 	GetName : function() { return "entry value"; }, // todo : localize
 	GetDescription : function() { return "entry _ for _[ is set to _]"; }, // todo : localize! and wording?
 	parameters : [

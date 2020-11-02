@@ -9,14 +9,6 @@ NOTES
 - decide whether the new style names are good
 - global variables aren't working
 */
-
-var SymNext = {
-	CurlyOpen : "{",
-	CurlyClose : "}",
-	DialogStart : "->",
-	Entry : ":",
-};
-
 function ScriptNext() {
 
 var compiledScripts = {};
@@ -29,7 +21,7 @@ function compile(script, options) {
 	if (forceWrapDialogStart || scriptStr.indexOf("\n") < 0) {
 		// wrap one-line dialogs in a dialog expression
 		// TODO : is this still what I want?
-		scriptStr = SymNext.CurlyOpen + SymNext.DialogStart + " " + scriptStr + SymNext.CurlyClose;
+		scriptStr = SYM_KEY.OPEN + SYM_KEY.DIALOG + " " + scriptStr + SYM_KEY.CLOSE;
 	}
 
 	var tokens = tokenize(scriptStr);
@@ -174,7 +166,7 @@ function serializeWrapped(expressionList, indentDepth) {
 	for (var i = 0; i < expressionList.length; i++) {
 		var exp = expressionList[i];
 		var expStr = serialize(expressionList[i], indentNext);
-		var nextWordLen = exp.type != "list" && exp.value != SymNext.DialogStart ? expStr.length : 0;
+		var nextWordLen = exp.type != "list" && exp.value != SYM_KEY.DIALOG ? expStr.length : 0;
 		var isMultiLine = exp.type === "list" && !isInlineFunction(exp.list[0].value);
 
 		if (prevLineIsMultiLine || isMultiLine || (curLineLen + nextWordLen + 1) > wordWrapLen) {
@@ -197,7 +189,7 @@ function serializeWrapped(expressionList, indentDepth) {
 this.SerializeWrapped = serializeWrapped;
 
 function isDialogExpression(symbol) {
-	return symbol === SymNext.DialogStart;
+	return symbol === SYM_KEY.DIALOG;
 }
 this.IsDialogExpression = isDialogExpression;
 
@@ -233,7 +225,7 @@ function serializeList(expression, indentDepth) {
 		listType = expression.list[0].value;
 	}
 
-	var out = SymNext.CurlyOpen;
+	var out = SYM_KEY.OPEN;
 
 	if (isDialogExpression(listType)) {
 		out += serializeWrapped(expression.list, indentDepth);
@@ -258,7 +250,7 @@ function serializeList(expression, indentDepth) {
 		out += "\n" + (" ".repeat(indentDepth));
 	}
 
-	out += SymNext.CurlyClose;
+	out += SYM_KEY.CLOSE;
 
 	return out;
 }
@@ -367,13 +359,13 @@ function parse(tokens, list) {
 
 	while (tokens.length > 0) {
 		var token = tokens.shift();
-		if (token === SymNext.CurlyOpen) {
+		if (token === SYM_KEY.OPEN) {
 			list.push({
 				type: "list",
 				list: parse(tokens),
 			});
 		}
-		else if (token === SymNext.CurlyClose) {
+		else if (token === SYM_KEY.CLOSE) {
 			break;
 		}
 		else {
@@ -641,7 +633,7 @@ var special = {
 				onReturn(table);
 			}
 			else {
-				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SymNext.Entry) {
+				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SYM_KEY.ENTRY) {
 					var name = expression.list[i].value.slice(1);
 					i++;
 
@@ -669,7 +661,7 @@ var special = {
 }
 
 // hacky?
-special[SymNext.DialogStart] = function(expression, environment, onReturn) {
+special[SYM_KEY.DIALOG] = function(expression, environment, onReturn) {
 	var result = false;
 	var i = 1;
 	var evalNext;
@@ -715,7 +707,7 @@ special[SymNext.DialogStart] = function(expression, environment, onReturn) {
 	evalNext();
 };
 
-special[SymNext.Entry] = function(expression, environment, onReturn) {
+special[SYM_KEY.ENTRY] = function(expression, environment, onReturn) {
 	if (expression.list.length < 2) {
 		PrintError("no TBL to get entry from", onReturn);
 	}
@@ -757,7 +749,7 @@ function Table(parent) {
 	var hasParent = parent != undefined && parent != null;
 
 	var GetInternalKey = function(key, isSecret) {
-		return isSecret ? key : SymNext.Entry + key;
+		return isSecret ? key : SYM_KEY.ENTRY + key;
 	}
 
 	function hasInternalKey(internalKey) {

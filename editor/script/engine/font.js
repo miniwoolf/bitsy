@@ -142,21 +142,21 @@ function Font(fontData) {
 		for (var i = 0; i < lines.length; i++) {
 			var line = lines[i];
 
-			if (line[0] === "#") {
+			if (line[0] === MISC_KEY.COMMENT) {
 				continue; // skip comment lines
 			}
 
 			if (!isReadingChar) {
 				// READING NON CHARACTER DATA LINE
 				var args = line.split(" ");
-				if (args[0] == "FONT") {
+				if (args[0] == TYPE_KEY.FONT) {
 					name = args[1];
 				}
-				else if (args[0] == "SIZE") {
+				else if (args[0] === FONT_KEY.SIZE) {
 					width = parseInt(args[1]);
 					height = parseInt(args[2]);
 				}
-				else if (args[0] == "CHAR") {
+				else if (args[0] === FONT_KEY.CHARACTER_START) {
 					isReadingChar = true;
 					isReadingCharProperties = true;
 
@@ -169,24 +169,23 @@ function Font(fontData) {
 				// CHAR PROPERTIES
 				if (isReadingCharProperties) {
 					var args = line.split(" ");
-					if (args[0].indexOf("CHAR_") == 0) { // Sub-properties start with "CHAR_"
-						if (args[0] == "CHAR_SIZE") {
-							// Custom character size - overrides the default character size for the font
-							chardata[curCharCode].width = parseInt(args[1]);
-							chardata[curCharCode].height = parseInt(args[2]);
-							chardata[curCharCode].spacing = parseInt(args[1]); // HACK : assumes CHAR_SIZE is always declared first
-						}
-						else if (args[0] == "CHAR_OFFSET") {
-							// Character offset - shift the origin of the character on the X or Y axis
-							chardata[curCharCode].offset.x = parseInt(args[1]);
-							chardata[curCharCode].offset.y = parseInt(args[2]);
-						}
-						else if (args[0] == "CHAR_SPACING") {
-							// Character spacing:
-							// specify total horizontal space taken up by the character
-							// lets chars take up more or less space on a line than its bitmap does
-							chardata[curCharCode].spacing = parseInt(args[1]);
-						}
+
+					if (args[0] === FONT_KEY.CHARACTER_SIZE) {
+						// Custom character size - overrides the default character size for the font
+						chardata[curCharCode].width = parseInt(args[1]);
+						chardata[curCharCode].height = parseInt(args[2]);
+						chardata[curCharCode].spacing = parseInt(args[1]); // HACK : assumes CHAR_SIZE is always declared first
+					}
+					else if (args[0] === FONT_KEY.CHARACTER_OFFSET) {
+						// Character offset - shift the origin of the character on the X or Y axis
+						chardata[curCharCode].offset.x = parseInt(args[1]);
+						chardata[curCharCode].offset.y = parseInt(args[2]);
+					}
+					else if (args[0] === FONT_KEY.CHARACTER_SPACING) {
+						// Character spacing:
+						// specify total horizontal space taken up by the character
+						// lets chars take up more or less space on a line than its bitmap does
+						chardata[curCharCode].spacing = parseInt(args[1]);
 					}
 					else {
 						isReadingCharProperties = false;
@@ -198,7 +197,7 @@ function Font(fontData) {
 					// READING CHARACTER DATA LINE
 					for (var j = 0; j < chardata[curCharCode].width; j++)
 					{
-						chardata[curCharCode].data.push( parseInt(line[j]) );
+						chardata[curCharCode].data.push(parseInt(line[j]));
 					}
 
 					curCharLineCount++;

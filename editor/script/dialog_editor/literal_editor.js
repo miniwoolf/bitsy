@@ -205,7 +205,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 				input.appendChild(variableDatalist);
 
 				input.onchange = function(event) {
-					expression.value = SymNext.Entry + event.target.value;
+					expression.value = SYM_KEY.ENTRY + event.target.value;
 					parentEditor.NotifyUpdate();
 				}
 

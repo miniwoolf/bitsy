@@ -782,13 +782,15 @@ function CreateDrawingThumbnailRenderer() {
 		var palId = getRoomPal(curRoom);
 		var drawingFrameData = [];
 
-		for (var i = 0; i < til.animation.frameCount; i++) {
-			if (options.isAnimated || options.frameIndex === i) {
-				var renderedTile = renderer.GetRenderedTile(til, i);
-				var hackTileTexture = textureCache[renderedTile].canvas; // todo : RENDER HACK
-				ctx.drawImage(hackTileTexture, 0, 0, tilesize * scale, tilesize * scale);
+		if (til.id in tile) {
+			for (var i = 0; i < til.animation.frameCount; i++) {
+				if (options.isAnimated || options.frameIndex === i) {
+					var renderedTile = renderer.GetRenderedTile(til, i);
+					var hackTileTexture = textureCache[renderedTile].canvas; // todo : RENDER HACK
+					ctx.drawImage(hackTileTexture, 0, 0, tilesize * scale, tilesize * scale);
 
-				drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
+					drawingFrameData.push(ctx.getImageData(0, 0, 8 * scale, 8 * scale).data);
+				}
 			}
 		}
 

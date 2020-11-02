@@ -89,7 +89,7 @@ var DialogRenderer = function() {
 	];
 
 	this.DrawNextArrow = function() {
-		drawArrow(arrowdata, textDirection === TextDirection.RightToLeft);
+		drawArrow(arrowdata, textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT);
 	};
 
 	var choiceArrowLeft = [
@@ -356,20 +356,20 @@ var DialogBuffer = function() {
 			var charCount = (i == rowIndex) ? (charIndex + 1) : row.chars.length;
 
 			var leftPos = 0;
-			if (textDirection === TextDirection.RightToLeft) {
+			if (textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT) {
 				leftPos = 24 * 8; // hack -- I think this is correct?
 			}
 
 			for (var j = 0; j < charCount; j++) {
 				var char = row.chars[j];
 				if (char) {
-					if (textDirection === TextDirection.RightToLeft) {
+					if (textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT) {
 						leftPos -= char.spacing;
 					}
 
 					handler(char, i, /*rowIndex*/ j, /*colIndex*/ leftPos);
 
-					if (textDirection === TextDirection.LeftToRight) {
+					if (textDirection === TEXT_DIRECTION_KEY.LEFT_TO_RIGHT) {
 						leftPos += char.spacing;
 					}
 				}

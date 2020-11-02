@@ -1,0 +1,71 @@
+var TYPE_KEY = {
+	PALETTE : "PAL",
+	ROOM : "ROOM",
+	MAP : "MAP",
+	AVATAR : "AVA",
+	TILE : "TIL",
+	SPRITE : "SPR",
+	ITEM : "ITM",
+	EXIT : "EXT",
+	ENDING : "END",
+	DIALOG : "DLG",
+	DEFAULT_FONT : "DEFAULT_FONT",
+	TEXT_DIRECTION : "TEXT_DIRECTION",
+	FONT : "FONT",
+};
+
+var ARG_KEY = {
+	NAME : "NAME",
+	IS_WALL : "WAL",
+	TRANSITION_EFFECT : "FX",
+	TRANSITION_EFFECT_UP : "FXU",
+	TRANSITION_EFFECT_DOWN : "FXD",
+	TRANSITION_EFFECT_LEFT : "FXL",
+	TRANSITION_EFFECT_RIGHT : "FXR",
+	COLOR : "COL",
+	BACKGROUND : "BGC",
+	DIALOG_SCRIPT : "DLG",
+	FRAME_TICK_SCRIPT : "TIK",
+	KNOCK_INTO_SCRIPT : "NOK",
+	BUTTON_DOWN_SCRIPT : "BTN",
+	EXIT_DESTINATION : "OUT",
+	LOCK : "LOK",
+};
+
+// move other symbol codes in here? SEQ? rename CURLY_KEY?
+var SYM_KEY = {
+	OPEN : "{",
+	CLOSE : "}",
+	DIALOG : "->",
+	ENTRY : ":",
+	VARIABLE : "VAR",
+};
+
+var BOOL_KEY = {
+	YES : "YES", // => TRUE
+	NO : "NO", // => FALSE, NULL, NIL
+};
+
+var FONT_KEY = {
+	SIZE : "SIZE",
+	CHARACTER_START : "CHAR",
+	CHARACTER_SIZE : "CHAR_SIZE",
+	CHARACTER_OFFSET : "CHAR_OFFSET",
+	CHARACTER_SPACING : "CHAR_SPACING",
+};
+
+var TEXT_DIRECTION_KEY = {
+	LEFT_TO_RIGHT : "LTR",
+	RIGHT_TO_LEFT : "RTL",
+};
+
+var MISC_KEY = {
+	COMMENT : "#",
+	FLAG : "!",
+};
+
+// for back compat with old versions
+var LEGACY_KEY = {
+	ROOM : "SET",
+	POSITION : "POS",
+};

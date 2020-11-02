@@ -424,7 +424,7 @@ function setDefaultGameState() {
 	document.getElementById("game_data").value = defaultData;
 	localStorage.game_data = document.getElementById("game_data").value; // save game
 	clearGameData();
-	parseWorld(document.getElementById("game_data").value); // load game
+	parser.ParseWorld(document.getElementById("game_data").value); // load game
 
 	// TODO RENDERER : refresh images
 	// TODO -- more setup???
@@ -477,12 +477,12 @@ function refreshGameData() {
 
 	flags.ROOM_FORMAT = 1; // always save out comma separated format, even if the old format is read in
 
-	// var gameData = serializeWorld();
+	// var gameData = parser.SerializeWorld();
 
 	// document.getElementById("game_data").value = gameData; // TODO : this is where the slow down is
 
-	var gameDataNoFonts = serializeWorld(true);
-	document.getElementById("game_data").value = showFontDataInGameData ? serializeWorld() : gameDataNoFonts;
+	var gameDataNoFonts = parser.SerializeWorld(true);
+	document.getElementById("game_data").value = showFontDataInGameData ? parser.SerializeWorld() : gameDataNoFonts;
 
 	// localStorage.setItem("game_data", gameData); //auto-save
 
@@ -1075,7 +1075,7 @@ function on_edit_mode() {
 	isPlayMode = false;
 	stopGame();
 	// TODO I should really do more to separate the editor's game-data from the engine's game-data
-	parseWorld(document.getElementById("game_data").value); //reparse world to account for any changes during gameplay
+	parser.ParseWorld(document.getElementById("game_data").value); //reparse world to account for any changes during gameplay
 
 	animationCounter = 0;
 	colorCycleCounter = 0;
@@ -1105,7 +1105,7 @@ function on_edit_mode() {
 // hacky - part of hiding font data from the game data
 function getFullGameData() {
 	// return document.getElementById("game_data").value + fontManager.GetData(fontName);
-	return serializeWorld();
+	return parser.SerializeWorld();
 }
 
 function on_play_mode() {
@@ -1251,7 +1251,7 @@ function on_game_data_change_core() {
 	// console.log(document.getElementById("game_data").value);
 
 	clearGameData();
-	var version = parseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data
+	var version = parser.ParseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data
 
 	// TODO RENDERER : refresh images
 
@@ -2195,9 +2195,9 @@ function on_change_text_direction(e) {
 }
 
 function pickDefaultTextDirectionForFont(newFontName) {
-	var newTextDirection = TextDirection.LeftToRight;
+	var newTextDirection = TEXT_DIRECTION_KEY.LEFT_TO_RIGHT;
 	if (newFontName === "arabic") {
-		newTextDirection = TextDirection.RightToLeft;
+		newTextDirection = TEXT_DIRECTION_KEY.RIGHT_TO_LEFT;
 	}
 	updateEditorTextDirection(newTextDirection);
 	updateTextDirectionSelectUI();

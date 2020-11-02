@@ -120,8 +120,13 @@ function ScreenRenderTarget() {
 	function Draw(drawing, x, y, options) {
 		var frameOverride = options && options.frameIndex ? options.frameIndex : null;
 
-		var renderedTile = getOrRenderTile(drawing, frameOverride);
-		bitsyCanvasPutTexture(renderedTile, x * tileIncrement, y * tileIncrement);
+		if (drawing.id in tile) {
+			var renderedTile = getOrRenderTile(drawing, frameOverride);
+			bitsyCanvasPutTexture(renderedTile, x * tileIncrement, y * tileIncrement);
+		}
+		else {
+			console.log("TRYING TO DRAW MISSING TILE " + drawing.id);
+		}
 	}
 
 	this.DrawTile = function(tileId, x, y, options) {
@@ -129,6 +134,11 @@ function ScreenRenderTarget() {
 	};
 
 	this.DrawSprite = function(sprite, x, y, options) {
+		if (sprite === undefined) {
+			console.log("TRYING TO DRAW MISSING SPRITE!");
+			return;
+		}
+
 		Draw(sprite, x, y, options);
 	};
 }
