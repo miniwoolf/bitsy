@@ -32,6 +32,20 @@ var ARG_KEY = {
 	LOCK : "LOK",
 };
 
+var BUTTON_KEY = {
+	UP : "UP",
+	DOWN : "DWN",
+	LEFT : "LFT",
+	RIGHT : "RGT",
+	OKAY : "OK",
+	// TODO: any others? or is this it?
+	
+	// stub for possible future cancel button -
+	// I don't think I need it yet and it complicates touch controls,
+	// but I might want it eventually
+	// CANCEL : "X",
+};
+
 // move other symbol codes in here? SEQ? rename CURLY_KEY?
 var SYM_KEY = {
 	OPEN : "{",
@@ -44,6 +58,17 @@ var SYM_KEY = {
 var BOOL_KEY = {
 	YES : "YES", // => TRUE
 	NO : "NO", // => FALSE, NULL, NIL
+};
+
+var TRANSITION_KEY = {
+	FADE_WHITE : "FDW",
+	FADE_BLACK : "FDB",
+	WAVE : "WVE",
+	TUNNEL : "TNL",
+	SLIDE_UP : "SLU",
+	SLIDE_DOWN : "SLD",
+	SLIDE_LEFT : "SLL",
+	SLIDE_RIGHT : "SLR",
 };
 
 var FONT_KEY = {

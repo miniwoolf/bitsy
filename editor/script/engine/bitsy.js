@@ -445,19 +445,19 @@ function updateInput() {
 		var prevPlayerDirection = curPlayerDirection;
 
 		if (input.isKeyDown(key.left) || input.isKeyDown(key.a) || input.swipeLeft()) {
-			curPlayerDirection = Direction.Left;
+			curPlayerDirection = BUTTON_KEY.LEFT;
 		}
 		else if (input.isKeyDown(key.right) || input.isKeyDown(key.d) || input.swipeRight()) {
-			curPlayerDirection = Direction.Right;
+			curPlayerDirection = BUTTON_KEY.RIGHT;
 		}
 		else if (input.isKeyDown(key.up) || input.isKeyDown(key.w) || input.swipeUp()) {
-			curPlayerDirection = Direction.Up;
+			curPlayerDirection = BUTTON_KEY.UP;
 		}
 		else if (input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
-			curPlayerDirection = Direction.Down;
+			curPlayerDirection = BUTTON_KEY.DOWN;
 		}
 		else {
-			curPlayerDirection = Direction.None;
+			curPlayerDirection = null;
 		}
 
 		function tryButtonDownActions(keyName, isButtonHeld, afterButtonPressFunc) {
@@ -484,11 +484,11 @@ function updateInput() {
 			}
 		}
 
-		if (curPlayerDirection != Direction.None) {
+		if (curPlayerDirection != null) {
 			if (curPlayerDirection != prevPlayerDirection) {
 				// new direction!
 				tryButtonDownActions(
-					directionToKeyName(curPlayerDirection),
+					curPlayerDirection,
 					false,
 					function() { movePlayer(curPlayerDirection); });
 
@@ -500,7 +500,7 @@ function updateInput() {
 
 				if (playerHoldToMoveTimer <= 0) {
 					tryButtonDownActions(
-						directionToKeyName(curPlayerDirection),
+						curPlayerDirection,
 						true,
 						function() { movePlayer(curPlayerDirection); });
 
@@ -517,7 +517,7 @@ function updateInput() {
 				// todo : is this the keycode I want?
 				// todo : should I implement held actions for this button?
 				// todo : what if this sets off a dialog -- do I need to reset the okay button?
-				tryButtonDownActions("OK", false);
+				tryButtonDownActions(BUTTON_KEY.OKAY, false);
 			}
 		}
 		else {
@@ -661,7 +661,7 @@ var Direction = {
 	Right : 3
 };
 
-var curPlayerDirection = Direction.None;
+var curPlayerDirection = null;
 var playerHoldToMoveTimer = 0;
 
 var isOkayButtonDown = false;
@@ -686,8 +686,8 @@ var InputManager = function() {
 			curX : 0,
 			curY : 0,
 			swipeDistance : 30,
-			swipeDirection : Direction.None,
-			tapReleased : false
+			swipeDirection : null,
+			tapReleased : false,
 		};
 	}
 	resetAll();
@@ -769,7 +769,7 @@ var InputManager = function() {
 			touchState.startX = touchState.curX = event.changedTouches[0].clientX;
 			touchState.startY = touchState.curY = event.changedTouches[0].clientY;
 
-			touchState.swipeDirection = Direction.None;
+			touchState.swipeDirection = null;
 		}
 	}
 
@@ -783,16 +783,16 @@ var InputManager = function() {
 			var prevDirection = touchState.swipeDirection;
 
 			if( touchState.curX - touchState.startX <= -touchState.swipeDistance ) {
-				touchState.swipeDirection = Direction.Left;
+				touchState.swipeDirection = BUTTON_KEY.LEFT;
 			}
 			else if( touchState.curX - touchState.startX >= touchState.swipeDistance ) {
-				touchState.swipeDirection = Direction.Right;
+				touchState.swipeDirection = BUTTON_KEY.RIGHT;
 			}
 			else if( touchState.curY - touchState.startY <= -touchState.swipeDistance ) {
-				touchState.swipeDirection = Direction.Up;
+				touchState.swipeDirection = BUTTON_KEY.UP;
 			}
 			else if( touchState.curY - touchState.startY >= touchState.swipeDistance ) {
-				touchState.swipeDirection = Direction.Down;
+				touchState.swipeDirection = BUTTON_KEY.DOWN;
 			}
 
 			if( touchState.swipeDirection != prevDirection ) {
@@ -808,12 +808,12 @@ var InputManager = function() {
 
 		touchState.isDown = false;
 
-		if( touchState.swipeDirection == Direction.None ) {
+		if (touchState.swipeDirection === null) {
 			// tap!
 			touchState.tapReleased = true;
 		}
 
-		touchState.swipeDirection = Direction.None;
+		touchState.swipeDirection = null;
 	}
 
 	this.isKeyDown = function(keyCode) {
@@ -829,19 +829,19 @@ var InputManager = function() {
 	}
 
 	this.swipeLeft = function() {
-		return touchState.swipeDirection == Direction.Left;
+		return touchState.swipeDirection === BUTTON_KEY.LEFT;
 	}
 
 	this.swipeRight = function() {
-		return touchState.swipeDirection == Direction.Right;
+		return touchState.swipeDirection === BUTTON_KEY.RIGHT;
 	}
 
 	this.swipeUp = function() {
-		return touchState.swipeDirection == Direction.Up;
+		return touchState.swipeDirection === BUTTON_KEY.UP;
 	}
 
 	this.swipeDown = function() {
-		return touchState.swipeDirection == Direction.Down;
+		return touchState.swipeDirection === BUTTON_KEY.DOWN;
 	}
 
 	this.isTapReleased = function() {
@@ -996,8 +996,8 @@ function createRoomWallCollisionInstance(x, y) {
 }
 
 function move(instance, direction, canEnterNeighborRoom) {
-	var x = instance.x + (direction === Direction.Left ? -1 : 0) + (direction === Direction.Right ? 1 : 0);
-	var y = instance.y + (direction === Direction.Up ? -1 : 0) + (direction === Direction.Down ? 1 : 0);
+	var x = instance.x + (direction === BUTTON_KEY.LEFT ? -1 : 0) + (direction === BUTTON_KEY.RIGHT ? 1 : 0);
+	var y = instance.y + (direction === BUTTON_KEY.UP ? -1 : 0) + (direction === BUTTON_KEY.DOWN ? 1 : 0);
 
 	var collision = false;
 	var collisionSprite = null;
@@ -1049,36 +1049,6 @@ function move(instance, direction, canEnterNeighborRoom) {
 	}
 
 	return { collision: collision, collidedWith: collisionSprite, };
-}
-
-function keyNameToDirection(keyName) {
-	switch (keyName) {
-		case "LFT":
-			return Direction.Left;
-		case "RGT":
-			return Direction.Right;
-		case "UP":
-			return Direction.Up;
-		case "DWN":
-			return Direction.Down;
-		default:
-			return Direction.None;
-	}
-}
-
-function directionToKeyName(direction) {
-	switch (direction) {
-		case Direction.Left:
-			return "LFT";
-		case Direction.Right:
-			return "RGT";
-		case Direction.Up:
-			return "UP";
-		case Direction.Down:
-			return "DWN";
-		default:
-			return null; // todo : error -- how to handle?
-	}
 }
 
 function updateLockState(spr) {

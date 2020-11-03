@@ -205,7 +205,7 @@ var TransitionManager = function() {
 		return curBuffer.GetPixel(pixelX, pixelY);
 	}
 
-	this.RegisterTransitionEffect("FDW", { // TODO : have it linger on full white briefly?
+	this.RegisterTransitionEffect(TRANSITION_KEY.FADE_WHITE, { // TODO : have it linger on full white briefly?
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 750,
@@ -214,7 +214,7 @@ var TransitionManager = function() {
 		pixelEffectFunc : pixelEffectFade,
 	});
 
-	this.RegisterTransitionEffect("FDB", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.FADE_BLACK, {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 750,
@@ -224,7 +224,7 @@ var TransitionManager = function() {
 	});
 
 	// todo : name? WVY? WAV?
-	this.RegisterTransitionEffect("WVE", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.WAVE, {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
@@ -252,7 +252,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("TNL", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.TUNNEL, {
 		showPlayerStart : true,
 		showPlayerEnd : true,
 		duration : 1500,
@@ -314,7 +314,7 @@ var TransitionManager = function() {
 		color.UpdateSystemPalette(start.PaletteId, end.PaletteId, paletteDelta);
 	}
 
-	this.RegisterTransitionEffect("SLU", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.SLIDE_UP, {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -333,7 +333,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("SLD", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.SLIDE_DOWN, {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -352,7 +352,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("SLL", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.SLIDE_LEFT, {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,
@@ -371,7 +371,7 @@ var TransitionManager = function() {
 		},
 	});
 
-	this.RegisterTransitionEffect("SLR", {
+	this.RegisterTransitionEffect(TRANSITION_KEY.SLIDE_RIGHT, {
 		showPlayerStart : false,
 		showPlayerEnd : true,
 		duration : 1000,

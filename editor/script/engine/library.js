@@ -241,7 +241,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 					transitionEffect,
 					initRoom);
 
-				transition.UpdateTransition(0);			
+				transition.UpdateTransition(0);
 			}
 			else {
 				initRoom(destRoom);
@@ -284,7 +284,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 
 		if (waitForInput) {
 			dialogBuffer.AddPagebreak();
-			dialogBuffer.AddScriptReturn(beginEnding);			
+			dialogBuffer.AddScriptReturn(beginEnding);
 		}
 		else {
 			beginEnding();
@@ -339,7 +339,7 @@ function createSpriteLibrary(contextInstance, parent) {
 		// todo : allow moving the current sprite if no parameters? that would mean putting the reference param last
 		// todo : check that the instance is a valid object instance!
 		var instance = parameters[0];
-		var result = !move(instance, keyNameToDirection(parameters[1])).collision;
+		var result = !move(instance, parameters[1]).collision;
 
 		onReturn(result);
 	});
@@ -415,5 +415,5 @@ this.CreateScriptEnvironment = function(variable, dialogBuffer, instance) {
 
 	return instanceEnv;
 };
-	
+
 }
