@@ -1,19 +1,3 @@
-/* TODO
-- are the rainbow colors right? try reverse engineering from old fx?
-- do I actually want automatic color cycling?
-*/
-
-var COLOR_INDEX = {
-	TEXTBOX : 0,
-	TEXT : 1,
-	RAINBOW_START : 2,
-	RAINBOW_END : 11,
-	TRANSPARENT : 12,
-	BACKGROUND : 13,
-	TILE : 14,
-	SPRITE : 15,
-};
-
 var PALETTE_ID = {
 	ROOM : 0,
 	PREV : 1,
@@ -22,7 +6,6 @@ var PALETTE_ID = {
 
 function Color() {
 	// active palette colors
-	var paletteSize = 16;
 	var palettes = {};
 
 	var colorCycleOffset = 0;
@@ -75,7 +58,7 @@ function Color() {
 
 	// todo : name?
 	function ShiftedColorIndex(index, indexOffset) {
-		return (index + indexOffset) % paletteSize;
+		return (index + indexOffset) % PALETTE_SIZE;
 	}
 	this.ShiftedColorIndex = ShiftedColorIndex;
 
@@ -100,20 +83,20 @@ function Color() {
 	this.CreateFadePalette = function(clearIndex) {
 		palettes[PALETTE_ID.FADE] = [];
 
-		for (var i = 0; i < paletteSize; i++) {
+		for (var i = 0; i < PALETTE_SIZE; i++) {
 			palettes[PALETTE_ID.FADE].push(palettes[PALETTE_ID.PREV][clearIndex]);
 		}
 	};
 
 	function UpdateSystemPalette(paletteIdA, paletteIdB, delta) {
-		bitsyPaletteRequestSize(paletteSize); // todo : do this on every update?
+		bitsyPaletteRequestSize(PALETTE_SIZE); // todo : do this on every update?
 
 		if (paletteIdA === undefined || paletteIdA === null) {
 			paletteIdA = PALETTE_ID.ROOM;
 		}
 
 		if (paletteIdB != undefined && paletteIdB != null && delta != undefined && delta != null) {
-			for (var i = 0; i < paletteSize; i++) {
+			for (var i = 0; i < PALETTE_SIZE; i++) {
 				var colorA = palettes[paletteIdA][i];
 				var colorB = palettes[paletteIdB][i];
 				var deltaColor = LerpColor(colorA, colorB, delta);
@@ -121,7 +104,7 @@ function Color() {
 			}
 		}
 		else {
-			for (var i = 0; i < paletteSize; i++) {
+			for (var i = 0; i < PALETTE_SIZE; i++) {
 				var color = palettes[paletteIdA][i];
 				bitsyPaletteSetColor(i, color[0], color[1], color[2], color[3]);
 			}

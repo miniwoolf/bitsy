@@ -1,3 +1,34 @@
+/* CONSTANTS */
+var width = 128;
+var height = 128;
+var scale = 4; //this is stupid but necessary
+var tilesize = 8;
+var roomsize = 16;
+var mapsize = 8;
+
+var MAP_MAX = 4;
+var ROOM_MAX = 256;
+var TILE_MAX = 256;
+var DIALOG_MAX = 128; // todo : too small?
+var PALETTE_MAX = 128; // todo : too small?
+var PALETTE_SIZE = 16;
+var ANIMATION_SIZE = 4;
+
+var COLOR_INDEX = {
+	TEXTBOX : 0,
+	TEXT : 1,
+	RAINBOW_START : 2,
+	RAINBOW_END : 11,
+	TRANSPARENT : 12,
+	BACKGROUND : 13,
+	TILE : 14,
+	SPRITE : 15,
+};
+
+var WRITABLE_COLOR_START = COLOR_INDEX.BACKGROUND;
+var ENABLE_DRAWING_OVERRIDES = false;
+
+/* KEYWORDS */
 var TYPE_KEY = {
 	PALETTE : "PAL",
 	ROOM : "ROOM",
@@ -87,6 +118,7 @@ var TEXT_DIRECTION_KEY = {
 var MISC_KEY = {
 	COMMENT : "#",
 	FLAG : "!",
+	NEXT : ">",
 };
 
 // for back compat with old versions

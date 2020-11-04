@@ -495,9 +495,7 @@ function parseTile(lines, i, type) {
 
 function parseDrawing(lines, i) {
 	var frameList = []; //init list of frames
-	frameList.push([]); //init first frame
-
-	var frameIndex = 0;
+	var curFrame = [];; //init first frame
 
 	var y = 0;
 
@@ -509,17 +507,20 @@ function parseDrawing(lines, i) {
 			row.push(parseInt(l.charAt(x)));
 		}
 
-		frameList[frameIndex].push(row);
+		curFrame.push(row);
 
 		y++;
 
 		if (y === tilesize) {
+			if (ANIMATION_SIZE === null || frameList.length < ANIMATION_SIZE) {
+				frameList.push(curFrame);
+			}
+
 			i = i + y;
 
-			if (lines[i] != undefined && lines[i].charAt(0) === ">") {
+			if (lines[i] != undefined && lines[i].charAt(0) === MISC_KEY.NEXT) {
 				// start next frame!
-				frameList.push([]);
-				frameIndex++;
+				curFrame = [];
 
 				//start the count over again for the next frame
 				i++;
@@ -890,16 +891,26 @@ function serializeWorld(skipFonts) {
 function serializeDrawing(drwId) {
 	var imageSource = renderer.GetTileSource(drwId);
 	var drwStr = "";
-	for (f in imageSource) {
-		for (y in imageSource[f]) {
+
+	var frameCount = ANIMATION_SIZE === null ?
+		imageSource.length : Math.min(ANIMATION_SIZE, imageSource.length);
+
+	for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+		for (y in imageSource[frameIndex]) {
 			var rowStr = "";
-			for (x in imageSource[f][y]) {
-				rowStr += imageSource[f][y][x];
+
+			for (x in imageSource[frameIndex][y]) {
+				rowStr += imageSource[frameIndex][y][x];
 			}
+
 			drwStr += rowStr + "\n";
 		}
-		if (f < (imageSource.length-1)) drwStr += ">\n";
+
+		if (frameIndex < (frameCount - 1)) {
+			drwStr += (MISC_KEY.NEXT + "\n");
+		}
 	}
+
 	return drwStr;
 }
 

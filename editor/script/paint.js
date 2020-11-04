@@ -830,6 +830,10 @@ function AnimationControl(onSelectFrame, controls) {
 
 	// todo : add animation caching back? or just replace with an undo/redo system?
 	function addNewFrameToDrawing() {
+		if (ANIMATION_SIZE != null && tile[drawingId].animation.frameCount >= ANIMATION_SIZE) {
+			return;
+		}
+
 		// copy last frame data into new frame
 		var prevFrameIndex = tile[drawingId].animation.frameCount - 1;
 		var imageSource = renderer.GetTileSource(drawingId);
@@ -862,8 +866,16 @@ function AnimationControl(onSelectFrame, controls) {
 		// reset animations
 		resetAllAnimations();
 
+		updateFrameControls();
+	}
+
+	function updateFrameControls() {
 		controls.removeButton.style.display =
 			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
+
+		controls.addButton.style.display =
+			(ANIMATION_SIZE != null && tile[drawingId].animation.frameCount >= ANIMATION_SIZE) ?
+				"none" : "inline-block";
 	}
 
 	controls.addButton.onclick = addNewFrameToDrawing;
@@ -900,8 +912,7 @@ function AnimationControl(onSelectFrame, controls) {
 		// reset animations
 		resetAllAnimations();
 
-		controls.removeButton.style.display =
-			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
+		updateFrameControls();
 	}
 
 	controls.removeButton.onclick = removeLastFrameFromDrawing;
@@ -924,7 +935,7 @@ function AnimationControl(onSelectFrame, controls) {
 			onSelectFrame(frameIndex);
 		};
 		thumbnailImgList.push(thumbnailImg);
-		controls.framesDiv.appendChild(thumbnailImg);		
+		controls.framesDiv.appendChild(thumbnailImg);
 	}
 
 	this.ChangeDrawing = function(id) {
@@ -949,8 +960,7 @@ function AnimationControl(onSelectFrame, controls) {
 
 		thumbnailImgList[frameIndex].onclick();
 
-		controls.removeButton.style.display =
-			tile[drawingId].animation.frameCount > 1 ? "inline-block" : "none";
+		updateFrameControls();
 	}
 
 	this.RefreshCurFrame = function() {

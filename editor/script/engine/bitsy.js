@@ -140,13 +140,6 @@ function clearGameData() {
 	textDirection = TEXT_DIRECTION_KEY.LEFT_TO_RIGHT;
 }
 
-var width = 128;
-var height = 128;
-var scale = 4; //this is stupid but necessary
-var tilesize = 8;
-var roomsize = 16;
-var mapsize = 8;
-
 var curRoom = "0";
 
 var key = {
