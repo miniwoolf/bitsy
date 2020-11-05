@@ -721,6 +721,10 @@ function start() {
 				colorSelect : document.getElementById("tileColorSelect"),
 				colorOtherOption : document.getElementById("tileColorOptionOther"),
 				colorIndexInput : document.getElementById("tileColorIndexInput"),
+				backgroundContainer : document.getElementById("tileBackgroundOverride"),
+				backgroundSelect : document.getElementById("tileBackgroundSelect"),
+				backgroundOtherOption : document.getElementById("tileBackgroundOptionOther"),
+				backgroundIndexInput : document.getElementById("tileBackgroundIndexInput"),
 			},
 			wall : {
 				container : document.getElementById("wall"),

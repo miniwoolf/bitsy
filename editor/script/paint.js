@@ -710,6 +710,7 @@ function ColorSettingsControl(controls, onColorChange) {
 
 	function UpdateControls(isVisible) {
 		if (isVisible) {
+			// color
 			controls.colorContainer.style.display = "flex";
 
 			if (tile[drawingId].col >= 0 && tile[drawingId].col < 3) {
@@ -721,9 +722,23 @@ function ColorSettingsControl(controls, onColorChange) {
 				controls.colorIndexInput.style.display = "flex";
 				controls.colorIndexInput.value = tile[drawingId].col;
 			}
+
+			// background
+			controls.backgroundContainer.style.display = "flex";
+
+			if (tile[drawingId].bgc >= 0 && tile[drawingId].bgc < 3) {
+				controls.backgroundSelect.value = tile[drawingId].bgc;
+				controls.backgroundIndexInput.style.display = "none";
+			}
+			else {
+				controls.backgroundSelect.value = "other";
+				controls.backgroundIndexInput.style.display = "flex";
+				controls.backgroundIndexInput.value = tile[drawingId].bgc;
+			}
 		}
 		else {
 			controls.colorContainer.style.display = "none";
+			controls.backgroundContainer.style.display = "none";
 		}
 	}
 
@@ -746,6 +761,34 @@ function ColorSettingsControl(controls, onColorChange) {
 
 	controls.colorIndexInput.onchange = function(e) {
 		tile[drawingId].col = parseInt(e.target.value);
+
+		refreshGameData();
+
+		if (onColorChange) {
+			onColorChange();
+		}
+	}
+
+	// background controls : a little duplicative oh well
+	controls.backgroundSelect.onchange = function(e) {
+		if (e.target.value === "other") {
+			controls.backgroundIndexInput.style.display = "flex";
+			controls.backgroundIndexInput.value = tile[drawingId].bgc;
+		}
+		else {
+			controls.backgroundIndexInput.style.display = "none";
+			tile[drawingId].bgc = parseInt(e.target.value);
+
+			refreshGameData();
+
+			if (onColorChange) {
+				onColorChange();
+			}
+		}
+	}
+
+	controls.backgroundIndexInput.onchange = function(e) {
+		tile[drawingId].bgc = parseInt(e.target.value);
 
 		refreshGameData();
 

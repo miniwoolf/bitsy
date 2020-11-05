@@ -5,12 +5,12 @@
 
 function DialogControl(parentPanelId) {
 	var drawingId = null;
-	var curEventId = "DLG";
+	var curEventId = ARG_KEY.DIALOG_SCRIPT;
 
 	this.SetDrawing = function(id) {
 		drawingId = id;
 		UpdateDialogIdSelectOptions();
-		setSelectedEvent("DLG");
+		setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
 		ChangeSettingsVisibility(false);
 	}
 
@@ -35,9 +35,15 @@ function DialogControl(parentPanelId) {
 
 	var labelSpan = document.createElement("span");
 	labelSpan.style.flexGrow = 1;
+	labelSpan.classList.add("paintSetting"); // this class could use a more general name?
 	controlDiv.appendChild(labelSpan);
 
-	labelSpan.appendChild(iconUtils.CreateIcon("dialog"));
+	var dialogIcon = iconUtils.CreateIcon("dialog");
+	labelSpan.appendChild(dialogIcon);
+
+	var spacer = document.createElement("span");
+	spacer.classList.add("spacer");
+	labelSpan.appendChild(spacer);
 
 	var labelTextSpan = document.createElement("span");
 	labelSpan.appendChild(labelTextSpan);
@@ -86,50 +92,53 @@ function DialogControl(parentPanelId) {
 	div.appendChild(dialogIdSelectRoot);
 
 	// todo : localize
-	var dialogEventTypes = {
-		"DLG" : {
-			name : "dialog",
-			shortName : "dialog",
-			propertyId : "dlg",
-			defaultScript : 'hi there!', // todo : changed based on sprite type?
-			selectControl : null,
-		},
-		"TIK" : {
-			name : "on frame tick",
-			shortName : "tick",
-			propertyId : "tickDlgId",
-			defaultScript :
-				'{->\n' +
-				'    {FN {FRM}\n' +
-				'        {HOP "RGT"}\n' +
-				'    }\n' +
-				'}',
-			selectControl : null,
-		},
-		"NOK" : {
-			name : "on knock into",
-			shortName : "knock",
-			propertyId : "knockDlgId",
-			defaultScript : // todo : is this the script I want?
-				'{->\n' +
-				'    {FN {OTHER}\n' +
-				'        {RID OTHER}\n' +
-				'    }\n' +
-				'}',
-			selectControl : null,
-		},
-		"BTN" : {
-			name : "on button",
-			shortName : "button",
-			propertyId : "buttonDownDlgId",
-			defaultScript : // todo : is this the script I want?
-				'{->\n' +
-				'    {FN {BTN HLD}\n' +
-				'        {-> player pressed {SAY BTN}}\n' +
-				'    }\n' +
-				'}',
-			selectControl : null,
-		},
+	var dialogEventTypes = {};
+
+	dialogEventTypes[ARG_KEY.DIALOG_SCRIPT] = {
+		name : "dialog",
+		shortName : "dialog",
+		propertyId : "dlg",
+		defaultScript : 'hi there!', // todo : changed based on sprite type?
+		selectControl : null,
+	};
+
+	dialogEventTypes[ARG_KEY.FRAME_TICK_SCRIPT] = {
+		name : "on frame tick",
+		shortName : "tick",
+		propertyId : "tickDlgId",
+		defaultScript :
+			'{->\n' +
+			'    {FN {FRM}\n' +
+			'        {HOP "RGT"}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
+	};
+
+	dialogEventTypes[ARG_KEY.KNOCK_INTO_SCRIPT] = {
+		name : "on knock into",
+		shortName : "knock",
+		propertyId : "knockDlgId",
+		defaultScript : // todo : is this the script I want?
+			'{->\n' +
+			'    {FN {OTHER}\n' +
+			'        {RID OTHER}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
+	};
+
+	dialogEventTypes[ARG_KEY.BUTTON_DOWN_SCRIPT] = {
+		name : "on button",
+		shortName : "button",
+		propertyId : "buttonDownDlgId",
+		defaultScript : // todo : is this the script I want?
+			'{->\n' +
+			'    {FN {BTN HLD}\n' +
+			'        {-> player pressed {SAY BTN}}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
 	};
 
 	function setSelectedEvent(id) {
@@ -186,6 +195,8 @@ function DialogControl(parentPanelId) {
 					dialogEvent.selectControl.OpenTool();
 
 					refreshGameData();
+
+					curEventId = eventId;
 				}
 				else {
 					setSelectedEvent(eventId);
@@ -220,7 +231,7 @@ function DialogControl(parentPanelId) {
 					hasNoneOption : true,
 				});
 
-			selectEvent.appendChild(dialogEvent.selectControl.GetElement());			
+			selectEvent.appendChild(dialogEvent.selectControl.GetElement());
 		}
 
 		if (findTool) {
@@ -245,7 +256,7 @@ function DialogControl(parentPanelId) {
 	}
 
 	UpdateDialogIdSelectOptions();
-	
+
 	events.Listen("new_dialog", function() { UpdateDialogIdSelectOptions(); });
 	events.Listen("dialog_update", function(event) {
 		// TODO
@@ -255,18 +266,26 @@ function DialogControl(parentPanelId) {
 		showSettings = visible;
 		editorDiv.style.display = showSettings ? "none" : "flex";
 		dialogIdSelectRoot.style.display = showSettings ? "block" : "none";
-		settingsButton.style.display = showSettings ? "none" : "inline";
 		openButton.style.display = showSettings ? "none" : "inline";
+
+		settingsButton.innerHTML = "";
+		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "settings"));
 	}
 
 	settingsButton.onclick = function() {
-		labelTextSpan.innerText = "dialog events"; // todo : localize // todo : best name?
-		ChangeSettingsVisibility(true);
+		ChangeSettingsVisibility(!showSettings);
+
+		if (showSettings) {
+			labelTextSpan.innerText = "dialog events"; // todo : localize // todo : best name?
+		}
+		else {
+			setSelectedEvent(curEventId);
+		}
 	}
 
 	this.GetElement = function() {
 		return div;
 	}
 
-	setSelectedEvent("DLG");
+	setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
 }
