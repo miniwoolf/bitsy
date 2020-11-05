@@ -189,35 +189,6 @@ function mobileOffsetCorrection(off,e,innerSize) {
 	return off;
 }
 
-// todo : seems like this could be used several places...
-// todo : localize
-function tileTypeToString(type) {
-	if (type == TileType.Tile) {
-		return "tile";
-	}
-	else if (type == TileType.Sprite) {
-		return "sprite";
-	}
-	else if (type == TileType.Avatar) {
-		return "avatar";
-	}
-	else if (type == TileType.Item) {
-		return "item";
-	}
-}
-
-function tileTypeToIdPrefix(type) {
-	if (type == TileType.Tile) {
-		return "TIL_";
-	}
-	else if (type == TileType.Sprite || type == TileType.Avatar) {
-		return "SPR_";
-	}
-	else if (type == TileType.Item) {
-		return "ITM_";
-	}
-}
-
 /* DIALOG UI 
 - hacky to make this all global
 - some of this should be folded into paint tool later
@@ -745,6 +716,12 @@ function start() {
 		},
 		settings : {
 			container : document.getElementById("tileSettings"),
+			color : {
+				colorContainer : document.getElementById("tileColorOverride"),
+				colorSelect : document.getElementById("tileColorSelect"),
+				colorOtherOption : document.getElementById("tileColorOptionOther"),
+				colorIndexInput : document.getElementById("tileColorIndexInput"),
+			},
 			wall : {
 				container : document.getElementById("wall"),
 				checkbox : document.getElementById("wallCheckbox"),
@@ -1213,26 +1190,6 @@ function editDrawingAtCoordinate(x,y) {
 	}
 }
 
-function selectPaint() {
-	if (drawing.id === this.value) {
-		// showPanel("paintPanel", "paintExplorerPanel");
-	}
-
-	drawing.id = this.value;
-	if( drawing.type === TileType.Tile ) {
-		tileIndex = sortedTileIdList().indexOf( drawing.id );
-		paintTool.ReloadDrawing();
-	}
-	else if( drawing.type === TileType.Item ) {
-		itemIndex = sortedItemIdList().indexOf( drawing.id );
-		paintTool.ReloadDrawing();
-	}
-	else {
-		spriteIndex = sortedSpriteIdList().indexOf( drawing.id );
-		paintTool.ReloadDrawing();
-	}
-}
-
 function on_change_adv_dialog() {
 	on_change_dialog();
 }
@@ -1309,11 +1266,6 @@ function updateFontDescriptionUI() {
 			fontDescription.style.display = fontOption.selected ? "block" : "none";
 		}
 	}
-}
-
-function toggleWallUI(checked) {
-	iconUtils.LoadIcon(document.getElementById("wallCheckboxIcon"), checked ? "wall_on" : "wall_off");
-	document.getElementById("wallCheckboxText").innerText = checked ? "yes " : "no "; // todo : localize
 }
 
 function filenameFromGameTitle() {

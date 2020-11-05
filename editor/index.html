@@ -716,13 +716,29 @@
 						</div>
 
 						<div id="tileSettings" class="controlBox">
+							<!-- TODO : localize -->
+							<div id="tileColorOverride" class="paintSetting" title="foreground color">
+								<span class="bitsy_icon">colors</span>
+								<span class="spacer"></span>
+								<span>color:</span>
+								<span class="spacer"></span>
+								<select id="tileColorSelect">
+									<option value="0">background (0)</option>
+									<option value="1">tile (1)</option>
+									<option value="2">sprite (2)</option>
+									<option id="tileColorOptionOther" value="other">other</option>
+								</select>
+								<span class="spacer"></span>
+								<input id="tileColorIndexInput" type="number"></input>
+							</div>
+
 							<div id="wall" class="paintSetting" title="is this tile a wall?">
 								<span id="wallCheckboxIcon" class="bitsy_icon">wall_off</span>
 								<span class="spacer"></span>
 								<span class="localize wall_toggle">wall</span>
 								<span>:</span> 
 								<span class="spacer"></span>
-								<input type="checkbox" id="wallCheckbox" onchange="on_toggle_wall(event);">
+								<input type="checkbox" id="wallCheckbox">
 								<label title="make tile an impassible wall" for="wallCheckbox">
 									<span id="wallCheckboxText">no </span>
 								</label>

@@ -414,11 +414,11 @@ function parseTile(lines, i, type) {
 			/* NAME */
 			options.name = lines[i].split(/\s(.+)/)[1];
 		}
-		else if (getType(lines[i]) === ARG_KEY.COLOR) {
+		else if (getType(lines[i]) === ARG_KEY.COLOR && ENABLE_COLOR_OVERRIDE) {
 			/* COLOR OFFSET INDEX */
 			options.col = parseInt(getId(lines[i]));
 		}
-		else if (getType(lines[i]) === ARG_KEY.BACKGROUND) {
+		else if (getType(lines[i]) === ARG_KEY.BACKGROUND && ENABLE_COLOR_OVERRIDE) {
 			/* BACKGROUND COLOR OFFSET INDEX */
 			options.bgc = parseInt(getId(lines[i]));
 		}
@@ -811,12 +811,12 @@ function serializeWorld(skipFonts) {
 			/* NAME */
 			worldStr += ARG_KEY.NAME + " " + tile[id].name + "\n";
 		}
-		if (tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
+		if (ENABLE_COLOR_OVERRIDE && tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
 			/* BACKGROUND COLOR OVERRIDE */
 			worldStr += ARG_KEY.BACKGROUND + " " + tile[id].bgc + "\n";
 		}
-		if (tile[id].col != null && tile[id].col != undefined) {
-			var defaultColor = type === isBackgroundTile ? 1 : 2;
+		if (ENABLE_COLOR_OVERRIDE && tile[id].col != null && tile[id].col != undefined) {
+			var defaultColor = isBackgroundTile ? 1 : 2;
 			if (tile[id].col != defaultColor) {
 				/* COLOR OVERRIDE */
 				worldStr += ARG_KEY.COLOR +  " " + tile[id].col + "\n";

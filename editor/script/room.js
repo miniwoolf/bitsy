@@ -32,10 +32,6 @@ function RoomTool(canvas) {
 	this.drawMapGrid = true;
 	this.drawCollisionMap = false;
 
-	function getDrawingType() {
-		return getDrawingTypeFromId(drawingId);
-	}
-
 	function onMouseDown(e) {
 		e.preventDefault();
 
@@ -56,7 +52,7 @@ function RoomTool(canvas) {
 
 		if (drawingId != null) {
 			//add tiles/sprites to map
-			if (getDrawingType() == TileType.Tile) {
+			if (tile[drawingId].type === TYPE_KEY.TILE) {
 				if (room[curRoom].tilemap[y][x] === "0") {
 					room[curRoom].tilemap[y][x] = drawingId;
 					isDragAddingTiles = true;
@@ -69,7 +65,7 @@ function RoomTool(canvas) {
 				}
 				//room[curRoom].tilemap[y] = row;
 			}
-			else if (getDrawingType() == TileType.Avatar) {
+			else if (tile[drawingId].type === TYPE_KEY.AVATAR) {
 				// TODO : bug -- doesn't erase other sprites!!
 				var isAvatarAlreadyHere = false;
 

@@ -127,19 +127,21 @@ function DialogTextEditor(expressionList, parentEditor) {
 		if (tile[id].name) {
 			tileName += tile[id].name;
 		}
-		else if (getDrawingTypeFromId(id) == TileType.Avatar) {
+		else if (tile[id].type === TYPE_KEY.AVATAR) {
 			tileName += localization.GetStringOrFallback("avatar_label", "avatar");
 		}
 		else {
-			if (getDrawingTypeFromId(id) == TileType.Sprite) {
+			if (tile[id].type === TYPE_KEY.SPRITE) {
 				tileName += localization.GetStringOrFallback("sprite_label", "sprite");
 			}
-			else if (getDrawingTypeFromId(id) == TileType.Tile) {
+			else if (tile[id].type === TYPE_KEY.TILE) {
 				tileName += localization.GetStringOrFallback("tile_label", "tile");
 			}
-			else if (getDrawingTypeFromId(id) == TileType.Item) {
+			else if (tile[id].type === TYPE_KEY.ITEM) {
 				tileName += localization.GetStringOrFallback("item_label", "item");
 			}
+			// TOOD: what about exits and endings?
+			// TODO : can't I get this from the find tool now?
 
 			tileName += " " + id;
 		}

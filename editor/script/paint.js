@@ -20,6 +20,17 @@ function PaintTool(controls) {
 		},
 		controls.animation);
 
+	var colorSettings = new ColorSettingsControl(
+		controls.settings.color,
+		function() {
+			self.UpdateCanvas();
+		});
+
+	var wallSettings = new WallSettingsControl(controls.settings.wall);
+	var inventorySettings = new InventorySettingsControl(controls.settings.inventory);
+	var exitSettings = new ExitSettingsControl(controls.settings.exit);
+	var lockSettings = new LockSettingsControl(controls.settings.lock);
+
 	//paint canvas & context
 	controls.canvas.width = tilesize * paint_scale;
 	controls.canvas.height = tilesize * paint_scale;
@@ -127,7 +138,7 @@ function PaintTool(controls) {
 		updateNamesFromCurData(); // todo : does this even work anymore?
 
 		// make sure items referenced in scripts update their names
-		if (til.type === TileType.Item) {
+		if (til.type === TYPE_KEY.ITEM) {
 			// console.log("SWAP ITEM NAMES");
 			// todo : re-implement -- update item names in scripts!
 			updateInventoryItemUI(); // todo : use event instead?
@@ -190,10 +201,6 @@ function PaintTool(controls) {
 		return tile[drawingId].drw;
 	}
 
-	function getDrawingType() {
-		return getDrawingTypeFromId(drawingId);
-	}
-
 	function isCurDrawingAnimated() {
 		return tile[drawingId].animation.isAnimated;
 	}
@@ -207,28 +214,12 @@ function PaintTool(controls) {
 		return getFrameData(frameIndex);
 	}
 
-	events.Listen("item_inventory_change", function(e) {
-		if (e.id === drawingId) {
-			controls.settings.inventory.input.value = e.count;
-		}
-	});
-
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
 		animationControl.ChangeDrawing(drawingId);
 
 		var hasSettings = false;
-
-		// wall UI
-		if (tile[drawingId].type === "TIL") {
-			hasSettings = true;
-			controls.settings.wall.container.setAttribute("style", "display:flex;");
-			updateWallCheckboxOnCurrentTile();
-		}
-		else {
-			controls.settings.wall.container.setAttribute("style", "display:none;");
-		}
 
 		// dialog UI
 		if (drawingId === "A" || tile[drawingId].type === "TIL") {
@@ -238,42 +229,24 @@ function PaintTool(controls) {
 			UpdateDialogControl(true);
 		}
 
-		if (tile[drawingId].type === "ITM") {
+		if (colorSettings.Update(drawingId)) {
 			hasSettings = true;
-			controls.settings.inventory.container.setAttribute("style","display:flex;");
-			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
-			controls.settings.inventory.input.value = itemCount;
-			controls.settings.inventory.input.oninput = function(e) {
-				console.log(e.target.value);
-				if (e.target.value <= 0) {
-					delete tile[playerId].inventory[drawingId];
-				}
-				else {
-					tile[playerId].inventory[drawingId] = e.target.value;
-					refreshGameData();
-				}
-
-				events.Raise("item_inventory_change", { id: drawingId, count: e.target.value, });
-			};
-		}
-		else {
-			controls.settings.inventory.container.setAttribute("style","display:none;");
 		}
 
-		if (tile[drawingId].type === "EXT") {
+		if (wallSettings.Update(drawingId)) {
 			hasSettings = true;
-			UpdateExitSettingControls(true);
-		}
-		else {
-			UpdateExitSettingControls(false);
 		}
 
-		if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
+		if (inventorySettings.Update(drawingId)) {
 			hasSettings = true;
-			UpdateLockSettingControls(true);
 		}
-		else {
-			UpdateLockSettingControls(false);
+
+		if (exitSettings.Update(drawingId)) {
+			hasSettings = true;
+		}
+
+		if (lockSettings.Update(drawingId)) {
+			hasSettings = true;
 		}
 
 		controls.settings.container.style.display = hasSettings ? "block" : "none";
@@ -302,42 +275,16 @@ function PaintTool(controls) {
 
 	events.Listen("select_drawing", function(e) {
 		drawingId = e.id;
+		console.log(drawingId);
 		self.ReloadDrawing();
 	});
-
-	this.ToggleWall = function(checked) {
-		if (getDrawingType() != TileType.Tile) {
-			return;
-		}
-
-		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null) {
-			// clear out any existing wall settings for this tile in any rooms
-			// (this is back compat for old-style wall settings)
-			for (roomId in room) {
-				var i = room[roomId].walls.indexOf(drawingId);
-				
-				if (i > -1) {
-					room[roomId].walls.splice(i , 1);
-				}
-			}
-		}
-
-		tile[drawingId].isWall = checked;
-
-		refreshGameData();
-
-		// TODO : move this global function into paint.js
-		if (toggleWallUI != null && toggleWallUI != undefined) {
-			toggleWallUI(checked);
-		}
-	}
 
 	// TODO : who uses this? once in reload paint dialog ui, and once in this file... probably could be removed
 	this.GetCurTile = function() {
 		return tile[drawingId];
 	}
 
-	var lastAddType = "TIL";
+	var lastAddType = TYPE_KEY.TILE;
 
 	function NewDrawing(type, imageData) {
 		var nextId = nextObjectId(sortedBase36IdList(tile)); // TODO : helper function?
@@ -350,16 +297,12 @@ function PaintTool(controls) {
 		createTile(nextId, type, tileOptions);
 		refreshGameData();
 
-		events.Raise("add_drawing", { id: nextId });
+		events.Raise("add_drawing", { id: nextId, type: type, });
 		self.SelectDrawing(nextId);
 
 		// TODO : hack... replace with event hookup
 		if (type === "ITM") {
 			updateInventoryItemUI();
-			
-			if (lockItemSelect) {
-				lockItemSelect.UpdateOptions();
-			}
 		}
 
 		lastAddType = type;
@@ -397,27 +340,27 @@ function PaintTool(controls) {
 	};
 
 	controls.add.tile.onclick = function() {
-		NewDrawing("TIL");
+		NewDrawing(TYPE_KEY.TILE);
 		ShowNewDrawingControls(false);
 	};
 
 	controls.add.sprite.onclick = function() {
-		NewDrawing("SPR");
+		NewDrawing(TYPE_KEY.SPRITE);
 		ShowNewDrawingControls(false);
 	};
 
 	controls.add.item.onclick = function() {
-		NewDrawing("ITM");
+		NewDrawing(TYPE_KEY.ITEM);
 		ShowNewDrawingControls(false);
 	};
 
 	controls.add.exit.onclick = function() {
-		NewDrawing("EXT");
+		NewDrawing(TYPE_KEY.EXIT);
 		ShowNewDrawingControls(false);
 	};
 
 	controls.add.ending.onclick = function() {
-		NewDrawing("END");
+		NewDrawing(TYPE_KEY.ENDING);
 		ShowNewDrawingControls(false);
 	};
 
@@ -432,7 +375,7 @@ function PaintTool(controls) {
 
 		// tiles have extra data to copy
 		var tileIsWall = false;
-		if (getDrawingType() === TileType.Tile) {
+		if (tile[drawingId].type === TYPE_KEY.TILE) {
 			tileIsWall = tile[drawingId].isWall;
 		}
 
@@ -440,7 +383,7 @@ function PaintTool(controls) {
 
 		// HACKY
 		// tiles have extra data to copy
-		if (getDrawingType() === TileType.Tile) {
+		if (tile[drawingId].type === TYPE_KEY.TILE) {
 			tile[drawingId].isWall = tileIsWall;
 			// make sure the wall toggle gets updated
 			self.ReloadDrawing();
@@ -450,16 +393,16 @@ function PaintTool(controls) {
 
 	// TODO - may need to extract this for different tools beyond the paint tool (put it in core.js?)
 	function DeleteDrawing() {
-		if (getDrawingType() == TileType.Avatar) {
+		if (tile[drawingId].type === TYPE_KEY.AVATAR) {
 			alert("You can't delete the player! :(");
 			return;
 		}
 
 		if (confirm("Are you sure you want to delete this drawing?")) {
-			if (getDrawingType() == TileType.Tile) {
+			if (tile[drawingId].type === TYPE_KEY.TILE) {
 				findAndReplaceTileInAllRooms(drawingId, "0");
 			}
-			else if (getDrawingType() == TileType.Item) {
+			else if (tile[drawingId].type === TYPE_KEY.ITEM) {
 				removeAllItems(drawingId);
 			}
 			// TODO : remove all sprite locations
@@ -478,10 +421,6 @@ function PaintTool(controls) {
 			// TODO RENDERER : refresh images
 			updateInventoryItemUI();
 
-			if (lockItemSelect) {
-				lockItemSelect.UpdateOptions();
-			}
-
 			nextDrawing();
 
 			// TODO : add event
@@ -490,30 +429,6 @@ function PaintTool(controls) {
 		}
 	}
 	controls.nav.del.onclick = DeleteDrawing;
-
-	function updateWallCheckboxOnCurrentTile() {
-		var isCurTileWall = false;
-
-		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null ) {
-			if (room[curRoom]) {
-				isCurTileWall = (room[curRoom].walls.indexOf(drawingId) != -1);
-			}
-		}
-		else {
-			isCurTileWall = tile[drawingId].isWall;
-		}
-
-		if (isCurTileWall) {
-			controls.settings.wall.checkbox.checked = true;
-			iconUtils.LoadIcon(controls.settings.wall.icon, "wall_on");
-			controls.settings.wall.text.innerText = "yes "; // todo : localize
-		}
-		else {
-			controls.settings.wall.checkbox.checked = false;
-			iconUtils.LoadIcon(controls.settings.wall.icon, "wall_off");
-			controls.settings.wall.text.innerText = "no "; // todo : localize
-		}
-	}
 
 	function updateDrawingNameUI() {
 		var til = tile[drawingId];
@@ -583,195 +498,6 @@ function PaintTool(controls) {
 	}
 	this.PrevDrawing = prevDrawing;
 	controls.nav.prev.onclick = prevDrawing;
-
-	// exit transition controls
-	controls.settings.exit.transitionSelect.onchange = function(e) {
-		if (tile[drawingId].type === "EXT") {
-			if (e.target.value === "none") {
-				tile[drawingId].transition_effect = null;
-			}
-			else {
-				tile[drawingId].transition_effect = e.target.value;
-			}
-
-			refreshGameData();
-		}
-	};
-
-	// exit destination controls
-	var exitRoomSelect;
-
-	controls.settings.exit.editToggle.onchange = function(e) {
-		controls.settings.exit.room.style.display = e.target.checked ? "flex" : "none";
-		controls.settings.exit.pos.style.display = e.target.checked ? "flex" : "none";
-	};
-
-	var onMove = null;
-	controls.settings.exit.moveToggle.onchange = function(e) {
-		if (e.target.checked) {
-			if (roomTool) {
-				onMove = roomTool.OnSelectLocation(
-					function(roomId, x, y) {
-						tile[drawingId].dest.room = roomId;
-						tile[drawingId].dest.x = x;
-						tile[drawingId].dest.y = y;
-
-						UpdateExitSettingControls(true);
-
-						refreshGameData();
-					},
-					function() {
-						controls.settings.exit.moveToggle.checked = false;
-						onMove = null;
-					});
-			}
-		}
-		else if (onMove != null) {
-			onMove.OnFinish();
-		}
-	}
-
-	controls.settings.exit.xInput.onchange = function(e) {
-		tile[drawingId].dest.x = e.target.value;
-		UpdateExitDescription();
-		refreshGameData();
-	};
-
-	controls.settings.exit.yInput.onchange = function(e) {
-		tile[drawingId].dest.y = e.target.value;
-		UpdateExitDescription();
-		refreshGameData();
-	};
-
-	function UpdateExitDescription() {
-		// todo : localize
-		controls.settings.exit.description.innerText = "exit to " + 
-			findTool.GetDisplayName("room", tile[drawingId].dest.room) + 
-			" (" + tile[drawingId].dest.x + ", " + tile[drawingId].dest.y + ")";
-	}
-
-	function UpdateExitSettingControls(isVisible) {
-		controls.settings.exit.destination.style.display = isVisible ? "block" : "none";
-		controls.settings.exit.transitionEffect.style.display = isVisible ? "flex" : "none";
-
-		if (!exitRoomSelect && findTool) {
-			exitRoomSelect = findTool.CreateSelectControl(
-				"room",
-				{
-					onSelectChange : function(id) {
-						tile[drawingId].dest.room = id;
-						UpdateExitDescription();
-						refreshGameData();
-					},
-					toolId : "paintPanel",
-					getSelectMessage : function() {
-						// todo : localize
-						return "select destination room for " + findTool.GetDisplayName("drawing", drawingId) + "...";
-					},
-				});
-
-			controls.settings.exit.roomSelect.appendChild(exitRoomSelect.GetElement());
-		}
-
-		if (isVisible) {
-			UpdateExitDescription();
-
-			controls.settings.exit.room.style.display = controls.settings.exit.editToggle.checked ? "flex" : "none";
-			controls.settings.exit.pos.style.display = controls.settings.exit.editToggle.checked ? "flex" : "none";
-
-			if (exitRoomSelect) {
-				exitRoomSelect.SetSelection(tile[drawingId].dest.room);
-			}
-
-			controls.settings.exit.xInput.value = tile[drawingId].dest.x;
-			controls.settings.exit.yInput.value = tile[drawingId].dest.y;
-
-			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
-			controls.settings.exit.transitionSelect.value = effectId;
-		}
-	}
-
-	// lock controls
-	var lockItemSelect;
-	var UpdateLockSettingControls;
-	UpdateLockSettingControls = function (isVisible) {
-		if (!lockItemSelect && findTool) {
-			lockItemSelect = findTool.CreateSelectControl(
-				"drawing",
-				{
-					onSelectChange : function(id) {
-						tile[drawingId].lockItem = id;
-						refreshGameData();
-					},
-					filters : ["item"],
-					toolId : "paintPanel",
-					getSelectMessage : function() {
-						// todo : localize
-						return "select lock item for " + findTool.GetDisplayName("drawing", drawingId) + "...";
-					},
-					// showDropdown : false, // todo : show or not?
-				});
-
-			controls.settings.lock.itemInput.appendChild(lockItemSelect.GetElement());
-
-			controls.settings.lock.tollInput.onchange = function(e) {
-				if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
-					tile[drawingId].lockToll = e.target.value;
-
-					if (e.target.value < 1) {
-						controls.settings.lock.typeSelect.value = 0;
-						UpdateLockSettingControls(true);
-					}
-
-					refreshGameData();
-				}
-			};
-
-			controls.settings.lock.typeSelect.onchange = function(e) {
-				if (e.target.value > -1) {
-					tile[drawingId].lockToll = e.target.value;
-
-					if (tile[drawingId].lockItem === null) {
-						// todo : how to pick the starting item?
-						tile[drawingId].lockItem = "1";
-					}
-				}
-				else {
-					tile[drawingId].lockToll = 0;
-					tile[drawingId].lockItem = null;
-				}
-
-				UpdateLockSettingControls(true);
-
-				refreshGameData();
-			}
-		}
-
-		if (!isVisible) {
-			controls.settings.lock.container.style.display = "none";
-		}
-		else {
-			controls.settings.lock.container.style.display = "flex";
-
-			if (tile[drawingId].lockItem === null) {
-				controls.settings.lock.typeSelect.value = -1;
-				controls.settings.lock.itemInput.style.display = "none";
-				controls.settings.lock.tollContainer.style.display = "none";
-			}
-			else {
-				controls.settings.lock.typeSelect.value = Math.min(1, tile[drawingId].lockToll);
-
-				controls.settings.lock.tollContainer.style.display =
-					tile[drawingId].lockToll <= 0 ? "none" : "inline";
-				controls.settings.lock.tollInput.value = tile[drawingId].lockToll;
-
-				controls.settings.lock.itemInput.style.display = "inline";
-				if (lockItemSelect) {
-					lockItemSelect.SetSelection(tile[drawingId].lockItem);
-				}
-			}
-		}
-	}
 
 	var dialogControl = null;
 	function UpdateDialogControl(isVisible) {
@@ -972,35 +698,404 @@ function AnimationControl(onSelectFrame, controls) {
 	}
 }
 
-/*
- PAINT UTILS
-*/
+function ColorSettingsControl(controls, onColorChange) {
+	var drawingId = null;
 
-function getDrawingTypeFromId(drawingId) {
-	if (drawingId === "A") {
-		return TileType.Avatar;
-	}
-	else if (tile[drawingId].type === "SPR") {
-		return TileType.Sprite;
-	}
-	else if (tile[drawingId].type === "TIL") {
-		return TileType.Tile;
-	}
-	else if (tile[drawingId].type === "ITM") {
-		return TileType.Item;
+	this.Update = function(id) {
+		drawingId = id;
+		var isVisible = true; // todo
+		UpdateControls(isVisible);
+		return isVisible;
 	}
 
-	return null; // uh oh
+	function UpdateControls(isVisible) {
+		if (isVisible) {
+			controls.colorContainer.style.display = "flex";
+
+			if (tile[drawingId].col >= 0 && tile[drawingId].col < 3) {
+				controls.colorSelect.value = tile[drawingId].col;
+				controls.colorIndexInput.style.display = "none";
+			}
+			else {
+				controls.colorSelect.value = "other";
+				controls.colorIndexInput.style.display = "flex";
+				controls.colorIndexInput.value = tile[drawingId].col;
+			}
+		}
+		else {
+			controls.colorContainer.style.display = "none";
+		}
+	}
+
+	controls.colorSelect.onchange = function(e) {
+		if (e.target.value === "other") {
+			controls.colorIndexInput.style.display = "flex";
+			controls.colorIndexInput.value = tile[drawingId].col;
+		}
+		else {
+			controls.colorIndexInput.style.display = "none";
+			tile[drawingId].col = parseInt(e.target.value);
+
+			refreshGameData();
+
+			if (onColorChange) {
+				onColorChange();
+			}
+		}
+	}
+
+	controls.colorIndexInput.onchange = function(e) {
+		tile[drawingId].col = parseInt(e.target.value);
+
+		refreshGameData();
+
+		if (onColorChange) {
+			onColorChange();
+		}
+	}
 }
 
-/* 
- GLOBAL UI HOOKS
- TODO : someday I'll get rid of these, right? who knows...
-*/
-function on_toggle_wall(e) {
-	paintTool.ToggleWall(e.target.checked);
+function WallSettingsControl(controls) {
+	var drawingId = null;
+
+	this.Update = function(id) {
+		drawingId = id;
+		var isVisible = tile[drawingId].type === TYPE_KEY.TILE;
+		UpdateWallSettingsControl(isVisible);
+		return isVisible;
+	}
+
+	function UpdateWallSettingsControl(isVisible) {
+		// wall UI
+		if (isVisible) {
+			hasSettings = true;
+			controls.container.setAttribute("style", "display:flex;");
+			updateWallCheckboxOnCurrentTile();
+		}
+		else {
+			controls.container.setAttribute("style", "display:none;");
+		}
+	}
+
+	function updateWallCheckboxOnCurrentTile() {
+		var isCurTileWall = false;
+
+		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null ) {
+			if (room[curRoom]) {
+				isCurTileWall = (room[curRoom].walls.indexOf(drawingId) != -1);
+			}
+		}
+		else {
+			isCurTileWall = tile[drawingId].isWall;
+		}
+
+		if (isCurTileWall) {
+			controls.checkbox.checked = true;
+			iconUtils.LoadIcon(controls.icon, "wall_on");
+			controls.text.innerText = "yes "; // todo : localize
+		}
+		else {
+			controls.checkbox.checked = false;
+			iconUtils.LoadIcon(controls.icon, "wall_off");
+			controls.text.innerText = "no "; // todo : localize
+		}
+	}
+
+	function ToggleWall(checked) {
+		if (tile[drawingId].type != TYPE_KEY.TILE) {
+			return;
+		}
+
+		if (tile[drawingId].isWall == undefined || tile[drawingId].isWall == null) {
+			// clear out any existing wall settings for this tile in any rooms
+			// (this is back compat for old-style wall settings)
+			for (roomId in room) {
+				var i = room[roomId].walls.indexOf(drawingId);
+				
+				if (i > -1) {
+					room[roomId].walls.splice(i , 1);
+				}
+			}
+		}
+
+		tile[drawingId].isWall = checked;
+
+		refreshGameData();
+
+		updateWallCheckboxOnCurrentTile();
+	}
+
+	controls.checkbox.onchange = function(e) {
+		ToggleWall(e.target.checked);
+	};
 }
 
-function togglePaintGrid(e) {
-	paintTool.SetPaintGrid(e.target.checked);
+function InventorySettingsControl(controls) {
+	var drawingId = null;
+
+	this.Update = function(id) {
+		drawingId = id;
+		var isVisible = tile[drawingId].type === TYPE_KEY.ITEM;
+		UpdateInventorySettings(isVisible);
+		return isVisible;
+	}
+
+	events.Listen("item_inventory_change", function(e) {
+		if (e.id === drawingId) {
+			controls.input.value = e.count;
+		}
+	});
+
+	function UpdateInventorySettings(isVisible) {
+		if (isVisible) {
+			hasSettings = true;
+
+			controls.container.setAttribute("style", "display:flex;");
+
+			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
+
+			controls.input.value = itemCount;
+
+			controls.input.oninput = function(e) {
+				if (e.target.value <= 0) {
+					delete tile[playerId].inventory[drawingId];
+				}
+				else {
+					tile[playerId].inventory[drawingId] = e.target.value;
+					refreshGameData();
+				}
+
+				events.Raise("item_inventory_change", { id: drawingId, count: e.target.value, });
+			};
+		}
+		else {
+			controls.container.setAttribute("style", "display:none;");
+		}
+	}
+}
+
+function ExitSettingsControl(controls) {
+	var drawingId = null;
+
+	this.Update = function(id) {
+		drawingId = id;
+		var isVisible = tile[drawingId].type === TYPE_KEY.EXIT;
+		UpdateExitSettingControls(isVisible);
+		return isVisible;
+	}
+
+	// exit transition controls
+	controls.transitionSelect.onchange = function(e) {
+		if (tile[drawingId].type === TYPE_KEY.EXIT) {
+			if (e.target.value === "none") {
+				tile[drawingId].transition_effect = null;
+			}
+			else {
+				tile[drawingId].transition_effect = e.target.value;
+			}
+
+			refreshGameData();
+		}
+	};
+
+	// exit destination controls
+	var exitRoomSelect;
+
+	controls.editToggle.onchange = function(e) {
+		controls.room.style.display = e.target.checked ? "flex" : "none";
+		controls.pos.style.display = e.target.checked ? "flex" : "none";
+	};
+
+	var onMove = null;
+	controls.moveToggle.onchange = function(e) {
+		if (e.target.checked) {
+			if (roomTool) {
+				onMove = roomTool.OnSelectLocation(
+					function(roomId, x, y) {
+						tile[drawingId].dest.room = roomId;
+						tile[drawingId].dest.x = x;
+						tile[drawingId].dest.y = y;
+
+						UpdateExitSettingControls(true);
+
+						refreshGameData();
+					},
+					function() {
+						controls.moveToggle.checked = false;
+						onMove = null;
+					});
+			}
+		}
+		else if (onMove != null) {
+			onMove.OnFinish();
+		}
+	}
+
+	controls.xInput.onchange = function(e) {
+		tile[drawingId].dest.x = e.target.value;
+		UpdateExitDescription();
+		refreshGameData();
+	};
+
+	controls.yInput.onchange = function(e) {
+		tile[drawingId].dest.y = e.target.value;
+		UpdateExitDescription();
+		refreshGameData();
+	};
+
+	function UpdateExitDescription() {
+		console.log(drawingId);
+
+		// todo : localize
+		controls.description.innerText = "exit to " + 
+			findTool.GetDisplayName("room", tile[drawingId].dest.room) + 
+			" (" + tile[drawingId].dest.x + ", " + tile[drawingId].dest.y + ")";
+	}
+
+	function UpdateExitSettingControls(isVisible) {
+		controls.destination.style.display = isVisible ? "block" : "none";
+		controls.transitionEffect.style.display = isVisible ? "flex" : "none";
+
+		if (!exitRoomSelect && findTool) {
+			exitRoomSelect = findTool.CreateSelectControl(
+				"room",
+				{
+					onSelectChange : function(id) {
+						tile[drawingId].dest.room = id;
+						UpdateExitDescription();
+						refreshGameData();
+					},
+					toolId : "paintPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select destination room for " + findTool.GetDisplayName("drawing", drawingId) + "...";
+					},
+				});
+
+			controls.roomSelect.appendChild(exitRoomSelect.GetElement());
+		}
+
+		if (isVisible) {
+			UpdateExitDescription();
+
+			controls.room.style.display = controls.editToggle.checked ? "flex" : "none";
+			controls.pos.style.display = controls.editToggle.checked ? "flex" : "none";
+
+			if (exitRoomSelect) {
+				exitRoomSelect.SetSelection(tile[drawingId].dest.room);
+			}
+
+			controls.xInput.value = tile[drawingId].dest.x;
+			controls.yInput.value = tile[drawingId].dest.y;
+
+			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
+			controls.transitionSelect.value = effectId;
+		}
+	}
+}
+
+function LockSettingsControl(controls) {
+	var drawingId = null;
+	var lockItemSelect;
+	var UpdateLockSettingControls;
+
+	this.Update = function(id) {
+		drawingId = id;
+		var isVisible = tile[drawingId].type === TYPE_KEY.EXIT || tile[drawingId].type === TYPE_KEY.ENDING;
+
+		UpdateLockSettingControls(isVisible);
+
+		return isVisible;
+	};
+
+	events.Listen("add_drawing", function() {
+		if (lockItemSelect) {
+			lockItemSelect.UpdateOptions();
+		}
+	});
+
+	events.Listen("delete_drawing", function() {
+		if (lockItemSelect) {
+			lockItemSelect.UpdateOptions();
+		}
+	});
+
+	UpdateLockSettingControls = function (isVisible) {
+		if (!lockItemSelect && findTool) {
+			lockItemSelect = findTool.CreateSelectControl(
+				"drawing",
+				{
+					onSelectChange : function(id) {
+						tile[drawingId].lockItem = id;
+						refreshGameData();
+					},
+					filters : ["item"],
+					toolId : "paintPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select lock item for " + findTool.GetDisplayName("drawing", drawingId) + "...";
+					},
+					// showDropdown : false, // todo : show or not?
+				});
+
+			controls.itemInput.appendChild(lockItemSelect.GetElement());
+
+			controls.tollInput.onchange = function(e) {
+				if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
+					tile[drawingId].lockToll = e.target.value;
+
+					if (e.target.value < 1) {
+						controls.typeSelect.value = 0;
+						UpdateLockSettingControls(true);
+					}
+
+					refreshGameData();
+				}
+			};
+
+			controls.typeSelect.onchange = function(e) {
+				if (e.target.value > -1) {
+					tile[drawingId].lockToll = e.target.value;
+
+					if (tile[drawingId].lockItem === null) {
+						// todo : how to pick the starting item?
+						tile[drawingId].lockItem = "1";
+					}
+				}
+				else {
+					tile[drawingId].lockToll = 0;
+					tile[drawingId].lockItem = null;
+				}
+
+				UpdateLockSettingControls(true);
+
+				refreshGameData();
+			}
+		}
+
+		if (!isVisible) {
+			controls.container.style.display = "none";
+		}
+		else {
+			controls.container.style.display = "flex";
+
+			if (tile[drawingId].lockItem === null) {
+				controls.typeSelect.value = -1;
+				controls.itemInput.style.display = "none";
+				controls.tollContainer.style.display = "none";
+			}
+			else {
+				controls.typeSelect.value = Math.min(1, tile[drawingId].lockToll);
+
+				controls.tollContainer.style.display =
+					tile[drawingId].lockToll <= 0 ? "none" : "inline";
+				controls.tollInput.value = tile[drawingId].lockToll;
+
+				controls.itemInput.style.display = "inline";
+				if (lockItemSelect) {
+					lockItemSelect.SetSelection(tile[drawingId].lockItem);
+				}
+			}
+		}
+	}
 }
