@@ -693,9 +693,10 @@ function start() {
 	// todo : better organization
 	paintTool = new PaintTool({
 		canvas : document.getElementById("paint"),
-		editRoot : document.getElementById("paintEditRoot"),
+		editRoot : document.getElementById("paintEditControls"),
 		typeButton : document.getElementById("paintType"),
 		nameInput : document.getElementById("drawingName"),
+		gridCheck : document.getElementById("paintGridCheck"),
 		gridIcon : document.getElementById("paintGridIcon"),
 		dialogControl : document.getElementById("dialog"),
 		nav : {

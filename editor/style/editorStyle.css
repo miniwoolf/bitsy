@@ -405,6 +405,16 @@ span.controlBox {
 	/*background: red;*/
 }
 
+#paintEditRoot {
+	width: 256px;
+}
+
+#addDrawingOptions {
+	display: none;
+	flex-direction: column;
+	min-height: 256px;
+}
+
 #paintModeRadio {
 	display: flex;
 }
@@ -626,7 +636,7 @@ span.controlBox {
 .paintSetting {
 	display: flex;
 	line-height: 100%;
-	align-items: center;
+	align-items: normal;
 	margin-bottom: 5px;
 	margin-top: 5px;
 }
@@ -637,4 +647,28 @@ span.controlBox {
 
 .paintSetting input[type=checkbox] + label {
 	margin: 0px;
+}
+
+.paintSettingLabelContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.paintSettingLabel {
+	display: flex;
+	align-items: center;
+}
+
+.paintSettingLabel span {
+	margin-right: 5px;
+}
+
+.paintSettingLabelPadding {
+	flex-grow: 1;
+}
+
+.paintSettingControls {
+	flex-grow: 1;
+	display: inline;
+	white-space: normal;
 }

@@ -664,194 +664,219 @@
 						</button>
 					</div>
 
-					<div id="addDrawingOptions" class="controlBox" style="display: none; flex-direction: column; min-width: 256px; min-height: 256px;">
-						<button id="paintAddTile" title="add tile">
-							<span class="bitsy_icon">tile</span> <span>tile</span> <!-- TODO :localize -->
-						</button>
-						<button id="paintAddSprite" title="add sprite">
-							<span class="bitsy_icon">sprite</span> <span>sprite</span> <!-- TODO :localize -->
-						</button>
-						<button id="paintAddItem" title="add item">
-							<span class="bitsy_icon">item</span> <span>item</span> <!-- TODO :localize -->
-						</button>
-						<button id="paintAddExit" title="add exit">
-							<span class="bitsy_icon">exit_one_way</span> <span>exit</span> <!-- TODO :localize -->
-						</button>
-						<button id="paintAddEnding" title="add ending">
-							<span class="bitsy_icon">ending</span> <span>ending</span> <!-- TODO :localize -->
-						</button>
-						<button id="paintAddCancel" class="reverseColors" title="cancel">
-							<span class="bitsy_icon">cancel</span> <span class="localize action_cancel">cancel</span>
-						</button>
-					</div>
-
 					<div id="paintEditRoot">
-						<div style="margin-bottom: 5px;">
-							<canvas id="paint"></canvas>
+						<div id="addDrawingOptions" class="controlBox">
+							<button id="paintAddTile" title="add tile">
+								<span class="bitsy_icon">tile</span> <span>tile</span> <!-- TODO :localize -->
+							</button>
+							<button id="paintAddSprite" title="add sprite">
+								<span class="bitsy_icon">sprite</span> <span>sprite</span> <!-- TODO :localize -->
+							</button>
+							<button id="paintAddItem" title="add item">
+								<span class="bitsy_icon">item</span> <span>item</span> <!-- TODO :localize -->
+							</button>
+							<button id="paintAddExit" title="add exit">
+								<span class="bitsy_icon">exit_one_way</span> <span>exit</span> <!-- TODO :localize -->
+							</button>
+							<button id="paintAddEnding" title="add ending">
+								<span class="bitsy_icon">ending</span> <span>ending</span> <!-- TODO :localize -->
+							</button>
+							<button id="paintAddCancel" class="reverseColors" title="cancel">
+								<span class="bitsy_icon">cancel</span> <span class="localize action_cancel">cancel</span>
+							</button>
 						</div>
 
-						<div id="paintEditMain">
-							<div class="buttonGroup" style="margin-bottom: 10px;">
-								<input type="checkbox" id="paintGridCheck" onclick="togglePaintGrid(event);" checked/>
-								<label title="show / hide grid" for="paintGridCheck">
-									<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
-									<span class="localize grid_toggle_visible">grid</span>
-								</label>
-							</div>
-						</div>
-
-						<div id="animationOuter" class="controlBox">
-							<div id="animationPreview"></div>
-							<div id="animationContent">
-								<span id="animationFrames"></span>
-								<span id="animationButtons">
-									<button id="animationRemove">
-										<span class="bitsy_icon">delete</span>
-									</button>
-									<button id="animationAdd">
-										<span class="bitsy_icon">add</span>
-									</button>
-								</span>
-							</div>
-						</div>
-
-						<div id="tileSettings" class="controlBox">
-							<!-- TODO : localize -->
-							<div id="tileColorOverride" class="paintSetting" title="foreground color">
-								<span class="bitsy_icon">colors</span>
-								<span class="spacer"></span>
-								<span>color:</span>
-								<span class="spacer"></span>
-								<select id="tileColorSelect">
-									<option value="0">background (0)</option>
-									<option value="1">tile (1)</option>
-									<option value="2">sprite (2)</option>
-									<option id="tileColorOptionOther" value="other">other</option>
-								</select>
-								<span class="spacer"></span>
-								<input id="tileColorIndexInput" type="number"></input>
+						<div id="paintEditControls">
+							<div style="margin-bottom: 5px;">
+								<canvas id="paint"></canvas>
 							</div>
 
-							<!-- TODO : localize -->
-							<div id="tileBackgroundOverride" class="paintSetting" title="background color">
-								<span class="bitsy_icon">colors</span>
-								<span class="spacer"></span>
-								<span>background:</span>
-								<span class="spacer"></span>
-								<select id="tileBackgroundSelect">
-									<option value="0">background (0)</option>
-									<option value="1">tile (1)</option>
-									<option value="2">sprite (2)</option>
-									<option id="tileBackgroundOptionOther" value="other">other</option>
-								</select>
-								<span class="spacer"></span>
-								<input id="tileBackgroundIndexInput" type="number"></input>
-							</div>
-
-							<div id="wall" class="paintSetting" title="is this tile a wall?">
-								<span id="wallCheckboxIcon" class="bitsy_icon">wall_off</span>
-								<span class="spacer"></span>
-								<span class="localize wall_toggle">wall</span>
-								<span>:</span> 
-								<span class="spacer"></span>
-								<input type="checkbox" id="wallCheckbox">
-								<label title="make tile an impassible wall" for="wallCheckbox">
-									<span id="wallCheckboxText">no </span>
-								</label>
-							</div>
-
-							<div id="itemInventoryStart" class="paintSetting" title="how many of this item does the player start with?">
-								<span class="bitsy_icon">item</span>
-								<span class="spacer"></span>
-								<span class="localize inventory_tool_name">inventory</span>
-								<span>:</span>
-								<span class="spacer"></span>
-								<input type="number" id="itemInventoryStartInput"/>
-								<span class="spacer"></span>
-								<button id="showInventoryButton" title="show inventory" onclick="showPanel('inventoryPanel', 'paintPanel');">
-									<span class="bitsy_icon">open_tool</span>
-								</button>
-							</div>
-
-							<!-- todo : localize -->
-							<!-- todo : stop all the manual margins -->
-							<div id="exitDestination" style="margin-bottom: 5px;">
-								<div class="paintSetting">
-									<span class="bitsy_icon">exit_one_way</span>
-									<span class="spacer"></span>
-									<span id="exitDestinationDescription">exit to ___</span>
-									<span class="spacer"></span>
-
-									<input type="checkbox" id="toggleEditExit" />
-									<label for="toggleEditExit" title="edit coordinates">
-										<span class="bitsy_icon">edit</span>
-									</label>
-									<span class="spacer"></span>
-
-									<input type="checkbox" id="toggleMoveExit" />
-									<label for="toggleMoveExit" title="click to place exit in current room">
-										<span class="bitsy_icon">set_exit_location</span>
-										<span class="localize marker_move">move</span>
+							<div id="paintEditMain">
+								<div class="buttonGroup" style="margin-bottom: 10px;">
+									<input type="checkbox" id="paintGridCheck" checked/>
+									<label title="show / hide grid" for="paintGridCheck">
+										<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
+										<span class="localize grid_toggle_visible">grid</span>
 									</label>
 								</div>
-								<div id="exitDestinationRoom" class="paintSetting">
-									<span class="bitsy_icon" style="margin-right: 5px;">room</span>
-									<span>room:</span>
-									<span class="spacer"></span>
-									<span id="exitDestinationRoomSelect"></span>
+							</div>
+
+							<div id="animationOuter" class="controlBox">
+								<div id="animationPreview"></div>
+								<div id="animationContent">
+									<span id="animationFrames"></span>
+									<span id="animationButtons">
+										<button id="animationRemove">
+											<span class="bitsy_icon">delete</span>
+										</button>
+										<button id="animationAdd">
+											<span class="bitsy_icon">add</span>
+										</button>
+									</span>
 								</div>
-								<div id="exitDestinationPos" class="paintSetting">
-									<span class="bitsy_icon" style="margin-right: 5px;">set_exit_location</span>
-									<span>pos:</span>
+							</div>
+
+							<div id="tileSettings" class="controlBox">
+								<!-- TODO : localize -->
+								<div id="tileColorOverride" class="paintSetting" title="foreground color">
+									<div class="paintSettingLabelContainer">
+										<span class="paintSettingLabel">
+											<span class="bitsy_icon">colors</span>
+											<span>color:</span>
+										</span>
+										<span class="paintSettingLabelPadding"></span>
+									</div>
+									<span class="paintSettingControls">
+										<select id="tileColorSelect">
+											<option value="0">background (0)</option>
+											<option value="1">tile (1)</option>
+											<option value="2">sprite (2)</option>
+											<option id="tileColorOptionOther" value="other">other</option>
+										</select>
+										<span class="spacer"></span>
+										<input id="tileColorIndexInput" type="number"></input>
+									</span>
+								</div>
+
+								<!-- TODO : localize -->
+								<div id="tileBackgroundOverride" class="paintSetting" title="background color">
+									<div class="paintSettingLabelContainer">
+										<span class="paintSettingLabel">
+											<span class="bitsy_icon">colors</span>
+											<span>background:</span>
+										</span>
+										<span class="paintSettingLabelPadding"></span>
+									</div>
+									<span class="paintSettingControls">
+										<select id="tileBackgroundSelect">
+											<option value="0">background (0)</option>
+											<option value="1">tile (1)</option>
+											<option value="2">sprite (2)</option>
+											<option id="tileBackgroundOptionOther" value="other">other</option>
+										</select>
+										<span class="spacer"></span>
+										<input id="tileBackgroundIndexInput" type="number"></input>
+									</span>
+								</div>
+
+								<div id="wall" class="paintSetting" title="is this tile a wall?">
+									<div class="paintSettingLabelContainer">
+										<span class="paintSettingLabel">
+											<span id="wallCheckboxIcon" class="bitsy_icon">wall_off</span>
+											<!-- TODO localize again? -->
+											<!-- <span class="localize wall_toggle">wall</span> -->
+											<span>wall:</span> 
+										</span>
+										<span class="paintSettingLabelPadding"></span>
+									</div>
+									<span class="paintSettingControls">
+										<input type="checkbox" id="wallCheckbox">
+										<label title="make tile an impassible wall" for="wallCheckbox">
+											<span id="wallCheckboxText">no </span>
+										</label>
+									</span>
+								</div>
+
+								<div id="itemInventoryStart" class="paintSetting" title="how many of this item does the player start with?">
+									<div class="paintSettingLabelContainer">
+										<span class="paintSettingLabel">
+											<span class="bitsy_icon">item</span>
+											<!-- TODO : localize again? -->
+											<!-- <span class="localize inventory_tool_name">inventory</span>
+											<span>:</span> -->
+											<span>inventory:</span>
+										</span>
+										<span class="paintSettingLabelPadding"></span>
+									</div>
+									<span class="paintSettingControls">
+										<input type="number" id="itemInventoryStartInput"/>
+										<span class="spacer"></span>
+										<button id="showInventoryButton" title="show inventory" onclick="showPanel('inventoryPanel', 'paintPanel');">
+											<span class="bitsy_icon">open_tool</span>
+										</button>
+									</span>
+								</div>
+
+								<!-- todo : localize -->
+								<!-- todo : stop all the manual margins -->
+								<div id="exitDestination" style="margin-bottom: 5px;">
+									<div class="paintSetting">
+										<span class="bitsy_icon">exit_one_way</span>
+										<span class="spacer"></span>
+										<span id="exitDestinationDescription">exit to ___</span>
+										<span class="spacer"></span>
+
+										<input type="checkbox" id="toggleEditExit" />
+										<label for="toggleEditExit" title="edit coordinates">
+											<span class="bitsy_icon">edit</span>
+										</label>
+										<span class="spacer"></span>
+
+										<input type="checkbox" id="toggleMoveExit" />
+										<label for="toggleMoveExit" title="click to place exit in current room">
+											<span class="bitsy_icon">set_exit_location</span>
+											<span class="localize marker_move">move</span>
+										</label>
+									</div>
+									<div id="exitDestinationRoom" class="paintSetting">
+										<span class="bitsy_icon" style="margin-right: 5px;">room</span>
+										<span>room:</span>
+										<span class="spacer"></span>
+										<span id="exitDestinationRoomSelect"></span>
+									</div>
+									<div id="exitDestinationPos" class="paintSetting">
+										<span class="bitsy_icon" style="margin-right: 5px;">set_exit_location</span>
+										<span>pos:</span>
+										<span class="spacer"></span>
+										<input id="exitDestinationInputX" type="number" min="0" max="15"></input>
+										<span class="spacer"></span>
+										<span>,</span>
+										<span class="spacer"></span>
+										<input id="exitDestinationInputY" type="number" min="0" max="15"></input>
+									</div>
+								</div>
+
+								<!-- todo : localize -->
+								<div id="exitTransitionEffect" class="paintSetting">
+									<span class="bitsy_icon">transition_effect</span>
 									<span class="spacer"></span>
-									<input id="exitDestinationInputX" type="number" min="0" max="15"></input>
+									<span>transition effect: </span>
 									<span class="spacer"></span>
-									<span>,</span>
+									<select id="exitTransitionEffectSelect">
+										<option value="NONE">none</option>
+										<option value="FDW">fade (white)</option>
+										<option value="FDB">fade (black)</option>
+										<option value="WVE">wave</option>
+										<option value="TNL">tunnel</option>
+										<option value="SLU">slide up</option>
+										<option value="SLD">slide down</option>
+										<option value="SLL">slide left</option>
+										<option value="SLR">slide right</option>
+									</select>
+								</div>
+
+								<!-- todo : localize -->
+								<div id="lockSettings" class="paintSetting">
+									<span class="bitsy_icon" style="margin-right: 5px;">item</span>
+									<span>lock: </span>
 									<span class="spacer"></span>
-									<input id="exitDestinationInputY" type="number" min="0" max="15"></input>
+									<select id="lockTypeSelect" style="margin-right: 5px;">
+										<option value="-1">open</option>
+										<option value="0">item</option>
+										<option value="1">toll</option>
+									</select>
+									<span id="lockToll">
+										<input id="lockTollInput" type="number" min="0"></input>
+										<span class="spacer"></span>
+										<span>of</span>
+										<span class="spacer"></span>
+									</span>
+									<span id="lockItemInput"></span>
 								</div>
 							</div>
 
-							<!-- todo : localize -->
-							<div id="exitTransitionEffect" class="paintSetting">
-								<span class="bitsy_icon">transition_effect</span>
-								<span class="spacer"></span>
-								<span>transition effect: </span>
-								<span class="spacer"></span>
-								<select id="exitTransitionEffectSelect">
-									<option value="NONE">none</option>
-									<option value="FDW">fade (white)</option>
-									<option value="FDB">fade (black)</option>
-									<option value="WVE">wave</option>
-									<option value="TNL">tunnel</option>
-									<option value="SLU">slide up</option>
-									<option value="SLD">slide down</option>
-									<option value="SLL">slide left</option>
-									<option value="SLR">slide right</option>
-								</select>
+							<div id="dialog" style="display:none;">
 							</div>
-
-							<!-- todo : localize -->
-							<div id="lockSettings" class="paintSetting">
-								<span class="bitsy_icon" style="margin-right: 5px;">item</span>
-								<span>lock: </span>
-								<span class="spacer"></span>
-								<select id="lockTypeSelect" style="margin-right: 5px;">
-									<option value="-1">open</option>
-									<option value="0">item</option>
-									<option value="1">toll</option>
-								</select>
-								<span id="lockToll">
-									<input id="lockTollInput" type="number" min="0"></input>
-									<span class="spacer"></span>
-									<span>of</span>
-									<span class="spacer"></span>
-								</span>
-								<span id="lockItemInput"></span>
-							</div>
-						</div>
-
-						<div id="dialog" style="display:none;">
 						</div>
 					</div>
 

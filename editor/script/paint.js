@@ -452,11 +452,11 @@ function PaintTool(controls) {
 		controls.nameInput.readOnly = til.id === "A";
 	}
 
-	this.SetPaintGrid = function(isVisible) {
-		drawPaintGrid = isVisible;
-		iconUtils.LoadIcon(controls.gridIcon, isVisible ? "visibility" : "visibility_off");
+	controls.gridCheck.onchange = function(e) {
+		drawPaintGrid = e.target.checked;
+		iconUtils.LoadIcon(controls.gridIcon, drawPaintGrid ? "visibility" : "visibility_off");
 		self.UpdateCanvas();
-	}
+	};
 
 	// let's us restore the animation during the session if the user wants it back
 	function cacheDrawingAnimation(drawing, sourceId) {
@@ -703,7 +703,7 @@ function ColorSettingsControl(controls, onColorChange) {
 
 	this.Update = function(id) {
 		drawingId = id;
-		var isVisible = true; // todo
+		var isVisible = ENABLE_COLOR_OVERRIDE;
 		UpdateControls(isVisible);
 		return isVisible;
 	}

@@ -1,8 +1,4 @@
-/* PALETTE TOOL STUFF
-TODO:
-- is PaletteTool the best name?
-- should it create its own color picker?
-*/
+/* PALETTE TOOL */
 
 // todo : localize
 var PaletteColorDescriptions = [
