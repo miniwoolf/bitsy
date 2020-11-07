@@ -153,7 +153,7 @@ function DialogControl(parentPanelId) {
 			var dialogEvent = dialogEventTypes[eventId];
 
 			var selectEvent = document.createElement("div");
-			selectEvent.classList.add("paintSetting");
+			selectEvent.classList.add("dialogEvent");
 			dialogIdSelectRoot.appendChild(selectEvent);
 
 			var selectEventEditButton = document.createElement("button");

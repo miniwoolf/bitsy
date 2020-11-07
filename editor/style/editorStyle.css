@@ -411,7 +411,7 @@ span.controlBox {
 #addDrawingOptions {
 	display: none;
 	flex-direction: column;
-	min-height: 256px;
+	min-height: 320px;
 }
 
 #paintModeRadio {
@@ -637,7 +637,7 @@ span.controlBox {
 	flex-wrap: wrap;
 	flex-direction: row;
 	line-height: 100%;
-	margin-bottom: 10px;
+	margin-bottom: 5px;
 	padding-left: 21px;
 }
 
@@ -651,6 +651,10 @@ span.controlBox {
 }
 
 .paintSetting input[type=checkbox] + label {
+	padding: 2px;
+}
+
+.paintSetting input[type=checkbox] + label span {
 	margin: 0px;
 }
 

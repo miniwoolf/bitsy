@@ -570,6 +570,7 @@
 .dialogControlTop {
 	display: flex;
 	align-items: center;
+	margin-bottom: 5px;
 }
 
 .expandingSpacer {
@@ -589,4 +590,9 @@
 
 .dialogControlLabel .bitsy_icon.icon_space_right {
 	margin-right: 5px;
+}
+
+.dialogEvent {
+	display: flex;
+	margin-bottom: 5px;
 }
