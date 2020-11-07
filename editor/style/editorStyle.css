@@ -349,7 +349,6 @@ span.controlBox {
 }
 
 #animationOuter {
-	max-width: 290px;
 	white-space: normal;
 	display: flex;
 }
@@ -406,7 +405,7 @@ span.controlBox {
 }
 
 #paintEditRoot {
-	width: 256px;
+	width: 320px;
 }
 
 #addDrawingOptions {
@@ -424,7 +423,7 @@ span.controlBox {
 }
 
 #paint {
-	width: 256px;
+	width: 320px;
 
 	/* keep this centered in div */
 	padding-left: 0;
@@ -635,10 +634,16 @@ span.controlBox {
 
 .paintSetting {
 	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
 	line-height: 100%;
-	align-items: normal;
-	margin-bottom: 5px;
+	margin-bottom: 10px;
+	padding-left: 21px;
+}
+
+.paintSetting span {
 	margin-top: 5px;
+	margin-right: 5px;
 }
 
 .paintSetting input[type=number] {
@@ -649,26 +654,34 @@ span.controlBox {
 	margin: 0px;
 }
 
+.paintSetting .bitsy_icon {
+	margin: 0px;
+}
+
 .paintSettingLabelContainer {
-	display: flex;
-	flex-direction: column;
 }
 
 .paintSettingLabel {
 	display: flex;
 	align-items: center;
+	margin-left: -21px;
 }
 
 .paintSettingLabel span {
+	margin-right: 0px;
+	margin-top: 0px;
+}
+
+.paintSettingLabel .bitsy_icon.icon_space_right {
 	margin-right: 5px;
 }
 
-.paintSettingLabelPadding {
-	flex-grow: 1;
+.paintSettingControlGroup {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
 }
 
-.paintSettingControls {
-	flex-grow: 1;
-	display: inline;
-	white-space: normal;
+.paintSettingControlGroup span {
+	margin-top: 0px;
 }

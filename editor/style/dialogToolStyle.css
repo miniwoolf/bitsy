@@ -575,3 +575,18 @@
 .expandingSpacer {
 	flex-grow: 100;
 }
+
+.dialogControlLabel {
+	flex-grow: 1;
+	display: flex;
+	align-items: center;
+}
+
+.dialogControlLabel .bitsy_icon {
+	display: flex;
+	margin: 0px;
+}
+
+.dialogControlLabel .bitsy_icon.icon_space_right {
+	margin-right: 5px;
+}

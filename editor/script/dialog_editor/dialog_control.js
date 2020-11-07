@@ -34,16 +34,12 @@ function DialogControl(parentPanelId) {
 	div.appendChild(controlDiv);
 
 	var labelSpan = document.createElement("span");
-	labelSpan.style.flexGrow = 1;
-	labelSpan.classList.add("paintSetting"); // this class could use a more general name?
+	labelSpan.classList.add("dialogControlLabel");
 	controlDiv.appendChild(labelSpan);
 
 	var dialogIcon = iconUtils.CreateIcon("dialog");
+	dialogIcon.classList.add("icon_space_right");
 	labelSpan.appendChild(dialogIcon);
-
-	var spacer = document.createElement("span");
-	spacer.classList.add("spacer");
-	labelSpan.appendChild(spacer);
 
 	var labelTextSpan = document.createElement("span");
 	labelSpan.appendChild(labelTextSpan);
