@@ -693,8 +693,29 @@
 							</div>
 
 							<div id="paintEditMain">
-								<div class="buttonGroup" style="margin-bottom: 10px;">
-									<input type="checkbox" id="paintGridCheck" checked/>
+								<div class="buttonGroup" style="display: flex; margin-bottom: 10px;">
+									<!-- TODO : hook up theses settings toggles... also - turn into radio maybe? -->
+									<input type="checkbox" id="paintAnimationCheck" />
+									<label for="paintAnimationCheck">
+										<!-- TODO : needs icon... -->
+										<span>animation</span> <!-- TODO : localize -->
+									</label>
+
+									<input type="checkbox" id="paintDialogCheck" />
+									<label for="paintDialogCheck">
+										<span class="bitsy_icon icon_space_right">dialog</span>
+										<span>dialog</span> <!-- TODO : localize -->
+									</label>
+
+									<input type="checkbox" id="paintSettingsCheck" />
+									<label for="paintSettingsCheck">
+										<span class="bitsy_icon icon_space_right">settings</span>
+										<span>settings</span> <!-- TODO : localize -->
+									</label>
+
+									<span class="expandingSpacer"></span>
+
+									<input type="checkbox" id="paintGridCheck" checked />
 									<label title="show / hide grid" for="paintGridCheck">
 										<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
 										<span class="localize grid_toggle_visible">grid</span>

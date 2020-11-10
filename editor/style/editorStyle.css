@@ -351,6 +351,7 @@ span.controlBox {
 #animationOuter {
 	white-space: normal;
 	display: flex;
+	padding-bottom: 0px;
 }
 
 #animationButtons {
