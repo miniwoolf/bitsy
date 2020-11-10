@@ -695,6 +695,7 @@ function start() {
 		canvas : document.getElementById("paint"),
 		editRoot : document.getElementById("paintEditControls"),
 		typeButton : document.getElementById("paintType"),
+		typeMessage : document.getElementById("drawingTypeMessage"),
 		nameInput : document.getElementById("drawingName"),
 		gridCheck : document.getElementById("paintGridCheck"),
 		gridIcon : document.getElementById("paintGridIcon"),
@@ -706,8 +707,8 @@ function start() {
 			copy : document.getElementById("paintCopy"),
 			del : document.getElementById("paintDelete"),
 		},
-		add : {
-			container : document.getElementById("addDrawingOptions"),
+		typeSelect : {
+			container : document.getElementById("drawingTypeSelect"),
 			tile : document.getElementById("paintAddTile"),
 			sprite : document.getElementById("paintAddSprite"),
 			item : document.getElementById("paintAddItem"),
@@ -1015,20 +1016,23 @@ function duplicateExit(exit) {
 	return newExit;
 }
 
-function removeAllItems( id ) {
-	function getFirstItemIndex(roomId, itemId) {
-		for(var i = 0; i < room[roomId].items.length; i++) {
-			if(room[roomId].items[i].id === itemId)
+function removeAllSprites(id) {
+	function getFirstSpriteIndex(roomId, id) {
+		for (var i = 0; i < room[roomId].sprites.length; i++) {
+			if (room[roomId].sprites[i].id === id) {
 				return i;
+			}
 		}
+
 		return -1;
 	}
 
-	for(roomId in room) {
-		var i = getFirstItemIndex(roomId, id );
-		while(i > -1) {
-			room[roomId].items.splice(i,1);
-			i = getFirstItemIndex(roomId, id );
+	for (roomId in room) {
+		var i = getFirstSpriteIndex(roomId, id);
+
+		while (i > -1) {
+			room[roomId].sprites.splice(i, 1);
+			i = getFirstSpriteIndex(roomId, id);
 		}
 	}
 }

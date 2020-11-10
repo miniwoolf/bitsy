@@ -408,7 +408,7 @@ span.controlBox {
 	width: 320px;
 }
 
-#addDrawingOptions {
+#drawingTypeSelect {
 	display: none;
 	flex-direction: column;
 	min-height: 320px;

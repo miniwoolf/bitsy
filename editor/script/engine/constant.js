@@ -26,7 +26,7 @@ var COLOR_INDEX = {
 };
 
 var WRITABLE_COLOR_START = COLOR_INDEX.BACKGROUND;
-var ENABLE_COLOR_OVERRIDE = true; // todo : should be false by default
+var ENABLE_COLOR_OVERRIDE = false;
 
 /* KEYWORDS */
 var TYPE_KEY = {

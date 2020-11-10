@@ -50,11 +50,8 @@ function PaintTool(controls) {
 		e.preventDefault();
 		
 		if (isPlayMode) {
-			return; //can't paint during play mode
+			return; // can't paint during play mode
 		}
-
-		console.log("PAINT TOOL!!!");
-		console.log(e);
 
 		var off = getOffset(e);
 
@@ -255,7 +252,7 @@ function PaintTool(controls) {
 
 		var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
 		for (var i = 0; i < disableForAvatarElements.length; i++) {
-			disableForAvatarElements[i].disabled = drawingId === "A";
+			disableForAvatarElements[i].disabled = (drawingId === "A");
 		}
 
 		// update paint canvas
@@ -266,6 +263,9 @@ function PaintTool(controls) {
 			controls.typeButton.innerHTML = "";
 			controls.typeButton.appendChild(iconUtils.CreateIcon(typeIconId));
 		}
+
+		// todo : convert type code to localized string...
+		controls.typeButton.title = "change type (current: " + tile[drawingId].type + ")";
 	}
 
 	// TODO : remove this after moving everything to events
@@ -275,7 +275,6 @@ function PaintTool(controls) {
 
 	events.Listen("select_drawing", function(e) {
 		drawingId = e.id;
-		console.log(drawingId);
 		self.ReloadDrawing();
 	});
 
@@ -308,11 +307,88 @@ function PaintTool(controls) {
 		lastAddType = type;
 	}
 
-	var isAddVisible = false;
+	function SwitchType(type) {
+		// todo : convert type codes to localized string
+		var confirmationMessage = "Are you sure you want to change the type of this drawing from "
+			+ tile[drawingId].type + " to " + type + "? You will lose any type-specific settings.";
 
-	function ShowNewDrawingControls(isVisible) {
+		if ((type === TYPE_KEY.TILE) != (tile[drawingId].type === TYPE_KEY.TILE)) {
+			confirmationMessage += "\n\nWhen swapping between tile and non-tile types, all"
+				+ " existing drawing locations will be removed.";
+		}
+
+		if (!confirm(confirmationMessage)) {
+			return;
+		}
+
+		// set any type-specific data to defaults
+		if (tile[drawingId].col === (tile[drawingId].type === TYPE_KEY.TILE ? 1 : 2)) {
+			tile[drawingId].col = (type === TYPE_KEY.TILE ? 1 : 2);
+		}
+
+		if (type === TYPE_KEY.TILE) {
+			tile[drawingId].dlg = null;
+			tile[drawingId].tickDlgId = null;
+			tile[drawingId].knockDlgId = null;
+			tile[drawingId].buttonDownDlgId = null;
+		}
+
+		if (tile[drawingId].type === TYPE_KEY.TILE) {
+			tile[drawingId].isWall = (type === TYPE_KEY.SPRITE);
+		}
+
+		if (tile[drawingId].type === TYPE_KEY.EXIT) {
+			tile[drawingId].transition_effect = null;
+			tile[drawingId].dest.room = null;
+			tile[drawingId].dest.x = 0;
+			tile[drawingId].dest.y = 0;
+		}
+
+		if (type === TYPE_KEY.EXIT) {
+			tile[drawingId].dest.room = 0;
+			tile[drawingId].dest.x = 0;
+			tile[drawingId].dest.y = 0;
+		}
+
+		if (tile[drawingId].type === TYPE_KEY.EXIT || tile[drawingId].type === TYPE_KEY.ENDING) {
+			tile[drawingId].lockItem = null;
+			tile[drawingId].lockToll = 0;
+		}
+
+		// when swapping between background-tile and non-background-tile types
+		// we need to remove all old locations of this tile/sprite
+		if (tile[drawingId].type === TYPE_KEY.TILE && type != TYPE_KEY.TILE) {
+			findAndReplaceTileInAllRooms(drawingId, "0");
+		}
+		else if (tile[drawingId].type != TYPE_KEY.TILE && type === TYPE_KEY.TILE) {
+			removeAllSprites(drawingId);
+		}
+
+		tile[drawingId].type = type;
+
+		refreshGameData();
+
+		updateInventoryItemUI();
+		self.ReloadDrawing();
+
+		lastAddType = type;
+	}
+
+	var TypeSelectControlMode = {
+		Hidden: 0,
+		Add: 1,
+		Switch: 2,
+	};
+
+	var typeSelectMode = TypeSelectControlMode.Hidden;
+
+	function UpdateTypeSelectControls(mode) {
+		typeSelectMode = mode;
+
+		isVisible = (typeSelectMode != TypeSelectControlMode.Hidden);
+
 		controls.editRoot.style.display = isVisible ? "none" : "block";
-		controls.add.container.style.display = isVisible ? "flex" : "none";
+		controls.typeSelect.container.style.display = isVisible ? "flex" : "none";
 		controls.nameInput.disabled = isVisible;
 		controls.nav.prev.disabled = isVisible;
 		controls.nav.next.disabled = isVisible;
@@ -320,52 +396,79 @@ function PaintTool(controls) {
 		controls.nav.del.disabled = isVisible;
 
 		if (isVisible) {
-			controls.nav.add.classList.add("reverseColors");
+			if (mode === TypeSelectControlMode.Add) {
+				controls.nav.add.classList.add("reverseColors");
+				controls.typeButton.disabled = true;
+				// todo : localize
+				controls.typeMessage.innerText = "add new drawing:"; // todo : do these messages need icons?
+			}
+			else if (mode === TypeSelectControlMode.Switch) {
+				controls.typeButton.classList.add("reverseColors");
+				controls.nav.add.disabled = true;
+				// todo : localize
+				controls.typeMessage.innerText = "change drawing type:";
+			}
 		}
 		else {
+			controls.typeButton.classList.remove("reverseColors");
 			controls.nav.add.classList.remove("reverseColors");
+			controls.typeButton.disabled = false;
+			controls.nav.add.disabled = false;
 		}
-
-		isAddVisible = isVisible;
 	}
 
-	controls.nav.add.onclick = function() {
-		if (isAddVisible) {
-			NewDrawing(lastAddType);
-			ShowNewDrawingControls(false);
+	controls.typeButton.onclick = function() {
+		if (typeSelectMode === TypeSelectControlMode.Switch) {
+			UpdateTypeSelectControls(TypeSelectControlMode.Hidden);
 		}
 		else {
-			ShowNewDrawingControls(true);
+			UpdateTypeSelectControls(TypeSelectControlMode.Switch);
 		}
 	};
 
-	controls.add.tile.onclick = function() {
-		NewDrawing(TYPE_KEY.TILE);
-		ShowNewDrawingControls(false);
+	controls.nav.add.onclick = function() {
+		if (typeSelectMode === TypeSelectControlMode.Add) {
+			NewDrawing(lastAddType);
+			UpdateTypeSelectControls(TypeSelectControlMode.Hidden);
+		}
+		else {
+			UpdateTypeSelectControls(TypeSelectControlMode.Add);
+		}
 	};
 
-	controls.add.sprite.onclick = function() {
-		NewDrawing(TYPE_KEY.SPRITE);
-		ShowNewDrawingControls(false);
+	function NewDrawingOrSwitchType(type) {
+		if (typeSelectMode === TypeSelectControlMode.Add) {
+			NewDrawing(type);
+		}
+		else if (typeSelectMode === TypeSelectControlMode.Switch) {
+			SwitchType(type);
+		}
+
+		UpdateTypeSelectControls(TypeSelectControlMode.Hidden);
+	}
+
+	controls.typeSelect.tile.onclick = function() {
+		NewDrawingOrSwitchType(TYPE_KEY.TILE);
 	};
 
-	controls.add.item.onclick = function() {
-		NewDrawing(TYPE_KEY.ITEM);
-		ShowNewDrawingControls(false);
+	controls.typeSelect.sprite.onclick = function() {
+		NewDrawingOrSwitchType(TYPE_KEY.SPRITE);
 	};
 
-	controls.add.exit.onclick = function() {
-		NewDrawing(TYPE_KEY.EXIT);
-		ShowNewDrawingControls(false);
+	controls.typeSelect.item.onclick = function() {
+		NewDrawingOrSwitchType(TYPE_KEY.ITEM);
 	};
 
-	controls.add.ending.onclick = function() {
-		NewDrawing(TYPE_KEY.ENDING);
-		ShowNewDrawingControls(false);
+	controls.typeSelect.exit.onclick = function() {
+		NewDrawingOrSwitchType(TYPE_KEY.EXIT);
 	};
 
-	controls.add.cancel.onclick = function() {
-		ShowNewDrawingControls(false);
+	controls.typeSelect.ending.onclick = function() {
+		NewDrawingOrSwitchType(TYPE_KEY.ENDING);
+	};
+
+	controls.typeSelect.cancel.onclick = function() {
+		UpdateTypeSelectControls(TypeSelectControlMode.Hidden);
 	};
 
 	function DuplicateDrawing() {
@@ -402,11 +505,11 @@ function PaintTool(controls) {
 			if (tile[drawingId].type === TYPE_KEY.TILE) {
 				findAndReplaceTileInAllRooms(drawingId, "0");
 			}
-			else if (tile[drawingId].type === TYPE_KEY.ITEM) {
-				removeAllItems(drawingId);
+			else {
+				removeAllSprites(drawingId);
 			}
-			// TODO : remove all sprite locations
 
+			// todo : is this ok?
 			var dlgId = tile[drawingId].dlg;
 			if (dlgId && dialog[dlgId]) {
 				delete dialog[dlgId];
