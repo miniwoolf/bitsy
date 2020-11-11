@@ -685,10 +685,37 @@ function start() {
 	bitsyCanvasAttach(document.getElementById("game"), width * scale);
 
 	//init tool controllers
-	roomTool = new RoomTool(canvas);
+	roomTool = new RoomTool({
+		canvas: canvas,
+		playToggle : document.getElementById("playModeCheck"),
+		nameInput : document.getElementById("roomName"),
+		nav : {
+			prev : document.getElementById("roomToolPrev"),
+			next : document.getElementById("roomToolNext"),
+			add : document.getElementById("roomToolNew"),
+			copy : document.getElementById("roomToolCopy"),
+			del : document.getElementById("roomToolDelete"),
+		},
+		// toolSelect : {
+		// 	// todo :
+		// },
+		settings : {
+			toggle : document.getElementById("roomSettingsCheck"),
+			container : document.getElementById("roomSettings"),
+			palette : document.getElementById("roomPaletteSelect"),
+		},
+		visibility : {
+			toggle : document.getElementById("roomVisibilityControlsCheck"),
+			container : document.getElementById("roomVisibilityControls"),
+			gridVisibility : document.getElementById("roomGridCheck"),
+			gridIcon : document.getElementById("roomGridIcon"),
+			wallVisibility : document.getElementById("roomWallsCheck"),
+			wallIcon : document.getElementById("roomWallsIcon"),
+			exitAndEndingVisibility : document.getElementById("roomMarkersCheck"),
+		},
+	});
 	roomTool.listenEditEvents();
 	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
-	listenForRoomSelect(); // todo : hacky to have this be external to the tool, right?
 
 	// todo : better organization
 	paintTool = new PaintTool({

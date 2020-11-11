@@ -13,7 +13,7 @@ what other methods do I need to move into this class? exit stuff??
 - items
 - etc.
 */
-function RoomTool(canvas) {
+function RoomTool(controls) {
 	var self = this; // feels a bit hacky
 
 	// todo : RENDER HACK
@@ -29,8 +29,8 @@ function RoomTool(canvas) {
 	var isDragDeletingTiles = false;
 
 	// render flags
-	this.drawMapGrid = true;
-	this.drawCollisionMap = false;
+	var drawMapGrid = true;
+	var drawCollisionMap = false;
 
 	function onMouseDown(e) {
 		e.preventDefault();
@@ -186,13 +186,13 @@ function RoomTool(canvas) {
 	var mapEditAnimationLoop;
 
 	this.listenEditEvents = function() {
-		canvas.addEventListener("mousedown", onMouseDown);
-		canvas.addEventListener("mousemove", onMouseMove);
-		canvas.addEventListener("mouseup", onMouseUp);
-		canvas.addEventListener("mouseleave", onMouseUp);
-		canvas.addEventListener("touchstart", onTouchStart);
-		canvas.addEventListener("touchmove", onTouchMove);
-		canvas.addEventListener("touchend", onTouchEnd);
+		controls.canvas.addEventListener("mousedown", onMouseDown);
+		controls.canvas.addEventListener("mousemove", onMouseMove);
+		controls.canvas.addEventListener("mouseup", onMouseUp);
+		controls.canvas.addEventListener("mouseleave", onMouseUp);
+		controls.canvas.addEventListener("touchstart", onTouchStart);
+		controls.canvas.addEventListener("touchmove", onTouchMove);
+		controls.canvas.addEventListener("touchend", onTouchEnd);
 
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
@@ -202,20 +202,20 @@ function RoomTool(canvas) {
 	}
 
 	this.unlistenEditEvents = function() {
-		canvas.removeEventListener("mousedown", onMouseDown);
-		canvas.removeEventListener("mousemove", onMouseMove);
-		canvas.removeEventListener("mouseup", onMouseUp);
-		canvas.removeEventListener("mouseleave", onMouseUp);
-		canvas.removeEventListener("touchstart", onTouchStart);
-		canvas.removeEventListener("touchmove", onTouchMove);
-		canvas.removeEventListener("touchend", onTouchEnd);
+		controls.canvas.removeEventListener("mousedown", onMouseDown);
+		controls.canvas.removeEventListener("mousemove", onMouseMove);
+		controls.canvas.removeEventListener("mouseup", onMouseUp);
+		controls.canvas.removeEventListener("mouseleave", onMouseUp);
+		controls.canvas.removeEventListener("touchstart", onTouchStart);
+		controls.canvas.removeEventListener("touchmove", onTouchMove);
+		controls.canvas.removeEventListener("touchend", onTouchEnd);
 
 		clearInterval(mapEditAnimationLoop);
 	}
 
 	this.drawEditMap = function() {
 		//draw grid
-		if (self.drawMapGrid) {
+		if (drawMapGrid) {
 			ctx.fillStyle = getContrastingColor();
 			for (var x = 1; x < roomsize; x++) {
 				ctx.fillRect(x * tilesize * scale, 0 * tilesize * scale, 1, roomsize * tilesize * scale);
@@ -226,7 +226,7 @@ function RoomTool(canvas) {
 		}
 
 		//draw walls
-		if (self.drawCollisionMap) {
+		if (drawCollisionMap) {
 			ctx.fillStyle = getContrastingColor();
 			for (y in room[curRoom].tilemap) {
 				for (x in room[curRoom].tilemap[y]) {
@@ -277,7 +277,7 @@ function RoomTool(canvas) {
 				});
 
 			// todo : pass in control root via constructor
-			document.getElementById("roomPaletteSelect").appendChild(paletteSelect.GetElement());
+			controls.settings.palette.appendChild(paletteSelect.GetElement());
 		}
 
 		if (paletteSelect) {
@@ -306,56 +306,161 @@ function RoomTool(canvas) {
 
 		return onSelectBehavior;
 	}
-} // RoomTool()
 
-/* 
-	GLOBAL FUNCTIONS
-	TODO : move as much as possible into the tool object
-*/
+	/* play control */
+	controls.playToggle.onclick = function(e) {
+		// todo : move these methods into room tool
+		if (e.target.checked) {
+			on_play_mode();
+		}
+		else {
+			on_edit_mode();
+		}
 
-/* PLAYMODE TODO 
-- make a PlayModeController objec?
-- share:
-	- on_play_mode
-	- on_edit_mode
-*/
-function togglePlayMode(e) {
-	if (e.target.checked) {
-		on_play_mode();
+		updatePlayModeButton();
+	};
+
+	/* name input */
+	controls.nameInput.onchange = function(e) {
+		var str = e.target.value;
+
+		if (str.length > 0) {
+			room[curRoom].name = str;
+		}
+		else {
+			room[curRoom].name = null;
+		}
+
+		updateNamesFromCurData()
+
+		refreshGameData();
+
+		events.Raise("change_room_name", { id: curRoom, name: room[curRoom].name });
+	};
+
+	/* nav controls */
+	function nextRoom() {
+		var ids = sortedRoomIdList();
+		var nextIndex = (roomIndex + 1) % ids.length;
+		var nextId = ids[nextIndex];
+
+		events.Raise("select_room", { id: nextId });
 	}
-	else {
-		on_edit_mode();
+
+	function prevRoom() {
+		var ids = sortedRoomIdList();
+		var prevIndex = roomIndex - 1;
+		if (prevIndex < 0) {
+			prevIndex = (ids.length - 1);
+		}
+		var prevId = ids[prevIndex];
+
+		events.Raise("select_room", { id: prevId });
 	}
 
-	updatePlayModeButton();
-}
+	function duplicateRoom() {
+		var idList = sortedRoomIdList();
+		var copyRoomId = idList[roomIndex];
+		var roomToCopy = room[copyRoomId];
 
-function on_room_name_change() {
-	var str = document.getElementById("roomName").value;
-	if(str.length > 0) {
-		room[curRoom].name = str;
+		roomIndex = idList.length;
+		var newRoomId = nextRoomId();
+
+		var duplicateTilemap = [];
+		for (y in roomToCopy.tilemap) {
+			duplicateTilemap.push([]);
+			for (x in roomToCopy.tilemap[y]) {
+				duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
+			}
+		}
+
+		room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
+		room[newRoomId].tilemap = duplicateTilemap;
+		room[newRoomId].sprites = roomToCopy.sprites.slice(0);
+
+		refreshGameData();
+
+		events.Raise("add_room", { id: newRoomId });
+		events.Raise("select_room", { id: newRoomId });
 	}
-	else {
-		room[curRoom].name = null;
+
+	function newRoom() {
+		roomIndex = Object.keys( room ).length;
+		var roomId = nextRoomId();
+
+		var palIdList = sortedPaletteIdList();
+		var palId = palIdList.length > 0 ? palIdList[0] : null;
+
+		room[roomId] = createRoom(roomId, palId);
+		refreshGameData();
+
+		events.Raise("add_room", { id: roomId });
+		events.Raise("select_room", { id: roomId });
 	}
 
-	updateNamesFromCurData()
+	function deleteRoom() {
+		if ( Object.keys(room).length <= 1 ) {
+			alert("You can't delete your only room!");
+		}
+		else if ( confirm("Are you sure you want to delete this room? You can't get it back.") ) {
+			var roomId = sortedRoomIdList()[roomIndex];
 
-	refreshGameData();
+			// delete exits in _other_ rooms that go to this room
+			// todo : re-implement?
 
-	events.Raise("change_room_name", { id: curRoom, name: room[curRoom].name });
-}
+			delete room[roomId];
 
-// todo: should this global function be replaced with a global event? (ok really what's the difference tho?)
-function listenForRoomSelect() {
+			refreshGameData();
+
+			events.Raise("delete_room", { id: roomId });
+
+			nextRoom();
+			self.drawEditMap();
+			paintTool.UpdateCanvas();
+		}
+	}
+
+	controls.nav.prev.onclick = prevRoom;
+	controls.nav.next.onclick = nextRoom;
+	controls.nav.add.onclick = newRoom;
+	controls.nav.copy.onclick = duplicateRoom;
+	controls.nav.del.onclick = deleteRoom;
+
+	/* visibility controls */
+	controls.visibility.toggle.onclick = function(e) {
+		controls.visibility.container.style.display = e.target.checked ? "block" : "none";
+	};
+
+	controls.visibility.gridVisibility.onclick = function(e) {
+		drawMapGrid = e.target.checked;
+		iconUtils.LoadIcon(controls.visibility.gridIcon, drawMapGrid ? "visibility" : "visibility_off");
+		this.drawEditMap();
+	};
+
+	controls.visibility.wallVisibility.onclick = function(e) {
+		drawCollisionMap = e.target.checked;
+		iconUtils.LoadIcon(controls.visibility.wallIcon, drawCollisionMap ? "visibility" : "visibility_off");
+		this.drawEditMap();
+	};
+
+	controls.visibility.exitAndEndingVisibility.onclick = function(e) {
+		// TODO
+	};
+
+	/* settings controls */
+	controls.settings.toggle.onclick = function(e) {
+		controls.settings.container.style.display = e.target.checked ? "block" : "none";
+	};
+
+
+
+	/* event listeners */
 	events.Listen("select_room", function(e) {
 		selectRoom(e.id);
 	});
-}
+} // RoomTool()
 
-// todo : definitely move inside of tooL!
-// I don't like that this only functions correctly if listenForSelectRoom is run before all other events...
-// I need to add an "after_select_room" event...
+// TODO : refactor this global function
 function selectRoom(roomId) {
 	// ok watch out this is gonna be hacky
 	var ids = sortedRoomIdList();
@@ -375,99 +480,4 @@ function selectRoom(roomId) {
 		roomTool.Update(); // todo : input id?
 		updateRoomName(); // todo : move inside of tool?
 	}
-}
-
-// todo : put controls inside room tool and hook this up there!
-// todo : move inside of tool?
-function nextRoom() {
-	var ids = sortedRoomIdList();
-	var nextIndex = (roomIndex + 1) % ids.length;
-	var nextId = ids[nextIndex];
-
-	events.Raise("select_room", { id: nextId });
-}
-
-function prevRoom() {
-	var ids = sortedRoomIdList();
-	var prevIndex = roomIndex - 1;
-	if (prevIndex < 0) {
-		prevIndex = (ids.length - 1);
-	}
-	var prevId = ids[prevIndex];
-
-	events.Raise("select_room", { id: prevId });
-}
-
-function duplicateRoom() {
-	var idList = sortedRoomIdList();
-	var copyRoomId = idList[roomIndex];
-	var roomToCopy = room[copyRoomId];
-
-	roomIndex = idList.length;
-	var newRoomId = nextRoomId();
-
-	var duplicateTilemap = [];
-	for (y in roomToCopy.tilemap) {
-		duplicateTilemap.push([]);
-		for (x in roomToCopy.tilemap[y]) {
-			duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
-		}
-	}
-
-	room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
-	room[newRoomId].tilemap = duplicateTilemap;
-	room[newRoomId].sprites = roomToCopy.sprites.slice(0);
-
-	refreshGameData();
-
-	events.Raise("add_room", { id: newRoomId });
-	events.Raise("select_room", { id: newRoomId });
-}
-
-function newRoom() {
-	roomIndex = Object.keys( room ).length;
-	var roomId = nextRoomId();
-
-	var palIdList = sortedPaletteIdList();
-	var palId = palIdList.length > 0 ? palIdList[0] : null;
-
-	room[roomId] = createRoom(roomId, palId);
-	refreshGameData();
-
-	events.Raise("add_room", { id: roomId });
-	events.Raise("select_room", { id: roomId });
-}
-
-function deleteRoom() {
-	if ( Object.keys(room).length <= 1 ) {
-		alert("You can't delete your only room!");
-	}
-	else if ( confirm("Are you sure you want to delete this room? You can't get it back.") ) {
-		var roomId = sortedRoomIdList()[roomIndex];
-
-		// delete exits in _other_ rooms that go to this room
-		// todo : re-implement?
-
-		delete room[roomId];
-
-		refreshGameData();
-
-		events.Raise("delete_room", { id: roomId });
-
-		nextRoom();
-		roomTool.drawEditMap();
-		paintTool.UpdateCanvas();
-	}
-}
-
-function toggleMapGrid(e) {
-	roomTool.drawMapGrid = e.target.checked;
-	iconUtils.LoadIcon(document.getElementById("roomGridIcon"), roomTool.drawMapGrid ? "visibility" : "visibility_off");
-	roomTool.drawEditMap();
-}
-
-function toggleCollisionMap(e) {
-	roomTool.drawCollisionMap = e.target.checked;
-	iconUtils.LoadIcon(document.getElementById("roomWallsIcon"), roomTool.drawCollisionMap ? "visibility" : "visibility_off");
-	roomTool.drawEditMap();
 }

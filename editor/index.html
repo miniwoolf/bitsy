@@ -296,7 +296,7 @@
 					</div>
 					
 					<div id="roomNav" class="navControl">
-						<input type="checkbox" id="playModeCheck" onclick="togglePlayMode(event);" />
+						<input type="checkbox" id="playModeCheck" />
 						<label title="play / pause game" for="playModeCheck">
 							<span id="playModeIcon" class="bitsy_icon">play</span>
 							<span id="playModeText" class="localize play_game">play</span> <!-- TODO LOCALIZE: also stop_game -->
@@ -304,26 +304,29 @@
 
 						<span class="spacer"></span>
 
-						<input type="text" id="roomName" title="a name to refer to this room" class="textInputField" onchange="on_room_name_change();" size="10"></input>
+						<input type="text" id="roomName" title="a name to refer to this room" class="textInputField" size="10"></input>
 
 						<span class="spacer"></span>
 
-						<button title="previous room" class="color0" onclick="prevRoom();">
+						<button id="roomToolPrev" title="previous room" class="color0" onclick="prevRoom();">
 							<span class="bitsy_icon">previous</span>
 						</button>
-						<button title="next room" class="color0" onclick="nextRoom();">
+
+						<button id="roomToolNext" title="next room" class="color0">
 							<span class="bitsy_icon">next</span>
 						</button>
 
 						<span class="spacer"></span>
 
-						<button title="add new room" class="color0" onclick="newRoom();">
+						<button id="roomToolNew" title="add new room" class="color0">
 							<span class="bitsy_icon">add</span>
 						</button>
-						<button title="duplicate room" class="color0" onclick="duplicateRoom();">
+
+						<button id="roomToolCopy" title="duplicate room" class="color0">
 							<span class="bitsy_icon">copy</span>
 						</button>
-						<button title="delete room" class="color0" onclick="deleteRoom();">
+
+						<button id="roomToolDelete" title="delete room" class="color0">
 							<span class="bitsy_icon">delete</span>
 						</button>
 					</div>
@@ -375,23 +378,23 @@
 						</form>
 					</div>
 
-					<div id="roomVisibilityControls" class="controlBox" style="display: none;">
-						<div style="margin-top: 5px;" id="roomVisibility">
+					<div id="roomVisibilityControls" class="controlBox" style="margin-top: 5px; display: none;">
+						<div id="roomVisibility">
 							<span>visibility:</span> <!-- TODO : localize -->
 
-							<input type="checkbox" id="roomGridCheck" onclick="toggleMapGrid(event);" checked/>
+							<input type="checkbox" id="roomGridCheck" checked />
 							<label title="show / hide grid" for="roomGridCheck">
 								<span id="roomGridIcon" class="bitsy_icon icon_space_right">visibility</span>
 								<span class="localize grid_toggle_visible">grid</span>
 							</label>
 
-							<input type="checkbox" id="roomWallsCheck" onclick="toggleCollisionMap(event);" />
+							<input type="checkbox" id="roomWallsCheck" />
 							<label title="show / hide walls" for="roomWallsCheck">
 								<span id="roomWallsIcon" class="bitsy_icon icon_space_right">visibility_off</span>
 								<span class="localize walls_toggle_visible">walls</span>
 							</label>
 
-							<input type="checkbox" id="roomMarkersCheck" onclick="toggleRoomMarkers(event.target.checked);" checked/>
+							<input type="checkbox" id="roomMarkersCheck" checked />
 							<label title="show / hide exits & endings" for="roomMarkersCheck">
 								<span id="roomMarkersIcon" class="bitsy_icon icon_space_right">visibility</span>
 								<span class="localize marker_tool_name">exits & endings</span>
@@ -399,7 +402,7 @@
 						</div>
 					</div>
 
-					<div id="roomSettings" class="controlBox" style="margin-top: 10px; display: none;">
+					<div id="roomSettings" class="controlBox" style="margin-top: 5px; display: none;">
 						<div class="paintSetting">
 							<span class="paintSettingLabel">
 								<span class="bitsy_icon icon_space_right">colors</span>
