@@ -1,7 +1,6 @@
 #colorPaletteForm {
 	max-height: 180px;
 	overflow: scroll;
-	padding: 5px;
 }
 
 #colorPaletteForm input[type=radio] {

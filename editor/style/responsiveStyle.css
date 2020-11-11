@@ -71,11 +71,6 @@
 		display: none;
 	}
 
-	#toolsCheckLabel {
-		float: right;
-		margin-top: 2vw; /* hacky */
-	}
-
 	#titlePanel {
 		display: block;
 	}

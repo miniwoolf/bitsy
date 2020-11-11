@@ -411,17 +411,26 @@
 
 /* todo: move into own file?*/
 /* TITLE WIDGET */
+.titleWidgetContainer {
+	height: 100%;
+}
+
 .titleWidget {
 	display: flex;
+	align-items: center;
+	height: 100%;
 }
 
 .titleWidget .textInputField {
 	flex-grow: 1;
+	font-size: 80%;
 }
 
 .titleOpenDialog {
 	display: none;
+	margin: 0px;
 	margin-left: 5px;
+	padding: 6px;
 }
 
 /* expression builder styles */

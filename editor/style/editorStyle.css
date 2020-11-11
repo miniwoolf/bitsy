@@ -32,13 +32,13 @@ input[type=text] {
 #topbar {
 	width: 100%;
 	background: white;
-	padding: 10px;
-	padding-left: 20px;
-	padding-right: 20px;
+	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+	/*padding-bottom: 10px;*/
 	box-sizing: border-box;
-	font-size: 125%;
-
 	flex: 0 1 auto;
+	/*border-bottom: solid 2px #6767b2;*/
 }
 
 #topbarMain {
@@ -60,6 +60,7 @@ input[type=text] {
 
 	/*border: solid 2px red;*/
 }
+
 #editorContent {
 	height:100%;
 	white-space: nowrap;
@@ -67,25 +68,27 @@ input[type=text] {
 	padding-left: 5px;
 	padding-right: 20px;
 }
+
 .panel {
 	display: inline-block;
 	vertical-align: top;
 	margin: 10px;
 	margin-right: 0px;
+	margin-top: 8px;
+	margin-bottom: 0px;
 	padding: 10px;
 	font-size: 100%;
 	border-radius: 4px;
 }
+
 .panel .bar {
-	padding: 8px;
+	padding: 6px;
 	margin: -10px;
 	margin-bottom: 10px;
 	font-size: 115%;
 	border-radius: 4px 4px 0px 0px;
 }
-.panel .bar .material-icons {
-	vertical-align: middle;
-}
+
 .panelShadow {
 	display: inline-block;
 	vertical-align: top;
@@ -93,10 +96,12 @@ input[type=text] {
 	margin-right: 0px;
 	border-radius: 4px;
 }
+
 textarea {
 	font-family: monospace;
 	font-size: 80%;
 }
+
 input {
 	font-family: monospace;
 }
@@ -211,13 +216,17 @@ span.controlBox {
 
 /*toolbar*/
 #toolsPanel {
-	padding-top: 5px;
-	font-size: 80%;
-	width:100%;
+	padding-top: 10px;
+	width: 100%;
 	overflow:auto;
 	display:none;
 	flex-flow: row;
 	flex-wrap: wrap;
+}
+
+#toolsPanel label {
+	margin-right: 5px;
+	padding: 6px;
 }
 
 .panelBarTitle {
@@ -501,15 +510,37 @@ span.controlBox {
 }
 
 #logoFlexItem {
-	flex: 1 0 auto; white-space: nowrap; overflow: hidden;
+	flex: 1 0 auto;
+	white-space: nowrap;
+	overflow: hidden;
 }
 
 #titleFlexItem {
-	flex: 1 100%; padding-left: 10px; padding-right: 20px;
+	flex: 100 100%;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 #toolsCheckFlexItem {
 	flex: 1 0 auto;
+	display: flex;
+	align-items: center;
+}
+
+#toolsCheckFlexItem label {
+	display: flex;
+	align-items: center;
+	padding: 6px;
+	margin: 0px;
+	border: solid 1px #e8e8ff; /* so it lines up right */
+}
+
+#toolsCheckFlexItem input[type="checkbox"]:checked + label {
+	border-color: #6767b2;
+}
+
+#toolsCheckFlexItem .icon_space_right {
+	margin-right: 5px;
 }
 
 #topbarSpaceFlexItem {
@@ -521,8 +552,14 @@ span.controlBox {
 	font-size: 80%;
 }
 
+#bitsyLogo {
+	margin-right: 5px;
+}
+
 #bitsyLogoTitle {
-	font-size: 125%;
+	display: flex;
+	align-items: baseline;
+	font-size: 150%;
 }
 
 #findFilter {

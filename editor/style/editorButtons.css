@@ -88,12 +88,6 @@ input[type="radio"]:disabled + label {
 	padding: 2px;
 }
 
-/*hack*/
-#toolsCheckFlexItem label {
-	border-radius: 4px;
-	/*font-size: 16px;*/
-}
-
 .filePickerLabel {
 	font-family: "Nunito", Helvetica, Arial, sans-serif;
 	font-size: 90%;

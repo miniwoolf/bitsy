@@ -3,10 +3,6 @@ body {
 	color: #6767b2;
 }
 
-#topbar {
-	border-bottom: solid 3px #6767b2;
-}
-
 .panel {
 	background: white;
 	border-bottom: solid 2px #6767b2;
@@ -117,15 +113,6 @@ input[type=radio]:checked + label {
 
 .controlBox .controlBox {
 	background: #ccccff;
-}
-
-/*topbar*/
-#topbar input[type=checkbox]:not(:checked) + label {
-	background: none;
-}
-
-#toolsPanel input[type=checkbox]:not(:checked) + label {
-	background: none;
 }
 
 .warning {
