@@ -1209,30 +1209,31 @@
 							<!-- TODO : create icons -->
 							<span>
 								<form>
-									<input type="radio" name="map tools" id="mapToolSelect">
-									<label title="select room tool" for="mapToolSelect">
-										<span class="bitsy_icon">pagesize_full</span>
-										<span class="toolSelectText">select</span>
-									</label>
 									<input type="radio" name="map tools" id="mapToolMove">
 									<label title="move room tool" for="mapToolMove">
 										<span class="bitsy_icon">set_exit_location</span>
-										<span class="toolSelectText">move</span>
+										<span class="toolSelectText">place room</span>
+									</label>
+
+									<input type="radio" name="map tools" id="mapToolSelect">
+									<label title="select room tool" for="mapToolSelect">
+										<span class="bitsy_icon">pagesize_full</span>
+										<span class="toolSelectText">select room</span>
 									</label>
 								</form>
 							</span>
 
-							<span class="spacer" style="flex-grow: 1;"></span>
-
-							<span>
+							<span style="margin-left: 10px;">
 								<input type="checkbox" id="mapShowOptions" />
 								<label title="show / hide map options" for="mapShowOptions">
 									<span class="bitsy_icon">settings</span>
+									<!-- todo : localize -->
+									<span>settings</span>
 								</label>
 							</span>
 						</div>
 
-						<div id="mapOptions" class="controlBox" style="margin-top: 5px; display: none;">
+						<div id="mapOptions" class="controlBox" style="margin-top: 10px; display: none;">
 							<div>
 								<span class="bitsy_icon">transition_effect</span>
 								<span>transition effects</span> <!-- TODO localize -->
