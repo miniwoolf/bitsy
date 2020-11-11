@@ -707,6 +707,11 @@ function start() {
 			copy : document.getElementById("paintCopy"),
 			del : document.getElementById("paintDelete"),
 		},
+		subPanelSelect : {
+			animation : document.getElementById("paintAnimationSelect"),
+			dialog : document.getElementById("paintDialogSelect"),
+			settings : document.getElementById("paintSettingsSelect"),
+		},
 		typeSelect : {
 			container : document.getElementById("drawingTypeSelect"),
 			tile : document.getElementById("paintAddTile"),
@@ -760,10 +765,11 @@ function start() {
 			},
 		},
 		animation : {
-			previewDiv: document.getElementById("animationPreview"),
-			framesDiv: document.getElementById("animationFrames"),
-			removeButton: document.getElementById("animationRemove"),
-			addButton: document.getElementById("animationAdd"),
+			container : document.getElementById("animationOuter"),
+			previewDiv : document.getElementById("animationPreview"),
+			framesDiv : document.getElementById("animationFrames"),
+			removeButton : document.getElementById("animationRemove"),
+			addButton : document.getElementById("animationAdd"),
 		},
 	});
 

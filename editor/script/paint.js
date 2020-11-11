@@ -211,6 +211,49 @@ function PaintTool(controls) {
 		return getFrameData(frameIndex);
 	}
 
+	var SubPanel = {
+		Animation : 0,
+		Dialog : 1,
+		Settings : 2,
+	};
+
+	var curSubPanel = SubPanel.Animation;
+
+	controls.subPanelSelect.animation.onclick = function() {
+		ChangeSubPanel(SubPanel.Animation);
+	};
+
+	controls.subPanelSelect.dialog.onclick = function() {
+		ChangeSubPanel(SubPanel.Dialog);
+	};
+
+	controls.subPanelSelect.settings.onclick = function() {
+		ChangeSubPanel(SubPanel.Settings);
+	};
+
+	function ChangeSubPanel(subPanel) {
+		curSubPanel = subPanel;
+
+		if (curSubPanel === SubPanel.Animation) {
+			controls.subPanelSelect.animation.checked = true;
+			controls.animation.container.style.display = "flex";
+			controls.dialogControl.style.display = "none";
+			controls.settings.container.style.display = "none";
+		}
+		else if (curSubPanel === SubPanel.Dialog) {
+			controls.subPanelSelect.dialog.checked = true;
+			controls.animation.container.style.display = "none";
+			controls.dialogControl.style.display = "block";
+			controls.settings.container.style.display = "none";
+		}
+		else if (curSubPanel === SubPanel.Settings) {
+			controls.subPanelSelect.settings.checked = true;
+			controls.animation.container.style.display = "none";
+			controls.dialogControl.style.display = "none";
+			controls.settings.container.style.display = "block";
+		}
+	}
+
 	// TODO : rename!
 	this.ReloadDrawing = function() {
 		// animation UI
@@ -246,7 +289,27 @@ function PaintTool(controls) {
 			hasSettings = true;
 		}
 
-		controls.settings.container.style.display = hasSettings ? "block" : "none";
+		controls.subPanelSelect.dialog.disabled = (tile[drawingId].type === TYPE_KEY.TILE);
+		controls.subPanelSelect.settings.disabled = !hasSettings;
+
+		if (tile[drawingId].type === TYPE_KEY.TILE) {
+			ChangeSubPanel(SubPanel.Settings);
+		}
+		else if (tile[drawingId].type === TYPE_KEY.SPRITE) {
+			ChangeSubPanel(SubPanel.Dialog);
+		}
+		else if (tile[drawingId].type === TYPE_KEY.AVATAR) {
+			ChangeSubPanel(SubPanel.Animation);
+		}
+		else if (tile[drawingId].type === TYPE_KEY.ITEM) {
+			ChangeSubPanel(SubPanel.Dialog);
+		}
+		else if (tile[drawingId].type === TYPE_KEY.EXIT) {
+			ChangeSubPanel(SubPanel.Settings);
+		}
+		else if (tile[drawingId].type === TYPE_KEY.ENDING) {
+			ChangeSubPanel(SubPanel.Dialog);
+		}
 
 		updateDrawingNameUI();
 

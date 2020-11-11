@@ -693,33 +693,32 @@
 							</div>
 
 							<div id="paintEditMain">
-								<div class="buttonGroup" style="display: flex; margin-bottom: 10px;">
-									<!-- TODO : hook up theses settings toggles... also - turn into radio maybe? -->
-									<input type="checkbox" id="paintAnimationCheck" />
-									<label for="paintAnimationCheck">
-										<!-- TODO : needs icon... -->
-										<span>animation</span> <!-- TODO : localize -->
-									</label>
+								<div class="buttonGroup" style="margin-bottom: 10px; display: block;">
+									<form style=>
+										<input type="radio" name="paintRadio" id="paintAnimationSelect" />
+										<label for="paintAnimationSelect">
+											<!-- TODO : needs icon... -->
+											<span>animation</span> <!-- TODO : localize -->
+										</label>
 
-									<input type="checkbox" id="paintDialogCheck" />
-									<label for="paintDialogCheck">
-										<span class="bitsy_icon icon_space_right">dialog</span>
-										<span>dialog</span> <!-- TODO : localize -->
-									</label>
+										<input type="radio" name="paintRadio" id="paintDialogSelect" />
+										<label for="paintDialogSelect">
+											<span class="bitsy_icon icon_space_right">dialog</span>
+											<span>dialog</span> <!-- TODO : localize -->
+										</label>
 
-									<input type="checkbox" id="paintSettingsCheck" />
-									<label for="paintSettingsCheck">
-										<span class="bitsy_icon icon_space_right">settings</span>
-										<span>settings</span> <!-- TODO : localize -->
-									</label>
+										<input type="radio" name="paintRadio" id="paintSettingsSelect" />
+										<label for="paintSettingsSelect">
+											<span class="bitsy_icon icon_space_right">settings</span>
+											<span>settings</span> <!-- TODO : localize -->
+										</label>
 
-									<span class="expandingSpacer"></span>
-
-									<input type="checkbox" id="paintGridCheck" checked />
-									<label title="show / hide grid" for="paintGridCheck">
-										<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
-										<span class="localize grid_toggle_visible">grid</span>
-									</label>
+										<input type="checkbox" id="paintGridCheck" checked />
+										<label title="show / hide grid" for="paintGridCheck" style="margin-left: 10px;">
+											<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
+											<span class="localize grid_toggle_visible">grid</span>
+										</label>
+									</form>
 								</div>
 							</div>
 
@@ -1211,12 +1210,12 @@
 							<span>
 								<form>
 									<input type="radio" name="map tools" id="mapToolSelect">
-									<label title="select room tool" for="mapToolSelect" class="left">
+									<label title="select room tool" for="mapToolSelect">
 										<span class="bitsy_icon">pagesize_full</span>
 										<span class="toolSelectText">select</span>
 									</label>
 									<input type="radio" name="map tools" id="mapToolMove">
-									<label title="move room tool" for="mapToolMove" class="right">
+									<label title="move room tool" for="mapToolMove">
 										<span class="bitsy_icon">set_exit_location</span>
 										<span class="toolSelectText">move</span>
 									</label>
@@ -1558,13 +1557,13 @@
 								<span class="localize option_window_size">game window size:</span>
 								<br/>
 								<input type="radio" name="export size" value="full" onclick="chooseExportSizeFull();" id="exportSizeOptionFull" checked>
-								<label title="game window resizes to fill page (mobile friendly)" for="exportSizeOptionFull" class="left">
+								<label title="game window resizes to fill page (mobile friendly)" for="exportSizeOptionFull">
 									<span class="bitsy_icon">pagesize_full</span>
 									<span class="localize option_full_size">full page</span>
 								</label>
 
 								<input type="radio" name="export size" value="fixed" onclick="chooseExportSizeFixed();" id="exportSizeOptionFixed">
-								<label title="game window stays a fixed size" for="exportSizeOptionFixed" class="right">
+								<label title="game window stays a fixed size" for="exportSizeOptionFixed">
 									<span class="bitsy_icon">pagesize_fixed</span>
 									<span class="localize option_fixed_size">fixed size</span>
 								</label>
