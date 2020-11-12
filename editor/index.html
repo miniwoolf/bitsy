@@ -1164,32 +1164,24 @@
 							<button title="add new dialog" class="color0" onclick="addNewDialog();">
 								<span class="bitsy_icon">add</span>
 							</button>
+
 							<button title="duplicate dialog" class="color0" onclick="duplicateDialog();">
 								<span class="bitsy_icon">copy</span>
 							</button>
+
 							<button id="deleteDialogButton" title="delete dialog" class="color0" onclick="deleteDialog();">
 								<span class="bitsy_icon">delete</span>
 							</button>
+
+							<span class="spacer"></span>
+
+							<input type="checkbox" id="dialogShowCodeCheck" onclick="toggleDialogCode(event);">
+							<label title="show / hide the code for this dialog" for="dialogShowCodeCheck" style="padding-right: 4px;">
+								<span class="bitsy_icon">code_edit</span>
+							</label>
 						</div>
 
 						<div id="dialogEditor">
-						</div>
-
-						<div id="dialogOptions">
-							<input type="checkbox" id="dialogShowCodeCheck" onclick="toggleDialogCode(event);">
-							<label title="show / hide the code for this dialog" for="dialogShowCodeCheck">
-								<span class="bitsy_icon">code_edit</span>
-								<span id="dialogToggleCodeShowText" class="localize dialog_show_code">show code</span> 
-								<span id="dialogToggleCodeHideText" class="localize dialog_hide_code" style="display:none;">hide code</span>
-							</label>
-
-							<input type="checkbox" id="dialogAlwaysShowDrawingCheck" onclick="toggleAlwaysShowDrawingDialog(event);" checked>
-							<label title="always show dialog of selected drawing" for="dialogAlwaysShowDrawingCheck">
-								<!-- TODO : bitsy_icon --- need a special icon for this case -->
-								<span class="bitsy_icon">paint</span>
-								<!-- todo : localize -->
-								<!-- <span id="dialogToggleCodeShowText"></span> --> <!-- TODO ?? --> 
-							</label>
 						</div>
 					</div>
 

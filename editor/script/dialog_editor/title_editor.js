@@ -26,7 +26,6 @@ function TitleWidget() {
 	openButton.appendChild(iconUtils.CreateIcon("open_tool"));
 	openButton.onclick = function() {
 		events.Raise("select_dialog", { id: titleDialogId });
-		alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 	}
 	div.appendChild(openButton);
 

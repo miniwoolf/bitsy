@@ -300,8 +300,6 @@ function nextDialog() {
 	}
 
 	events.Raise("select_dialog", { id: id });
-
-	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 }
 
 function prevDialog() {
@@ -328,11 +326,7 @@ function prevDialog() {
 		}
 	}
 
-	console.log("PREV DIALOG " + id);
-
 	events.Raise("select_dialog", { id: id });
-
-	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 }
 
 function addNewDialog() {
@@ -344,8 +338,6 @@ function addNewDialog() {
 	events.Raise("select_dialog", { id: id });
 
 	events.Raise("new_dialog", { id:id });
-
-	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 }
 
 function duplicateDialog() {
@@ -355,8 +347,6 @@ function duplicateDialog() {
 		refreshGameData();
 
 		events.Raise("select_dialog", { id: id });
-
-		alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 	}
 }
 
@@ -377,8 +367,6 @@ function deleteDialog() {
 
 		delete dialog[tempDialogId];
 		refreshGameData();
-
-		alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked = false;
 
 		events.Raise("dialog_delete", { dialogId:tempDialogId, editorId:null });
 	}
@@ -978,7 +966,6 @@ function start() {
 
 	// prepare dialog tool
 	events.Raise("select_dialog", { id: titleDialogId }); // start with the title open
-	alwaysShowDrawingDialog = document.getElementById("dialogAlwaysShowDrawingCheck").checked;
 
 	// create find tool
 	findTool = new FindTool({
@@ -1970,10 +1957,6 @@ function blockScrollBackpage(e) {
 
 function toggleDialogCode(e) {
 	var showCode = e.target.checked;
-
-	// toggle button text
-	document.getElementById("dialogToggleCodeShowText").style.display = showCode ? "none" : "inline";
-	document.getElementById("dialogToggleCodeHideText").style.display = showCode ? "inline" : "none";
 
 	// update editor
 	var dialogEditorViewport = document.getElementById("dialogEditor");
