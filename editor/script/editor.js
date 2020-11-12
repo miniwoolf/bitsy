@@ -1,11 +1,4 @@
 /* MODES */
-var TileType = {
-	Tile : 0,
-	Sprite : 1,
-	Avatar : 2,
-	Item : 3
-};
-
 var EditMode = {
 	Edit : 0,
 	Play : 1
@@ -684,9 +677,11 @@ function start() {
 			copy : document.getElementById("roomToolCopy"),
 			del : document.getElementById("roomToolDelete"),
 		},
-		// toolSelect : {
-		// 	// todo :
-		// },
+		toolSelect : {
+			paint : document.getElementById("roomToolPaint"),
+			erase : document.getElementById("roomToolErase"),
+			select : document.getElementById("roomToolSelect"),
+		},
 		settings : {
 			toggle : document.getElementById("roomSettingsCheck"),
 			container : document.getElementById("roomSettings"),
@@ -703,7 +698,6 @@ function start() {
 		},
 	});
 	roomTool.listenEditEvents();
-	roomTool.editDrawingAtCoordinateCallback = editDrawingAtCoordinate;
 
 	// todo : better organization
 	paintTool = new PaintTool({
@@ -1057,6 +1051,35 @@ function removeAllSprites(id) {
 	}
 }
 
+function getAllSpritesAtLocation(roomId, x, y) {
+	var locations = [];
+
+	if (roomId in room) {
+		for (var i = 0; i < room[roomId].sprites.length; i++) {
+			var l = room[roomId].sprites[i];
+
+			if (l.x === x && l.y === y) {
+				locations.push(l);
+			}
+		}
+	}
+
+	return locations;
+}
+
+function removeAllSpritesAtLocation(roomId, x, y) {
+	if (roomId in room) {
+		var locations = getAllSpritesAtLocation(roomId, x, y);
+
+		while (locations.length > 0) {
+			var l = locations.pop();
+			var i = room[roomId].sprites.indexOf(l);
+
+			room[roomId].sprites.splice(i, 1);
+		}
+	}
+}
+
 function toggleToolBar(e) {
 	if( e.target.checked ) {
 		document.getElementById("toolsPanel").style.display = "flex";
@@ -1176,47 +1199,6 @@ function duplicatePalette() {
 
 function deletePalette() {
 	paletteTool.DeleteSelected();
-}
-
-// TODO : move THIS into paint.js
-function editDrawingAtCoordinate(x,y) {
-	// todo: need more consistency with these methods
-	// TODO : also... need to make sure this works in edit mode now
-	var spriteId = getSpriteAt(x,y).id;
-
-	if (spriteId) {
-		if(spriteId === "A") {
-			on_paint_avatar_ui_update();
-		}
-		else {
-			on_paint_sprite_ui_update();
-		}
-
-		paintTool.SelectDrawing(spriteId);
-		// paintExplorer.RefreshAndChangeSelection(spriteId);
-
-		return;
-	}
-
-	var item = getItem(curRoom,x,y);
-	if (item) {
-		on_paint_item_ui_update(); // TODO : move these things into paint.js
-
-		paintTool.SelectDrawing(item.id);
-		// paintExplorer.RefreshAndChangeSelection(item.id);
-
-		return;
-	}
-
-	var tileId = getTile(x,y);
-	if(tileId != 0) {
-		on_paint_tile_ui_update();
-
-		paintTool.SelectDrawing(tileId);
-		// paintExplorer.RefreshAndChangeSelection(tileId);
-
-		return;
-	}
 }
 
 function on_change_adv_dialog() {

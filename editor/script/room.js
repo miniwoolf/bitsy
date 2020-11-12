@@ -19,6 +19,14 @@ function RoomTool(controls) {
 	// todo : RENDER HACK
 	var ctx = context; // hacky to grab the global context like this :(
 
+	var EditTool = {
+		Paint : 0,
+		Erase : 1,
+		Select : 2,
+	};
+
+	var curEditTool = EditTool.Paint;
+
 	var drawingId = "A";
 	events.Listen("select_drawing", function(event) {
 		drawingId = event.id;
@@ -40,76 +48,36 @@ function RoomTool(controls) {
 		var x = Math.floor( off.x / (tilesize*scale) );
 		var y = Math.floor( off.y / (tilesize*scale) );
 
-		if( self.editDrawingAtCoordinateCallback != null && e.altKey ) {
-			self.editDrawingAtCoordinateCallback(x,y); // "eye dropper"
-			return;
-		}
-
 		if (onSelectBehavior != null) {
 			onSelectBehavior.OnSelect(curRoom, x, y);
 			return;
 		}
-
-		if (drawingId != null) {
-			//add tiles/sprites to map
-			if (tile[drawingId].type === TYPE_KEY.TILE) {
-				if (room[curRoom].tilemap[y][x] === "0") {
+		else if (curEditTool === EditTool.Paint) {
+			if (drawingId != null) {
+				if (tile[drawingId].type === TYPE_KEY.TILE) {
 					room[curRoom].tilemap[y][x] = drawingId;
 					isDragAddingTiles = true;
 				}
 				else {
-					//delete (better way to do this?)
-					//row = row.substr(0, x) + "0" + row.substr(x+1);
-					room[curRoom].tilemap[y][x] = "0";
-					isDragDeletingTiles = true;
-				}
-				//room[curRoom].tilemap[y] = row;
-			}
-			else if (tile[drawingId].type === TYPE_KEY.AVATAR) {
-				// TODO : bug -- doesn't erase other sprites!!
-				var isAvatarAlreadyHere = false;
+					removeAllSpritesAtLocation(curRoom, x, y);
 
-				for (roomId in room) {
-					var playerSpr = null;
-					for (i in room[roomId].sprites) {
-						var spr = room[roomId].sprites[i];
-						if (spr.id === drawingId) {
-							playerSpr = spr;
-						}
+					// only one instance of the avatar allowed
+					if (tile[drawingId].type === TYPE_KEY.AVATAR) {
+						removeAllSprites(drawingId);
 					}
 
-					if (playerSpr) {
-						if (roomId === curRoom && x == playerSpr.x && y == playerSpr.y) {
-							isAvatarAlreadyHere = true;
-						}
-
-						var index = room[roomId].sprites.indexOf(playerSpr);
-						room[roomId].sprites.splice(index, 1);
-					}
-				}
-
-				if (!isAvatarAlreadyHere) {
 					room[curRoom].sprites.push(createSpriteLocation(drawingId, x, y));
 				}
+
+				refreshGameData();
+				self.drawEditMap();
 			}
-			else {
-				// TODO : is this the final behavior I want?
-
-				var otherSpr = getSpriteLocation(curRoom, x, y);
-				var isSprAlreadyHere = otherSpr != null && otherSpr.id === drawingId;
-
-				if (otherSpr) {
-					var index = room[curRoom].sprites.indexOf(otherSpr);
-					room[curRoom].sprites.splice(index, 1);
-				}
-
-				if (!isSprAlreadyHere) {
-					room[curRoom].sprites.push(createSpriteLocation(drawingId, x, y));
-				}
-			}
-
-			refreshGameData();
-			self.drawEditMap();
+		}
+		else if (curEditTool === EditTool.Erase) {
+			// todo
+		}
+		else if (curEditTool === EditTool.Select) {
+			// todo
 		}
 
 		events.Raise("change_room", { id: curRoom });
@@ -120,7 +88,7 @@ function RoomTool(controls) {
 			return;
 		}
 
-		editTilesOnDrag(e);
+		onDragEdit(e);
 	}
 
 	function onMouseUp(e) {
@@ -128,32 +96,22 @@ function RoomTool(controls) {
 			return;
 		}
 
-		editTilesOnDrag(e);
+		onDragEdit(e);
+
 		isDragAddingTiles = false;
 		isDragDeletingTiles = false;
 	}
 
-	function editTilesOnDrag(e) {
+	function onDragEdit(e) {
 		var off = getOffset(e);
 		off = mobileOffsetCorrection(off, e, (tilesize * roomsize * scale));
 		var x = clamp(Math.floor(off.x / (tilesize*scale)), 0, roomsize - 1);
 		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, roomsize - 1);
-		// var row = room[curRoom].tilemap[y];
-		if (isDragAddingTiles) {
-			if ( room[curRoom].tilemap[y][x] != drawingId ) {
-				room[curRoom].tilemap[y][x] = drawingId;
-				refreshGameData();
-				self.drawEditMap();
-			}
-		}
-		else if (isDragDeletingTiles) {
-			if (room[curRoom].tilemap[y][x] != "0") {
-				// row = row.substr(0, x) + "0" + row.substr(x+1);
-				// room[curRoom].tilemap[y] = row;
-				room[curRoom].tilemap[y][x] = "0";
-				refreshGameData();
-				self.drawEditMap();
-			}
+
+		if (curEditTool === EditTool.Paint && isDragAddingTiles) {
+			room[curRoom].tilemap[y][x] = drawingId;
+			refreshGameData();
+			self.drawEditMap();
 		}
 
 		events.Raise("change_room", { id: curRoom });
@@ -180,8 +138,6 @@ function RoomTool(controls) {
 		isDragAddingTiles = false;
 		isDragDeletingTiles = false;
 	}
-
-	this.editDrawingAtCoordinateCallback = null;
 
 	var mapEditAnimationLoop;
 
@@ -426,6 +382,19 @@ function RoomTool(controls) {
 	controls.nav.copy.onclick = duplicateRoom;
 	controls.nav.del.onclick = deleteRoom;
 
+	/* tool select controls */
+	controls.toolSelect.paint.onclick = function() {
+		curEditTool = EditTool.Paint;
+	};
+
+	controls.toolSelect.erase.onclick = function() {
+		curEditTool = EditTool.Erase;
+	};
+
+	controls.toolSelect.select.onclick = function() {
+		curEditTool = EditTool.Select;
+	};
+
 	/* visibility controls */
 	controls.visibility.toggle.onclick = function(e) {
 		controls.visibility.container.style.display = e.target.checked ? "block" : "none";
@@ -452,8 +421,6 @@ function RoomTool(controls) {
 		controls.settings.container.style.display = e.target.checked ? "block" : "none";
 	};
 
-
-
 	/* event listeners */
 	events.Listen("select_room", function(e) {
 		selectRoom(e.id);
@@ -479,5 +446,48 @@ function selectRoom(roomId) {
 
 		roomTool.Update(); // todo : input id?
 		updateRoomName(); // todo : move inside of tool?
+	}
+}
+
+
+// todo :
+// TODO : move THIS into paint.js
+function editDrawingAtCoordinate(x,y) {
+	// todo: need more consistency with these methods
+	// TODO : also... need to make sure this works in edit mode now
+	var spriteId = getSpriteAt(x,y).id;
+
+	if (spriteId) {
+		if(spriteId === "A") {
+			on_paint_avatar_ui_update();
+		}
+		else {
+			on_paint_sprite_ui_update();
+		}
+
+		paintTool.SelectDrawing(spriteId);
+		// paintExplorer.RefreshAndChangeSelection(spriteId);
+
+		return;
+	}
+
+	var item = getItem(curRoom,x,y);
+	if (item) {
+		on_paint_item_ui_update(); // TODO : move these things into paint.js
+
+		paintTool.SelectDrawing(item.id);
+		// paintExplorer.RefreshAndChangeSelection(item.id);
+
+		return;
+	}
+
+	var tileId = getTile(x,y);
+	if(tileId != 0) {
+		on_paint_tile_ui_update();
+
+		paintTool.SelectDrawing(tileId);
+		// paintExplorer.RefreshAndChangeSelection(tileId);
+
+		return;
 	}
 }
