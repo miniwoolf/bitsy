@@ -461,6 +461,7 @@ function RoomTool(controls) {
 	controls.toolSelect.paint.onclick = function() {
 		curEditTool = EditTool.Paint;
 	};
+	controls.toolSelect.paint.checked = true;
 
 	controls.toolSelect.erase.onclick = function() {
 		curEditTool = EditTool.Erase;
