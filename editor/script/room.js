@@ -27,20 +27,24 @@ function RoomTool(controls) {
 
 	var curEditTool = EditTool.Paint;
 
+	var isMouseDown = false;
+
 	var drawingId = "A";
 	events.Listen("select_drawing", function(event) {
 		drawingId = event.id;
 	});
 
-	// edit flags
-	var isDragAddingTiles = false;
-	var isDragDeletingTiles = false;
-
 	// render flags
 	var drawMapGrid = true;
 	var drawCollisionMap = false;
 
+	var selectPos = null;
+	var selectCornerAnimationTimer = 0;
+	var selectCornerOffset = 1;
+
 	function onMouseDown(e) {
+		isMouseDown = true;
+
 		e.preventDefault();
 
 		var off = getOffset(e);
@@ -71,35 +75,61 @@ function RoomTool(controls) {
 
 				refreshGameData();
 				self.drawEditMap();
+				events.Raise("change_room", { id: curRoom });
 			}
 		}
 		else if (curEditTool === EditTool.Erase) {
-			// todo
+			room[curRoom].tilemap[y][x] = "0";
+			removeAllSpritesAtLocation(curRoom, x, y);
+			refreshGameData();
+			self.drawEditMap();
+			events.Raise("change_room", { id: curRoom });
 		}
 		else if (curEditTool === EditTool.Select) {
-			// todo
-		}
+			if (selectPos != null && selectPos.x === x && selectPos.y === y) {
+				selectPos = null;
+			}
+			else {
+				var selectId = null;
 
-		events.Raise("change_room", { id: curRoom });
+				var locations = getAllSpritesAtLocation(curRoom, x, y);
+
+				if (locations.length > 0) {
+					selectId = locations[locations.length - 1].id;
+				}
+				else if (room[curRoom].tilemap[y][x] != "0") {
+					selectId = room[curRoom].tilemap[y][x];
+				}
+
+				if (selectId != null) {
+					events.Raise("select_drawing", { id: selectId });
+				}
+
+				selectPos = { x:x, y:y };
+			}
+		}
 	}
 
 	function onMouseMove(e) {
-		if (onSelectBehavior != null) {
-			return;
-		}
+		if (isMouseDown) {
+			if (onSelectBehavior != null) {
+				return;
+			}
 
-		onDragEdit(e);
+			onDragEdit(e);
+		}
 	}
 
 	function onMouseUp(e) {
-		if (onSelectBehavior != null) {
-			return;
+		if (isMouseDown) {
+			if (onSelectBehavior != null) {
+				return;
+			}
+
+			onDragEdit(e);
+
+			isMouseDown = false;
 		}
-
-		onDragEdit(e);
-
-		isDragAddingTiles = false;
-		isDragDeletingTiles = false;
 	}
 
 	function onDragEdit(e) {
@@ -108,13 +138,19 @@ function RoomTool(controls) {
 		var x = clamp(Math.floor(off.x / (tilesize*scale)), 0, roomsize - 1);
 		var y = clamp(Math.floor(off.y / (tilesize*scale)), 0, roomsize - 1);
 
-		if (curEditTool === EditTool.Paint && isDragAddingTiles) {
+		if (curEditTool === EditTool.Paint && tile[drawingId].type === TYPE_KEY.TILE) {
 			room[curRoom].tilemap[y][x] = drawingId;
 			refreshGameData();
 			self.drawEditMap();
+			events.Raise("change_room", { id: curRoom });
 		}
-
-		events.Raise("change_room", { id: curRoom });
+		else if (curEditTool === EditTool.Erase) {
+			room[curRoom].tilemap[y][x] = "0";
+			removeAllSpritesAtLocation(curRoom, x, y);
+			refreshGameData();
+			self.drawEditMap();
+			events.Raise("change_room", { id: curRoom });
+		}
 	}
 
 	function onTouchStart(e) {
@@ -153,8 +189,16 @@ function RoomTool(controls) {
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
 			renderOnlyUpdate({ drawInstances: false, });
+
+			selectCornerAnimationTimer += deltaTime;
+
+			if (selectCornerAnimationTimer >= 400) {
+				selectCornerOffset = (selectCornerOffset === 1) ? 2 : 1;
+				selectCornerAnimationTimer = 0
+			}
+
 			self.drawEditMap();
-		});
+		}, 16);
 	}
 
 	this.unlistenEditEvents = function() {
@@ -195,6 +239,37 @@ function RoomTool(controls) {
 
 		// TODO : new version of this!
 		//draw exits (and entrances) and endings
+
+		// draw select cursor
+		if (selectPos != null) {
+			ctx.fillStyle = getContrastingColor();
+
+			var size = tilesize * scale;
+			var top = (selectPos.y * size) - (selectCornerOffset * scale);
+			var left = (selectPos.x * size) - (selectCornerOffset * scale);
+			var bottom = (selectPos.y * size) + size + ((selectCornerOffset - 1) * scale);
+			var right = (selectPos.x * size) + size + ((selectCornerOffset - 1) * scale);
+
+			// top left
+			ctx.fillRect(left, top, scale, scale);
+			ctx.fillRect(left, top + scale, scale, scale);
+			ctx.fillRect(left + scale, top, scale, scale);
+
+			// top right
+			ctx.fillRect(right, top, scale, scale);
+			ctx.fillRect(right, top + scale, scale, scale);
+			ctx.fillRect(right - scale, top, scale, scale);
+
+			// bottom left
+			ctx.fillRect(left, bottom, scale, scale);
+			ctx.fillRect(left, bottom - scale, scale, scale);
+			ctx.fillRect(left + scale, bottom, scale, scale);
+
+			// bottom right
+			ctx.fillRect(right, bottom, scale, scale);
+			ctx.fillRect(right, bottom - scale, scale, scale);
+			ctx.fillRect(right - scale, bottom, scale, scale);
+		}
 	}
 
 	events.Listen("palette_change", function(event) {
@@ -403,13 +478,13 @@ function RoomTool(controls) {
 	controls.visibility.gridVisibility.onclick = function(e) {
 		drawMapGrid = e.target.checked;
 		iconUtils.LoadIcon(controls.visibility.gridIcon, drawMapGrid ? "visibility" : "visibility_off");
-		this.drawEditMap();
+		self.drawEditMap();
 	};
 
 	controls.visibility.wallVisibility.onclick = function(e) {
 		drawCollisionMap = e.target.checked;
 		iconUtils.LoadIcon(controls.visibility.wallIcon, drawCollisionMap ? "visibility" : "visibility_off");
-		this.drawEditMap();
+		self.drawEditMap();
 	};
 
 	controls.visibility.exitAndEndingVisibility.onclick = function(e) {
@@ -423,6 +498,7 @@ function RoomTool(controls) {
 
 	/* event listeners */
 	events.Listen("select_room", function(e) {
+		selectPos = null;
 		selectRoom(e.id);
 	});
 } // RoomTool()
@@ -446,48 +522,5 @@ function selectRoom(roomId) {
 
 		roomTool.Update(); // todo : input id?
 		updateRoomName(); // todo : move inside of tool?
-	}
-}
-
-
-// todo :
-// TODO : move THIS into paint.js
-function editDrawingAtCoordinate(x,y) {
-	// todo: need more consistency with these methods
-	// TODO : also... need to make sure this works in edit mode now
-	var spriteId = getSpriteAt(x,y).id;
-
-	if (spriteId) {
-		if(spriteId === "A") {
-			on_paint_avatar_ui_update();
-		}
-		else {
-			on_paint_sprite_ui_update();
-		}
-
-		paintTool.SelectDrawing(spriteId);
-		// paintExplorer.RefreshAndChangeSelection(spriteId);
-
-		return;
-	}
-
-	var item = getItem(curRoom,x,y);
-	if (item) {
-		on_paint_item_ui_update(); // TODO : move these things into paint.js
-
-		paintTool.SelectDrawing(item.id);
-		// paintExplorer.RefreshAndChangeSelection(item.id);
-
-		return;
-	}
-
-	var tileId = getTile(x,y);
-	if(tileId != 0) {
-		on_paint_tile_ui_update();
-
-		paintTool.SelectDrawing(tileId);
-		// paintExplorer.RefreshAndChangeSelection(tileId);
-
-		return;
 	}
 }
