@@ -54,7 +54,6 @@ function RoomTool(controls) {
 
 		if (onSelectBehavior != null) {
 			onSelectBehavior.OnSelect(curRoom, x, y);
-			return;
 		}
 		else if (curEditTool === EditTool.Paint) {
 			if (drawingId != null) {
@@ -322,18 +321,32 @@ function RoomTool(controls) {
 	}
 
 	var onSelectBehavior = null;
-	this.OnSelectLocation = function(onSelect, onFinish) {
+	this.OnSelectLocation = function(onSelect, onFinish, options) {
+		controls.toolSelect.select.checked = true;
+		curEditTool = EditTool.Select;
+
 		if (onSelectBehavior != null) {
 			onSelectBehavior.OnFinish();
 		}
 
 		onSelectBehavior = {
-			OnSelect : onSelect,
+			OnSelect : function(curRoom, x, y) {
+				selectPos = { x:x, y:y, };
+				onSelect(curRoom, x, y);
+			},
 			OnFinish : function() {
 				onFinish();
 				onSelectBehavior = null;
+				selectPos = null;
 			}
 		};
+
+		if (options && options.StartPos) {
+			selectPos = options.StartPos;
+		}
+		else {
+			selectPos = null;
+		}
 
 		return onSelectBehavior;
 	}
@@ -459,11 +472,19 @@ function RoomTool(controls) {
 
 	/* tool select controls */
 	controls.toolSelect.paint.onclick = function() {
+		if (onSelectBehavior) {
+			onSelectBehavior.OnFinish();
+		}
+
 		curEditTool = EditTool.Paint;
 	};
 	controls.toolSelect.paint.checked = true;
 
 	controls.toolSelect.erase.onclick = function() {
+		if (onSelectBehavior) {
+			onSelectBehavior.OnFinish();
+		}
+
 		curEditTool = EditTool.Erase;
 	};
 
@@ -499,7 +520,12 @@ function RoomTool(controls) {
 
 	/* event listeners */
 	events.Listen("select_room", function(e) {
+		if (onSelectBehavior) {
+			onSelectBehavior.OnFinish();
+		}
+
 		selectPos = null;
+
 		selectRoom(e.id);
 	});
 } // RoomTool()

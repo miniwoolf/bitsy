@@ -1119,6 +1119,12 @@ function ExitSettingsControl(controls) {
 	controls.moveToggle.onchange = function(e) {
 		if (e.target.checked) {
 			if (roomTool) {
+				var options = {};
+
+				if (tile[drawingId].dest.room === curRoom) {
+					options.StartPos = { x: tile[drawingId].dest.x, y: tile[drawingId].dest.y, };
+				}
+
 				onMove = roomTool.OnSelectLocation(
 					function(roomId, x, y) {
 						tile[drawingId].dest.room = roomId;
@@ -1132,7 +1138,8 @@ function ExitSettingsControl(controls) {
 					function() {
 						controls.moveToggle.checked = false;
 						onMove = null;
-					});
+					},
+					options);
 			}
 		}
 		else if (onMove != null) {
