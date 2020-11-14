@@ -24,11 +24,6 @@ button .material-icons {
 .panel .bar button.light button.light {
 	line-height: 100%;
 }
-.panel .bar button.light .material-icons {
-	font-size: 110%;
-	vertical-align: middle;
-	line-height: 100%;
-}
 
 /* checkbox */
 input[type="checkbox"] {

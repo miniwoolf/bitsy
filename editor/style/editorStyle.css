@@ -82,6 +82,8 @@ input[type=text] {
 }
 
 .panel .bar {
+	display: flex;
+	align-items: center;
 	padding: 6px;
 	margin: -10px;
 	margin-bottom: 10px;
@@ -230,12 +232,25 @@ span.controlBox {
 }
 
 .panelBarTitle {
-	/*background:red;*/
-	overflow:auto;
+	overflow: auto;
+	flex-grow: 1;
+	display: flex;
+	align-items: center;
+}
+
+.panelBarTitle .bitsy_icon.icon_space_right {
+	margin-right: 8px;
+}
+
+.panelBarTitle .curVersionLabel {
+	margin-left: 5px;
 }
 
 .panelBarClose {
-	float: right;
+	padding: 4px;
+	margin: 0px;
+	display: flex;
+	align-items: center;
 }
 
 #gifDownload .material-icons {
