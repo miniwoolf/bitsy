@@ -322,6 +322,9 @@ function RoomTool(controls) {
 
 	var onSelectBehavior = null;
 	this.OnSelectLocation = function(onSelect, onFinish, options) {
+		controls.nav.container.style.display = "none";
+		controls.locationSelect.container.style.display = "flex";
+
 		controls.toolSelect.select.checked = true;
 		curEditTool = EditTool.Select;
 
@@ -336,20 +339,37 @@ function RoomTool(controls) {
 			},
 			OnFinish : function() {
 				onFinish();
+
 				onSelectBehavior = null;
 				selectPos = null;
+
+				controls.nav.container.style.display = "flex";
+				controls.locationSelect.container.style.display = "none";
 			}
 		};
 
-		if (options && options.StartPos) {
-			selectPos = options.StartPos;
+		if (options && options.startPos) {
+			selectPos = options.startPos;
 		}
 		else {
 			selectPos = null;
 		}
 
+		if (options && options.message) {
+			controls.locationSelect.message.innerText = options.message;
+		}
+		else {
+			controls.locationSelect.message.innerText = "click in room";
+		}
+
 		return onSelectBehavior;
 	}
+
+	controls.locationSelect.stop.onclick = function() {
+		if (onSelectBehavior) {
+			onSelectBehavior.OnFinish();
+		}
+	};
 
 	/* play control */
 	controls.playToggle.onclick = function(e) {

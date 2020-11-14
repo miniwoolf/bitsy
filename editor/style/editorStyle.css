@@ -336,6 +336,8 @@ span.controlBox {
 
 #findResizeRoot {
 	resize: both;
+	min-width: 280px;
+	min-height: 220px;
 	width: 375px;
 	height: 450px;
 	display: flex;
@@ -569,6 +571,7 @@ span.controlBox {
 
 #findSearchBox {
 	display: flex;
+	margin-bottom: 5px;
 }
 
 #findSelect {
@@ -588,8 +591,15 @@ span.controlBox {
 }
 
 #game_data {
-	width: 300px;
-	height: 300px;
+	min-width: 350px;
+	min-height: 150px;
+	width: 350px;
+	height: 400px;
+	background: black;
+	color: white;
+	border: none;
+	padding: 5px;
+	margin-bottom: 5px;
 }
 
 #gifPreview {
@@ -726,4 +736,20 @@ span.controlBox {
 
 .paintSettingControlGroup span {
 	margin-top: 0px;
+}
+
+#roomLocationSelectMessage {
+	flex-grow: 1;
+}
+
+.inventoryHeader {
+	display: flex;
+	line-height: 100%;
+	align-items: center;
+	margin-top: 10px;
+	margin-bottom: 5px;
+}
+
+.inventoryHeader .icon_space_right {
+	margin-right: 5px;
 }

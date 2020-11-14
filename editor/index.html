@@ -85,10 +85,13 @@
 				<div id="topbarFlexContainer">
 
 					<div id="logoFlexItem">
-						<span title="Bitsy ~ make little worlds ~" id="bitsyLogoTitle">
-							<img src="image/cat.svg" height="24px" width="24px" id="bitsyLogo"/>
-							<span class="localize bitsy_title">Bitsy</span>
-						</span>	
+						<span id="bitsyLogoTitle">
+							<a target="_blank" href="http://www.bitsy.org" title="bitsy homepage">
+								<img src="image/cat.svg" height="24px" width="24px" id="bitsyLogo" />
+							</a>
+
+							<span title="Bitsy ~ make little worlds ~" class="localize bitsy_title">Bitsy</span>
+						</span>
 					</div>
 
 					<div id="titleFlexItem">
@@ -263,6 +266,7 @@
 
 						<p>
 							getting started: <br/>
+							<a target="_blank" href="http://www.bitsy.org" title="bitsy homepage">home</a> |
 							<a target="_blank" href="https://www.shimmerwitch.space/bitsyTutorial.html">tutorial</a>
 						</p>
 
@@ -294,7 +298,7 @@
 							<span class="localize room_tool_name">room</span>
 						</div>
 					</div>
-					
+
 					<div id="roomNav" class="navControl">
 						<input type="checkbox" id="playModeCheck" />
 						<label title="play / pause game" for="playModeCheck">
@@ -331,6 +335,14 @@
 						</button>
 					</div>
 
+					<div id="roomLocationSelectBar" class="controlBox" style="display: none;">
+						<!-- todo :  localize -->
+						<span id="roomLocationSelectMessage">click in room to place destination for exit...</span>
+						<button id="roomLocationSelectStop">
+							<span class="bitsy_icon">close</span>
+						</button>
+					</div>
+
 					<canvas id="game"></canvas>
 
 					<div>
@@ -359,21 +371,21 @@
 							</label>
 
 							<input type="checkbox" id="roomSettingsCheck" />
-							<label for="roomSettingsCheck" style="margin-left: 10px">
+							<label for="roomSettingsCheck" style="margin-left: 5px">
 								<span class="bitsy_icon icon_space_right">settings</span>
 								<!-- todo : localize -->
 								<span>settings</span>
 							</label>
 
 							<input type="checkbox" id="roomVisibilityControlsCheck" />
-							<label title="show visibility controls" for="roomVisibilityControlsCheck" style="margin-left: 10px;">
+							<label title="show visibility controls" for="roomVisibilityControlsCheck" style="margin-left: 5px;">
 								<span class="bitsy_icon">visibility</span>
 								<span>visibility</span> <!-- TODO : localize -->
 							</label>
 						</form>
 					</div>
 
-					<div id="roomVisibilityControls" class="controlBox" style="margin-top: 5px; display: none;">
+					<div id="roomVisibilityControls" class="controlBox" style="margin-top: 10px; margin-bottom: 0px; display: none;">
 						<div id="roomVisibility">
 							<span>visibility:</span> <!-- TODO : localize -->
 
@@ -397,7 +409,7 @@
 						</div>
 					</div>
 
-					<div id="roomSettings" class="controlBox" style="margin-top: 5px; display: none;">
+					<div id="roomSettings" class="controlBox" style="margin-top: 10px; margin-bottom: 0px; display: none;">
 						<div class="paintSetting">
 							<span class="paintSettingLabel">
 								<span class="bitsy_icon icon_space_right">colors</span>
@@ -724,6 +736,7 @@
 										<input type="radio" name="paintRadio" id="paintAnimationSelect" />
 										<label for="paintAnimationSelect">
 											<!-- TODO : needs icon... -->
+											<span class="bitsy_icon icon_space_right">paint</span>
 											<span>animation</span> <!-- TODO : localize -->
 										</label>
 
@@ -740,7 +753,7 @@
 										</label>
 
 										<input type="checkbox" id="paintGridCheck" checked />
-										<label title="show / hide grid" for="paintGridCheck" style="margin-left: 10px;">
+										<label title="show / hide grid" for="paintGridCheck" style="margin-left: 5px;">
 											<span id="paintGridIcon" class="bitsy_icon icon_space_right">visibility</span>
 											<span class="localize grid_toggle_visible">grid</span>
 										</label>
@@ -1245,7 +1258,7 @@
 								</form>
 							</span>
 
-							<span style="margin-left: 10px;">
+							<span style="margin-left: 5px;">
 								<input type="checkbox" id="mapShowOptions" />
 								<label title="show / hide map options" for="mapShowOptions">
 									<span class="bitsy_icon">settings</span>
@@ -1343,18 +1356,20 @@
 					</div>
 
 					<div class="inventoryViewport">
-						<div>
-							<span class="bitsy_icon">item</span>
+						<div class="inventoryHeader">
+							<span class="bitsy_icon icon_space_right">item</span>
 							<span class="localize items_label">items</span>
 						</div>
+
 						<div id="inventoryItem">
 						</div>
 
-						<div style="margin-top: 10px;">
+						<div class="inventoryHeader">
 							<!-- TODO : bitsy_icon -- does this need its own special icon? -->
-							<span class="bitsy_icon">code_edit</span>
+							<span class="bitsy_icon icon_space_right">code_edit</span>
 							<span class="localize variables_label">variables</span>
 						</div>
+
 						<div id="inventoryVariable">
 						</div>
 					</div>
@@ -1436,7 +1451,7 @@
 						<span class="localize gif_encoding">encoding...</span> <span id="gifEncodingProgress">0</span>%
 					</span>
 
-					<button title="make screenshot of current room" class="color0" id="gifSnapshotButton" onclick="takeSnapshotGif(event);"  style="margin-left: 10px;">
+					<button title="make screenshot of current room" class="color0" id="gifSnapshotButton" onclick="takeSnapshotGif(event);"  style="margin-left: 5px;">
 						<span class="bitsy_icon">record_snapshot</span>
 						<span class="localize gif_snapshot">snapshot</span>
 					</button>
@@ -1472,22 +1487,26 @@
 							<span class="localize data_tool_name">game data</span>
 						</div>
 					</div>
-					<textarea title="raw text of the bitsy game data file (be careful when editing)" id="game_data" onchange="on_game_data_change();"></textarea>
-					<br>
-					<button title="reset everything and start new game" class="color0" onclick="newGameDialog();">
-						<span class="bitsy_icon">new_game</span>
-						<span class="localize reset_data">reset game data</span>
-					</button>
-					<button title="download game data" class="color0" onclick="exportGameData();">
-						<span class="bitsy_icon">download</span>
-						<span class="localize download_data">download data</span>
-					</button>
-					<br/>
-					<input type="checkbox" id="fontDataCheck" onclick="toggleFontDataVisibility(event);" />
-					<label title="show / hide font data (WARNING: can be very slow for large fonts)" for="fontDataCheck">
-						<span id="fontDataIcon" class="bitsy_icon">visibility_off</span>
-						<span class="localize font_data_toggle_visible">font data</span>
-					</label>
+
+					<textarea title="raw text of the bitsy game data file (be careful when editing)" id="game_data" spellcheck="false" onchange="on_game_data_change();"></textarea>
+
+					<div style="display: flex;">
+						<button title="reset everything and start new game" class="color0" onclick="newGameDialog();">
+							<span class="bitsy_icon">new_game</span>
+							<span class="localize reset_data">reset game data</span>
+						</button>
+
+						<button title="download game data" class="color0" onclick="exportGameData();">
+							<span class="bitsy_icon">download</span>
+							<span class="localize download_data">download data</span>
+						</button>
+
+						<input type="checkbox" id="fontDataCheck" onclick="toggleFontDataVisibility(event);" />
+						<label title="show / hide font data (WARNING: can be very slow for large fonts)" for="fontDataCheck" style="margin-left: 5px;">
+							<span id="fontDataIcon" class="bitsy_icon">visibility_off</span>
+							<span class="localize font_data_toggle_visible">font data</span>
+						</label>
+					</div>
 				</div>
 
 				<div id="settingsPanel" class="panel color0" style="display:none;">

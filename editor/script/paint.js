@@ -1122,8 +1122,11 @@ function ExitSettingsControl(controls) {
 				var options = {};
 
 				if (tile[drawingId].dest.room === curRoom) {
-					options.StartPos = { x: tile[drawingId].dest.x, y: tile[drawingId].dest.y, };
+					options.startPos = { x: tile[drawingId].dest.x, y: tile[drawingId].dest.y, };
 				}
+
+				// todo : localize
+				options.message = "click in room to place destination for " + findTool.GetDisplayName("drawing", drawingId);
 
 				onMove = roomTool.OnSelectLocation(
 					function(roomId, x, y) {

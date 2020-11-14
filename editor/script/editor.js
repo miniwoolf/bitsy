@@ -671,6 +671,7 @@ function start() {
 		playToggle : document.getElementById("playModeCheck"),
 		nameInput : document.getElementById("roomName"),
 		nav : {
+			container : document.getElementById("roomNav"),
 			prev : document.getElementById("roomToolPrev"),
 			next : document.getElementById("roomToolNext"),
 			add : document.getElementById("roomToolNew"),
@@ -695,6 +696,11 @@ function start() {
 			wallVisibility : document.getElementById("roomWallsCheck"),
 			wallIcon : document.getElementById("roomWallsIcon"),
 			exitAndEndingVisibility : document.getElementById("roomMarkersCheck"),
+		},
+		locationSelect : {
+			container : document.getElementById("roomLocationSelectBar"),
+			message : document.getElementById("roomLocationSelectMessage"),
+			stop : document.getElementById("roomLocationSelectStop"),
 		},
 	});
 	roomTool.listenEditEvents();
