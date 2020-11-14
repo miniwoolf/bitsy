@@ -378,6 +378,7 @@ span.controlBox {
 	white-space: normal;
 	display: flex;
 	padding-bottom: 0px;
+	margin-bottom: 0px;
 }
 
 #animationButtons {
@@ -767,4 +768,8 @@ span.controlBox {
 
 .inventoryHeader .icon_space_right {
 	margin-right: 5px;
+}
+
+#dialog .controlBox {
+	margin-bottom: 0px;
 }
