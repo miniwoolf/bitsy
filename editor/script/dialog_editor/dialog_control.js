@@ -63,22 +63,14 @@ function DialogControl(parentPanelId) {
 	this.SetDrawing = function(id) {
 		drawingId = id;
 		UpdateDialogIdSelectOptions();
+		
+		setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
 
-		var firstValidDialogEvent = null;
-
-		for (var dlgId in dialogEventTypes) {
-			if (firstValidDialogEvent === null && tile[drawingId][dialogEventTypes[dlgId].propertyId] != null) {
-				firstValidDialogEvent = dlgId;
-			}
-		}
-
-		if (firstValidDialogEvent != null) {
-			setSelectedEvent(firstValidDialogEvent);
-			ChangeSettingsVisibility(false);
+		if (tile[drawingId].type === TYPE_KEY.AVATAR) {
+			ChangeSettingsVisibility(true);
 		}
 		else {
-			setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
-			ChangeSettingsVisibility(true);
+			ChangeSettingsVisibility(false);
 		}
 	}
 
@@ -137,16 +129,47 @@ function DialogControl(parentPanelId) {
 	editorDiv.classList.add("dialogBoxContainer");
 	div.appendChild(editorDiv);
 
-	// todo : improve styling of this
+	function createNewDialog(dialogEvent, src, openTool) {
+		var nextDlgId = nextObjectId(sortedDialogIdList());
+
+		var nextName = "";
+
+		if (findTool) {
+			nextName += findTool.GetDisplayName("drawing", drawingId);
+			nextName += " ";
+		}
+
+		nextName += dialogEvent.shortName;
+
+		nextName = CreateDefaultName(nextName, dialog, true);
+
+		dialog[nextDlgId] = createScript(nextDlgId, nextName, src);
+
+		curDlgId = nextDlgId;
+
+		dialogEvent.selectControl.UpdateOptions();
+		dialogEvent.selectControl.SetSelection(curDlgId);
+
+		if (openTool) {
+			dialogEvent.selectControl.OpenTool();
+		}
+
+		refreshGameData();
+	}
+
 	var textArea = document.createElement("textarea");
-	textArea.cols = 32;
 	textArea.rows = 2;
 	textArea.oninput = function(e) {
 		// todo : delete empty dialogs?
 		var curDlgId = selectedDialogId();
+
 		if (curDlgId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
 			dialog[curDlgId].src = e.target.value;
+		}
+		else if (curEventId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
+			createNewDialog(dialogEventTypes[curEventId], e.target.value, false);
+			openButton.disabled = false;
 		}
 	}
 	editorDiv.appendChild(textArea);
@@ -161,8 +184,12 @@ function DialogControl(parentPanelId) {
 
 		// todo : strip off the outer dialog block stuff
 		var curDlgId = selectedDialogId();
+
 		if (curDlgId != null) {
 			textArea.value = dialog[curDlgId].src;
+		}
+		else {
+			textArea.value = "";
 		}
 	}
 
@@ -187,29 +214,7 @@ function DialogControl(parentPanelId) {
 			selectEventEditButton.onclick = function() {
 				var curDlgId = tile[drawingId][dialogEvent.propertyId];
 				if (curDlgId === null) {
-					var nextDlgId = nextObjectId(sortedDialogIdList());
-
-					var nextName = "";
-
-					if (findTool) {
-						nextName += findTool.GetDisplayName("drawing", drawingId);
-						nextName += " ";
-					}
-
-					nextName += dialogEvent.shortName;
-
-					nextName = CreateDefaultName(nextName, dialog, true);
-
-					dialog[nextDlgId] = createScript(nextDlgId, nextName, dialogEvent.defaultScript);
-
-					curDlgId = nextDlgId;
-
-					dialogEvent.selectControl.UpdateOptions();
-					dialogEvent.selectControl.SetSelection(curDlgId);
-					dialogEvent.selectControl.OpenTool();
-
-					refreshGameData();
-
+					createNewDialog(dialogEvent, dialogEvent.defaultScript, true);
 					curEventId = eventId;
 				}
 				else {
@@ -291,6 +296,13 @@ function DialogControl(parentPanelId) {
 		dialogIdSelectRoot.style.display = showSettings ? "block" : "none";
 		openButton.style.display = showSettings ? "none" : "inline";
 
+		openButton.disabled = false;
+		var eventPropertyId = dialogEventTypes[curEventId].propertyId;
+		var doesEventExist = (eventPropertyId in tile[drawingId]) && (tile[drawingId][eventPropertyId] != null);
+		if (!showSettings && !doesEventExist) {
+			openButton.disabled = true;
+		}
+
 		settingsButton.innerHTML = "";
 		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "settings"));
 
@@ -299,12 +311,15 @@ function DialogControl(parentPanelId) {
 
 	// todo : UI question.. do I really want the settings button on in settings mode??
 	function UpdateSettingsButtingDisabled(visible) {
+		settingsButton.disabled = false;
+
 		var eventPropertyId = dialogEventTypes[curEventId].propertyId;
-		if (visible && (!(eventPropertyId in tile[drawingId]) || (tile[drawingId][eventPropertyId] === null))) {
-			settingsButton.disabled = true;
-		}
-		else {
-			settingsButton.disabled = false;
+
+		if (visible) {
+			var doesEventExist = (eventPropertyId in tile[drawingId]) && (tile[drawingId][eventPropertyId] != null);
+			var allowsTextboxToCreate = (curEventId === ARG_KEY.DIALOG_SCRIPT) && (tile[drawingId].type != TYPE_KEY.AVATAR);
+
+			settingsButton.disabled = !doesEventExist && !allowsTextboxToCreate;
 		}
 	}
 
