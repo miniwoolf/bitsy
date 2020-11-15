@@ -72,8 +72,6 @@ function DialogControl(parentPanelId) {
 			}
 		}
 
-		console.log("DLG " + firstValidDialogEvent);
-
 		if (firstValidDialogEvent != null) {
 			setSelectedEvent(firstValidDialogEvent);
 			ChangeSettingsVisibility(false);

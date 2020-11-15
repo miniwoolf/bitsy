@@ -245,6 +245,8 @@ function PaintTool(controls) {
 			controls.animation.container.style.display = "none";
 			controls.dialogControl.style.display = "block";
 			controls.settings.container.style.display = "none";
+
+			UpdateDialogControl(true);
 		}
 		else if (curSubPanel === SubPanel.Settings) {
 			controls.subPanelSelect.settings.checked = true;
