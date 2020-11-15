@@ -15,10 +15,6 @@ function DialogTool() {
 		return new DialogScriptEditor(dialogId);
 	}
 
-	this.CreatePlaintextEditor = function(dialogId, style) {
-		return new PlaintextDialogScriptEditor(dialogId, style);
-	}
-
 	this.CreateTitleWidget = function() {
 		return new TitleWidget();
 	}
@@ -50,9 +46,9 @@ function DialogTool() {
 		var editorId = dialogScriptEditorUniqueIdCounter;
 		dialogScriptEditorUniqueIdCounter++;
 
-		var scriptRoot, div;
+		var scriptRoot, div, codeTextArea;
 		div = document.createElement("div");
-		div.style.width = "100%"; // hack
+		div.style.lineHeight = "1";
 
 		var self = this;
 
@@ -62,14 +58,9 @@ function DialogTool() {
 			div.innerHTML = "";
 			scriptRoot = scriptNext.Parse(dialogStr);
 
-			var dialogBoxContainer = document.createElement("div");
-			dialogBoxContainer.classList.add("dialogBoxContainer");
-			div.appendChild(dialogBoxContainer);
-
-			var codeTextArea = document.createElement("textarea");
-			codeTextArea.rows = 2;
-			codeTextArea.cols = 32;
+			codeTextArea = document.createElement("textarea");
 			codeTextArea.classList.add(style);
+			codeTextArea.rows = 2;
 			codeTextArea.value = scriptNext.Serialize(scriptRoot); // todo : do I need to remove the wrapping stuff?
 			function OnTextChangeHandler() {
 				var dialogStr = codeTextArea.value;
@@ -80,7 +71,7 @@ function DialogTool() {
 			codeTextArea.onchange = OnTextChangeHandler;
 			codeTextArea.onkeyup = OnTextChangeHandler;
 			codeTextArea.onblur = OnTextChangeHandler;
-			dialogBoxContainer.appendChild(codeTextArea);
+			div.appendChild(codeTextArea);
 		}
 
 		RefreshEditorUI();
@@ -132,9 +123,16 @@ function DialogTool() {
 		this.OnDestroy = function() {
 			listener.UnlistenAll();
 		}
+
+		this.SetSize = function(width, height) {
+			codeTextArea.style.width = width + "px";
+			codeTextArea.style.height = height + "px";
+		}
 	}
 
 	function DialogScriptEditor(dialogId) {
+		var isPlaintextMode = false;
+
 		var listener = new EventListener(events);
 
 		var editorId = dialogScriptEditorUniqueIdCounter;
@@ -148,7 +146,9 @@ function DialogTool() {
 		var viewportDiv;
 		var expressionBuilderDiv;
 
-		function RefreshEditorUI() {
+		var plaintextEditor = new PlaintextDialogScriptEditor(dialogId, "largeDialogPlaintextArea");
+
+		function RefreshEditorUI(width, height) {
 			div.innerHTML = "";
 			scriptRoot = scriptNext.Compile(dialog[dialogId]);
 
@@ -170,12 +170,21 @@ function DialogTool() {
 			}
 
 			viewportDiv.appendChild(rootEditor.GetElement());
-			div.appendChild(viewportDiv);
 
 			expressionBuilderDiv = document.createElement("div");
 			expressionBuilderDiv.classList.add("dialogExpressionBuilderHolder");
 			expressionBuilderDiv.style.display = "none";
 			div.appendChild(expressionBuilderDiv);
+
+			var innerElement = isPlaintextMode ? plaintextEditor.GetElement() : viewportDiv;
+
+			if (width != undefined && height != undefined) {
+				viewportDiv.style.width = width + "px";
+				viewportDiv.style.height = height + "px";
+				plaintextEditor.SetSize(width, height);
+			}
+
+			div.appendChild(innerElement);
 		}
 
 		RefreshEditorUI();
@@ -261,7 +270,27 @@ function DialogTool() {
 
 		this.OnDestroy = function() {
 			listener.UnlistenAll();
-		}
+			plaintextEditor.OnDestroy();
+		};
+
+		this.SetPlaintextMode = function(isPlaintext) {
+			var curElement = isPlaintextMode ? plaintextEditor.GetElement() : viewportDiv;
+			isPlaintextMode = isPlaintext;
+			RefreshEditorUI(curElement.offsetWidth, curElement.offsetHeight);
+		};
+
+		this.SetSize = function(width, height) {
+			RefreshEditorUI(width, height);
+		};
+
+		this.GetSize = function() {
+			var curElement = isPlaintextMode ? plaintextEditor.GetElement() : viewportDiv;
+
+			return {
+				width: curElement.offsetWidth,
+				height: curElement.offsetHeight,
+			};
+		};
 	}
 }
 

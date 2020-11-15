@@ -196,7 +196,6 @@ function listenForDialogSelect() {
 var dialogTool = new DialogTool();
 var curDialogEditorId = null; // can I wrap this all up somewhere? -- feels a bit hacky to have all these globals
 var curDialogEditor = null;
-var curPlaintextDialogEditor = null; // the duplication is a bit weird, but better than recreating editors all the time?
 function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rename since it doesn't always "open" it?
 	if (showIfHidden === undefined || showIfHidden === null) {
 		showIfHidden = true;
@@ -206,31 +205,27 @@ function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rena
 
 	var showCode = document.getElementById("dialogShowCodeCheck").checked;
 
+	var size = null;
+
 	// clean up any existing editors -- is there a more "automagical" way to do this???
 	if (curDialogEditor) {
+		size = curDialogEditor.GetSize();
 		curDialogEditor.OnDestroy();
 		delete curDialogEditor;
 	}
 
-	if (curPlaintextDialogEditor) {
-		curPlaintextDialogEditor.OnDestroy();
-		delete curPlaintextDialogEditor;
-	}
-	
-
 	curDialogEditorId = dialogId;
 	curDialogEditor = dialogTool.CreateEditor(dialogId);
-	curPlaintextDialogEditor = dialogTool.CreatePlaintextEditor(dialogId, "largeDialogPlaintextArea");
+	curDialogEditor.SetPlaintextMode(showCode);
+
+	if (size != null) {
+		curDialogEditor.SetSize(size.width, size.height);
+	}
 
 	var dialogEditorViewport = document.getElementById("dialogEditor");
 	dialogEditorViewport.innerHTML = "";
 
-	if (showCode) {
-		dialogEditorViewport.appendChild(curPlaintextDialogEditor.GetElement());
-	}
-	else {
-		dialogEditorViewport.appendChild(curDialogEditor.GetElement());
-	}
+	dialogEditorViewport.appendChild(curDialogEditor.GetElement());
 
 	document.getElementById("dialogName").placeholder = "dialog " + dialogId;
 	if (dialogId === titleDialogId) {
@@ -1945,16 +1940,7 @@ function blockScrollBackpage(e) {
 
 function toggleDialogCode(e) {
 	var showCode = e.target.checked;
-
-	// update editor
-	var dialogEditorViewport = document.getElementById("dialogEditor");
-	dialogEditorViewport.innerHTML = "";
-	if (showCode) {
-		dialogEditorViewport.appendChild(curPlaintextDialogEditor.GetElement());
-	}
-	else {
-		dialogEditorViewport.appendChild(curDialogEditor.GetElement());
-	}
+	curDialogEditor.SetPlaintextMode(showCode);
 }
 
 var alwaysShowDrawingDialog = true;
