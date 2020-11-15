@@ -4,14 +4,84 @@
 */
 
 function DialogControl(parentPanelId) {
+	// todo : localize
+	var dialogEventTypes = {};
+
+	dialogEventTypes[ARG_KEY.DIALOG_SCRIPT] = {
+		name : "dialog",
+		shortName : "dialog",
+		propertyId : "dlg",
+		defaultScript : 'hi there!', // todo : changed based on sprite type?
+		selectControl : null,
+	};
+
+	dialogEventTypes[ARG_KEY.FRAME_TICK_SCRIPT] = {
+		name : "on frame tick",
+		shortName : "tick",
+		propertyId : "tickDlgId",
+		defaultScript :
+			'{->\n' +
+			'    {FN {FRM}\n' +
+			'        {HOP "RGT"}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
+		selectRoot : null,
+	};
+
+	dialogEventTypes[ARG_KEY.KNOCK_INTO_SCRIPT] = {
+		name : "on knock into",
+		shortName : "knock",
+		propertyId : "knockDlgId",
+		defaultScript : // todo : is this the script I want?
+			'{->\n' +
+			'    {FN {OTHER}\n' +
+			'        {RID OTHER}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
+		selectRoot : null,
+	};
+
+	dialogEventTypes[ARG_KEY.BUTTON_DOWN_SCRIPT] = {
+		name : "on button",
+		shortName : "button",
+		propertyId : "buttonDownDlgId",
+		defaultScript : // todo : is this the script I want?
+			'{->\n' +
+			'    {FN {BTN HLD}\n' +
+			'        {-> player pressed {SAY BTN}}\n' +
+			'    }\n' +
+			'}',
+		selectControl : null,
+		selectRoot : null,
+	};
+
 	var drawingId = null;
 	var curEventId = ARG_KEY.DIALOG_SCRIPT;
 
 	this.SetDrawing = function(id) {
 		drawingId = id;
 		UpdateDialogIdSelectOptions();
-		setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
-		ChangeSettingsVisibility(false);
+
+		var firstValidDialogEvent = null;
+
+		for (var dlgId in dialogEventTypes) {
+			if (firstValidDialogEvent === null && tile[drawingId][dialogEventTypes[dlgId].propertyId] != null) {
+				firstValidDialogEvent = dlgId;
+			}
+		}
+
+		console.log("DLG " + firstValidDialogEvent);
+
+		if (firstValidDialogEvent != null) {
+			setSelectedEvent(firstValidDialogEvent);
+			ChangeSettingsVisibility(false);
+		}
+		else {
+			setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
+			ChangeSettingsVisibility(true);
+		}
 	}
 
 	function selectedDialogId() {
@@ -86,56 +156,6 @@ function DialogControl(parentPanelId) {
 	var dialogIdSelectRoot = document.createElement("div");
 	dialogIdSelectRoot.style.display = "none";
 	div.appendChild(dialogIdSelectRoot);
-
-	// todo : localize
-	var dialogEventTypes = {};
-
-	dialogEventTypes[ARG_KEY.DIALOG_SCRIPT] = {
-		name : "dialog",
-		shortName : "dialog",
-		propertyId : "dlg",
-		defaultScript : 'hi there!', // todo : changed based on sprite type?
-		selectControl : null,
-	};
-
-	dialogEventTypes[ARG_KEY.FRAME_TICK_SCRIPT] = {
-		name : "on frame tick",
-		shortName : "tick",
-		propertyId : "tickDlgId",
-		defaultScript :
-			'{->\n' +
-			'    {FN {FRM}\n' +
-			'        {HOP "RGT"}\n' +
-			'    }\n' +
-			'}',
-		selectControl : null,
-	};
-
-	dialogEventTypes[ARG_KEY.KNOCK_INTO_SCRIPT] = {
-		name : "on knock into",
-		shortName : "knock",
-		propertyId : "knockDlgId",
-		defaultScript : // todo : is this the script I want?
-			'{->\n' +
-			'    {FN {OTHER}\n' +
-			'        {RID OTHER}\n' +
-			'    }\n' +
-			'}',
-		selectControl : null,
-	};
-
-	dialogEventTypes[ARG_KEY.BUTTON_DOWN_SCRIPT] = {
-		name : "on button",
-		shortName : "button",
-		propertyId : "buttonDownDlgId",
-		defaultScript : // todo : is this the script I want?
-			'{->\n' +
-			'    {FN {BTN HLD}\n' +
-			'        {-> player pressed {SAY BTN}}\n' +
-			'    }\n' +
-			'}',
-		selectControl : null,
-	};
 
 	function setSelectedEvent(id) {
 		curEventId = id;
@@ -216,6 +236,7 @@ function DialogControl(parentPanelId) {
 					onSelectChange : function(id) {
 						tile[drawingId][dialogEvent.propertyId] = id;
 						updateEventEditButton();
+						UpdateSettingsButtingDisabled(true);
 						refreshGameData();
 					},
 					toolId : parentPanelId,
@@ -228,6 +249,8 @@ function DialogControl(parentPanelId) {
 				});
 
 			selectEvent.appendChild(dialogEvent.selectControl.GetElement());
+
+			dialogEvent.selectRoot = selectEvent;
 		}
 
 		if (findTool) {
@@ -243,9 +266,15 @@ function DialogControl(parentPanelId) {
 			for (var id in dialogEventTypes) {
 				var dialogEvent = dialogEventTypes[id];
 				if (dialogEvent.selectControl) {
-					var curDlgId = tile[drawingId][dialogEvent.propertyId];
-					dialogEvent.selectControl.UpdateOptions();
-					dialogEvent.selectControl.SetSelection(curDlgId);
+					if (id === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type === TYPE_KEY.AVATAR) {
+						dialogEvent.selectRoot.style.display = "none";
+					}
+					else {
+						var curDlgId = tile[drawingId][dialogEvent.propertyId];
+						dialogEvent.selectControl.UpdateOptions();
+						dialogEvent.selectControl.SetSelection(curDlgId);
+						dialogEvent.selectRoot.style.display = "flex";
+					}
 				}
 			}
 		}
@@ -266,6 +295,19 @@ function DialogControl(parentPanelId) {
 
 		settingsButton.innerHTML = "";
 		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "settings"));
+
+		UpdateSettingsButtingDisabled(visible);
+	}
+
+	// todo : UI question.. do I really want the settings button on in settings mode??
+	function UpdateSettingsButtingDisabled(visible) {
+		var eventPropertyId = dialogEventTypes[curEventId].propertyId;
+		if (visible && (!(eventPropertyId in tile[drawingId]) || (tile[drawingId][eventPropertyId] === null))) {
+			settingsButton.disabled = true;
+		}
+		else {
+			settingsButton.disabled = false;
+		}
 	}
 
 	settingsButton.onclick = function() {

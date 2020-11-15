@@ -400,8 +400,11 @@ function parseTile(lines, i, type) {
 	i = drawingResult.i;
 	options.drawingData = drawingResult.drawingData;
 
-	var isPlayer = type === TYPE_KEY.SPRITE && id === playerId;
+	// todo : is this the best way to handle back compat?
+	var isPlayer = (type === TYPE_KEY.AVATAR) || (type === TYPE_KEY.SPRITE && id === playerId);
+
 	if (isPlayer) {
+		type = TYPE_KEY.AVATAR;
 		options.inventory = {};
 	}
 

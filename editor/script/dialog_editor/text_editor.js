@@ -36,7 +36,6 @@ function DialogTextEditor(expressionList, parentEditor) {
 	textArea.onblur = OnDialogTextChange;
 
 	textArea.rows = Math.max(2, dialogText.split("\n").length + 1);
-	textArea.cols = 32;
 
 	textArea.addEventListener('click', textSelectionChangeHandler);
 	textArea.addEventListener('select', textSelectionChangeHandler);

@@ -262,7 +262,7 @@ function PaintTool(controls) {
 		var hasSettings = false;
 
 		// dialog UI
-		if (drawingId === "A" || tile[drawingId].type === "TIL") {
+		if (tile[drawingId].type === TYPE_KEY.TILE) {
 			UpdateDialogControl(false);
 		}
 		else {
@@ -315,7 +315,7 @@ function PaintTool(controls) {
 
 		var disableForAvatarElements = document.getElementsByClassName("disableForAvatar");
 		for (var i = 0; i < disableForAvatarElements.length; i++) {
-			disableForAvatarElements[i].disabled = (drawingId === "A");
+			disableForAvatarElements[i].disabled = (tile[drawingId].type === TYPE_KEY.AVATAR);
 		}
 
 		// update paint canvas
@@ -600,7 +600,7 @@ function PaintTool(controls) {
 		var til = tile[drawingId];
 
 		// todo : simplify?
-		if (til.id === "A") { // hacky
+		if (til.type === TYPE_KEY.AVATAR) { // hacky
 			controls.nameInput.value = "avatar"; // TODO: localize
 		}
 		else if (til.name != null) {
@@ -615,7 +615,7 @@ function PaintTool(controls) {
 			controls.nameInput.placeholder = findTool.GetDisplayName("drawing", drawingId, true);
 		}
 
-		controls.nameInput.readOnly = til.id === "A";
+		controls.nameInput.readOnly = (til.type === TYPE_KEY.AVATAR);
 	}
 
 	controls.gridCheck.onchange = function(e) {

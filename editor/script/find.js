@@ -96,23 +96,23 @@ function FindTool(controls) {
 				caption = til.name;
 			}
 			else {
-				if (til.type === "SPR" && til.id === "A") {
+				if (til.type === TYPE_KEY.AVATAR) {
 					caption = localization.GetStringOrFallback("avatar_label", "avatar");
 				}
-				else if (til.type === "TIL") {
+				else if (til.type === TYPE_KEY.TILE) {
 					caption = localization.GetStringOrFallback("tile_label", "tile") + " " + til.id;
 				}
-				else if (til.type === "SPR") {
+				else if (til.type === TYPE_KEY.SPRITE) {
 					caption = localization.GetStringOrFallback("sprite_label", "sprite") + " " + til.id;
 				}
-				else if (til.type === "ITM") {
+				else if (til.type === TYPE_KEY.ITEM) {
 					caption = localization.GetStringOrFallback("item_label", "item") + " " + til.id;
 				}
 				// todo : localize
-				else if (til.type === "EXT") {
+				else if (til.type === TYPE_KEY.EXIT) {
 					caption = "exit " + til.id;
 				}
-				else if (til.type === "END") {
+				else if (til.type === TYPE_KEY.ENDING) {
 					caption = "ending " + til.id; // todo : word too long?
 				}
 			}
@@ -122,16 +122,19 @@ function FindTool(controls) {
 		getIconId: function(til) {
 			var iconId = "tile";
 
-			if (til.type === "SPR") {
-				iconId = til.id === "A" ? "avatar" : "sprite";
+			if (til.type === TYPE_KEY.AVATAR) {
+				iconId = "avatar";
 			}
-			else if (til.type === "ITM") {
+			else if (til.type === TYPE_KEY.SPRITE) {
+				iconId = "sprite";
+			}
+			else if (til.type === TYPE_KEY.ITEM) {
 				iconId = "item";
 			}
-			else if (til.type === "EXT") {
+			else if (til.type === TYPE_KEY.EXIT) {
 				iconId = "exit_one_way"; // todo : right icon for this?
 			}
-			else if (til.type === "END") {
+			else if (til.type === TYPE_KEY.ENDING) {
 				iconId = "ending";
 			}
 
@@ -140,24 +143,27 @@ function FindTool(controls) {
 		includedInFilter: function(til, filters) {
 			var result = false;
 
-			if (til.type === "SPR") {
-				result = filters.indexOf(til.id === "A" ? "avatar" : "sprite") != -1;
+			if (til.type === TYPE_KEY.AVATAR) {
+				result = filters.indexOf("avatar") != -1;
 			}
-			else if (til.type === "TIL") {
+			else if (til.type === TYPE_KEY.SPRITE) {
+				result = filters.indexOf("sprite") != -1;
+			}
+			else if (til.type === TYPE_KEY.TILE) {
 				result = filters.indexOf("tile") != -1;
 			}
-			else if (til.type === "ITM") {
+			else if (til.type === TYPE_KEY.ITEM) {
 				result = filters.indexOf("item") != -1;
 			}
-			else if (til.type === "EXT") {
+			else if (til.type === TYPE_KEY.EXIT) {
 				result = filters.indexOf("exit") != -1;
 			}
-			else if (til.type === "END") {
+			else if (til.type === TYPE_KEY.ENDING) {
 				result = filters.indexOf("ending") != -1;
 			}
 
 			if (result && filters.indexOf("cur_room") != -1) {
-				if (til.type === "TIL") {
+				if (til.type === TYPE_KEY.TILE) {
 					var tileInRoom = false;
 
 					for (var y = 0; y < roomsize; y++) {

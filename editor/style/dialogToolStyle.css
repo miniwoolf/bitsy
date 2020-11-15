@@ -295,20 +295,17 @@
 
 /* dialog box */
 .dialogBoxContainer {
-	background: black;
-	resize: vertical;
-	overflow: hidden;
-	padding: 5px;
-	border-radius: 2px;
+	display: flex;
 }
 
 .dialogBoxContainer textarea {
-	height: calc(100% - 10px);
-	width: auto;
+	resize: vertical;
 	background: black;
 	color: white;
-	resize: none;
 	border: none;
+	padding: 5px;
+	border-radius: 2px;
+	flex-grow: 1;
 }
 
 @font-face {

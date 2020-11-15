@@ -952,7 +952,7 @@ function movePlayer(direction) {
 function queueButtonDownScripts(keyName, isButtonHeld) {
 	for (var i in spriteInstances) {
 		var spr = spriteInstances[i];
-		if (spr.id != "A" && spr.btn != null && (spr.btn in dialog)) {
+		if (spr.type != TYPE_KEY.AVATAR && spr.btn != null && (spr.btn in dialog)) {
 			queueScript(spr.btn, spr, function() {}, [keyName, isButtonHeld]);
 		}
 	}
@@ -1450,18 +1450,19 @@ function createTile(id, type, options) {
 		return value != undefined && value != null ? value : defaultValue;
 	}
 
-	var isPlayer = type === "SPR" && id === playerId;
+	var isPlayer = (type === TYPE_KEY.AVATAR); // todo : back compat?
+
 	var drwId = id;
 	var inventory = isPlayer && options.inventory ? options.inventory : null;
-	var isWall = type === "TIL" && options.isWall != undefined ? options.isWall : null;
+	var isWall = (type === TYPE_KEY.TILE) && options.isWall != undefined ? options.isWall : null;
 	var isUnique = isPlayer;
 
 	var isWall = false;
 
-	if (type === "TIL" && options.isWall != undefined) {
+	if ((type === TYPE_KEY.TILE) && options.isWall != undefined) {
 		isWall = options.isWall;
 	}
-	else if (type === "SPR") {
+	else if (type === TYPE_KEY.SPRITE) {
 		isWall = true;
 	}
 
@@ -1474,7 +1475,7 @@ function createTile(id, type, options) {
 		drw: drwId, // drawing ID
 		colorOffset: COLOR_INDEX.BACKGROUND, // color offset start for global palette
 		bgc: valueOrDefault(options.bgc, 0), // background color index
-		col: valueOrDefault(options.col, (type === "TIL" ? 1 : 2)), // color index
+		col: valueOrDefault(options.col, (type === TYPE_KEY.TILE ? 1 : 2)), // color index
 		animation : { // animation data // TODO: figure out how this works with instances
 			isAnimated : (renderer.GetFrameCount(drwId) > 1),
 			frameIndex : 0,

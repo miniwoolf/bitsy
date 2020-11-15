@@ -51,29 +51,35 @@ function updateInventoryItemUI(){
 	for (id in tile) {
 		var til = tile[id];
 
-		if (til.type === "ITM") {
+		if (til.type === TYPE_KEY.ITEM) {
 			var itemName = til.name != null ? til.name : itemLabel + " " + id;
 			var playerEntry = isPlayMode ? player() : tile[playerId];
-			var itemCount = playerEntry.inventory[id] != undefined ? parseFloat(playerEntry.inventory[id]) : 0;
 
-			var itemDiv = document.createElement("div");
-			itemDiv.classList.add("controlBox");
-			itemDiv.id = "inventoryItem_" + id;
-			itemDiv.title = itemName;
-			viewport.appendChild(itemDiv);
+			console.log(playerEntry);
 
-			var itemNameSpan = document.createElement("span");
-			itemNameSpan.innerText = itemName + " : ";
-			itemDiv.appendChild(itemNameSpan);
+			// why is this null?
+			if (playerEntry) {
+				var itemCount = playerEntry.inventory[id] != undefined ? parseFloat(playerEntry.inventory[id]) : 0;
 
-			var itemValueInput = document.createElement("input");
-			itemValueInput.type = "number";
-			itemValueInput.min = 0;
-			itemValueInput.value = itemCount;
-			itemValueInput.style.fontSize = "100%";
-			itemValueInput.style.width = "30%";
-			itemValueInput.addEventListener('change', createOnItemValueChange(id));
-			itemDiv.appendChild(itemValueInput);
+				var itemDiv = document.createElement("div");
+				itemDiv.classList.add("controlBox");
+				itemDiv.id = "inventoryItem_" + id;
+				itemDiv.title = itemName;
+				viewport.appendChild(itemDiv);
+
+				var itemNameSpan = document.createElement("span");
+				itemNameSpan.innerText = itemName + " : ";
+				itemDiv.appendChild(itemNameSpan);
+
+				var itemValueInput = document.createElement("input");
+				itemValueInput.type = "number";
+				itemValueInput.min = 0;
+				itemValueInput.value = itemCount;
+				itemValueInput.style.fontSize = "100%";
+				itemValueInput.style.width = "30%";
+				itemValueInput.addEventListener('change', createOnItemValueChange(id));
+				itemDiv.appendChild(itemValueInput);
+			}
 		}
 	}
 }
