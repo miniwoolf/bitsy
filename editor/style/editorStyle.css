@@ -607,11 +607,12 @@ span.controlBox {
 }
 
 #game_data {
-	min-width: 350px;
-	min-height: 150px;
+	min-width: 400px;
+	min-height: 400px;
 	width: 350px;
 	height: 400px;
 	background: black;
+	border-radius: 2px;
 	color: white;
 	border: none;
 	padding: 5px;
