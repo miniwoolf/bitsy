@@ -178,10 +178,11 @@ function DialogTool() {
 
 			var innerElement = isPlaintextMode ? plaintextEditor.GetElement() : viewportDiv;
 
+			// hack: the minus 10 is to avoid having the padding expand the element size
 			if (width != undefined && height != undefined) {
-				viewportDiv.style.width = width + "px";
-				viewportDiv.style.height = height + "px";
-				plaintextEditor.SetSize(width, height);
+				viewportDiv.style.width = (width - 10) + "px";
+				viewportDiv.style.height = (height - 10) + "px";
+				plaintextEditor.SetSize(width - 10, height - 10);
 			}
 
 			div.appendChild(innerElement);

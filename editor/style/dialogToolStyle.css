@@ -1,8 +1,6 @@
 .dialogContentViewport {
 	min-width: 400px;
-	min-height: 200px;
-/*	width: 400px;
-	height: 445px;*/
+	min-height: 400px;
 	overflow: scroll;
 	display: block;
 	border: none;
@@ -11,6 +9,8 @@
 	resize: both;
 	background: #e8e8ff;
 	white-space: normal;
+	padding: 5px;
+	margin: 0px;
 }
 
 .largeDialogPlaintextArea {
@@ -21,8 +21,8 @@
 	line-height: 1;
 	resize: both !important;
 	min-width: 400px;
-	min-height: 200px;
-	padding: 0px !important;
+	min-height: 400px;
+	padding: 5px !important;
 	margin: 0px !important;
 }
 
