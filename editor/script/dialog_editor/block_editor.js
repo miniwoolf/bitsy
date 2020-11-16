@@ -5,6 +5,13 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 	var div = document.createElement("div");
 	div.classList.add("blockEditor");
 
+	if (isDialogExpression) {
+		div.classList.add("dialogExpression");
+	}
+	else {
+		div.classList.add("functionBody");
+	}
+
 	var childEditorRootDiv = document.createElement("div");
 	div.appendChild(childEditorRootDiv);
 
@@ -65,6 +72,12 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		addText();
 	}
 
+	var downArrowSvgSource =
+		'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' + "\n" +
+		'<svg viewBox="0 0 50 30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink= "http://www.w3.org/1999/xlink">' + "\n" +
+		'<path d="M0,0 0,10 10,10 10,20 20,20 20,30 30,30 30,20 40,20 40,10 50,10 50,0z" />' + "\n" +
+		'</svg>';
+
 	function RefreshChildUI() {
 		childEditorRootDiv.innerHTML = "";
 
@@ -80,14 +93,9 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 			if (i < childEditors.length - 1) {
 				var arrowHolder = document.createElement("div");
-				arrowHolder.style.textAlign = "center";
+				arrowHolder.classList.add("dialogNextArrow");
 				childEditorRootDiv.appendChild(arrowHolder);
-
-				var svgArrow = document.createElement("img");
-				svgArrow.src = "image/down_arrow.svg";
-				svgArrow.style.margin = "5px";
-				svgArrow.style.width = "20px";
-				arrowHolder.appendChild(svgArrow);
+				arrowHolder.innerHTML = downArrowSvgSource;
 			}
 		}
 	}

@@ -7,7 +7,7 @@
 	border-radius: 2px;
 	line-height: 1;
 	resize: both;
-	background: #e8e8ff;
+	background: black;
 	white-space: normal;
 	padding: 5px;
 	margin: 0px;
@@ -41,6 +41,27 @@
 	flex-grow: 1;
 }
 
+.dialogNextArrow {
+	text-align: center;;
+}
+
+.dialogNextArrow svg {
+	width: 20px;
+	margin: 5px;
+}
+
+.blockEditor.dialogExpression {
+	background: black;
+}
+
+.blockEditor.dialogExpression .dialogNextArrow {
+	fill: white;
+}
+
+.blockEditor.functionBody .dialogNextArrow {
+	fill: #6767b2;
+}
+
 @keyframes actionEditorDelete {
 	0% { transform:translateX(0px); opacity:1; }
 	100% { transform:translateX(30px); opacity:0; }
@@ -55,8 +76,7 @@
 .actionEditor {
 	background: white;
 	padding: 10px;
-	/*margin-bottom: 5px;*/
-	border: solid 1px #ccccff;
+	border: none;
 	border-radius: 2px;
 	display: flex;
 	flex-direction: column;
@@ -103,8 +123,20 @@
 	border: solid 2px #6767b2;
 }
 
+.blockEditor.dialogExpression .selectedEditor.actionEditor {
+	border-color: #777;
+}
+
+.blockEditor.functionBody .selectedEditor.actionEditor {
+	border-color: #6767b2;
+}
+
 .selectedEditor.actionEditor.inline {
 	border: none;
+}
+
+.dialogEditor {
+	background: #333;
 }
 
 .dialogEditor textarea {
@@ -127,6 +159,20 @@
 }
 
 .optionControls {
+}
+
+.dialogEditor button {
+	background: black;
+	color: white;
+}
+
+.dialogEditor .bitsy_icon {
+	fill: white;
+}
+
+.dialogEditor .controlBox {
+	background: #444;
+	color: white;
 }
 
 .optionControls button {
