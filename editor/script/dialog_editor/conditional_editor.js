@@ -44,8 +44,9 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_item", "item branch");
 	addItemCondition.style.display = "none";
 	addItemCondition.onclick = function() {
-		var conditionPairNode = scriptUtils.CreateItemConditionPair();
-		var optionEditor = new ConditionalOptionEditor(conditionPairNode, self, optionEditors.length);
+		var conditionToken = scriptNext.Parse('{GT {ITM "1"} 0}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 
 		RefreshOptionsUI();
@@ -65,8 +66,9 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_variable", "variable branch");
 	addVariableCondition.style.display = "none";
 	addVariableCondition.onclick = function() {
-		var conditionPairNode = scriptUtils.CreateVariableConditionPair();
-		var optionEditor = new ConditionalOptionEditor(conditionPairNode, self, optionEditors.length);
+		var conditionToken = scriptNext.Parse('{GT a 5}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 
 		RefreshOptionsUI();
@@ -86,8 +88,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_default", "default branch");
 	addDefaultCondition.style.display = "none";
 	addDefaultCondition.onclick = function() {
-		var conditionPairNode = scriptUtils.CreateDefaultConditionPair();
-		var optionEditor = new ConditionalOptionEditor(conditionPairNode, self, optionEditors.length);
+		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var optionEditor = new ConditionalOptionEditor([resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 
 		RefreshOptionsUI();
@@ -183,15 +185,14 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 
 	// TODO : share w/ sequence editor?
 	function UpdateNodeOptions() {
-		// todo : reimplement
-		// var updatedOptions = [];
+		var updatedOptions = [];
 
-		// for (var i = 0; i < optionEditors.length; i++) {
-		// 	var editor = optionEditors[i];
-		// 	updatedOptions = updatedOptions.concat(editor.GetNodes());
-		// }
+		for (var i = 0; i < optionEditors.length; i++) {
+			var editor = optionEditors[i];
+			updatedOptions = updatedOptions.concat(editor.GetExpressionList());
+		}
 
-		// conditionalNode.SetChildren(updatedOptions);
+		conditionalExpression.list = [conditionalExpression.list[0]].concat(updatedOptions);
 	}
 
 	CreateOptionEditors();
@@ -312,8 +313,10 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 		}
 		div.appendChild(conditionStartSpan);
 
-		conditionExpressionEditor = createExpressionEditor(conditionExpression, self, true);
-		div.appendChild(conditionExpressionEditor.GetElement());
+		if (conditionExpression != null) {
+			conditionExpressionEditor = createExpressionEditor(conditionExpression, self, true);
+			div.appendChild(conditionExpressionEditor.GetElement());
+		}
 
 		conditionEndSpan = document.createElement("span");
 		if (conditionExpression != null) {
@@ -332,8 +335,7 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 	}
 
 	this.GetExpressionList = function() {
-		// will this always work???
-		return conditionExpressionEditor.GetExpressionList();
+		return conditionExpressionEditor != null ? conditionExpressionEditor.GetExpressionList() : [];
 	}
 
 	this.UpdateIndex = function(i) {

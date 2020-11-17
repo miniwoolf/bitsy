@@ -111,8 +111,8 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 	addOptionButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
 		+ localization.GetStringOrFallback("dialog_conditional_add", "add option"); // TODO : funny that this is the old conditional text
 	addOptionButton.onclick = function() {
-		var optionNode = scriptUtils.CreateOptionBlock();
-		var optionEditor = new SequenceOptionEditor(optionNode, self);
+		var token = scriptNext.Parse("{-> ...}", DialogWrapMode.No);
+		var optionEditor = new SequenceOptionEditor(token, self);
 		optionEditors.push(optionEditor);
 
 		RefreshOptionsUI();

@@ -321,7 +321,7 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("branching_list_name", "branching list"),
 			function() {
-				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {-> a}}', DialogWrapMode.No);
+				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {-> a} {-> b}}', DialogWrapMode.No);
 				var editor = new ConditionalEditor(token, parentEditor);
 				return editor;
 			}));

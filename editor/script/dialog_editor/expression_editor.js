@@ -296,8 +296,6 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		var descriptionText = expressionDescriptionMap[descriptionId].GetDescription();
 		var descriptionTextSplit = descriptionText.split("_");
 
-		console.log(descriptionTextSplit);
-
 		var i = 0;
 
 		for (; i < descriptionTextSplit.length; i++) {
