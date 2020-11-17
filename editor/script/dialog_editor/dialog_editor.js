@@ -156,20 +156,15 @@ function DialogTool() {
 
 			viewportDiv = document.createElement("div");
 			viewportDiv.classList.add("dialogContentViewport");
-			// always selected so we can add actions to the root
-			viewportDiv.classList.add("selectedEditor");
+
+			// unselect all if you click the background
 			viewportDiv.onclick = function() {
-				// a hack to allow you to not have anything selected
-				// if you click the background of the script editor
-				// global curSelectedEditor is still a bit hacky :/
-				// todo : FIX THIS!!!
-				// if (curSelectedEditor != null) {
-				// 	curSelectedEditor.Deselect();
-				// 	curSelectedEditor = null;
-				// }
+				selectionBehaviorController.UnselectAll();
 			}
 
 			viewportDiv.appendChild(rootEditor.GetElement());
+
+			rootEditor.GetElement().classList.add("selectedEditor");
 
 			expressionBuilderDiv = document.createElement("div");
 			expressionBuilderDiv.classList.add("dialogExpressionBuilderHolder");
@@ -453,11 +448,10 @@ function OrderControls(editor, parentEditor) {
 	}
 }
 
-var AddSelectionBehavior = (function() {
-	// todo is this an ok way to create this global -- capture it in closure?
+function SelectionBehaviorController() {
 	var curSelectedEditor = null;
 
-	return function (editor, onSelect, onDeselect, isInline) {
+	this.AddSelectionBehavior = function (editor, onSelect, onDeselect, isInline) {
 		if (isInline === undefined || isInline === null) {
 			isInline = false;
 		}
@@ -498,8 +492,19 @@ var AddSelectionBehavior = (function() {
 				curSelectedEditor = editor;
 			}
 		}
-	}
-})();
+	};
+
+	this.UnselectAll = function() {
+		if (curSelectedEditor != null) {
+			curSelectedEditor.Deselect();
+			curSelectedEditor = null;
+		}
+	};
+};
+
+// leaving this as global for now..
+var selectionBehaviorController = new SelectionBehaviorController();
+var AddSelectionBehavior = selectionBehaviorController.AddSelectionBehavior;
 
 function ConvertNumberStringToArabic(numberString) {
 	var arabicNumerals = ["٠","١","٢","٣","٤","٥","٦","٧","٨","٩"];
