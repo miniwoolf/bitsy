@@ -122,9 +122,9 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 	}
 
 	this.RemoveChild = function(childEditor) {
-		childEditors.splice(childEditors.indexOf(childEditor),1);
-		RefreshChildUI();
+		childEditors.splice(childEditors.indexOf(childEditor), 1);
 
+		RefreshChildUI();
 		UpdateChildren();
 
 		parentEditor.NotifyUpdate();
@@ -136,8 +136,8 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 	this.InsertChild = function(childEditor, index) {
 		childEditors.splice(index, 0, childEditor);
-		RefreshChildUI();
 
+		RefreshChildUI();
 		UpdateChildren();
 
 		parentEditor.NotifyUpdate();
@@ -195,6 +195,7 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 	div.appendChild(blockEditor.GetElement());
 }
 
+// TODO : rename? add new functions, etc
 function ActionBuilder(parentEditor) {
 	var div = document.createElement("div");
 	div.classList.add("actionBuilder");
@@ -269,25 +270,19 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("dialog_block_basic", "dialog"),
 			function() {
-				var printFunc = scriptUtils.CreateEmptyPrintFunc();
-
-				// hacky access of the parent node is required
-				// because the print function needs to start with a parent
-				// otherwise the dialog editor can't serialize the text D:
-				// TODO : re-implement!!!
-				// parentEditor.GetNodes()[0].AddChild(printFunc);
-
-				var editor = new DialogTextEditor([printFunc], parentEditor);
+				var token = scriptNext.Parse("...", DialogWrapMode.No);
+				var editor = new DialogTextEditor([token], parentEditor);
 				return editor;
 			}));
 
+	// todo : do I want this now that I have {PG} as inline? add that to text effects instead?
 	div.appendChild(
 		makeActionBuilderButton(
 			"dialog",
 			localization.GetStringOrFallback("function_pg_name", "pagebreak"),
 			function() {
-				var node = scriptUtils.CreateFunctionBlock("pg", []);
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse("{PG}", DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -296,8 +291,8 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("sequence_list_name", "sequence list"),
 			function() {
-				var node = scriptUtils.CreateSequenceBlock();
-				var editor = new SequenceEditor(node, parentEditor);
+				var token = scriptNext.Parse("{SEQ {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -306,8 +301,8 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("cycle_list_name", "cycle list"),
 			function() {
-				var node = scriptUtils.CreateCycleBlock();
-				var editor = new SequenceEditor(node, parentEditor);
+				var token = scriptNext.Parse("{CYC {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -316,8 +311,8 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("shuffle_list_name", "shuffle list"),
 			function() {
-				var node = scriptUtils.CreateShuffleBlock();
-				var editor = new SequenceEditor(node, parentEditor);
+				var token = scriptNext.Parse("{SHF {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -326,8 +321,8 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("branching_list_name", "branching list"),
 			function() {
-				var node = scriptUtils.CreateIfBlock();
-				var editor = new ConditionalEditor(node, parentEditor);
+				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {-> a}}', DialogWrapMode.No);
+				var editor = new ConditionalEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -336,8 +331,8 @@ function ActionBuilder(parentEditor) {
 			"exit",
 			localization.GetStringOrFallback("function_exit_name", "exit"),
 			function() {
-				var node = scriptUtils.CreateFunctionBlock("exit", ["0", 0, 0]);
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{EXT "0" 0 0}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -346,8 +341,8 @@ function ActionBuilder(parentEditor) {
 			"exit",
 			localization.GetStringOrFallback("function_end_name", "end"),
 			function() {
-				var node = scriptUtils.CreateFunctionBlock("end", []);
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{END}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -356,8 +351,8 @@ function ActionBuilder(parentEditor) {
 			"exit",
 			localization.GetStringOrFallback("dialog_action_locked_set", "lock / unlock"),
 			function() {
-				var node = scriptUtils.CreatePropertyNode("locked", true);
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{: THIS LOK YES}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -366,8 +361,8 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_item_set", "set item count"),
 			function() {
-				var node = scriptUtils.CreateFunctionBlock("item", ["0", 10]);
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{ITM "0" 10}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -376,12 +371,8 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_item_increase", "increase item count"),
 			function() {
-				var expressionNode = scriptInterpreter.CreateExpression('{item "0"} + 1');
-				var codeBlock = scriptUtils.CreateCodeBlock();
-				codeBlock.children.push(expressionNode);
-				var node = scriptUtils.CreateFunctionBlock("item", ["0"]);
-				node.children[0].args.push(codeBlock); // hacky
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{ITM "0" {ADD {ITM "0"} 1}}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -390,12 +381,8 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_item_decrease", "decrease item count"),
 			function() {
-				var expressionNode = scriptInterpreter.CreateExpression('{item "0"} - 1');
-				var codeBlock = scriptUtils.CreateCodeBlock();
-				codeBlock.children.push(expressionNode);
-				var node = scriptUtils.CreateFunctionBlock("item", ["0"]);
-				node.children[0].args.push(codeBlock); // hacky
-				var editor = new ExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{ITM "0" {SUB {ITM "0"} 1}}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -404,10 +391,8 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_variable_set", "set variable value"),
 			function() {
-				var expressionNode = scriptInterpreter.CreateExpression("a = 5");
-				var node = scriptUtils.CreateCodeBlock();
-				node.children.push(expressionNode);
-				var editor = new MathExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{SET a 5}', DialogWrapMode.No);
+				var editor = new MathExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -416,10 +401,8 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_variable_change", "change variable value"),
 			function() {
-				var expressionNode = scriptInterpreter.CreateExpression("a = a + 1");
-				var node = scriptUtils.CreateCodeBlock();
-				node.children.push(expressionNode);
-				var editor = new MathExpressionEditor(node, parentEditor);
+				var token = scriptNext.Parse('{SET a {ADD a 1}}', DialogWrapMode.No);
+				var editor = new MathExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 

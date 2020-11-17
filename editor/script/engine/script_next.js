@@ -9,16 +9,24 @@ NOTES
 - decide whether the new style names are good
 - global variables aren't working
 */
+var DialogWrapMode = {
+	Auto : 0,
+	Yes : 1,
+	No : 2,
+};
+
 function ScriptNext() {
 
 var compiledScripts = {};
 
 function compile(script, options) {
 	var doNotStore = options && options.doNotStore;
-	var forceWrapDialogStart = options && options.forceWrapDialogStart;
+
+	var dialogWrapMode =
+		(options && "dialogWrapMode" in options) ? options.dialogWrapMode : DialogWrapMode.Auto;
 
 	var scriptStr = script.src;
-	if (forceWrapDialogStart || scriptStr.indexOf("\n") < 0) {
+	if (dialogWrapMode != DialogWrapMode.No && (dialogWrapMode === DialogWrapMode.Yes || scriptStr.indexOf("\n") < 0)) {
 		// wrap one-line dialogs in a dialog expression
 		// TODO : is this still what I want?
 		scriptStr = SYM_KEY.OPEN + SYM_KEY.DIALOG + " " + scriptStr + SYM_KEY.CLOSE;
@@ -37,10 +45,10 @@ function compile(script, options) {
 this.Compile = compile;
 
 // temporary parsing... not sure about this implementation..
-this.Parse = function(scriptSrc, forceWrapDialogStart) {
+this.Parse = function(scriptSrc, dialogWrapMode) {
 	return compile(
 		{ src: scriptSrc, id: null },
-		{ doNotStore: true, forceWrapDialogStart: forceWrapDialogStart });
+		{ doNotStore: true, dialogWrapMode: dialogWrapMode });
 }
 
 // TODO : pass in dialog buffer instead of using a global reference?

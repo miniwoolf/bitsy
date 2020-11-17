@@ -23,7 +23,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 	function OnDialogTextChange() {
 		console.log("TEXT CHANGE!!!");
 		// a bit wonky
-		var tempDialogExpression = scriptNext.Parse(textArea.value, true);
+		var tempDialogExpression = scriptNext.Parse(textArea.value, DialogWrapMode.Yes);
 		expressionList = tempDialogExpression.list.slice(1);
 		parentEditor.NotifyUpdate(true);
 	}
