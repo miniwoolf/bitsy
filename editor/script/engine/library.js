@@ -182,7 +182,7 @@ function createDialogLibrary(dialogBuffer, parent) {
 		dialogBuffer.AddScriptReturn(onReturn);
 	});
 
-	var textEffectIds = ["WVY", "SHK", "RBW", "CLR", "TFX"];
+	var textEffectIds = ["WVY", "SHK", "RBW", "CLR", "FXT"];
 
 	function addTextEffect(id) {
 		lib.Set(id, function(parameters, onReturn) {

@@ -1042,7 +1042,7 @@ var CustomEffect = function() {
 		}
 	};
 };
-TextEffects["TFX"] = new CustomEffect();
+TextEffects["FXT"] = new CustomEffect();
 
 var DebugErrorEffect = function() {
 	this.DoEffect = function(char) {

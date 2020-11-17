@@ -591,6 +591,7 @@ function FindTool(controls) {
 		var filters = options && options.filters ? options.filters : [categoryName];
 		var toolId = options && options.toolId ? options.toolId : null;
 		var hasNoneOption = options && options.hasNoneOption;
+		var showOpenTool = options && "showOpenTool" in options ? options.showOpenTool : true;
 
 		var span = document.createElement("span");
 		span.classList.add("selectControl");
@@ -624,10 +625,12 @@ function FindTool(controls) {
 			}
 		}
 
-		var editButton = document.createElement("button");
-		editButton.appendChild(iconUtils.CreateIcon("open_tool"));
-		editButton.onclick = tryOpenTool;
-		span.appendChild(editButton);
+		if (showOpenTool) {
+			var editButton = document.createElement("button");
+			editButton.appendChild(iconUtils.CreateIcon("open_tool"));
+			editButton.onclick = tryOpenTool;
+			span.appendChild(editButton);
+		}
 
 		function updateSelection(id) {
 			if (id === "null") {

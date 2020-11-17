@@ -156,6 +156,14 @@ function PaletteTool(colorPicker, controls) {
 		labelElements[index].setAttribute("class", hsvColor.v < 0.5 ? "colorPaletteLabelDark" : "colorPaletteLabelLight");
 	}
 
+	this.GetBackgroundColor = function(index) {
+		return labelElements[index].style.background;
+	};
+
+	this.GetStyle = function(index) {
+		return labelElements[index].getAttribute("class");
+	};
+
 	// public
 	function updateColorPickerUI() {
 		var pal = palette[GetSelectedId()];

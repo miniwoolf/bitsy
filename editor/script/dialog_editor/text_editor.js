@@ -13,6 +13,13 @@ function DialogTextEditor(expressionList, parentEditor) {
 	// span.innerText = "dialog";
 	// div.appendChild(span);
 
+	// add text effects root
+	var textEffectsDiv = document.createElement("div");
+	textEffectsDiv.classList.add("controlBox");
+	textEffectsDiv.style.display = "none";
+	textEffectsDiv.style.marginBottom = "10px"; // hacky
+	div.appendChild(textEffectsDiv);
+
 	function OnDialogTextChange() {
 		console.log("TEXT CHANGE!!!");
 		// a bit wonky
@@ -29,6 +36,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 	textHolderDiv.classList.add("dialogBoxContainer");
 
 	var textArea = document.createElement("textarea");
+	textArea.spellcheck = false;
 	textArea.value = dialogText;
 
 	textArea.onchange = OnDialogTextChange;
@@ -50,18 +58,12 @@ function DialogTextEditor(expressionList, parentEditor) {
 	div.appendChild(textHolderDiv);
 
 	// add text effects controls
-	var textEffectsDiv = document.createElement("div");
-	textEffectsDiv.classList.add("controlBox");
-	textEffectsDiv.style.display = "none";
-	textEffectsDiv.style.marginTop = "10px"; // hacky
-	div.appendChild(textEffectsDiv);
-
 	var toggleTextEffectsButton = document.createElement("button");
 	toggleTextEffectsButton.appendChild(iconUtils.CreateIcon("text_effects"));
 	toggleTextEffectsButton.title = "show/hide text effects controls";
 	toggleTextEffectsButton.onclick = function() {
 		globalShowTextEffectsControls = !globalShowTextEffectsControls;
-		textEffectsDiv.style.display = globalShowTextEffectsControls ? "block" : "none";
+		UpdateTextEffectsControls(globalShowTextEffectsControls);
 	}
 	orderControls.GetCustomControlsContainer().appendChild(toggleTextEffectsButton);
 
@@ -74,88 +76,146 @@ function DialogTextEditor(expressionList, parentEditor) {
 	textEffectsControlsDiv.style.marginBottom = "5px";
 	textEffectsDiv.appendChild(textEffectsControlsDiv);
 
-	var effectsTags = ["{clr1}", "{clr2}", "{clr3}", "{wvy}", "{shk}", "{rbw}"];
-	var effectsNames = [
-		localization.GetStringOrFallback("dialog_effect_color1", "color 1"),
-		localization.GetStringOrFallback("dialog_effect_color2", "color 2"),
-		localization.GetStringOrFallback("dialog_effect_color3", "color 3"),
-		localization.GetStringOrFallback("dialog_effect_wavy", "wavy"),
-		localization.GetStringOrFallback("dialog_effect_shaky", "shaky"),
-		localization.GetStringOrFallback("dialog_effect_rainbow", "rainbow"),
+	var textEffects = [
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color1", "color 1"),
+			description: "text in tags matches the 1st color in the palette", // todo : localize these!
+			iconId: "colors",
+			tagOpen : "{CLR 0}",
+			tagClose : "{/CLR}",
+			styleName : paletteTool ? paletteTool.GetStyle(0) : null,
+			backgroundColor : paletteTool ? paletteTool.GetBackgroundColor(0) : null,
+		},
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color2", "color 2"),
+			description: "text in tags matches the 2nd color in the palette",
+			iconId: "colors",
+			tagOpen : "{CLR 1}",
+			tagClose : "{/CLR}",
+			styleName : paletteTool ? paletteTool.GetStyle(1) : null,
+			backgroundColor : paletteTool ? paletteTool.GetBackgroundColor(1) : null,
+		},
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color3", "color 3"),
+			description: "text in tags matches the 3rd color in the palette",
+			iconId: "colors",
+			tagOpen : "{CLR 2}",
+			tagClose : "{/CLR}",
+			styleName : paletteTool ? paletteTool.GetStyle(2) : null,
+			backgroundColor : paletteTool ? paletteTool.GetBackgroundColor(2) : null,
+		},
+		{
+			name: "WVY", //localization.GetStringOrFallback("dialog_effect_wavy", "wavy"),
+			description: "text in tags waves up and down",
+			iconId: null,
+			tagOpen : "{WVY}",
+			tagClose : "{/WVY}",
+			styleName: "textEffectWvyHover",
+		},
+		{
+			name: "SHK", //localization.GetStringOrFallback("dialog_effect_shaky", "shaky"),
+			description: "text in tags shakes constantly",
+			iconId: null,
+			tagOpen : "{SHK}",
+			tagClose : "{/SHK}",
+			styleName: "textEffectShkHover",
+		},
+		{
+			name: "RBW", //localization.GetStringOrFallback("dialog_effect_rainbow", "rainbow"),
+			description: "text in tags is rainbow colored",
+			iconId: null,
+			tagOpen : "{RBW}",
+			tagClose : "{/RBW}",
+			styleName: "textEffectRbwHover",
+		},
 	];
 
-	var effectsDescriptions = [
-		"text in tags matches the 1st color in the palette",
-		"text in tags matches the 2nd color in the palette",
-		"text in tags matches the 3rd color in the palette",
-		"text in tags waves up and down",
-		"text in tags shakes constantly",
-		"text in tags is rainbow colored"
-	]; // TODO : localize
-
-	function CreateAddEffectHandler(tag) {
+	function CreateAddEffectHandler(tagOpen, tagClose) {
 		return function() {
-			wrapTextSelection(tag); // hacky to still use this?
+			wrapTextSelection(tagOpen, tagClose); // hacky to still use this?
 		}
 	}
 
-	for (var i = 0; i < effectsTags.length; i++) {
+	for (var i = 0; i < textEffects.length; i++) {
+		var effect = textEffects[i];
+
 		var effectButton = document.createElement("button");
-		effectButton.onclick = CreateAddEffectHandler(effectsTags[i]);
-		effectButton.innerText = effectsNames[i];
-		effectButton.title = effectsDescriptions[i];
+		effectButton.onclick = CreateAddEffectHandler(effect.tagOpen, effect.tagClose);
+
+		if (effect.iconId != null && iconUtils != null) {
+			effectButton.appendChild(iconUtils.CreateIcon(effect.iconId));
+		}
+		else {
+			effectButton.innerText = effect.name;
+		}
+
+		effectButton.title = effect.description;
+
+		if (effect.backgroundColor) {
+			effectButton.style.background = effect.backgroundColor;
+		}
+
+		if (effect.styleName) {
+			effectButton.setAttribute("class", effect.styleName);
+		}
+
 		textEffectsControlsDiv.appendChild(effectButton);
 	}
 
-	var textEffectsPrintDrawingDiv = document.createElement("div");
-	textEffectsDiv.appendChild(textEffectsPrintDrawingDiv);
+	var textEffectsPrintDrawingSpan = document.createElement("span");
+	textEffectsPrintDrawingSpan.classList.add("textEffectDrwSelect");
+	textEffectsControlsDiv.appendChild(textEffectsPrintDrawingSpan);
 
-	var textEffectsPrintDrawingButton = document.createElement("button");
-	textEffectsPrintDrawingButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
-		+ localization.GetStringOrFallback("dialog_effect_drawing", "insert drawing");
-	textEffectsPrintDrawingButton.title = "draw a sprite, tile, or item in your dialog";
-	textEffectsPrintDrawingDiv.appendChild(textEffectsPrintDrawingButton);
+	function TryUpdateTextEffectDrwSelectControls() {
+		if (findTool) {
+			textEffectsPrintDrawingSpan.innerHTML = "";
 
-	var textEffectsPrintDrawingSelect = document.createElement("select");
-	textEffectsPrintDrawingDiv.appendChild(textEffectsPrintDrawingSelect);
+			var textEffectsPrintDrawingButton = document.createElement("button");
+			textEffectsPrintDrawingButton.appendChild(iconUtils.CreateIcon("paint"));
+			textEffectsPrintDrawingButton.title = "draw a tile in your dialog";
+			textEffectsPrintDrawingSpan.appendChild(textEffectsPrintDrawingButton);
 
-	for (id in tile) {
-		var option = document.createElement("option");
+			var seperatorSpan = document.createElement("span");
+			seperatorSpan.innerText = ":";
+			seperatorSpan.style.marginLeft = "2px"; // hacky styles..
+			seperatorSpan.style.marginRight = "4px";
+			textEffectsPrintDrawingSpan.appendChild(seperatorSpan);
 
-		var tileName = "";
-		if (tile[id].name) {
-			tileName += tile[id].name;
+			var textEffectDrwId = "A"; // todo : is this ok?
+
+			var textEffectDrwSelect = findTool.CreateSelectControl(
+				"drawing",
+				{
+					onSelectChange : function(id) {
+						textEffectDrwId = id;
+					},
+					filters : ["avatar", "sprite", "tile", "item", "exit", "ending"],
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select drawing";
+					},
+					// showDropdown : false, // todo : show or not?
+					showOpenTool : false,
+				});
+
+			textEffectDrwSelect.SetSelection(textEffectDrwId);
+
+			textEffectsPrintDrawingSpan.appendChild(textEffectDrwSelect.GetElement());
+
+			textEffectsPrintDrawingButton.onclick = function() {
+				textArea.value += '{DRW "' + textEffectDrwId + '"}';
+				OnDialogTextChange();
+			};
 		}
-		else if (tile[id].type === TYPE_KEY.AVATAR) {
-			tileName += localization.GetStringOrFallback("avatar_label", "avatar");
-		}
-		else {
-			if (tile[id].type === TYPE_KEY.SPRITE) {
-				tileName += localization.GetStringOrFallback("sprite_label", "sprite");
-			}
-			else if (tile[id].type === TYPE_KEY.TILE) {
-				tileName += localization.GetStringOrFallback("tile_label", "tile");
-			}
-			else if (tile[id].type === TYPE_KEY.ITEM) {
-				tileName += localization.GetStringOrFallback("item_label", "item");
-			}
-			// TOOD: what about exits and endings?
-			// TODO : can't I get this from the find tool now?
-
-			tileName += " " + id;
-		}
-
-		option.innerText = tileName;
-
-		option.value = '{printSprite "' + id + '"}'; // TODO : replace with "printDrawing"
-
-		textEffectsPrintDrawingSelect.appendChild(option);
 	}
 
-	textEffectsPrintDrawingButton.onclick = function() {
-		textArea.value += textEffectsPrintDrawingSelect.value;
+	function UpdateTextEffectsControls(visible) {
+		textEffectsDiv.style.display = visible ? "block" : "none";
 
-		OnDialogTextChange();
+		if (visible) {
+			TryUpdateTextEffectDrwSelectControls();
+		}
 	}
 
 	this.GetElement = function() {
@@ -164,7 +224,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 
 	AddSelectionBehavior(
 		this,
-		function() { textEffectsDiv.style.display = globalShowTextEffectsControls ? "block" : "none"; },
+		function() { UpdateTextEffectsControls(globalShowTextEffectsControls); },
 		function() { textEffectsDiv.style.display = "none"; });
 
 	this.GetExpressionList = function() {
@@ -218,41 +278,46 @@ function createOnTextSelectionChange(onchange) {
 }
 
 function preventTextDeselect(event) {
-	if(dialogSel.target != null) {
+	if (dialogSel.target != null) {
 		// event.preventDefault();
 	}
 }
 
 function preventTextDeselectAndClick(event) {
-	if(dialogSel.target != null) {
+	if (dialogSel.target != null) {
 		// event.preventDefault();
 		event.target.click();
 	}
 }
 
-function wrapTextSelection(effect) {
-	if( dialogSel.target != null ) {
+function wrapTextSelection(tagOpen, tagClose) {
+	if (dialogSel.target != null) {
 		var curText = dialogSel.target.value;
 		var selText = curText.slice(dialogSel.start, dialogSel.end);
 
-		var isEffectAlreadyApplied = selText.indexOf( effect ) > -1;
-		if(isEffectAlreadyApplied) {
+		var isEffectAlreadyApplied = selText.startsWith(tagOpen) && selText.endsWith(tagClose);
+
+		if (isEffectAlreadyApplied) {
 			//remove all instances of effect
-			var effectlessText = selText.split( effect ).join( "" );
+			var effectlessText = selText.substring(tagOpen.length, selText.length - tagClose.length);
 			var newText = curText.slice(0, dialogSel.start) + effectlessText + curText.slice(dialogSel.end);
 			dialogSel.target.value = newText;
 			dialogSel.target.setSelectionRange(dialogSel.start,dialogSel.start + effectlessText.length);
-			if(dialogSel.onchange != null)
-				dialogSel.onchange( dialogSel ); // dialogSel needs to mimic the event the onchange would usually receive
+
+			if (dialogSel.onchange != null) {
+				dialogSel.onchange(dialogSel); // dialogSel needs to mimic the event the onchange would usually receive
+			}
 		}
 		else {
 			// add effect
-			var effectText = effect + selText + effect;
+			var effectText = tagOpen + selText + tagClose;
 			var newText = curText.slice(0, dialogSel.start) + effectText + curText.slice(dialogSel.end);
 			dialogSel.target.value = newText;
 			dialogSel.target.setSelectionRange(dialogSel.start,dialogSel.start + effectText.length);
-			if(dialogSel.onchange != null)
-				dialogSel.onchange( dialogSel ); // dialogSel needs to mimic the event the onchange would usually receive
+
+			if (dialogSel.onchange != null) {
+				dialogSel.onchange(dialogSel); // dialogSel needs to mimic the event the onchange would usually receive
+			}
 		}
 	}
 }

@@ -1,13 +1,13 @@
 .dialogContentViewport {
-	min-width: 400px;
-	min-height: 400px;
+	min-width: 415px;
+	min-height: 415px;
 	overflow: scroll;
 	display: block;
 	border: none;
 	border-radius: 2px;
 	line-height: 1;
 	resize: both;
-	background: black;
+	background: #e8e8ff;
 	white-space: normal;
 	padding: 5px;
 	margin: 0px;
@@ -20,8 +20,8 @@
 	border-radius: 2px;
 	line-height: 1;
 	resize: both !important;
-	min-width: 400px;
-	min-height: 400px;
+	min-width: 415px;
+	min-height: 415px;
 	padding: 5px !important;
 	margin: 0px !important;
 }
@@ -42,7 +42,8 @@
 }
 
 .dialogNextArrow {
-	text-align: center;;
+	text-align: center;
+	fill: #6767b2;
 }
 
 .dialogNextArrow svg {
@@ -51,15 +52,7 @@
 }
 
 .blockEditor.dialogExpression {
-	background: black;
-}
-
-.blockEditor.dialogExpression .dialogNextArrow {
-	fill: white;
-}
-
-.blockEditor.functionBody .dialogNextArrow {
-	fill: #6767b2;
+	background: #e8e8ff;
 }
 
 @keyframes actionEditorDelete {
@@ -123,12 +116,8 @@
 	border: solid 2px #6767b2;
 }
 
-.blockEditor.dialogExpression .selectedEditor.actionEditor {
-	border-color: #777;
-}
-
-.blockEditor.functionBody .selectedEditor.actionEditor {
-	border-color: #6767b2;
+.selectedEditor.actionEditor.dialogEditor {
+	border-color: black;
 }
 
 .selectedEditor.actionEditor.inline {
@@ -136,7 +125,7 @@
 }
 
 .dialogEditor {
-	background: #333;
+	background: #444;
 }
 
 .dialogEditor textarea {
@@ -170,8 +159,16 @@
 	fill: white;
 }
 
+.dialogEditor .colorPaletteLabelLight .bitsy_icon {
+	fill: black;
+}
+
+.dialogEditor .colorPaletteLabelDark .bitsy_icon {
+	fill: white;
+}
+
 .dialogEditor .controlBox {
-	background: #444;
+	background: #333;
 	color: white;
 }
 
@@ -410,14 +407,26 @@
 
 @keyframes textEffectWvy {
 	/*0% { transform:translateY(0px); }*/
-	0% { transform:translateY(25%); }
+	0% { transform:translateY(10%); }
 	/*50% { transform:translateY(0px); }*/
-	50% { transform:translateY(-25%); }
+	50% { transform:translateY(-10%); }
 	/*100% { transform:translateY(0px); }*/
-	100% { transform:translateY(25%); }
+	100% { transform:translateY(10%); }
 }
 
 .textEffectWvy {
+	animation-name: textEffectWvy;
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+}
+
+.textEffectWvyHover {
+	margin-left: 5px; /* kinda hacky */
+	font-family: bitsy_ascii, monospace;
+	padding-top: 8px;
+}
+
+.textEffectWvyHover:hover {
 	animation-name: textEffectWvy;
 	animation-duration: 2s;
 	animation-iteration-count: infinite;
@@ -432,6 +441,17 @@
 }
 
 .textEffectShk {
+	animation-name: textEffectShk;
+	animation-duration: 0.2s;
+	animation-iteration-count: infinite;
+}
+
+.textEffectShkHover {
+	font-family: bitsy_ascii, monospace;
+	padding-top: 8px;
+}
+
+.textEffectShkHover:hover {
 	animation-name: textEffectShk;
 	animation-duration: 0.2s;
 	animation-iteration-count: infinite;
@@ -455,6 +475,23 @@
 	animation-name: textEffectRbw;
 	animation-duration: 1s;
 	animation-iteration-count: infinite;
+}
+
+.textEffectRbwHover {
+	font-family: bitsy_ascii, monospace;
+	padding-top: 8px;
+}
+
+.textEffectRbwHover:hover {
+	animation-name: textEffectRbw;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+}
+
+.textEffectDrwSelect {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 5px;
 }
 
 /* todo: move into own file?*/
