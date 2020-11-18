@@ -317,6 +317,7 @@ function prevDialog() {
 	events.Raise("select_dialog", { id: id });
 }
 
+// todo : move into its own tool?
 function addNewDialog() {
 	var id = nextAvailableDialogId();
 
@@ -407,7 +408,6 @@ function resetGameData() {
 	refreshGameData();
 
 	// TODO RENDERER : refresh images
-	updateRoomName();
 	updateInventoryUI();
 	updateFontSelectUI(); // hmm is this really the place for this?
 
@@ -849,7 +849,6 @@ function start() {
 	//draw everything
 	paintTool.SelectDrawing("A");
 	roomTool.Update();
-	updateRoomName(); // init the room UI
 
 	updateInventoryUI();
 	listenForInventoryItemChanges();
@@ -992,22 +991,6 @@ function start() {
 	var mapIds = sortedHexIdList(map);
 	if (mapIds.length > 0) {
 		events.Raise("select_map", { id: mapIds[0] });
-	}
-}
-
-function updateRoomName() {
-	if (curRoom == null) { 
-		return;
-	}
-
-	// document.getElementById("roomId").innerHTML = curRoom;
-	var roomLabel = localization.GetStringOrFallback("room_label", "room");
-	document.getElementById("roomName").placeholder = roomLabel + " " + curRoom;
-	if(room[curRoom].name != null) {
-		document.getElementById("roomName").value = room[curRoom].name;
-	}
-	else {
-		document.getElementById("roomName").value = "";
 	}
 }
 
@@ -1212,7 +1195,6 @@ function on_game_data_change() {
 	refreshGameData();
 
 	// ui stuff
-	updateRoomName();
 	refreshGameData();
 }
 

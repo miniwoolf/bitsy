@@ -351,25 +351,30 @@ function PaintTool(controls) {
 	var lastAddType = TYPE_KEY.TILE;
 
 	function NewDrawing(type, imageData) {
-		var nextId = nextObjectId(sortedBase36IdList(tile)); // TODO : helper function?
+		var nextId = nextB256Id(tile, 1, DEFAULT_REGISTRY_SIZE);
 
-		var tileOptions = {
-			drawingData: imageData,
-			destRoom: type === "EXT" ? "0" : null, // what if there's no room "0"?
-		};
+		if (nextId != null) {
+			var tileOptions = {
+				drawingData: imageData,
+				destRoom: type === "EXT" ? "0" : null, // what if there's no room "0"?
+			};
 
-		createTile(nextId, type, tileOptions);
-		refreshGameData();
+			createTile(nextId, type, tileOptions);
+			refreshGameData();
 
-		events.Raise("add_drawing", { id: nextId, type: type, });
-		self.SelectDrawing(nextId);
+			events.Raise("add_drawing", { id: nextId, type: type, });
+			self.SelectDrawing(nextId);
 
-		// TODO : hack... replace with event hookup
-		if (type === "ITM") {
-			updateInventoryItemUI();
+			// TODO : hack... replace with event hookup
+			if (type === "ITM") {
+				updateInventoryItemUI();
+			}
+
+			lastAddType = type;
 		}
-
-		lastAddType = type;
+		else {
+			alert("oh no you ran out of tiles! :(");
+		}
 	}
 
 	function SwitchType(type) {
@@ -614,7 +619,9 @@ function PaintTool(controls) {
 
 		// will this safety conditional bite me? can I have the find tool load earlier?
 		if (findTool) {
-			controls.nameInput.placeholder = findTool.GetDisplayName("drawing", drawingId, true);
+			controls.nameInput.placeholder =
+				findTool.GetDisplayName("drawing", drawingId, true)
+				+ " (" + fromB256(drawingId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")"; // todo : this will break right?
 		}
 
 		controls.nameInput.readOnly = (til.type === TYPE_KEY.AVATAR);

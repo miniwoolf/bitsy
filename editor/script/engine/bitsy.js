@@ -52,7 +52,7 @@ var playerId = "A";
 var spriteInstances = {};
 var nextInstanceId = 0;
 
-var titleDialogId = "title";
+var titleDialogId = "0";
 function getTitle() {
 	return dialog[titleDialogId].src;
 }

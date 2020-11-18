@@ -6,11 +6,8 @@ var tilesize = 8;
 var roomsize = 16;
 var mapsize = 8;
 
-var MAP_MAX = 4;
-var ROOM_MAX = 256;
-var TILE_MAX = 256;
-var DIALOG_MAX = 128; // todo : too small?
-var PALETTE_MAX = 128; // todo : too small?
+var DEFAULT_REGISTRY_SIZE = 256;
+var MAP_REGISTRY_SIZE = 5;
 var PALETTE_SIZE = 16;
 var ANIMATION_SIZE = 4;
 
@@ -82,8 +79,6 @@ var SYM_KEY = {
 	OPEN : "{",
 	CLOSE : "}",
 	DIALOG : "->",
-	// DIALOG_OPEN : "<<", // todo: possible idea
-	// DIALOG_CLOSE : ">>",
 	ENTRY : ":",
 	VARIABLE : "VAR",
 };
@@ -142,7 +137,33 @@ var ID_MAPPING = [
 	0x0036,
 	0x0037,
 	0x0038,
-	0x0039,
+	0x0039,	// lowercase letters:
+	0x0061,
+	0x0062,
+	0x0063,
+	0x0064,
+	0x0065,
+	0x0066,
+	0x0067,
+	0x0068,
+	0x0069,
+	0x006A,
+	0x006B,
+	0x006C,
+	0x006D,
+	0x006E,
+	0x006F,
+	0x0070,
+	0x0071,
+	0x0072,
+	0x0073,
+	0x0074,
+	0x0075,
+	0x0076,
+	0x0077,
+	0x0078,
+	0x0079,
+	0x007A,
 	// uppercase letters:
 	0x0041,
 	0x0042,
@@ -170,33 +191,6 @@ var ID_MAPPING = [
 	0x0058,
 	0x0059,
 	0x005A,
-	// lowercase letters:
-	0x0061,
-	0x0062,
-	0x0063,
-	0x0064,
-	0x0065,
-	0x0066,
-	0x0067,
-	0x0068,
-	0x0069,
-	0x006A,
-	0x006B,
-	0x006C,
-	0x006D,
-	0x006E,
-	0x006F,
-	0x0070,
-	0x0071,
-	0x0072,
-	0x0073,
-	0x0074,
-	0x0075,
-	0x0076,
-	0x0077,
-	0x0078,
-	0x0079,
-	0x007A,
 	// @ (avatar):
 	0x0040,
 	// other symbols from page 437:
@@ -390,11 +384,18 @@ var ID_MAPPING = [
 	0x207F,
 	0x00B2,
 	0x25A0,
-	// misc extra // todo : are these the symbols I really want?
-	0x00A6, // broken line
-	0x00D7, // multiplication
+	// misc extra:
+	0x0259, // schwa
+	0x2020, // dagger
 	0x00D8, // O with slash
 ];
+
+var ID_MAPPING_REVERSE = {};
+
+// todo : init in function?
+for (var i = 0; i < ID_MAPPING.length; i++) {
+	ID_MAPPING_REVERSE[String.fromCharCode(ID_MAPPING[i])] = i;
+}
 
 function debugPrintIdMapping() {
 	for (var i = 0; i < ID_MAPPING.length; i++) {
@@ -402,8 +403,9 @@ function debugPrintIdMapping() {
 
 		console.log(
 			(i).toString().padStart(3, "0") + " :: " + 
-			String.fromCharCode(ID_MAPPING[i]) + " :: " + 
-			ID_MAPPING[i].toString(16).toUpperCase().padStart(4, "0") + (priorIndex != i ? " !! " + priorIndex + " !!" : ""));
+			toB256(i) + " :: " + 
+			ID_MAPPING[i].toString(16).toUpperCase().padStart(4, "0") +
+			(priorIndex != i ? " !! " + priorIndex + " !!" : ""));
 	}
 }
 
@@ -412,10 +414,55 @@ function debugPrintIdGrid() {
 	for (var i = 0; i < roomsize; i++) {
 		var row = "";
 		for (var j = 0; j < roomsize; j++) {
-			row += String.fromCharCode(ID_MAPPING[(i*roomsize)+j]);
+			row += toB256((i*roomsize)+j);
 		}
 		row += "\n";
 		grid += row;
 	}
 	console.log(grid);
+}
+
+function toB256(num) {
+	var str = "";
+	var place = 0;
+	var i = (num >> (8 * place)) & 255;
+
+	str += String.fromCharCode(ID_MAPPING[i]);
+	num -= (i << (8 * place));
+
+	while (num > 0) {
+		place++;
+		i = (num >> (8 * place)) & 255;
+		str = String.fromCharCode(ID_MAPPING[i]) + str;
+		num -= (i << (8 * place));
+	}
+
+	return str;
+}
+
+function fromB256(str) {
+	var num = 0;
+
+	for (var i = str.length - 1; i >= 0; i--) {
+		var place = (str.length - 1) - i;
+		num += ID_MAPPING_REVERSE[str[i]] * Math.pow(256, place);
+	}
+
+	return num;
+}
+
+function nextB256Id(objectRegistry, min, max) {
+	var id = null;
+	var index = min;
+
+	while (id === null && (max === null || index < max)) {
+		var str = toB256(index);
+		if (!(str in objectRegistry)) {
+			id = str;
+		}
+
+		index++;
+	}
+
+	return id;
 }

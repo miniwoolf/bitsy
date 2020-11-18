@@ -249,18 +249,24 @@ function MapTool(controls) {
 	}
 
 	function AddMap() {
-		var nextId = nextObjectHexId(sortedHexIdList(map));
+		// todo : start at 0 or 1?
+		var nextId = nextB256Id(map, 1, MAP_REGISTRY_SIZE);
 
-		map[nextId] = createMap(nextId);
-		map[nextId].transition_effect_left = "SLL";
-		map[nextId].transition_effect_right = "SLR";
-		map[nextId].transition_effect_up = "SLU";
-		map[nextId].transition_effect_down = "SLD";
+		if (nextId != null) {
+			map[nextId] = createMap(nextId);
+			map[nextId].transition_effect_left = "SLL";
+			map[nextId].transition_effect_right = "SLR";
+			map[nextId].transition_effect_up = "SLU";
+			map[nextId].transition_effect_down = "SLD";
 
-		refreshGameData();
+			refreshGameData();
 
-		events.Raise("add_map", { id: nextId });
-		events.Raise("select_map", { id: nextId });
+			events.Raise("add_map", { id: nextId });
+			events.Raise("select_map", { id: nextId });
+		}
+		else {
+			alert("oh no you ran out of maps! :(");
+		}
 	}
 
 	function DeleteMap() {
@@ -318,7 +324,8 @@ function MapTool(controls) {
 
 			controls.nameInput.readOnly = false;
 			controls.nameInput.value = map[curMapId].name;
-			controls.nameInput.placeholder = "map " + curMapId; // todo : LOCALIZE
+			controls.nameInput.placeholder = "map " + curMapId +
+				" (" + fromB256(curMapId) + "/" + (MAP_REGISTRY_SIZE - 1) + ")"; // todo : LOCALIZE
 
 			controls.transitionEffectUp.value =
 				map[curMapId].transition_effect_up ? map[curMapId].transition_effect_up : "none";

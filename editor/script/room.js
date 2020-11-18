@@ -318,6 +318,7 @@ function RoomTool(controls) {
 	this.Update = function() {
 		self.drawEditMap();
 		updateRoomPaletteSelect();
+		updateRoomName();
 	}
 
 	var onSelectBehavior = null;
@@ -427,39 +428,47 @@ function RoomTool(controls) {
 		var copyRoomId = idList[roomIndex];
 		var roomToCopy = room[copyRoomId];
 
-		roomIndex = idList.length;
-		var newRoomId = nextRoomId();
+		var newRoomId = nextB256Id(room, 1, DEFAULT_REGISTRY_SIZE);
 
-		var duplicateTilemap = [];
-		for (y in roomToCopy.tilemap) {
-			duplicateTilemap.push([]);
-			for (x in roomToCopy.tilemap[y]) {
-				duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
+		if (newRoomId != null) {
+			var duplicateTilemap = [];
+			for (y in roomToCopy.tilemap) {
+				duplicateTilemap.push([]);
+				for (x in roomToCopy.tilemap[y]) {
+					duplicateTilemap[y].push( roomToCopy.tilemap[y][x] );
+				}
 			}
+
+			room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
+			room[newRoomId].tilemap = duplicateTilemap;
+			room[newRoomId].sprites = roomToCopy.sprites.slice(0);
+
+			refreshGameData();
+
+			events.Raise("add_room", { id: newRoomId });
+			events.Raise("select_room", { id: newRoomId });
 		}
-
-		room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
-		room[newRoomId].tilemap = duplicateTilemap;
-		room[newRoomId].sprites = roomToCopy.sprites.slice(0);
-
-		refreshGameData();
-
-		events.Raise("add_room", { id: newRoomId });
-		events.Raise("select_room", { id: newRoomId });
+		else {
+			alert("oh no you ran out of rooms! :(");
+		}
 	}
 
 	function newRoom() {
-		roomIndex = Object.keys( room ).length;
-		var roomId = nextRoomId();
+		var roomId = nextB256Id(room, 1, DEFAULT_REGISTRY_SIZE);
 
-		var palIdList = sortedPaletteIdList();
-		var palId = palIdList.length > 0 ? palIdList[0] : null;
+		if (roomId != null) {
+			var palIdList = sortedPaletteIdList();
+			var palId = palIdList.length > 0 ? palIdList[0] : null;
 
-		room[roomId] = createRoom(roomId, palId);
-		refreshGameData();
+			room[roomId] = createRoom(roomId, palId);
+			refreshGameData();
 
-		events.Raise("add_room", { id: roomId });
-		events.Raise("select_room", { id: roomId });
+			events.Raise("add_room", { id: roomId });
+			events.Raise("select_room", { id: roomId });
+		}
+		else {
+			alert("oh no you ran out of rooms! :(");
+		}
 	}
 
 	function deleteRoom() {
@@ -489,6 +498,24 @@ function RoomTool(controls) {
 	controls.nav.add.onclick = newRoom;
 	controls.nav.copy.onclick = duplicateRoom;
 	controls.nav.del.onclick = deleteRoom;
+
+	function updateRoomName() {
+		if (curRoom == null) { 
+			return;
+		}
+
+		// document.getElementById("roomId").innerHTML = curRoom;
+		var roomLabel = localization.GetStringOrFallback("room_label", "room");
+		document.getElementById("roomName").placeholder =
+			roomLabel + " " + curRoom + " (" + fromB256(curRoom) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+
+		if(room[curRoom].name != null) {
+			document.getElementById("roomName").value = room[curRoom].name;
+		}
+		else {
+			document.getElementById("roomName").value = "";
+		}
+	}
 
 	/* tool select controls */
 	controls.toolSelect.paint.onclick = function() {
@@ -568,6 +595,5 @@ function selectRoom(roomId) {
 		initRoom(curRoom);
 
 		roomTool.Update(); // todo : input id?
-		updateRoomName(); // todo : move inside of tool?
 	}
 }
