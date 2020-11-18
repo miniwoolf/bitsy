@@ -217,26 +217,9 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 		));
 }
 
-
-// todo : put in shared location?
-function GetItemNameFromId(id) {
-	if (!tile[id] || tile[id].type != "ITM") {
-		return "";
-	}
-
-	return (tile[id].name != null ? tile[id].name : localization.GetStringOrFallback("item_label", "item") + " " + id);
-}
-
-// todo : put in shared location?
-function GetRoomNameFromId(id) {
-	if (!room[id]) {
-		return "";
-	}
-
-	return (room[id].name != null ? room[id].name : localization.GetStringOrFallback("room_label", "room") + " " + id);
-}
-
 function RoomIdEditor(expression, parentEditor, isInline) {
+	var roomSelect;
+
 	Object.assign(
 		this,
 		new LiteralEditor(
@@ -245,36 +228,49 @@ function RoomIdEditor(expression, parentEditor, isInline) {
 			isInline,
 			"room select", // todo : localize
 			function() {
-				var input = document.createElement("select");
-				input.title = "choose room";
+				var span = document.createElement("span");
 
-				for (id in room) {
-					var roomOption = document.createElement("option");
-					roomOption.value = id;
-					roomOption.innerText = GetRoomNameFromId(id);
-					roomOption.selected = id === expression.value;
-					input.appendChild(roomOption);
+				TryCreateRoomSelect();
+
+				if (roomSelect) {
+					span.appendChild(roomSelect.GetElement());
 				}
 
-				input.onchange = function(event) {
-					expression.value = event.target.value;
-					parentEditor.NotifyUpdate();
-				}
-
-				return input;
+				return span;
 			},
 			function() {
-				return GetRoomNameFromId(expression.value);
+				return findTool ? findTool.GetDisplayName("room", expression.value) : "";
 			},
 		));
+
+	function TryCreateRoomSelect() {
+		if (findTool && !roomSelect) {
+			roomSelect = findTool.CreateSelectControl(
+				"room",
+				{
+					onSelectChange : function(id) {
+						expression.value = id;
+
+						if (parentEditor && "NotifyUpdate" in parentEditor) {
+							parentEditor.NotifyUpdate();
+						}
+					},
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select room";
+					},
+				});
+
+			roomSelect.SetSelection(expression.value);
+		}
+	}
+
+	TryCreateRoomSelect();
 }
 
-// for rendering item thumbnails
-var thumbnailRenderer = CreateDrawingThumbnailRenderer();
-
-// todo : reimplement thumbnail rendering
 function ItemIdEditor(expression, parentEditor, isInline) {
-	var itemThumbnail = null;
+	var itemSelect;
 
 	Object.assign(
 		this,
@@ -284,83 +280,54 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 			isInline,
 			"item select", // todo : localize
 			function() {
-				var input = document.createElement("select");
-				input.title = "choose item";
+				var span = document.createElement("span");
 
-				for (id in tile) {
-					if (tile[id].type === "ITM") {
-						var itemOption = document.createElement("option");
-						itemOption.value = id;
-						itemOption.innerText = GetItemNameFromId(id);
-						itemOption.selected = id === expression.value;
-						input.appendChild(itemOption);
-					}
+				TryCreateItemSelect();
+
+				if (itemSelect) {
+					span.appendChild(itemSelect.GetElement());
 				}
 
-				input.onchange = function(event) {
-					expression.value = event.target.value;
-					thumbnailRenderer.Render(expression.value, function(uri) { itemThumbnail.src = uri; }, { frameIndex: 0 });
-					parentEditor.NotifyUpdate();
-				}
-
-				return input;
+				return span;
 			},
 			function() {
-				return GetItemNameFromId(expression.value);
+				return findTool ? findTool.GetDisplayName("drawing", expression.value) : "";
 			},
 		));
 
-	// todo : replace this with a generic picker hosted by the find.js?
-	// only try to render the item if it actually exists!
-	if (expression.value in tile && tile[expression.value].type === "ITM") {
-		itemThumbnail = document.createElement("img");
-		itemThumbnail.id = "param_item_" + expression.value;
-		itemThumbnail.style.width = "16px";
-		itemThumbnail.style.marginLeft = "4px";
+	function TryCreateItemSelect() {
+		if (findTool && !itemSelect) {
+			itemSelect = findTool.CreateSelectControl(
+				"drawing",
+				{
+					onSelectChange : function(id) {
+						expression.value = id;
 
-		this.GetElement().prepend(itemThumbnail);
+						if (parentEditor && "NotifyUpdate" in parentEditor) {
+							parentEditor.NotifyUpdate();
+						}
+					},
+					filters : ["item"],
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select item";
+					},
+				});
 
-		thumbnailRenderer.Render(expression.value, function(uri) { itemThumbnail.src = uri; }, { frameIndex: 0 });
+			itemSelect.SetSelection(expression.value);
+		}
 	}
+
+	TryCreateItemSelect();
 }
 
-// TODO : put in shared location?
-var transitionTypes = [
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_fade_w", "fade (white)"); },
-		id: "FDW",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_fade_b", "fade (black)"); },
-		id: "FDB",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_wave", "wave"); },
-		id: "WVE",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_tunnel", "tunnel"); },
-		id: "TNL",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_slide_u", "slide up"); },
-		id: "SLU",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_slide_d", "slide down"); },
-		id: "SLD",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_slide_l", "slide left"); },
-		id: "SLL",
-	},
-	{
-		GetName: function() { return localization.GetStringOrFallback("transition_slide_r", "slide right"); },
-		id: "SLR",
-	},
-];
-
 function TransitionIdEditor(expression, parentEditor, isInline) {
+	var transitionEffectControl = new TransitionEffectControl(function(id) {
+		expression.value = event.target.value;
+		parentEditor.NotifyUpdate();
+	}, false);
+
 	Object.assign(
 		this,
 		new LiteralEditor(
@@ -369,37 +336,11 @@ function TransitionIdEditor(expression, parentEditor, isInline) {
 			isInline,
 			"transition select", // todo : localize
 			function() {
-				var input = document.createElement("select");
-				input.title = "select transition effect";
-
-				for (var i = 0; i < transitionTypes.length; i++) {
-					var id = transitionTypes[i].id;
-					var transitionOption = document.createElement("option");
-					transitionOption.value = id;
-					transitionOption.innerText = transitionTypes[i].GetName();
-					transitionOption.selected = id === expression.value;
-					input.appendChild(transitionOption);
-				}
-
-				input.onchange = function(event) {
-					expression.value = event.target.value;
-					parentEditor.NotifyUpdate();
-				}
-
-				return input;
+				return transitionEffectControl.GetElement();
 			},
 			function() {
-				var name = "";
-
-				// TODO : kind of using the loop in a weird way
-				for (var i = 0; i < transitionTypes.length; i++) {
-					var id = transitionTypes[i].id;
-					if (id === expression.value) {
-						name = transitionTypes[i].GetName();
-					}
-				}
-
-				return name;
+				// todo : broken??
+				return transitionEffectControl.GetName();
 			},
 		));
 }
@@ -494,7 +435,7 @@ function CreateDefaultExpression(type, exp) {
 	}
 	else if (type === "transition") {
 		exp.type = "string";
-		exp.value = "fade_w";
+		exp.value = "FDW";
 	}
 	else if (type === "direction") {
 		exp.type = "string";

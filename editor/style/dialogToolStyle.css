@@ -1,5 +1,5 @@
 .dialogContentViewport {
-	min-width: 415px;
+	min-width: 460px;
 	min-height: 415px;
 	overflow: scroll;
 	display: block;
@@ -20,7 +20,7 @@
 	border-radius: 2px;
 	line-height: 1;
 	resize: both !important;
-	min-width: 415px;
+	min-width: 460px;
 	min-height: 415px;
 	padding: 5px !important;
 	margin: 0px !important;
@@ -116,16 +116,8 @@
 	border: solid 2px #6767b2;
 }
 
-.selectedEditor.actionEditor.dialogEditor {
-	border-color: black;
-}
-
 .selectedEditor.actionEditor.inline {
 	border: none;
-}
-
-.dialogEditor {
-	background: #444;
 }
 
 .dialogEditor textarea {
@@ -150,26 +142,12 @@
 .optionControls {
 }
 
-.dialogEditor button {
-	background: black;
-	color: white;
-}
-
-.dialogEditor .bitsy_icon {
-	fill: white;
-}
-
-.dialogEditor .colorPaletteLabelLight .bitsy_icon {
+.dialogEditor .controlBox button.colorPaletteLabelLight .bitsy_icon {
 	fill: black;
 }
 
-.dialogEditor .colorPaletteLabelDark .bitsy_icon {
+.dialogEditor .controlBox button.colorPaletteLabelDark .bitsy_icon {
 	fill: white;
-}
-
-.dialogEditor .controlBox {
-	background: #333;
-	color: white;
 }
 
 .optionControls button {
@@ -420,13 +398,13 @@
 	animation-iteration-count: infinite;
 }
 
-.textEffectWvyHover {
+.textEffectWvyButton {
 	margin-left: 5px; /* kinda hacky */
 	font-family: bitsy_ascii, monospace;
 	padding-top: 8px;
 }
 
-.textEffectWvyHover:hover {
+.textEffectWvyButton:hover {
 	animation-name: textEffectWvy;
 	animation-duration: 2s;
 	animation-iteration-count: infinite;
@@ -446,12 +424,12 @@
 	animation-iteration-count: infinite;
 }
 
-.textEffectShkHover {
+.textEffectShkButton {
 	font-family: bitsy_ascii, monospace;
 	padding-top: 8px;
 }
 
-.textEffectShkHover:hover {
+.textEffectShkButton:hover {
 	animation-name: textEffectShk;
 	animation-duration: 0.2s;
 	animation-iteration-count: infinite;
@@ -477,12 +455,12 @@
 	animation-iteration-count: infinite;
 }
 
-.textEffectRbwHover {
+.textEffectRbwButton {
 	font-family: bitsy_ascii, monospace;
 	padding-top: 8px;
 }
 
-.textEffectRbwHover:hover {
+.textEffectRbwButton:hover {
 	animation-name: textEffectRbw;
 	animation-duration: 1s;
 	animation-iteration-count: infinite;
@@ -492,6 +470,17 @@
 	display: inline-flex;
 	align-items: center;
 	margin-left: 5px;
+}
+
+.textEffectBrButton {
+	font-family: bitsy_ascii, monospace;
+	padding-top: 8px;
+	margin-left: 5px;
+}
+
+.textEffectPgButton {
+	font-family: bitsy_ascii, monospace;
+	padding-top: 8px;
 }
 
 /* todo: move into own file?*/

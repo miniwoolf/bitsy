@@ -110,7 +110,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 			iconId: null,
 			tagOpen : "{WVY}",
 			tagClose : "{/WVY}",
-			styleName: "textEffectWvyHover",
+			styleName: "textEffectWvyButton",
 		},
 		{
 			name: "SHK", //localization.GetStringOrFallback("dialog_effect_shaky", "shaky"),
@@ -118,7 +118,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 			iconId: null,
 			tagOpen : "{SHK}",
 			tagClose : "{/SHK}",
-			styleName: "textEffectShkHover",
+			styleName: "textEffectShkButton",
 		},
 		{
 			name: "RBW", //localization.GetStringOrFallback("dialog_effect_rainbow", "rainbow"),
@@ -126,7 +126,23 @@ function DialogTextEditor(expressionList, parentEditor) {
 			iconId: null,
 			tagOpen : "{RBW}",
 			tagClose : "{/RBW}",
-			styleName: "textEffectRbwHover",
+			styleName: "textEffectRbwButton",
+		},
+		{
+			name: "BR",
+			description: "add linebreak",
+			iconId: null,
+			tagOpen: "",
+			tagClose: "{BR}",
+			styleName: "textEffectBrButton",
+		},
+		{
+			name: "PG",
+			description: "add pagebreak",
+			iconId: null,
+			tagOpen: "",
+			tagClose: "{PG}",
+			styleName: "textEffectPgButton",
 		},
 	];
 

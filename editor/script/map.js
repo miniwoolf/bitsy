@@ -327,17 +327,10 @@ function MapTool(controls) {
 			controls.nameInput.placeholder = "map " + curMapId +
 				" (" + fromB256(curMapId) + "/" + (MAP_REGISTRY_SIZE - 1) + ")"; // todo : LOCALIZE
 
-			controls.transitionEffectUp.value =
-				map[curMapId].transition_effect_up ? map[curMapId].transition_effect_up : "none";
-
-			controls.transitionEffectDown.value =
-				map[curMapId].transition_effect_down ? map[curMapId].transition_effect_down : "none";
-
-			controls.transitionEffectLeft.value =
-				map[curMapId].transition_effect_left ? map[curMapId].transition_effect_left : "none";
-
-			controls.transitionEffectRight.value =
-				map[curMapId].transition_effect_right ? map[curMapId].transition_effect_right : "none";
+			transitionEffectUpControl.SetSelection(map[curMapId].transition_effect_up);
+			transitionEffectDownControl.SetSelection(map[curMapId].transition_effect_down);
+			transitionEffectLeftControl.SetSelection(map[curMapId].transition_effect_left);
+			transitionEffectRightControl.SetSelection(map[curMapId].transition_effect_right);
 		}
 		else {
 			controls.nameInput.readOnly = true;
@@ -368,43 +361,121 @@ function MapTool(controls) {
 	controls.addButton.onclick = AddMap;
 	controls.deleteButton.onclick = DeleteMap;
 
-	controls.transitionEffectUp.onchange = function() {
+	var transitionEffectUpControl = new TransitionEffectControl(function(id) {
 		if (curMapId && curMapId in map) {
-			map[curMapId].transition_effect_up =
-				controls.transitionEffectUp.value != "none" ? controls.transitionEffectUp.value : null;
-
+			map[curMapId].transition_effect_up = id != "none" ? id : null;
 			refreshGameData();
 		}
-	}
+	}, true);
+	controls.transitionEffectUp.appendChild(transitionEffectUpControl.GetElement());
 
-	controls.transitionEffectDown.onchange = function() {
+	var transitionEffectDownControl = new TransitionEffectControl(function(id) {
 		if (curMapId && curMapId in map) {
-			map[curMapId].transition_effect_down =
-				controls.transitionEffectDown.value != "none" ? controls.transitionEffectDown.value : null;
-
+			map[curMapId].transition_effect_down = id != "none" ? id : null;
 			refreshGameData();
 		}
-	}
+	}, true);
+	controls.transitionEffectDown.appendChild(transitionEffectDownControl.GetElement());
 
-	controls.transitionEffectLeft.onchange = function() {
+	var transitionEffectLeftControl = new TransitionEffectControl(function(id) {
 		if (curMapId && curMapId in map) {
-			map[curMapId].transition_effect_left =
-				controls.transitionEffectLeft.value != "none" ? controls.transitionEffectLeft.value : null;
-
+			map[curMapId].transition_effect_left = id != "none" ? id : null;
 			refreshGameData();
 		}
-	}
+	}, true);
+	controls.transitionEffectLeft.appendChild(transitionEffectLeftControl.GetElement());
 
-	controls.transitionEffectRight.onchange = function() {
+	var transitionEffectRightControl = new TransitionEffectControl(function(id) {
 		if (curMapId && curMapId in map) {
-			map[curMapId].transition_effect_right =
-				controls.transitionEffectRight.value != "none" ? controls.transitionEffectRight.value : null;
-
+			map[curMapId].transition_effect_right = id != "none" ? id : null;
 			refreshGameData();
 		}
-	}
+	}, true);
+	controls.transitionEffectRight.appendChild(transitionEffectRightControl.GetElement());
 
 	controls.showOptionsButton.onclick = function() {
 		controls.optionsRoot.style.display = controls.showOptionsButton.checked ? "block" : "none";
 	}
 }
+
+var TransitionEffects = [
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_fade_w", "fade (white)"); },
+		id: TRANSITION_KEY.FADE_WHITE,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_fade_b", "fade (black)"); },
+		id: TRANSITION_KEY.FADE_BLACK,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_wave", "wave"); },
+		id: TRANSITION_KEY.WAVE,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_tunnel", "tunnel"); },
+		id: TRANSITION_KEY.TUNNEL,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_slide_u", "slide up"); },
+		id: TRANSITION_KEY.SLIDE_UP,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_slide_d", "slide down"); },
+		id: TRANSITION_KEY.SLIDE_DOWN,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_slide_l", "slide left"); },
+		id: TRANSITION_KEY.SLIDE_LEFT,
+	},
+	{
+		GetName: function() { return localization.GetStringOrFallback("transition_slide_r", "slide right"); },
+		id: TRANSITION_KEY.SLIDE_RIGHT,
+	},
+];
+
+// todo : add custom select control?
+function TransitionEffectControl(onChange, allowNone) {
+	var input = document.createElement("select");
+	input.title = "select transition effect";
+
+	if (allowNone) {
+		var noneOption = document.createElement("option");
+		noneOption.value = "none";
+		noneOption.innerText = "none"; // todo : localize
+		input.appendChild(noneOption);
+	}
+
+	for (var i = 0; i < TransitionEffects.length; i++) {
+		var id = TransitionEffects[i].id;
+		var transitionOption = document.createElement("option");
+		transitionOption.value = id;
+		transitionOption.innerText = TransitionEffects[i].GetName();
+		input.appendChild(transitionOption);
+	}
+
+	input.onchange = function(event) {
+		onChange(event.target.value);
+	}
+
+	this.GetElement = function() {
+		return input;
+	};
+
+	this.SetSelection = function(id) {
+		if (id === null) {
+			id = "none";
+		}
+
+		input.value = id;
+	};
+
+	this.GetName = function() {
+		for (var i = 0; i < TransitionEffects.length; i++) {
+			if (TransitionEffects[i].id === input.value) {
+				return TransitionEffects[i].GetName();
+			}
+		}
+
+		return "none";
+	};
+};
