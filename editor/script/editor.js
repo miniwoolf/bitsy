@@ -438,7 +438,7 @@ function refreshGameData() {
 		return; //never store game data while in playmode (TODO: wouldn't be necessary if the game data was decoupled form editor data)
 	}
 
-	flags.ROOM_FORMAT = 1; // always save out comma separated format, even if the old format is read in
+	flags.ROOM_FORMAT = 0; // todo : need a new format flag to signify that sprites are included?
 
 	// var gameData = parser.SerializeWorld();
 
