@@ -227,10 +227,14 @@ function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rena
 
 	dialogEditorViewport.appendChild(curDialogEditor.GetElement());
 
-	document.getElementById("dialogName").placeholder = "dialog " + dialogId;
+	// todo : localize!
+	document.getElementById("dialogName").placeholder = "dialog " + dialogId +
+		" (" + fromB256(dialogId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+
 	if (dialogId === titleDialogId) {
 		document.getElementById("dialogName").readOnly = true;
-		document.getElementById("dialogName").value = titleDialogId;
+		// todo : localize
+		document.getElementById("dialogName").value = "title";
 	}
 	else {
 		document.getElementById("dialogName").readOnly = false;
@@ -319,23 +323,35 @@ function prevDialog() {
 
 // todo : move into its own tool?
 function addNewDialog() {
-	var id = nextAvailableDialogId();
+	var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
-	dialog[id] = { src:" ", name:null };
-	refreshGameData();
+	if (id != null) {
+		// todo : need shared create method
+		dialog[id] = createScript(id, null, " ");
+		refreshGameData();
 
-	events.Raise("select_dialog", { id: id });
+		events.Raise("select_dialog", { id: id });
 
-	events.Raise("new_dialog", { id:id });
+		events.Raise("new_dialog", { id:id });
+	}
+	else {
+		alert("oh no you ran out of dialog! :(");
+	}
 }
 
 function duplicateDialog() {
 	if (curDialogEditorId != null) {
-		var id = nextAvailableDialogId();
-		dialog[id] = { src:dialog[curDialogEditorId].slice(), name:null };
-		refreshGameData();
+		var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
-		events.Raise("select_dialog", { id: id });
+		if (id != null) {
+			dialog[id] = createScript(id, null, dialog[curDialogEditorId].slice());
+			refreshGameData();
+
+			events.Raise("select_dialog", { id: id });
+		}
+		else {
+			alert("oh no you ran out of dialog! :(");
+		}
 	}
 }
 

@@ -100,7 +100,8 @@ function PaletteTool(colorPicker, controls) {
 		// update name field
 		var palettePlaceholderName = localization.GetStringOrFallback("palette_label", "palette");
 
-		controls.nameInput.placeholder = palettePlaceholderName + " " + GetSelectedId();
+		controls.nameInput.placeholder = palettePlaceholderName + " " + GetSelectedId() +
+			" (" + fromB256(GetSelectedId()) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
 
 		var pal = palette[GetSelectedId()];
 
@@ -216,36 +217,47 @@ function PaletteTool(colorPicker, controls) {
 
 	this.AddNew = function() {
 		// create new palette and save the data
-		var id = nextPaletteId();
+		var id = nextB256Id(palette, 1, DEFAULT_REGISTRY_SIZE);
 
-		var randomColors = [
-			hslToRgb(Math.random(), 1.0, 0.5),
-			hslToRgb(Math.random(), 1.0, 0.5),
-			hslToRgb(Math.random(), 1.0, 0.5) ];
+		if (id != null) {
+			var randomColors = [
+				hslToRgb(Math.random(), 1.0, 0.5),
+				hslToRgb(Math.random(), 1.0, 0.5),
+				hslToRgb(Math.random(), 1.0, 0.5) ];
 
-		palette[id] = createPalette(id, null, randomColors);
+			palette[id] = createPalette(id, null, randomColors);
 
-		events.Raise("add_palette", { id: id });
-		events.Raise("select_palette", { id: id });
-		events.Raise("palette_list_change");
+			events.Raise("add_palette", { id: id });
+			events.Raise("select_palette", { id: id });
+			events.Raise("palette_list_change");
+		}
+		else {
+			alert("oh no you ran out of palettes! :(");
+		}
 	}
 
 	this.AddDuplicate = function() {
-		var sourcePalette = palette[curPaletteId] === undefined ? null : palette[curPaletteId];
-		var curColors = sourcePalette.colors;
+		var id = nextB256Id(palette, 1, DEFAULT_REGISTRY_SIZE);
 
-		var id = nextPaletteId();
-		var dupeColors = [];
+		if (id != null) {
+			var sourcePalette = palette[curPaletteId] === undefined ? null : palette[curPaletteId];
+			var curColors = sourcePalette.colors;
 
-		for (var i = 0; i < curColors.length; i++) {
-			dupeColors.push(curColors[i].slice());
+			var dupeColors = [];
+
+			for (var i = 0; i < curColors.length; i++) {
+				dupeColors.push(curColors[i].slice());
+			}
+
+			palette[id] = createPalette(id, null, dupeColors);
+
+			events.Raise("add_palette", { id: id });
+			events.Raise("select_palette", { id: id });
+			events.Raise("palette_list_change");
 		}
-
-		palette[id] = createPalette(id, null, dupeColors);
-
-		events.Raise("add_palette", { id: id });
-		events.Raise("select_palette", { id: id });
-		events.Raise("palette_list_change");
+		else {
+			alert("oh no you ran out of palettes! :(");
+		}
 	}
 
 	this.DeleteSelected = function() {

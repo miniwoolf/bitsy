@@ -278,8 +278,8 @@ function FindTool(controls) {
 		categoryStore: dialog,
 		getCaption: function(dlg) {
 			if (dlg.id === titleDialogId) {
-				// todo : localize?
-				return titleDialogId;
+				// todo : localize
+				return "title";
 			}
 			else {
 				return dlg.name ? dlg.name : "dialog " + dlg.id;
@@ -293,7 +293,8 @@ function FindTool(controls) {
 		},
 		selectEventId: "select_dialog",
 		toolId: "dialogPanel",
-		// TODO : add & delete
+		addEventId: "new_dialog",
+		deleteEventId: "dialog_delete", // todo : seems broken?
 		changeNameEventId: "change_dialog_name",
 	});
 

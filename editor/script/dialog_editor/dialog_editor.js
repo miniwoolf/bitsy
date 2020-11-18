@@ -89,9 +89,15 @@ function DialogTool() {
 
 			var didMakeNewDialog = false;
 			if (dialogStr.length > 0 && !DoesDialogExist()) {
-				dialogId = nextAvailableDialogId();
-				dialog[dialogId] = { src: "", name: defaultDialogNameFunc ? defaultDialogNameFunc() : null }; // init new dialog
-				didMakeNewDialog = true;
+				dialogId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
+				if (dialogId != null) {
+					// init new dialog
+					dialog[dialogId] = createScript(dialogId, defaultDialogNameFunc ? defaultDialogNameFunc() : null, "" );
+					didMakeNewDialog = true;
+				}
+				else {
+					// error message?
+				}
 			}
 
 			if (!DoesDialogExist()) {

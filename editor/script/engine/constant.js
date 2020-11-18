@@ -8,8 +8,12 @@ var mapsize = 8;
 
 var DEFAULT_REGISTRY_SIZE = 256;
 var MAP_REGISTRY_SIZE = 5;
+
 var PALETTE_SIZE = 16;
 var ANIMATION_SIZE = 4;
+
+// todo : name ok?
+var NULL_ID = "0"; // reserved for blank / default
 
 var COLOR_INDEX = {
 	TEXTBOX : 0,

@@ -130,31 +130,36 @@ function DialogControl(parentPanelId) {
 	div.appendChild(editorDiv);
 
 	function createNewDialog(dialogEvent, src, openTool) {
-		var nextDlgId = nextObjectId(sortedDialogIdList());
+		var nextDlgId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
-		var nextName = "";
+		if (nextDlgId != null) {
+			var nextName = "";
 
-		if (findTool) {
-			nextName += findTool.GetDisplayName("drawing", drawingId);
-			nextName += " ";
+			if (findTool) {
+				nextName += findTool.GetDisplayName("drawing", drawingId);
+				nextName += " ";
+			}
+
+			nextName += dialogEvent.shortName;
+
+			nextName = CreateDefaultName(nextName, dialog, true);
+
+			dialog[nextDlgId] = createScript(nextDlgId, nextName, src);
+
+			curDlgId = nextDlgId;
+
+			dialogEvent.selectControl.UpdateOptions();
+			dialogEvent.selectControl.SetSelection(curDlgId);
+
+			if (openTool) {
+				dialogEvent.selectControl.OpenTool();
+			}
+
+			refreshGameData();
 		}
-
-		nextName += dialogEvent.shortName;
-
-		nextName = CreateDefaultName(nextName, dialog, true);
-
-		dialog[nextDlgId] = createScript(nextDlgId, nextName, src);
-
-		curDlgId = nextDlgId;
-
-		dialogEvent.selectControl.UpdateOptions();
-		dialogEvent.selectControl.SetSelection(curDlgId);
-
-		if (openTool) {
-			dialogEvent.selectControl.OpenTool();
+		else {
+			alert("oh no you ran out of dialog! :(");
 		}
-
-		refreshGameData();
 	}
 
 	var textArea = document.createElement("textarea");
