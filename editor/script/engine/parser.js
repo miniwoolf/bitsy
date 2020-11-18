@@ -765,7 +765,7 @@ function serializeWorld(skipFonts) {
 				}
 			}
 		}
-		if (room[id].pal != null) {
+		if (room[id].pal != null && room[id].pal != NULL_ID) {
 			/* PALETTE */
 			worldStr += TYPE_KEY.PALETTE + " " + room[id].pal + "\n";
 		}

@@ -1124,7 +1124,10 @@ function initRoom(roomId) {
 
 	var palId = room[roomId].pal;
 	color.StoreRoomPalette();
-	color.LoadRoomPalette(palette[palId]);
+
+	// todo : is this how I want to do this?
+	color.LoadRoomPalette(room[roomId].pal === NULL_ID ? null : palette[palId]);
+
 	color.UpdateSystemPalette();
 	renderer.ResetRenderCache();
 }
@@ -1391,7 +1394,7 @@ function createRoom(id, palId) {
 			],
 		sprites : [],
 		walls : [], // todo : remove?
-		pal : palId,
+		pal : (palId === undefined || palId === null) ? NULL_ID : palId,
 		mapLocation : { id: null, x:-1, y:-1 },
 	};
 }
