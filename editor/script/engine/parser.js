@@ -345,16 +345,13 @@ function parseMap(lines, i) {
 
 	var end = i + mapsize;
 	var y = 0;
-	for (; i < end; i++) {
-		var lineSep = lines[i].split(",");
 
+	for (; i < end; i++) {
 		for (x = 0; x < mapsize; x++) {
-			var roomId = lineSep[x];
-			map[id].map[y][x] = roomId;
+			map[id].map[y][x] = lines[i][x];
 
 			// NOTE: assumes rooms already exist!
-			// TODO : room "0" is no longer valid since 0 == empty map space...
-			if (roomId != "0") {
+			if (roomId != NULL_ID) {
 				room[roomId].mapLocation.id = id;
 				room[roomId].mapLocation.x = x;
 				room[roomId].mapLocation.y = y;
@@ -777,9 +774,6 @@ function serializeWorld(skipFonts) {
 		for (i in map[id].map) {
 			for (j in map[id].map[i]) {
 				worldStr += map[id].map[i][j];
-				if (j < map[id].map[i].length - 1) {
-					worldStr += ",";
-				}
 			}
 			worldStr += "\n";
 		}
