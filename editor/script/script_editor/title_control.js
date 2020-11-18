@@ -1,10 +1,4 @@
-/* TitleWidget TODO
-- gameTextDir class
-- empty title mode
-- get rid of the duplicate preview and text input and just make the input readonly
-- rename?
-*/
-function TitleWidget() {
+function TitleControl() {
 	var isMultiline = false;
 
 	// is it bad to share the id counter with the other editors?

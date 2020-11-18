@@ -1,0 +1,3 @@
+function DialogTool(controls) {
+	// TODO
+}

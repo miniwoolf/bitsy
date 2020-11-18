@@ -193,7 +193,6 @@ function listenForDialogSelect() {
 	});
 }
 
-var dialogTool = new DialogTool();
 var curDialogEditorId = null; // can I wrap this all up somewhere? -- feels a bit hacky to have all these globals
 var curDialogEditor = null;
 function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rename since it doesn't always "open" it?
@@ -215,7 +214,7 @@ function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rena
 	}
 
 	curDialogEditorId = dialogId;
-	curDialogEditor = dialogTool.CreateEditor(dialogId);
+	curDialogEditor = new ScriptEditor(dialogId);
 	curDialogEditor.SetPlaintextMode(showCode);
 
 	if (size != null) {
@@ -967,11 +966,11 @@ function start() {
 	// 	}
 	// }
 
-	// create title widgets
-	var titleTextWidgets = document.getElementsByClassName("titleWidgetContainer");
-	for (var i = 0; i < titleTextWidgets.length; i++) {
-		var widget = dialogTool.CreateTitleWidget();
-		titleTextWidgets[i].appendChild(widget.GetElement());
+	// create title controls
+	var titleControlRootElements = document.getElementsByClassName("titleWidgetContainer");
+	for (var i = 0; i < titleControlRootElements.length; i++) {
+		var control = new TitleControl();
+		titleControlRootElements[i].appendChild(control.GetElement());
 	}
 
 	// prepare dialog tool
