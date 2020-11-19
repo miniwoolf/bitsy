@@ -10,7 +10,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
-	titleDiv.innerText = localization.GetStringOrFallback("branching_list_name", "branching list");
+	titleDiv.innerText = localization.GetStringOrFallback("dialog_block_conditional", "conditional");
 	div.appendChild(titleDiv);
 
 	var descriptionDiv = document.createElement("div");

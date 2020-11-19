@@ -1,7 +1,7 @@
 var sequenceTypeDescriptionMap = {
 	"SEQ" : {
 		GetName : function() {
-			return localization.GetStringOrFallback("sequence_list_name", "sequence list");
+			return localization.GetStringOrFallback("sequence_name", "sequence");
 		},
 		GetTypeName : function() {
 			return localization.GetStringOrFallback("sequence_name", "sequence");
@@ -12,7 +12,7 @@ var sequenceTypeDescriptionMap = {
 	},
 	"CYC" : {
 		GetName : function() {
-			return localization.GetStringOrFallback("cycle_list_name", "cycle list");
+			return localization.GetStringOrFallback("cycle_name", "cycle");
 		},
 		GetTypeName : function() {
 			return localization.GetStringOrFallback("cycle_name", "cycle");
@@ -23,7 +23,7 @@ var sequenceTypeDescriptionMap = {
 	},
 	"SHF" : {
 		GetName : function() {
-			return localization.GetStringOrFallback("shuffle_list_name", "shuffle list");
+			return localization.GetStringOrFallback("shuffle_name", "shuffle");
 		},
 		GetTypeName : function() {
 			return localization.GetStringOrFallback("shuffle_name", "shuffle");
