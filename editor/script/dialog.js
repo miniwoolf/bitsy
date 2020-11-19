@@ -244,6 +244,22 @@ function DialogTool(controls) {
 		curScriptEditor.AddChoice();
 	};
 
+	controls.editControls.addDialogControls.sequence.onclick = function() {
+		curScriptEditor.AddSequence();
+	};
+
+	controls.editControls.addDialogControls.cycle.onclick = function() {
+		curScriptEditor.AddCycle();
+	};
+
+	controls.editControls.addDialogControls.shuffle.onclick = function() {
+		curScriptEditor.AddShuffle();
+	};
+
+	controls.editControls.addDialogControls.conditional.onclick = function() {
+		curScriptEditor.AddConditional();
+	};
+
 	/* events */
 	events.Listen("select_dialog", function(e) {
 		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
