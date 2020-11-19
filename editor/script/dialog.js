@@ -1,5 +1,446 @@
 function DialogTool(controls) {
-	// TODO
+	var curDialogId = null;
+	var curScriptEditor = null;
+
+	var textEffects = new TextEffectsControl();
+	textEffects.Update(false);
+
+	// todo : rename since it doesn't always "open" it?
+	function openDialogTool(dialogId, insertNextToId, showIfHidden) {
+		if (showIfHidden === undefined || showIfHidden === null) {
+			showIfHidden = true;
+		}
+
+		controls.nav.del.disabled = dialogId === titleDialogId;
+
+		var showCode = controls.showCodeToggle.checked;
+
+		var size = null;
+
+		// clean up any existing editors -- is there a more "automagical" way to do this???
+		if (curScriptEditor) {
+			size = curScriptEditor.GetSize();
+			curScriptEditor.OnDestroy();
+			delete curScriptEditor;
+		}
+
+		curDialogId = dialogId;
+		curScriptEditor = new ScriptEditor(dialogId);
+		curScriptEditor.SetPlaintextMode(showCode);
+
+		if (size != null) {
+			curScriptEditor.SetSize(size.width, size.height);
+		}
+
+		var dialogEditorViewport = controls.scriptEditorViewport;
+		dialogEditorViewport.innerHTML = "";
+
+		dialogEditorViewport.appendChild(curScriptEditor.GetElement());
+
+		// todo : localize!
+		controls.nameInput.placeholder = "dialog " + dialogId +
+			" (" + fromB256(dialogId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+
+		if (dialogId === titleDialogId) {
+			controls.nameInput.readOnly = true;
+			// todo : localize
+			controls.nameInput.value = "title";
+		}
+		else {
+			controls.nameInput.readOnly = false;
+			if (dialog[dialogId].name != null) {
+				controls.nameInput.value = dialog[dialogId].name;
+			}
+			else {
+				controls.nameInput.value = "";
+			}
+		}
+
+		var isHiddenOrShouldMove = (controls.panelRoot.style.display === "none") ||
+			(insertNextToId != undefined && insertNextToId != null);
+
+		if (isHiddenOrShouldMove && showIfHidden) {
+			showPanel("dialogPanel", insertNextToId);
+		}
+	}
+
+	function onDialogNameChange(event) {
+		if (event.target.value != null && event.target.value.length > 0) {
+			dialog[curDialogId].name = event.target.value;
+		}
+		else {
+			dialog[curDialogId].name = null;
+		}
+
+		refreshGameData();
+
+		events.Raise("change_dialog_name", { id: curDialogId, name: dialog[curDialogId].name });
+	}
+
+	function nextDialog() {
+		var id = titleDialogId; // the title is safe as a default choice
+
+		if (curDialogId != null) {
+			var dialogIdList = sortedDialogIdList();
+			var dialogIndex = dialogIdList.indexOf(curDialogId);
+
+			// pick the index of the next dialog to open
+			dialogIndex++;
+			if (dialogIndex >= dialogIdList.length) {
+				dialogIndex = -1; // hacky: I'm using -1 to denote the title
+			}
+
+			// turn the index into an ID
+			if (dialogIndex < 0) {
+				id = titleDialogId;
+			}
+			else {
+				id = dialogIdList[dialogIndex];
+			}
+		}
+
+		events.Raise("select_dialog", { id: id });
+	}
+
+	function prevDialog() {
+		var id = titleDialogId; // the title is safe as a default choice
+
+		if (curDialogId != null) {
+			var dialogIdList = sortedDialogIdList();
+			var dialogIndex = dialogIdList.indexOf(curDialogId);
+
+			// pick the index of the next dialog to open
+			if (dialogIndex === -1) {
+				dialogIndex = dialogIdList.length - 1;
+			}
+			else {
+				dialogIndex--;
+			}
+
+			// turn the index into an ID
+			if (dialogIndex < 0) {
+				id = titleDialogId;
+			}
+			else {
+				id = dialogIdList[dialogIndex];
+			}
+		}
+
+		events.Raise("select_dialog", { id: id });
+	}
+
+	// todo : move into its own tool?
+	function addNewDialog() {
+		var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
+
+		if (id != null) {
+			// todo : need shared create method
+			dialog[id] = createScript(id, null, " ");
+			refreshGameData();
+
+			events.Raise("select_dialog", { id: id });
+
+			events.Raise("new_dialog", { id:id });
+		}
+		else {
+			alert("oh no you ran out of dialog! :(");
+		}
+	}
+
+	function duplicateDialog() {
+		if (curDialogId != null) {
+			var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
+
+			if (id != null) {
+				dialog[id] = createScript(id, null, dialog[curDialogId].slice());
+				refreshGameData();
+
+				events.Raise("select_dialog", { id: id });
+			}
+			else {
+				alert("oh no you ran out of dialog! :(");
+			}
+		}
+	}
+
+	function deleteDialog() {
+		var shouldDelete = confirm("Are you sure you want to delete this dialog?");
+
+		if (shouldDelete && curDialogId != null && curDialogId != titleDialogId) {
+			var tempDialogId = curDialogId;
+
+			nextDialog();
+
+			// delete all references to deleted dialog (TODO : should this go in a wrapper function somewhere?)
+			for (id in tile) {
+				if (tile[id].dlg === tempDialogId) {
+					tile[id].dlg = null;
+				}
+			}
+
+			delete dialog[tempDialogId];
+			refreshGameData();
+
+			events.Raise("dialog_delete", { dialogId:tempDialogId, editorId:null });
+		}
+	}
+
+	function toggleDialogCode(e) {
+		var showCode = e.target.checked;
+		curScriptEditor.SetPlaintextMode(showCode);
+
+		if (showCode) {
+			controls.editControls.container.disabled = true;
+			controls.editControls.container.classList.add("disabledControls");
+		}
+		else {
+			controls.editControls.container.disabled = false;
+			controls.editControls.container.classList.remove("disabledControls");
+		}
+	}
+
+	var alwaysShowDrawingDialog = true;
+	function toggleAlwaysShowDrawingDialog(e) {
+		// TODO : re-implement?
+
+		// alwaysShowDrawingDialog = e.target.checked;
+
+		// if (alwaysShowDrawingDialog) {
+		// 	var dlg = getCurDialogId();
+		// 	if (dialog[dlg]) {
+		// 		events.Raise("select_dialog", { id: dlg });
+		// 	}
+		// }
+	}
+
+	/* controls */
+	controls.nameInput.onchange = onDialogNameChange;
+	controls.previewToggle.onclick = togglePreviewDialog;
+	controls.showCodeToggle.onclick = toggleDialogCode;
+	controls.nav.prev.onclick = prevDialog;
+	controls.nav.next.onclick = nextDialog;
+	controls.nav.add.onclick = addNewDialog;
+	controls.nav.copy.onclick = duplicateDialog;
+	controls.nav.del.onclick = deleteDialog;
+
+	controls.editControls.editDialogAdd.onclick = function() {
+		controls.editControls.dialogAddControls.style.display = "flex";
+		textEffects.Update(false);
+	};
+	controls.editControls.editDialogAdd.checked = true;
+
+	controls.editControls.editDialogTextEffects.onclick = function() {
+		controls.editControls.dialogAddControls.style.display = "none";
+		textEffects.Update(true);
+	};
+
+	controls.editControls.textEffectsControls.appendChild(textEffects.GetElement());
+
+	controls.editControls.addDialogControls.dialog.onclick = function() {
+		curScriptEditor.AddDialog();
+	};
+
+	controls.editControls.addDialogControls.choice.onclick = function() {
+		curScriptEditor.AddChoice();
+	};
+
+	/* events */
+	events.Listen("select_dialog", function(e) {
+		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
+	});
+}
+
+function TextEffectsControl() {
+	var textEffectsControlsDiv = document.createElement("div");
+
+	var textEffects = [
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color1", "color 1"),
+			description: "text in tags matches the 1st color in the palette", // todo : localize these!
+			iconId: "colors",
+			tagOpen : "{CLR 0}",
+			tagClose : "{/CLR}",
+			getStyle : function() { return paletteTool ? paletteTool.GetStyle(0) : null; },
+			getBackground : function() { return paletteTool ? paletteTool.GetBackgroundColor(0) : null; },
+		},
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color2", "color 2"),
+			description: "text in tags matches the 2nd color in the palette",
+			iconId: "colors",
+			tagOpen : "{CLR 1}",
+			tagClose : "{/CLR}",
+			getStyle : function() { return paletteTool ? paletteTool.GetStyle(1) : null; },
+			getBackground : function() { return paletteTool ? paletteTool.GetBackgroundColor(1) : null; },
+		},
+		{
+			name: localization.GetStringOrFallback("dialog_effect_color3", "color 3"),
+			description: "text in tags matches the 3rd color in the palette",
+			iconId: "colors",
+			tagOpen : "{CLR 2}",
+			tagClose : "{/CLR}",
+			getStyle : function() { return paletteTool ? paletteTool.GetStyle(2) : null; },
+			getBackground : function() { return paletteTool ? paletteTool.GetBackgroundColor(2) : null; },
+		},
+		{
+			name: "WVY", //localization.GetStringOrFallback("dialog_effect_wavy", "wavy"),
+			description: "text in tags waves up and down",
+			iconId: null,
+			tagOpen : "{WVY}",
+			tagClose : "{/WVY}",
+			styleName: "textEffectWvyButton",
+			getStyle : function() { return "textEffectWvyButton"; },
+		},
+		{
+			name: "SHK", //localization.GetStringOrFallback("dialog_effect_shaky", "shaky"),
+			description: "text in tags shakes constantly",
+			iconId: null,
+			tagOpen : "{SHK}",
+			tagClose : "{/SHK}",
+			getStyle : function() { return "textEffectShkButton"; },
+		},
+		{
+			name: "RBW", //localization.GetStringOrFallback("dialog_effect_rainbow", "rainbow"),
+			description: "text in tags is rainbow colored",
+			iconId: null,
+			tagOpen : "{RBW}",
+			tagClose : "{/RBW}",
+			getStyle : function() { return "textEffectRbwButton"; },
+		},
+		{
+			name: "BR",
+			description: "add linebreak",
+			iconId: null,
+			tagOpen: "",
+			tagClose: "{BR}",
+			getStyle : function() { return "textEffectBrButton"; },
+		},
+		{
+			name: "PG",
+			description: "add pagebreak",
+			iconId: null,
+			tagOpen: "",
+			tagClose: "{PG}",
+			getStyle : function() { return "textEffectPgButton"; },
+		},
+	];
+
+	function CreateAddEffectHandler(tagOpen, tagClose) {
+		return function() {
+			wrapTextSelection(tagOpen, tagClose); // hacky to still use this?
+		}
+	}
+
+	var effectButtons = [];
+
+	for (var i = 0; i < textEffects.length; i++) {
+		var effect = textEffects[i];
+
+		var effectButton = document.createElement("button");
+		effectButton.onclick = CreateAddEffectHandler(effect.tagOpen, effect.tagClose);
+
+		if (effect.iconId != null && iconUtils != null) {
+			effectButton.appendChild(iconUtils.CreateIcon(effect.iconId));
+		}
+		else {
+			effectButton.innerText = effect.name;
+		}
+
+		effectButton.title = effect.description;
+
+		if (effect.getBackground) {
+			effectButton.style.background = effect.getBackground();
+		}
+
+		if (effect.getStyle) {
+			effectButton.setAttribute("class", effect.getStyle());
+		}
+
+		effectButtons.push(effectButton);
+
+		textEffectsControlsDiv.appendChild(effectButton);
+	}
+
+	var textEffectsPrintDrawingSpan = document.createElement("span");
+	textEffectsPrintDrawingSpan.classList.add("textEffectDrwSelect");
+	textEffectsControlsDiv.appendChild(textEffectsPrintDrawingSpan);
+
+	function TryUpdateTextEffectDrwSelectControls() {
+		if (findTool) {
+			textEffectsPrintDrawingSpan.innerHTML = "";
+
+			var textEffectsPrintDrawingButton = document.createElement("button");
+			textEffectsPrintDrawingButton.appendChild(iconUtils.CreateIcon("paint"));
+			textEffectsPrintDrawingButton.title = "draw a tile in your dialog";
+			textEffectsPrintDrawingSpan.appendChild(textEffectsPrintDrawingButton);
+
+			var seperatorSpan = document.createElement("span");
+			seperatorSpan.innerText = ":";
+			seperatorSpan.style.marginLeft = "2px"; // hacky styles..
+			seperatorSpan.style.marginRight = "4px";
+			textEffectsPrintDrawingSpan.appendChild(seperatorSpan);
+
+			var textEffectDrwId = "A"; // todo : is this ok?
+
+			var textEffectDrwSelect = findTool.CreateSelectControl(
+				"drawing",
+				{
+					onSelectChange : function(id) {
+						textEffectDrwId = id;
+					},
+					filters : ["avatar", "sprite", "tile", "item", "exit", "ending"],
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select drawing";
+					},
+					// showDropdown : false, // todo : show or not?
+					showOpenTool : false,
+				});
+
+			textEffectDrwSelect.SetSelection(textEffectDrwId);
+
+			textEffectsPrintDrawingSpan.appendChild(textEffectDrwSelect.GetElement());
+
+			textEffectsPrintDrawingButton.onclick = function() {
+				wrapTextSelection("", '{DRW "' + textEffectDrwId + '"}');
+			};
+		}
+	}
+
+	function UpdateTextEffectsControls(visible) {
+		textEffectsControlsDiv.style.display = visible ? "flex" : "none";
+
+		UpdateButtonStyles();
+
+		if (visible) {
+			TryUpdateTextEffectDrwSelectControls();
+		}
+	}
+
+	function UpdateButtonStyles() {
+		for (var i = 0; i < textEffects.length; i++) {
+			var effect = textEffects[i];
+			var effectButton = effectButtons[i];
+
+			if (effect.getBackground) {
+				effectButton.style.background = effect.getBackground();
+			}
+
+			if (effect.getStyle) {
+				effectButton.setAttribute("class", effect.getStyle());
+			}
+		}
+	}
+
+	this.Update = UpdateTextEffectsControls;
+
+	this.GetElement = function() {
+		return textEffectsControlsDiv;
+	};
+
+	events.Listen("palette_change", function(event) {
+		UpdateButtonStyles();
+	});
 }
 
 function DialogControl(parentPanelId) {
@@ -343,4 +784,33 @@ function DialogControl(parentPanelId) {
 	}
 
 	setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
+}
+
+// todo : keep as global for now?
+var isPreviewDialogMode = false;
+function togglePreviewDialog(event) {
+	if (event.target.checked) {
+		if (curDialogEditor != null) {
+			isPreviewDialogMode = true;
+
+			if (document.getElementById("roomPanel").style.display === "none") {
+				showPanel("roomPanel");
+			}
+
+			on_play_mode();
+		
+			startPreviewDialog(
+				curDialogEditor.GetScriptRoot(), 
+				function() {
+					togglePreviewDialog({ target : { checked : false } });
+				});
+		}
+	}
+	else {
+		on_edit_mode();
+		isPreviewDialogMode = false;
+	}
+
+	updatePlayModeButton();
+	updatePreviewDialogButton();
 }

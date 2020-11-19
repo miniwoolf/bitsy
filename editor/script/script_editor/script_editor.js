@@ -155,6 +155,20 @@ function ScriptEditor(dialogId) {
 			height: curElement.offsetHeight,
 		};
 	};
+
+	this.AddDialog = function() {
+		var token = scriptNext.Parse("...", DialogWrapMode.No);
+		var editor = new DialogTextEditor([token], rootEditor);
+		rootEditor.AppendChild(editor);
+		OnUpdate();
+	};
+
+	this.AddChoice = function() {
+		var token = scriptNext.Parse("{PIK {-> yes} {-> nice!} {-> no} {-> darn}}", DialogWrapMode.No);
+		var editor = new ChoiceEditor(token, rootEditor);
+		rootEditor.AppendChild(editor);
+		OnUpdate();
+	}
 }
 
 function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {

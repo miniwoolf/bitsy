@@ -23,6 +23,7 @@ function selectedColorPal() {
 	return paletteTool.GetSelectedId();
 };
 
+// todo : remove these...
 /* UNIQUE ID METHODS */
 // TODO - lots of duplicated code around stuff (ex: all these things with IDs)
 function nextRoomId() {
@@ -182,200 +183,6 @@ function mobileOffsetCorrection(off,e,innerSize) {
 	return off;
 }
 
-/* DIALOG UI 
-- hacky to make this all global
-- some of this should be folded into paint tool later
-*/
-// another hacky global listener init
-function listenForDialogSelect() {
-	events.Listen("select_dialog", function(e) {
-		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
-	});
-}
-
-var curDialogEditorId = null; // can I wrap this all up somewhere? -- feels a bit hacky to have all these globals
-var curDialogEditor = null;
-function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rename since it doesn't always "open" it?
-	if (showIfHidden === undefined || showIfHidden === null) {
-		showIfHidden = true;
-	}
-
-	document.getElementById("deleteDialogButton").disabled = dialogId === titleDialogId;
-
-	var showCode = document.getElementById("dialogShowCodeCheck").checked;
-
-	var size = null;
-
-	// clean up any existing editors -- is there a more "automagical" way to do this???
-	if (curDialogEditor) {
-		size = curDialogEditor.GetSize();
-		curDialogEditor.OnDestroy();
-		delete curDialogEditor;
-	}
-
-	curDialogEditorId = dialogId;
-	curDialogEditor = new ScriptEditor(dialogId);
-	curDialogEditor.SetPlaintextMode(showCode);
-
-	if (size != null) {
-		curDialogEditor.SetSize(size.width, size.height);
-	}
-
-	var dialogEditorViewport = document.getElementById("dialogEditor");
-	dialogEditorViewport.innerHTML = "";
-
-	dialogEditorViewport.appendChild(curDialogEditor.GetElement());
-
-	// todo : localize!
-	document.getElementById("dialogName").placeholder = "dialog " + dialogId +
-		" (" + fromB256(dialogId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
-
-	if (dialogId === titleDialogId) {
-		document.getElementById("dialogName").readOnly = true;
-		// todo : localize
-		document.getElementById("dialogName").value = "title";
-	}
-	else {
-		document.getElementById("dialogName").readOnly = false;
-		if (dialog[dialogId].name != null) {
-			document.getElementById("dialogName").value = dialog[dialogId].name;
-		}
-		else {
-			document.getElementById("dialogName").value = "";
-		}
-	}
-
-	var isHiddenOrShouldMove = (document.getElementById("dialogPanel").style.display === "none") ||
-		(insertNextToId != undefined && insertNextToId != null);
-
-	if (isHiddenOrShouldMove && showIfHidden) {
-		console.log("insert next to : " + insertNextToId);
-		showPanel("dialogPanel", insertNextToId);
-	}
-}
-
-// TODO : probably this should be incorporated into the dialog editor main code somehow
-function onDialogNameChange(event) {
-	if (event.target.value != null && event.target.value.length > 0) {
-		dialog[curDialogEditorId].name = event.target.value;
-	}
-	else {
-		dialog[curDialogEditorId].name = null;
-	}
-
-	refreshGameData();
-
-	events.Raise("change_dialog_name", { id: curDialogEditorId, name: dialog[curDialogEditorId].name });
-}
-
-function nextDialog() {
-	var id = titleDialogId; // the title is safe as a default choice
-
-	if (curDialogEditorId != null) {
-		var dialogIdList = sortedDialogIdList();
-		var dialogIndex = dialogIdList.indexOf(curDialogEditorId);
-
-		// pick the index of the next dialog to open
-		dialogIndex++;
-		if (dialogIndex >= dialogIdList.length) {
-			dialogIndex = -1; // hacky: I'm using -1 to denote the title
-		}
-
-		// turn the index into an ID
-		if (dialogIndex < 0) {
-			id = titleDialogId;
-		}
-		else {
-			id = dialogIdList[dialogIndex];
-		}
-	}
-
-	events.Raise("select_dialog", { id: id });
-}
-
-function prevDialog() {
-	var id = titleDialogId; // the title is safe as a default choice
-
-	if (curDialogEditorId != null) {
-		var dialogIdList = sortedDialogIdList();
-		var dialogIndex = dialogIdList.indexOf(curDialogEditorId);
-
-		// pick the index of the next dialog to open
-		if (dialogIndex === -1) {
-			dialogIndex = dialogIdList.length - 1;
-		}
-		else {
-			dialogIndex--;
-		}
-
-		// turn the index into an ID
-		if (dialogIndex < 0) {
-			id = titleDialogId;
-		}
-		else {
-			id = dialogIdList[dialogIndex];
-		}
-	}
-
-	events.Raise("select_dialog", { id: id });
-}
-
-// todo : move into its own tool?
-function addNewDialog() {
-	var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
-
-	if (id != null) {
-		// todo : need shared create method
-		dialog[id] = createScript(id, null, " ");
-		refreshGameData();
-
-		events.Raise("select_dialog", { id: id });
-
-		events.Raise("new_dialog", { id:id });
-	}
-	else {
-		alert("oh no you ran out of dialog! :(");
-	}
-}
-
-function duplicateDialog() {
-	if (curDialogEditorId != null) {
-		var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
-
-		if (id != null) {
-			dialog[id] = createScript(id, null, dialog[curDialogEditorId].slice());
-			refreshGameData();
-
-			events.Raise("select_dialog", { id: id });
-		}
-		else {
-			alert("oh no you ran out of dialog! :(");
-		}
-	}
-}
-
-function deleteDialog() {
-	var shouldDelete = confirm("Are you sure you want to delete this dialog?");
-
-	if (shouldDelete && curDialogEditorId != null && curDialogEditorId != titleDialogId) {
-		var tempDialogId = curDialogEditorId;
-
-		nextDialog();
-
-		// delete all references to deleted dialog (TODO : should this go in a wrapper function somewhere?)
-		for (id in tile) {
-			if (tile[id].dlg === tempDialogId) {
-				tile[id].dlg = null;
-			}
-		}
-
-		delete dialog[tempDialogId];
-		refreshGameData();
-
-		events.Raise("dialog_delete", { dialogId:tempDialogId, editorId:null });
-	}
-}
-
 // hacky - assumes global paintTool object
 function getCurDialogId() {
 	return paintTool.drawing.getDialogId();
@@ -470,6 +277,7 @@ var editMode = EditMode.Edit; // TODO : move to core.js?
 var roomTool;
 var paintTool;
 var mapTool;
+var dialogTool;
 var findTool;
 
 /* ROOM */
@@ -830,9 +638,6 @@ function start() {
 	}
 	resetMissingCharacterWarning();
 
-	//
-	listenForDialogSelect();
-
 	//load last auto-save
 	if (localStorage.game_data) {
 		//console.log("~~~ found old save data! ~~~");
@@ -973,7 +778,37 @@ function start() {
 		titleControlRootElements[i].appendChild(control.GetElement());
 	}
 
-	// prepare dialog tool
+	// init dialog tool
+	dialogTool = new DialogTool({
+		panelRoot : document.getElementById("dialogPanel"),
+		nameInput : document.getElementById("dialogName"),
+		previewToggle : document.getElementById("previewDialogCheck"),
+		showCodeToggle : document.getElementById("dialogShowCodeCheck"),
+		scriptEditorViewport : document.getElementById("dialogEditor"),
+		nav : {
+			prev : document.getElementById("prevDialogButton"),
+			next : document.getElementById("nextDialogButton"),
+			add : document.getElementById("addDialogButton"),
+			copy : document.getElementById("copyDialogButton"),
+			del : document.getElementById("deleteDialogButton"),
+		},
+		editControls : {
+			container : document.getElementById("dialogEditControls"),
+			editDialogAdd : document.getElementById("editDialogAdd"),
+			editDialogTextEffects : document.getElementById("editDialogTextEffects"),
+			dialogAddControls : document.getElementById("editDialogAddControls"),
+			textEffectsControls : document.getElementById("editDialogTextEffectsControls"),
+			addDialogControls : {
+				dialog : document.getElementById("dialogAddDialog"),
+				choice : document.getElementById("dialogAddChoice"),
+				sequence : document.getElementById("dialogAddSequence"),
+				cycle : document.getElementById("dialogAddCycle"),
+				shuffle : document.getElementById("dialogAddShuffle"),
+				conditional : document.getElementById("dialogAddConditional"),
+			},
+		},
+	});
+
 	events.Raise("select_dialog", { id: titleDialogId }); // start with the title open
 
 	// create find tool
@@ -1934,24 +1769,6 @@ function blockScrollBackpage(e) {
 	// }
 }
 
-
-function toggleDialogCode(e) {
-	var showCode = e.target.checked;
-	curDialogEditor.SetPlaintextMode(showCode);
-}
-
-var alwaysShowDrawingDialog = true;
-function toggleAlwaysShowDrawingDialog(e) {
-	alwaysShowDrawingDialog = e.target.checked;
-
-	if (alwaysShowDrawingDialog) {
-		var dlg = getCurDialogId();
-		if (dialog[dlg]) {
-			events.Raise("select_dialog", { id: dlg });
-		}
-	}
-}
-
 function showInventoryItem() {
 	document.getElementById("inventoryItem").style.display = "block";
 	document.getElementById("inventoryVariable").style.display = "none";
@@ -1960,34 +1777,6 @@ function showInventoryItem() {
 function showInventoryVariable() {
 	document.getElementById("inventoryItem").style.display = "none";
 	document.getElementById("inventoryVariable").style.display = "block";
-}
-
-var isPreviewDialogMode = false;
-function togglePreviewDialog(event) {
-	if (event.target.checked) {
-		if (curDialogEditor != null) {
-			isPreviewDialogMode = true;
-
-			if (document.getElementById("roomPanel").style.display === "none") {
-				showPanel("roomPanel");
-			}
-
-			on_play_mode();
-		
-			startPreviewDialog(
-				curDialogEditor.GetScriptRoot(), 
-				function() {
-					togglePreviewDialog({ target : { checked : false } });
-				});
-		}
-	}
-	else {
-		on_edit_mode();
-		isPreviewDialogMode = false;
-	}
-
-	updatePlayModeButton();
-	updatePreviewDialogButton();
 }
 
 var isFixedSize = false;

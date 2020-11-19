@@ -142,14 +142,6 @@
 .optionControls {
 }
 
-.dialogEditor .controlBox button.colorPaletteLabelLight .bitsy_icon {
-	fill: black;
-}
-
-.dialogEditor .controlBox button.colorPaletteLabelDark .bitsy_icon {
-	fill: white;
-}
-
 .optionControls button {
 	background: #ccccff;
 }
@@ -678,4 +670,20 @@
 .dialogEvent {
 	display: flex;
 	margin-bottom: 5px;
+}
+
+#dialogEditControls {
+	margin-bottom: 10px;
+}
+
+#editDialogAddControls {
+	display: flex;
+}
+
+#editDialogTextEffectsControls button.colorPaletteLabelLight .bitsy_icon {
+	fill: black;
+}
+
+#editDialogTextEffectsControls button.colorPaletteLabelDark .bitsy_icon {
+	fill: white;
 }

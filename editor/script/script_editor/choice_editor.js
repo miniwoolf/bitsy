@@ -24,7 +24,11 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 
 	this.GetElement = function() {
 		return div;
-	}
+	};
+
+	this.GetExpressionList = function() {
+		return [choiceExpression];
+	};
 
 	AddSelectionBehavior(this);
 

@@ -193,6 +193,10 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 
 	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
 	div.appendChild(blockEditor.GetElement());
+
+	this.AppendChild = function(childEditor) {
+		blockEditor.AppendChild(childEditor);	
+	}
 }
 
 // TODO : rename? add new functions, etc

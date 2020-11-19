@@ -1145,7 +1145,7 @@
 
 					<div id="dialogEditorHasContent">
 						<div class="navControl">
-							<input type="checkbox" id="previewDialogCheck" onclick="togglePreviewDialog(event);" />
+							<input type="checkbox" id="previewDialogCheck" />
 							<label title="preview dialog" for="previewDialogCheck">
 								<span id="previewDialogIcon" class="bitsy_icon">play</span>
 								<span id="previewDialogText" class="localize dialog_start_preview">preview</span> <!-- TODO LOCALIZE : other state? dialog_stop_preview -->
@@ -1153,45 +1153,98 @@
 
 							<span class="spacer"></span>
 
-							<input type="text" id="dialogName" title="a name to refer to this dialog" class="textInputField" onchange="onDialogNameChange(event);" size="10"></input>
+							<input type="text" id="dialogName" title="a name to refer to this dialog" class="textInputField" size="10"></input>
 
 							<span class="spacer"></span>
 
-							<button title="previous dialog" class="color0" onclick="prevDialog();">
+							<button id="prevDialogButton" title="previous dialog" class="color0">
 								<span class="bitsy_icon">previous</span>
 							</button>
-							<button title="next dialog" class="color0" onclick="nextDialog();">
+
+							<button id="nextDialogButton" title="next dialog" class="color0">
 								<span class="bitsy_icon">next</span>
 							</button>
 
 							<span class="spacer"></span>
 
-							<button title="add new dialog" class="color0" onclick="addNewDialog();">
+							<button id="addDialogButton" title="add new dialog" class="color0">
 								<span class="bitsy_icon">add</span>
 							</button>
 
-							<button title="duplicate dialog" class="color0" onclick="duplicateDialog();">
+							<button id="copyDialogButton" title="duplicate dialog" class="color0">
 								<span class="bitsy_icon">copy</span>
 							</button>
 
-							<button id="deleteDialogButton" title="delete dialog" class="color0" onclick="deleteDialog();">
+							<button id="deleteDialogButton" title="delete dialog" class="color0">
 								<span class="bitsy_icon">delete</span>
 							</button>
 
 							<span class="spacer"></span>
 
-							<input type="checkbox" id="dialogShowCodeCheck" onclick="toggleDialogCode(event);">
+							<input type="checkbox" id="dialogShowCodeCheck">
 							<label title="show / hide the code for this dialog" for="dialogShowCodeCheck" style="padding-right: 4px;">
 								<span class="bitsy_icon">code_edit</span>
 							</label>
 						</div>
 
+						<div id="dialogEditControls" class="controlBox">
+							<div style="margin-bottom: 10px;">
+								<form>
+									<input type="radio" name="dialog edit controls" id="editDialogAdd" checked>
+									<label title="add dialog" for="editDialogAdd">
+										<!-- todo : localize -->
+										<span class="bitsy_icon">dialog</span>
+										<span>add dialog</span>
+									</label>
+
+									<input type="radio" name="dialog edit controls" id="editDialogTextEffects">
+									<label title="add text effects" for="editDialogTextEffects">
+										<!-- todo : localize -->
+										<span class="bitsy_icon">text_effects</span>
+										<span>text effects</span>
+									</label>
+								</form>
+							</div>
+
+							<!-- TODO : localize these! -->
+							<div id="editDialogAddControls">
+								<button id="dialogAddDialog">
+									<span class="bitsy_icon">add</span>
+									<span>dialog</span>
+								</button>
+
+								<button id="dialogAddChoice">
+									<span class="bitsy_icon">add</span>
+									<span>choice</span>
+								</button>
+
+								<button id="dialogAddSequence">
+									<span class="bitsy_icon">add</span>
+									<span>sequence</span>
+								</button>
+
+								<button id="dialogAddCycle">
+									<span class="bitsy_icon">add</span>
+									<span>cycle</span>
+								</button>
+
+								<button id="dialogAddShuffle">
+									<span class="bitsy_icon">add</span>
+									<span>shuffle</span>
+								</button>
+
+								<button id="dialogAddConditional">
+									<span class="bitsy_icon">add</span>
+									<span>conditional</span>
+								</button>
+							</div>
+
+							<div id="editDialogTextEffectsControls">
+							</div>
+						</div>
+
 						<div id="dialogEditor">
 						</div>
-					</div>
-
-					<div id="dialogEditorNoContent" class="controlBox" style="display:none;">
-						<span class="localize dialog_no_selection">Select a sprite or item to edit its dialog.</span>
 					</div>
 				</div>
 
