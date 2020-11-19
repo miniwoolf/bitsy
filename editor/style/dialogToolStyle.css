@@ -393,7 +393,10 @@
 .textEffectWvyButton {
 	margin-left: 5px; /* kinda hacky */
 	font-family: bitsy_ascii, monospace;
-	padding-top: 8px;
+	padding-top: 6px;
+	padding-bottom: 0px;
+	letter-spacing: 2px;
+	line-height: 120%;
 }
 
 .textEffectWvyButton:hover {
@@ -418,7 +421,10 @@
 
 .textEffectShkButton {
 	font-family: bitsy_ascii, monospace;
-	padding-top: 8px;
+	padding-top: 6px;
+	padding-bottom: 0px;
+	letter-spacing: 2px;
+	line-height: 120%;
 }
 
 .textEffectShkButton:hover {
@@ -449,7 +455,10 @@
 
 .textEffectRbwButton {
 	font-family: bitsy_ascii, monospace;
-	padding-top: 8px;
+	padding-top: 6px;
+	padding-bottom: 0px;
+	letter-spacing: 2px;
+	line-height: 120%;
 }
 
 .textEffectRbwButton:hover {
@@ -466,13 +475,19 @@
 
 .textEffectBrButton {
 	font-family: bitsy_ascii, monospace;
-	padding-top: 8px;
 	margin-left: 5px;
+	padding-top: 6px;
+	padding-bottom: 0px;
+	letter-spacing: 2px;
+	line-height: 120%;
 }
 
 .textEffectPgButton {
 	font-family: bitsy_ascii, monospace;
-	padding-top: 8px;
+	padding-top: 6px;
+	padding-bottom: 0px;
+	letter-spacing: 2px;
+	line-height: 120%;
 }
 
 /* todo: move into own file?*/
