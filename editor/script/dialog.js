@@ -476,7 +476,7 @@ function DialogControl(parentPanelId) {
 		shortName : "tick",
 		propertyId : "tickDlgId",
 		defaultScript :
-			'{->\n' +
+			'{>>\n' +
 			'    {FN {FRM}\n' +
 			'        {HOP "RGT"}\n' +
 			'    }\n' +
@@ -490,7 +490,7 @@ function DialogControl(parentPanelId) {
 		shortName : "knock",
 		propertyId : "knockDlgId",
 		defaultScript : // todo : is this the script I want?
-			'{->\n' +
+			'{>>\n' +
 			'    {FN {OTHER}\n' +
 			'        {RID OTHER}\n' +
 			'    }\n' +
@@ -504,9 +504,9 @@ function DialogControl(parentPanelId) {
 		shortName : "button",
 		propertyId : "buttonDownDlgId",
 		defaultScript : // todo : is this the script I want?
-			'{->\n' +
+			'{>>\n' +
 			'    {FN {BTN HLD}\n' +
-			'        {-> player pressed {SAY BTN}}\n' +
+			'        {>> player pressed {SAY BTN}}\n' +
 			'    }\n' +
 			'}',
 		selectControl : null,

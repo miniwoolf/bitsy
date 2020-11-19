@@ -82,7 +82,7 @@ var BUTTON_KEY = {
 var SYM_KEY = {
 	OPEN : "{",
 	CLOSE : "}",
-	DIALOG : "->",
+	DIALOG : ">>",
 	ENTRY : ":",
 	VARIABLE : "VAR",
 };

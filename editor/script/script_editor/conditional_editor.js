@@ -45,7 +45,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	addItemCondition.style.display = "none";
 	addItemCondition.onclick = function() {
 		var conditionToken = scriptNext.Parse('{GT {ITM "1"} 0}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 
@@ -67,7 +67,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	addVariableCondition.style.display = "none";
 	addVariableCondition.onclick = function() {
 		var conditionToken = scriptNext.Parse('{GT a 5}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 
@@ -88,7 +88,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_default", "default branch");
 	addDefaultCondition.style.display = "none";
 	addDefaultCondition.onclick = function() {
-		var resultToken = scriptNext.Parse('{-> ...}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
 		var optionEditor = new ConditionalOptionEditor([resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 

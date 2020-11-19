@@ -295,7 +295,7 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("sequence_list_name", "sequence list"),
 			function() {
-				var token = scriptNext.Parse("{SEQ {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -305,7 +305,7 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("cycle_list_name", "cycle list"),
 			function() {
-				var token = scriptNext.Parse("{CYC {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -315,7 +315,7 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("shuffle_list_name", "shuffle list"),
 			function() {
-				var token = scriptNext.Parse("{SHF {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+				var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -325,7 +325,7 @@ function ActionBuilder(parentEditor) {
 			"flow",
 			localization.GetStringOrFallback("branching_list_name", "branching list"),
 			function() {
-				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {-> a} {-> b}}', DialogWrapMode.No);
+				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
 				var editor = new ConditionalEditor(token, parentEditor);
 				return editor;
 			}));

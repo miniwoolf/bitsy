@@ -164,35 +164,35 @@ function ScriptEditor(dialogId) {
 	};
 
 	this.AddChoice = function() {
-		var token = scriptNext.Parse("{PIK {-> yes} {-> nice!} {-> no} {-> darn}}", DialogWrapMode.No);
+		var token = scriptNext.Parse("{PIK {>> yes} {>> nice!} {>> no} {>> darn}}", DialogWrapMode.No);
 		var editor = new ChoiceEditor(token, rootEditor);
 		rootEditor.AppendChild(editor);
 		OnUpdate();
 	};
 
 	this.AddSequence = function() {
-		var token = scriptNext.Parse("{SEQ {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+		var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, rootEditor);
 		rootEditor.AppendChild(editor);
 		OnUpdate();
 	};
 
 	this.AddCycle = function() {
-		var token = scriptNext.Parse("{CYC {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+		var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, rootEditor);
 		rootEditor.AppendChild(editor);
 		OnUpdate();
 	};
 
 	this.AddShuffle = function() {
-		var token = scriptNext.Parse("{SHF {-> a} {-> b} {-> c}}", DialogWrapMode.No);
+		var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, rootEditor);
 		rootEditor.AppendChild(editor);
 		OnUpdate();
 	};
 
 	this.AddConditional = function() {
-		var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {-> a} {-> b}}', DialogWrapMode.No);
+		var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
 		var editor = new ConditionalEditor(token, rootEditor);
 		rootEditor.AppendChild(editor);
 		OnUpdate();
