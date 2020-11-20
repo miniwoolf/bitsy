@@ -37,6 +37,10 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 		return [choiceExpression];
 	};
 
+	this.NotifyUpdate = function() {
+		parentEditor.NotifyUpdate();
+	}
+
 	AddSelectionBehavior(this);
 
 	var optionEditors = [];
@@ -53,6 +57,51 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 	}
 
 	CreateOptionEditors();
+
+	// todo : share w/ sequence?
+	this.RemoveChild = function(childEditor) {
+		optionEditors.splice(optionEditors.indexOf(childEditor), 1);
+
+		RefreshOptionsUI();
+		UpdateExpressionList();
+		parentEditor.NotifyUpdate();
+	}
+
+	this.IndexOfChild = function(childEditor) {
+		return optionEditors.indexOf(childEditor);
+	}
+
+	this.InsertChild = function(childEditor, index) {
+		optionEditors.splice(index, 0, childEditor);
+
+		RefreshOptionsUI();
+		UpdateExpressionList();
+		parentEditor.NotifyUpdate();
+	}
+
+	this.ChildCount = function() {
+		return optionEditors.length;
+	}
+
+	function RefreshOptionsUI() {
+		optionRootDiv.innerHTML = "";
+		for (var i = 0; i < optionEditors.length; i++) {
+			var editor = optionEditors[i];
+			// editor.SetOrderNumber(i + 1);
+			optionRootDiv.appendChild(editor.GetElement());
+		}
+	}
+
+	function UpdateExpressionList() {
+		var updatedOptions = [];
+
+		for (var i = 0; i < optionEditors.length; i++) {
+			var editor = optionEditors[i];
+			updatedOptions = updatedOptions.concat(editor.GetExpressionList());
+		}
+
+		choiceExpression.list = [choiceExpression.list[0]].concat(updatedOptions);
+	}
 }
 
 function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, index) {
@@ -84,6 +133,14 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 
 	this.GetElement = function() {
 		return div;
+	}
+
+	this.GetExpressionList = function() {
+		return [choiceExpression, resultExpression];
+	}
+
+	this.NotifyUpdate = function() {
+		parentEditor.NotifyUpdate();
 	}
 
 	AddSelectionBehavior(this);
