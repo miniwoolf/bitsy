@@ -143,7 +143,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		parentEditor.NotifyUpdate();
 	}
 
-	this.AppendChild = function(childEditor) {
+	this.AddChild = function(childEditor) {
 		self.InsertChild(childEditor, childEditors.length);
 	}
 
@@ -169,6 +169,43 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 	CreateChildEditors();
 	RefreshChildUI();
+
+	// default functions for creating add new dialog
+	this.AddDialog = function() {
+		var token = scriptNext.Parse("...", DialogWrapMode.No);
+		var editor = new DialogTextEditor([token], self);
+		self.AddChild(editor);
+	};
+
+	this.AddChoice = function() {
+		var token = scriptNext.Parse("{PIK {>> yes} {>> nice!} {>> no} {>> darn}}", DialogWrapMode.No);
+		var editor = new ChoiceEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddSequence = function() {
+		var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var editor = new SequenceEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddCycle = function() {
+		var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var editor = new SequenceEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddShuffle = function() {
+		var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var editor = new SequenceEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddConditional = function() {
+		var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
+		var editor = new ConditionalEditor(token, self);
+		self.AddChild(editor);
+	};
 }
 
 function DialogExpressionEditor(dialogExpression, parentEditor) {
@@ -194,9 +231,33 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
 	div.appendChild(blockEditor.GetElement());
 
-	this.AppendChild = function(childEditor) {
-		blockEditor.AppendChild(childEditor);	
+	this.AddChild = function(childEditor) {
+		blockEditor.AddChild(childEditor);
 	}
+
+	this.AddDialog = function() {
+		blockEditor.AddDialog();
+	};
+
+	this.AddChoice = function() {
+		blockEditor.AddChoice();
+	};
+
+	this.AddSequence = function() {
+		blockEditor.AddSequence();
+	};
+
+	this.AddCycle = function() {
+		blockEditor.AddCycle();
+	};
+
+	this.AddShuffle = function() {
+		blockEditor.AddShuffle();
+	};
+
+	this.AddConditional = function() {
+		blockEditor.AddConditional();
+	};
 }
 
 // TODO : rename? add new functions, etc
@@ -260,7 +321,7 @@ function ActionBuilder(parentEditor) {
 		actionBuilderButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " " + text;
 		actionBuilderButton.onclick = function() {
 			var editor = createEditorFunc();
-			parentEditor.AppendChild(editor);
+			parentEditor.AddChild(editor);
 			div.classList.remove("actionBuilderActive");
 			div.classList.remove(activeCategoryClass);
 			activeCategoryClass = null;

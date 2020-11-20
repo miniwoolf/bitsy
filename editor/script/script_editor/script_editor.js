@@ -157,45 +157,27 @@ function ScriptEditor(dialogId) {
 	};
 
 	this.AddDialog = function() {
-		var token = scriptNext.Parse("...", DialogWrapMode.No);
-		var editor = new DialogTextEditor([token], rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddDialog();
 	};
 
 	this.AddChoice = function() {
-		var token = scriptNext.Parse("{PIK {>> yes} {>> nice!} {>> no} {>> darn}}", DialogWrapMode.No);
-		var editor = new ChoiceEditor(token, rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddChoice();
 	};
 
 	this.AddSequence = function() {
-		var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
-		var editor = new SequenceEditor(token, rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddSequence();
 	};
 
 	this.AddCycle = function() {
-		var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
-		var editor = new SequenceEditor(token, rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddCycle();
 	};
 
 	this.AddShuffle = function() {
-		var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
-		var editor = new SequenceEditor(token, rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddShuffle();
 	};
 
 	this.AddConditional = function() {
-		var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
-		var editor = new ConditionalEditor(token, rootEditor);
-		rootEditor.AppendChild(editor);
-		OnUpdate();
+		rootEditor.AddConditional();
 	};
 }
 
@@ -389,7 +371,7 @@ function createExpressionEditor(expression, parent, isInline, specialEditorType)
 // oh noooo more globals....???!?!?!
 var dialogScriptEditorUniqueIdCounter = 0;
 
-function OrderControls(editor, parentEditor) {
+function OrderControls(editor, parentEditor, disableMoveControls) {
 	var div = document.createElement("div");
 	div.classList.add("orderControls");
 	div.style.display = "none";
@@ -401,7 +383,7 @@ function OrderControls(editor, parentEditor) {
 		var insertIndex = parentEditor.IndexOfChild(editor);
 		parentEditor.RemoveChild(editor);
 		insertIndex -= 1;
-		parentEditor.InsertChild(editor,insertIndex);
+		parentEditor.InsertChild(editor, insertIndex);
 	}
 	div.appendChild(moveUpButton);
 
@@ -412,7 +394,7 @@ function OrderControls(editor, parentEditor) {
 		var insertIndex = parentEditor.IndexOfChild(editor);
 		parentEditor.RemoveChild(editor);
 		insertIndex += 1;
-		parentEditor.InsertChild(editor,insertIndex);
+		parentEditor.InsertChild(editor, insertIndex);
 	}
 	div.appendChild(moveDownButton);
 
@@ -443,7 +425,7 @@ function OrderControls(editor, parentEditor) {
 	}
 
 	editor.ShowOrderControls = function() {
-		if (parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
+		if (!disableMoveControls && parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
 			// TODO : replace w/ added class name?
 			moveUpButton.disabled = false;
 			moveDownButton.disabled = false;

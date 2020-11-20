@@ -68,7 +68,7 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 	div.appendChild(choiceEditor.GetElement());
 
 	var resultLabel = document.createElement("span");
-	resultLabel.innerText = "then do:"; // todo : localize
+	resultLabel.innerText = "then:"; // todo : localize
 	div.appendChild(resultLabel);
 
 	// result
@@ -78,4 +78,6 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 	this.GetElement = function() {
 		return div;
 	}
+
+	AddSelectionBehavior(this);
 }

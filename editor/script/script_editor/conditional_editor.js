@@ -36,6 +36,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		addVariableCondition.style.display = "block";
 		addDefaultCondition.style.display = "block";
 		cancelButton.style.display = "block";
+
+		addDefaultCondition.disabled = HasElseCondition();
 	}
 	addConditionRootDiv.appendChild(addButton);
 
@@ -46,12 +48,10 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	addItemCondition.onclick = function() {
 		var conditionToken = scriptNext.Parse('{GT {ITM "1"} 0}', DialogWrapMode.No);
 		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
-		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
-		optionEditors.push(optionEditor);
 
-		RefreshOptionsUI();
-		UpdateNodeOptions();
-		parentEditor.NotifyUpdate();
+		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
+		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
+		self.InsertChild(optionEditor, insertIndex);
 
 		addButton.style.display = "block";
 		addItemCondition.style.display = "none";
@@ -68,12 +68,10 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	addVariableCondition.onclick = function() {
 		var conditionToken = scriptNext.Parse('{GT a 5}', DialogWrapMode.No);
 		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
-		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, optionEditors.length);
-		optionEditors.push(optionEditor);
 
-		RefreshOptionsUI();
-		UpdateNodeOptions();
-		parentEditor.NotifyUpdate();
+		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
+		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
+		self.InsertChild(optionEditor, insertIndex);
 
 		addButton.style.display = "block";
 		addItemCondition.style.display = "none";
@@ -151,6 +149,11 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	}
 
 	this.InsertChild = function(childEditor, index) {
+		// don't allow paired conditions to be swapped with the else condition
+		if (HasElseCondition() && index >= optionEditors.length - 1) {
+			index = optionEditors.length - 1;
+		}
+
 		optionEditors.splice(index, 0, childEditor);
 
 		RefreshOptionsUI();
@@ -172,6 +175,10 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 			optionRootDiv.appendChild(optionEditor.GetElement());
 			optionEditors.push(optionEditor);
 		}
+	}
+
+	function HasElseCondition() {
+		return (optionEditors.length > 0 && optionEditors[optionEditors.length - 1].IsElse());
 	}
 
 	function RefreshOptionsUI() {
@@ -234,7 +241,7 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 	topControlsDiv.classList.add("optionControls");
 	div.appendChild(topControlsDiv);
 
-	var orderControls = new OrderControls(this, parentEditor);
+	var orderControls = new OrderControls(this, parentEditor, conditionPair.length < 2);
 	topControlsDiv.appendChild(orderControls.GetElement());
 
 	// condition
@@ -246,6 +253,10 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 	var resultExpression = conditionPair.length >= 2 ? conditionPair[1] : conditionPair[0];
 	var resultEditor = createExpressionEditor(resultExpression, this);
 	div.appendChild(resultEditor.GetElement());
+
+	this.IsElse = function() {
+		return conditionPair.length === 1;
+	}
 
 	this.GetElement = function() {
 		return div;
