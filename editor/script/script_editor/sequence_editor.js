@@ -9,6 +9,7 @@ var sequenceTypeDescriptionMap = {
 		GetDescription : function() {
 			return localization.GetStringOrFallback("sequence_list_description", "go through each item once in _:");
 		},
+		GetIconId : function() { return "sequence"; },
 	},
 	"CYC" : {
 		GetName : function() {
@@ -20,6 +21,7 @@ var sequenceTypeDescriptionMap = {
 		GetDescription : function() {
 			return localization.GetStringOrFallback("cycle_list_description", "repeat items in a _:");
 		},
+		GetIconId : function() { return "cycle"; },
 	},
 	"SHF" : {
 		GetName : function() {
@@ -31,6 +33,7 @@ var sequenceTypeDescriptionMap = {
 		GetDescription : function() {
 			return localization.GetStringOrFallback("shuffle_list_description", "_ items in a random order:");
 		},
+		GetIconId : function() { return "shuffle"; },
 	},
 };
 
@@ -55,9 +58,16 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 	div.appendChild(descriptionDiv);
 
 	function CreateSequenceDescription(isEditable) {
+		titleDiv.innerHTML = "";
 		descriptionDiv.innerHTML = "";
 
-		titleDiv.innerText = sequenceTypeDescriptionMap[sequenceType].GetName();
+		var titleIcon = iconUtils.CreateIcon(sequenceTypeDescriptionMap[sequenceType].GetIconId());
+		titleIcon.classList.add("icon_space_right");
+		titleDiv.appendChild(titleIcon);
+
+		var titleSpan = document.createElement("span");
+		titleSpan.innerText = sequenceTypeDescriptionMap[sequenceType].GetName();
+		titleDiv.appendChild(titleSpan);
 
 		var descriptionText = sequenceTypeDescriptionMap[sequenceType].GetDescription();
 		var descriptionTextSplit = descriptionText.split("_");

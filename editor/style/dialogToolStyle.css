@@ -79,8 +79,14 @@
 }
 
 .actionTitle {
+	display: flex;
+	align-items: center;
 	font-weight: bold;
 	margin-bottom: 5px;
+}
+
+.actionTitle .bitsy_icon.icon_space_right {
+	margin-right: 5px;
 }
 
 .executing.actionEditor {

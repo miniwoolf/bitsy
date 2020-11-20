@@ -10,8 +10,15 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
-	titleDiv.innerText = "choice"; // TODO : localize
 	div.appendChild(titleDiv);
+
+	var titleIcon = iconUtils.CreateIcon("choice");
+	titleIcon.classList.add("icon_space_right");
+	titleDiv.appendChild(titleIcon);
+
+	var titleSpan = document.createElement("span");
+	titleSpan.innerText = "choice"; // TODO : localize
+	titleDiv.appendChild(titleSpan);
 
 	var descriptionDiv = document.createElement("div");
 	descriptionDiv.classList.add("sequenceDescription"); // hack
