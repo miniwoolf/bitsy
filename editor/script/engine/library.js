@@ -16,11 +16,9 @@ function createGlobalEnvironment(variableStore) {
 		Set: function(key, value) {
 			variableStore[key] = value;
 
-			// WIP --- this isn't quite working yet...
-			// // hacky?
-			// if (onVariableChanged) {
-			// 	onVariableChanged(key);
-			// }
+			if (onVariableChanged) {
+				onVariableChanged(key);
+			}
 
 			return value;
 		},
@@ -31,7 +29,7 @@ function createGlobalEnvironment(variableStore) {
 
 function createInstanceEnvironment(instance, parent) {
 	var env = new Table(parent);
-	env.Set("THIS", instance);
+	env.Set(SYM_KEY.THIS, instance);
 	return env;
 }
 
@@ -59,9 +57,9 @@ function createCoreLibrary(parent) {
 
 	// todo : what about OTHER one parameter math functions? cos? sin? etc...
 	// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
-	lib.Set("NOT", function(parameters, onReturn) {
-		onReturn(!parameters[0]);
-	});
+	// lib.Set("NOT", function(parameters, onReturn) {
+	// 	onReturn(!parameters[0]);
+	// });
 
 	// WIP --- for loops, range, and random for tables
 	// todo :

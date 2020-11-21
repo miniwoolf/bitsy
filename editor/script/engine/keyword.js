@@ -53,9 +53,22 @@ var SYM_KEY = {
 	OPEN : "{",
 	CLOSE : "}",
 	DIALOG : ">>",
-	ENTRY : ":",
+	SEQUENCE : "SEQ",
+	CYCLE : "CYC",
+	SHUFFLE : "SHF",
+	CHOICE : "PIK",
+	CONDITIONAL : "IF",
+	FUNCTION : "FN",
 	VARIABLE : "VAR",
+	ASSIGN : "SET",
+	TABLE : "TBL",
+	ENTRY : ":",
+	THIS : "THIS",
 };
+
+var DEBUG_KEY = {
+	ERROR : "ERR",
+}
 
 var BOOL_KEY = {
 	YES : "YES", // => TRUE

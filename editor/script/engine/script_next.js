@@ -1,14 +1,8 @@
 /*
 NOTES
 - BUG: when scripts take too long they interrupt player keypresses!
-- should the compile then run model remain the same?
-- name of language / module?
-- missing functions
-- better multi-line dialog script parsing by handling strings inside quotes
-- what do I do about global vs local variables?
-- decide whether the new style names are good
-- global variables aren't working
 */
+
 var DialogWrapMode = {
 	Auto : 0,
 	Yes : 1,
@@ -440,246 +434,8 @@ function eval(expression, environment, onReturn) {
 	}
 }
 
-var special = {
-	"SEQ": function(expression, environment, onReturn) {
-		if ("index" in expression) {
-			expression.index = Math.min(expression.index + 1, expression.list.length - 1);
-		}
-		else {
-			expression.index = 1;
-		}
+var special = {};
 
-		if (expression.index >= expression.list.length) {
-			PrintError("not enough items in SEQ", onReturn);
-		}
-		else {
-			eval(expression.list[expression.index], environment, onReturn);
-		}
-	},
-	"CYC": function(expression, environment, onReturn) {
-		if ("index" in expression) {
-			expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
-		}
-		else {
-			expression.index = 1;
-		}
-
-		if (expression.index >= expression.list.length) {
-			PrintError("not enough items in CYC", onReturn);
-		}
-		else {
-			eval(expression.list[expression.index], environment, onReturn);
-		}
-	},
-	"SHF": function(expression, environment, onReturn) {
-		if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
-			expression.index++;
-		}
-		else {
-			expression.index = 0;
-			expression.shuffle = [];
-
-			var unshuffled = Array(expression.list.length - 1).fill(1).map((x, y) => x + y);
-			while (unshuffled.length > 0) {
-				var i = Math.floor(Math.random() * unshuffled.length);
-				expression.shuffle.push(unshuffled.splice(i, 1)[0]);
-			}
-		}
-
-		var shuffleIndex = expression.shuffle[expression.index];
-
-		if (shuffleIndex >= expression.list.index) {
-			PrintError("not enough items in SHF", onReturn);
-		}
-		else {
-			eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
-		}
-	},
-	"PIK" : function(expression, environment, onReturn) {
-		var i = 1;
-		var evalNext;
-
-		var buffer = environment.Get("DIALOG_BUFFER", true);
-
-		// use this to capture the current expression
-		function createReturnHandler(expression, environment, onReturn) {
-			return function() {
-				eval(expression, environment, onReturn);
-			}
-		}
-
-		evalNext = function() {
-			if (i + 1 < expression.list.length) {
-				// initialize choice that will evaluate the option result
-				var handler = createReturnHandler(expression.list[i + 1], environment, onReturn);
-
-				if (buffer) {
-					buffer.AddChoiceOption(handler);
-				}
-
-				// eval option (will create the choice text)
-				eval(expression.list[i], environment, function() {
-					i += 2;
-					evalNext();
-				});
-			}
-		};
-
-		if (expression.list.length >= 3) {
-			evalNext();
-		}
-		else {
-			PrintError("not enough items in PIK", onReturn);
-		}
-	},
-	"IF": function(expression, environment, onReturn) {
-		var result = null;
-		var i = 1;
-		var evalNext;
-
-		evalNext = function() {
-			if (i >= expression.list.length) {
-				onReturn(false);
-			}
-			else if (i + 1 >= expression.list.length) {
-				eval(expression.list[i], environment, onReturn);
-			}
-			else {
-				eval(expression.list[i], environment, function(value) {
-					if (value === true) {
-						eval(expression.list[i + 1], environment, onReturn);
-					}
-					else {
-						i += 2;
-						evalNext();
-					}
-				});
-			}
-		}
-
-		evalNext();
-	},
-	// todo : more creative name for functions? rename to routine? RN? RTN?
-	"FN": function(expression, environment, onReturn) {
-		var error = null;
-
-		// initialize parameter names
-		var parameterNames = [];
-		if (expression.list.length >= 2) {
-			if (expression.list[1].type === "list") {
-				var parameterList = expression.list[1];
-				for (var i = 0; i < parameterList.list.length; i++) {
-					if (parameterList.list[i].type === "symbol") {
-						parameterNames.push(parameterList.list[i].value);
-					}
-				}
-			}
-			else {
-				error = "FN input is not list";
-			}
-		}
-		else {
-			error = "FN input list is missing";
-		}
-
-		var result = function(parameters, onReturn) {
-			// create local function environment from input parameters
-			var fnEnvironment = new Table(environment); // todo : should it have access to the external environment?
-			for (var i = 0; i < parameters.length; i++) {
-				if (i < parameterNames.length) {
-					fnEnvironment.Set(parameterNames[i], parameters[i]);
-				}
-			}
-
-			// every expression after the parameter list is a statement in the function
-			var result = false;
-			var i = 2;
-			var evalNext;
-
-			evalNext = function() {
-				if (i >= expression.list.length) {
-					onReturn(result);
-				}
-				else {
-					eval(expression.list[i], fnEnvironment, function(value) {
-						result = value;
-						i++;
-						evalNext();
-					});
-				}
-			}
-
-			evalNext();
-		};
-
-		if (error === null && expression.list.length < 3) {
-			error = "FN body is empty";
-		}
-
-		if (error != null) {
-			PrintError(error, onReturn);
-		}
-		else {
-			onReturn(result);
-		}
-	},
-	// todo : name? LET instead?
-	"SET": function(expression, environment, onReturn) {
-		function setValue(value) {
-			// todo : what about local variables?
-			environment.SetGlobal(expression.list[1].value, value);
-			onReturn(false);
-		}
-
-		if (expression.list.length < 2 || expression.list[1].type != "symbol") {
-			PrintError("SET symbol is missing", onReturn);
-		}
-		else if (expression.list.length < 3) {
-			// no value provided - set to false
-			setValue(false);
-		}
-		else {
-			eval(expression.list[2], environment, setValue);
-		}
-	},
-	"TBL": function(expression, environment, onReturn) {
-		var table = new Table();
-		var i = 1;
-		var evalNext;
-
-		evalNext = function() {
-			if (i >= expression.list.length) {
-				onReturn(table);
-			}
-			else {
-				if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SYM_KEY.ENTRY) {
-					var name = expression.list[i].value.slice(1);
-					i++;
-
-					if (i >= expression.list.length) {
-						PrintError("TBL entry value is missing", onReturn);
-					}
-					else {
-						eval(expression.list[i], environment, function(value) {
-							table.Set(name, value);
-							i++;
-							evalNext();
-						});
-					}
-				}
-				else {
-					// for now, skip invalid syntax
-					// TODO : decide whether to allow a lua-like "list" form
-					PrintError("TBL entry name is missing", onReturn);
-				}
-			}
-		}
-
-		evalNext();
-	},
-}
-
-// hacky?
 special[SYM_KEY.DIALOG] = function(expression, environment, onReturn) {
 	var result = false;
 	var i = 1;
@@ -719,6 +475,267 @@ special[SYM_KEY.DIALOG] = function(expression, environment, onReturn) {
 			}
 			else {
 				eval(expression.list[i], environment, incrementAndEval);
+			}
+		}
+	}
+
+	evalNext();
+};
+
+special[SYM_KEY.SEQUENCE] = function(expression, environment, onReturn) {
+	if ("index" in expression) {
+		expression.index = Math.min(expression.index + 1, expression.list.length - 1);
+	}
+	else {
+		expression.index = 1;
+	}
+
+	if (expression.index >= expression.list.length) {
+		PrintError("not enough items in SEQ", onReturn);
+	}
+	else {
+		eval(expression.list[expression.index], environment, onReturn);
+	}
+};
+
+special[SYM_KEY.CYCLE] = function(expression, environment, onReturn) {
+	if ("index" in expression) {
+		expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
+	}
+	else {
+		expression.index = 1;
+	}
+
+	if (expression.index >= expression.list.length) {
+		PrintError("not enough items in CYC", onReturn);
+	}
+	else {
+		eval(expression.list[expression.index], environment, onReturn);
+	}
+};
+
+special[SYM_KEY.SHUFFLE] = function(expression, environment, onReturn) {
+	if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
+		expression.index++;
+	}
+	else {
+		expression.index = 0;
+		expression.shuffle = [];
+
+		var unshuffled = Array(expression.list.length - 1).fill(1).map((x, y) => x + y);
+		while (unshuffled.length > 0) {
+			var i = Math.floor(Math.random() * unshuffled.length);
+			expression.shuffle.push(unshuffled.splice(i, 1)[0]);
+		}
+	}
+
+	var shuffleIndex = expression.shuffle[expression.index];
+
+	if (shuffleIndex >= expression.list.index) {
+		PrintError("not enough items in SHF", onReturn);
+	}
+	else {
+		eval(expression.list[expression.shuffle[expression.index]], environment, onReturn);
+	}
+};
+
+special[SYM_KEY.CHOICE] = function(expression, environment, onReturn) {
+	var i = 1;
+	var evalNext;
+
+	var buffer = environment.Get("DIALOG_BUFFER", true);
+
+	// use this to capture the current expression
+	function createReturnHandler(expression, environment, onReturn) {
+		return function() {
+			eval(expression, environment, onReturn);
+		}
+	}
+
+	evalNext = function() {
+		if (i + 1 < expression.list.length) {
+			// initialize choice that will evaluate the option result
+			var handler = createReturnHandler(expression.list[i + 1], environment, onReturn);
+
+			if (buffer) {
+				buffer.AddChoiceOption(handler);
+			}
+
+			// eval option (will create the choice text)
+			eval(expression.list[i], environment, function() {
+				i += 2;
+				evalNext();
+			});
+		}
+	};
+
+	if (expression.list.length >= 3) {
+		evalNext();
+	}
+	else {
+		PrintError("not enough items in PIK", onReturn);
+	}
+};
+
+special[SYM_KEY.CONDITIONAL] = function(expression, environment, onReturn) {
+	var result = null;
+	var i = 1;
+	var evalNext;
+
+	evalNext = function() {
+		if (i >= expression.list.length) {
+			onReturn(false);
+		}
+		else if (i + 1 >= expression.list.length) {
+			eval(expression.list[i], environment, onReturn);
+		}
+		else {
+			eval(expression.list[i], environment, function(value) {
+				if (value === true) {
+					eval(expression.list[i + 1], environment, onReturn);
+				}
+				else {
+					i += 2;
+					evalNext();
+				}
+			});
+		}
+	}
+
+	evalNext();
+};
+
+special[SYM_KEY.FUNCTION] = function(expression, environment, onReturn) {
+	var error = null;
+
+	// initialize parameter names
+	var parameterNames = [];
+	if (expression.list.length >= 2) {
+		if (expression.list[1].type === "list") {
+			var parameterList = expression.list[1];
+			for (var i = 0; i < parameterList.list.length; i++) {
+				if (parameterList.list[i].type === "symbol") {
+					parameterNames.push(parameterList.list[i].value);
+				}
+			}
+		}
+		else {
+			error = "FN input is not list";
+		}
+	}
+	else {
+		error = "FN input list is missing";
+	}
+
+	var result = function(parameters, onReturn) {
+		// create local function environment from input parameters
+		var fnEnvironment = new Table(environment); // todo : should it have access to the external environment?
+		for (var i = 0; i < parameters.length; i++) {
+			if (i < parameterNames.length) {
+				fnEnvironment.Set(parameterNames[i], parameters[i]);
+			}
+		}
+
+		// every expression after the parameter list is a statement in the function
+		var result = false;
+		var i = 2;
+		var evalNext;
+
+		evalNext = function() {
+			if (i >= expression.list.length) {
+				onReturn(result);
+			}
+			else {
+				eval(expression.list[i], fnEnvironment, function(value) {
+					result = value;
+					i++;
+					evalNext();
+				});
+			}
+		}
+
+		evalNext();
+	};
+
+	if (error === null && expression.list.length < 3) {
+		error = "FN body is empty";
+	}
+
+	if (error != null) {
+		PrintError(error, onReturn);
+	}
+	else {
+		onReturn(result);
+	}
+};
+
+// local variable
+special[SYM_KEY.VARIABLE] = function(expression, environment, onReturn) {
+	function setValue(value) {
+		environment.SetLocal(expression.list[1].value, value);
+		onReturn(value);
+	}
+
+	if (expression.list.length < 2 || expression.list[1].type != "symbol") {
+		PrintError("VAR symbol is missing", onReturn);
+	}
+	else if (expression.list.length < 3) {
+		// no value provided - set to false
+		setValue(false);
+	}
+	else {
+		eval(expression.list[2], environment, setValue);
+	}
+};
+
+// global variable / variable assignment
+special[SYM_KEY.ASSIGN] = function(expression, environment, onReturn) {
+	function setValue(value) {
+		environment.SetGlobal(expression.list[1].value, value);
+		onReturn(value);
+	}
+
+	if (expression.list.length < 2 || expression.list[1].type != "symbol") {
+		PrintError("SET symbol is missing", onReturn);
+	}
+	else if (expression.list.length < 3) {
+		// no value provided - set to false
+		setValue(false);
+	}
+	else {
+		eval(expression.list[2], environment, setValue);
+	}
+};
+
+special[SYM_KEY.TABLE] = function(expression, environment, onReturn) {
+	var table = new Table();
+	var i = 1;
+	var evalNext;
+
+	evalNext = function() {
+		if (i >= expression.list.length) {
+			onReturn(table);
+		}
+		else {
+			if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SYM_KEY.ENTRY) {
+				var name = expression.list[i].value.slice(1);
+				i++;
+
+				if (i >= expression.list.length) {
+					PrintError("TBL entry value is missing", onReturn);
+				}
+				else {
+					eval(expression.list[i], environment, function(value) {
+						table.Set(name, value);
+						i++;
+						evalNext();
+					});
+				}
+			}
+			else {
+				// for now, skip invalid syntax
+				// TODO : decide whether to allow a lua-like "list" form
+				PrintError("TBL entry name is missing", onReturn);
 			}
 		}
 	}
@@ -773,7 +790,7 @@ function Table(parent) {
 
 	function hasInternalKey(internalKey) {
 		return entries.hasOwnProperty(internalKey) &&
-			entries[internalKey] != false && entries[internalKey] != null && entries[internalKey] != undefined;
+			entries[internalKey] != null && entries[internalKey] != undefined;
 	}
 
 	this.Has = function(key, isSecret) {
@@ -788,11 +805,17 @@ function Table(parent) {
 		}
 
 		return hasEntry;
-	}
+	};
 
 	this.Get = function(key, isSecret) {
 		var value = false;
 		var internalKey = GetInternalKey(key, isSecret);
+
+		console.log(internalKey);
+
+		// console.log(entries);
+		console.log(hasInternalKey(internalKey));
+
 
 		if (hasInternalKey(internalKey)) {
 			value = entries[internalKey];
@@ -802,9 +825,10 @@ function Table(parent) {
 		}
 
 		return value;
-	}
+	};
 
 	function set(key, value, options) {
+		var isLocal = options && options.isLocal;
 		var isGlobal = options && options.isGlobal;
 		var isSecret = options && options.isSecret;
 		var isReadOnly = options && options.isReadOnly;
@@ -813,10 +837,12 @@ function Table(parent) {
 		var internalKey = GetInternalKey(key, isSecret);
 		var hasInternalEntry = hasInternalKey(internalKey);
 
-		if ((!hasInternalEntry || readOnlyEntries[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
+		if (!isLocal && (!hasInternalEntry || readOnlyEntries[internalKey]) && hasParent && (isGlobal || parent.Has(key, isSecret))) {
 			parent.Set(key, value, options);
 		}
 		else if (!readOnlyEntries[internalKey]) {
+			console.log("set local " + key + " " + value);
+
 			if (!hasInternalEntry) {
 				if (!isSecret) {
 					keyList.push(key);
@@ -830,6 +856,8 @@ function Table(parent) {
 			}
 
 			entries[internalKey] = value;
+
+			// console.log(entries);
 		}
 
 		return value;
@@ -837,18 +865,23 @@ function Table(parent) {
 
 	this.Set = set;
 
+	// todo : clean up these APIs?
+	this.SetLocal = function(key, value) {
+		set(key, value, { isLocal: true });
+	};
+
 	this.SetGlobal = function(key, value) {
 		set(key, value, { isGlobal: true });
-	}
+	};
 
 	this.SetSecret = function(key, value) {
 		set(key, value, { isSecret: true });
-	}
+	};
 
 	// only includes keys for entries that are not secret
 	this.Keys = function() {
 		return keyList;
-	}
+	};
 
 	// adds external getter and setter for convenience of the engine
 	var AddGetterSetter = (function(table) {
@@ -870,7 +903,7 @@ function Table(parent) {
 } // Table
 
 function PrintError(message, onReturn) {
-	message = "ERR: " + message;
+	message = DEBUG_KEY.ERROR + ": " + message;
 	console.log(message);
 
 	if (isPlayerEmbeddedInEditor && dialogBuffer) {
