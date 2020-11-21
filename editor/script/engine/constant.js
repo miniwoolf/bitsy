@@ -1,10 +1,12 @@
 /* CONSTANTS */
 var width = 128;
 var height = 128;
-var scale = 4; //this is stupid but necessary
 var tilesize = 8;
 var roomsize = 16;
 var mapsize = 8;
+
+var scale = 4;
+var text_scale = scale / 2;
 
 var DEFAULT_REGISTRY_SIZE = 256;
 var MAP_REGISTRY_SIZE = 5;
@@ -42,6 +44,7 @@ var TYPE_KEY = {
 	ENDING : "END",
 	DIALOG : "DLG",
 	DEFAULT_FONT : "DEFAULT_FONT",
+	TEXT_SCALE : "TEXT_SCALE",
 	TEXT_DIRECTION : "TEXT_DIRECTION",
 	FONT : "FONT",
 };

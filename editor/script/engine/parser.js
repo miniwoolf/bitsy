@@ -86,6 +86,9 @@ function parseWorld(file) {
 		else if (getType(curLine) === TYPE_KEY.DEFAULT_FONT) {
 			i = parseFontName(lines, i);
 		}
+		else if (getType(curLine) === TYPE_KEY.TEXT_SCALE) {
+			i = parseTextScale(lines, i);
+		}
 		else if (getType(curLine) === TYPE_KEY.TEXT_DIRECTION) {
 			i = parseTextDirection(lines, i);
 		}
@@ -627,6 +630,22 @@ function parseFontName(lines, i) {
 	return i;
 }
 
+function parseTextScale(lines, i) {
+	var scaleFlag = getArg(lines[i], 1);
+
+	if (scaleFlag === "1") {
+		// 1x scale
+		text_scale = scale;
+	}
+	else if (scaleFlag === "2") {
+		// 2x scale
+		text_scale = scale / 2; // NOTE: assumes scale is an even number
+	}
+
+	i++;
+	return i;
+}
+
 function parseTextDirection(lines, i) {
 	textDirection = getArg(lines[i], 1);
 	i++;
@@ -684,6 +703,11 @@ function serializeWorld(skipFonts) {
 	/* FONT */
 	if (fontName != defaultFontName) {
 		worldStr += TYPE_KEY.DEFAULT_FONT + " " + fontName + "\n";
+		worldStr += "\n";
+	}
+	// todo : what should be the default?
+	if (text_scale === scale) {
+		worldStr += TYPE_KEY.TEXT_SCALE + " 1\n";
 		worldStr += "\n";
 	}
 	if (textDirection != TEXT_DIRECTION_KEY.LEFT_TO_RIGHT) {

@@ -13,12 +13,11 @@ var DialogRenderer = function() {
 	// TODO : refactor this eventually? remove everything from struct.. avoid the defaults?
 	var textboxInfo = {
 		textureId : null,
-		width : 104,
-		height : 8+4+2+6, //8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
+		width : 8 + 96, // 8 for left-right padding, 96 for text
+		height : 8 + 4 + 2 + 6, //8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
 		top : 12,
 		left : 12,
 		bottom : 12, //for drawing it from the bottom
-		font_scale : 0.5, // we draw font at half-size compared to everything else
 		padding_vert : 2,
 		padding_horz : 4,
 		arrow_height : 6,
@@ -31,16 +30,12 @@ var DialogRenderer = function() {
 		textboxInfo.textureId = bitsyTextureCreate(textboxInfo.width * scale, textboxInfo.height * scale);
 	}
 
-	function textScale() {
-		return scale * textboxInfo.font_scale;
-	}
-
 	function relativeFontWidth() {
-		return Math.ceil( font.getWidth() * textboxInfo.font_scale );
+		return Math.ceil(font.getWidth() * (text_scale / scale));
 	}
 
 	function relativeFontHeight() {
-		return Math.ceil( font.getHeight() * textboxInfo.font_scale );
+		return Math.ceil(font.getHeight() * (text_scale / scale));
 	}
 
 	this.ClearTextbox = function() {
@@ -122,7 +117,7 @@ var DialogRenderer = function() {
 			drawArrow(choiceArrowRight, false);
 		}
 
-		var top = (textboxInfo.height - 5);
+		var top = (textboxInfo.height - 4);
 		var left = (textboxInfo.width / 2) - Math.floor((choiceCount * 5) / 2);
 		for (var i = 0; i < choiceCount; i++) {
 			drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top, left);
@@ -131,7 +126,7 @@ var DialogRenderer = function() {
 	}
 
 	function drawArrow(arrowImgData, isLeftSide) {
-		var top = (textboxInfo.height - 5);
+		var top = (textboxInfo.height - 4);
 		var left = isLeftSide ? (4) : (textboxInfo.width - (5 + 4));
 		drawTextboxIcon(arrowImgData, top, left);
 	}
@@ -148,7 +143,6 @@ var DialogRenderer = function() {
 		}
 	}
 
-	var text_scale = 2; //using a different scaling factor for text feels like cheating... but it looks better
 	this.DrawChar = function(char, row, col, leftPos) {
 		char.offset = {
 			x: char.base_offset.x,
@@ -229,7 +223,7 @@ var DialogBuffer = function() {
 
 	// TODO : these seem like good reasons to combine the buffer and the renderer
 	var maxRowCount = 2;
-	var pixelsPerRow = 192; // hard-coded fun times!!!
+	var pixelsPerRow = 96 * (scale / text_scale); // (slightly less) hard-coded fun times!!!
 
 	function AddPage() {
 		var page = {
@@ -991,7 +985,7 @@ TextEffects["CLR"] = new ColorEffect();
 
 var WavyEffect = function() {
 	this.DoEffect = function(char, time) {
-		char.offset.y += Math.sin( (time / 250) - (char.col / 2) ) * 4;
+		char.offset.y += Math.sin( (time / 250) - (char.col / 2) ) * (2 * (scale / text_scale));
 	}
 };
 TextEffects["WVY"] = new WavyEffect();
@@ -1002,14 +996,14 @@ var ShakyEffect = function() {
 	}
 
 	this.DoEffect = function(char, time) {
-		char.offset.y += 3
-						* disturb(Math.sin,time,char.col,0.1,0.5)
-						* disturb(Math.cos,time,char.col,0.3,0.2)
-						* disturb(Math.sin,time,char.row,2.0,1.0);
-		char.offset.x += 3
-						* disturb(Math.cos,time,char.row,0.1,1.0)
-						* disturb(Math.sin,time,char.col,3.0,0.7)
-						* disturb(Math.cos,time,char.col,0.2,0.3);
+		char.offset.y += (1.5 * (scale / text_scale))
+						* disturb(Math.sin, time, char.col, 0.1, 0.5)
+						* disturb(Math.cos, time, char.col, 0.3, 0.2)
+						* disturb(Math.sin, time, char.row, 2.0, 1.0);
+		char.offset.x += (1.5 * (scale / text_scale))
+						* disturb(Math.cos, time, char.row, 0.1, 1.0)
+						* disturb(Math.sin, time, char.col, 3.0, 0.7)
+						* disturb(Math.cos, time, char.col, 0.2, 0.3);
 	}
 };
 TextEffects["SHK"] = new ShakyEffect();
