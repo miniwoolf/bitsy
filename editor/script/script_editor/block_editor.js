@@ -311,15 +311,27 @@ function ActionBuilder(parentEditor) {
 	div.appendChild(makeActionCategoryButton(
 		"dialog",
 		localization.GetStringOrFallback("dialog_action_category_dialog", "dialog")));
+
 	div.appendChild(makeActionCategoryButton(
-		"flow",
-		localization.GetStringOrFallback("dialog_action_category_list", "lists")));
+		"room",
+		"room actions")); // todo : localize
+
 	div.appendChild(makeActionCategoryButton(
-		"exit",
-		localization.GetStringOrFallback("dialog_action_category_exit", "exit and ending actions")));
+		"sprite",
+		"sprite actions")); // todo : localize
+
+	// todo : needs its own category?
+	// div.appendChild(makeActionCategoryButton(
+	// 	"entry",
+	// 	"sprite entries")); // todo : localize // todo : is the right name?
+
 	div.appendChild(makeActionCategoryButton(
 		"item",
 		localization.GetStringOrFallback("dialog_action_category_item", "item and variable actions")));
+
+	div.appendChild(makeActionCategoryButton(
+		"advanced",
+		"advanced")); // todo : localize
 
 	function makeActionBuilderButton(categoryName, text, createEditorFunc) {
 		var actionBuilderButton = document.createElement("button");
@@ -347,21 +359,20 @@ function ActionBuilder(parentEditor) {
 				return editor;
 			}));
 
-	// todo : do I want this now that I have {PG} as inline? add that to text effects instead?
 	div.appendChild(
 		makeActionBuilderButton(
 			"dialog",
-			localization.GetStringOrFallback("function_pg_name", "pagebreak"),
+			"choice", // todo : localize
 			function() {
-				var token = scriptNext.Parse("{PG}", DialogWrapMode.No);
-				var editor = new ExpressionEditor(token, parentEditor);
+				var token = scriptNext.Parse("{PIK {>> A} {>> a} {>> B} {>> b}}", DialogWrapMode.No);
+				var editor = new ChoiceEditor(token, parentEditor);
 				return editor;
 			}));
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"flow",
-			localization.GetStringOrFallback("sequence_list_name", "sequence list"),
+			"dialog",
+			localization.GetStringOrFallback("sequence_name", "sequence"),
 			function() {
 				var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
@@ -370,8 +381,8 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"flow",
-			localization.GetStringOrFallback("cycle_list_name", "cycle list"),
+			"dialog",
+			localization.GetStringOrFallback("cycle_name", "cycle"),
 			function() {
 				var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
@@ -380,8 +391,8 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"flow",
-			localization.GetStringOrFallback("shuffle_list_name", "shuffle list"),
+			"dialog",
+			localization.GetStringOrFallback("shuffle_name", "shuffle"),
 			function() {
 				var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
@@ -390,8 +401,8 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"flow",
-			localization.GetStringOrFallback("branching_list_name", "branching list"),
+			"dialog",
+			localization.GetStringOrFallback("dialog_block_conditional", "conditional"),
 			function() {
 				var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
 				var editor = new ConditionalEditor(token, parentEditor);
@@ -400,7 +411,7 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"exit",
+			"room",
 			localization.GetStringOrFallback("function_exit_name", "exit"),
 			function() {
 				var token = scriptNext.Parse('{EXT "0" 0 0}', DialogWrapMode.No);
@@ -410,7 +421,7 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"exit",
+			"room",
 			localization.GetStringOrFallback("function_end_name", "end"),
 			function() {
 				var token = scriptNext.Parse('{END}', DialogWrapMode.No);
@@ -420,7 +431,57 @@ function ActionBuilder(parentEditor) {
 
 	div.appendChild(
 		makeActionBuilderButton(
-			"exit",
+			"room",
+			"palette swap",
+			function() {
+				var token = scriptNext.Parse('{PAL "1"}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"sprite",
+			"put new sprite", // todo : localize
+			function() {
+				var token = scriptNext.Parse('{PUT "1"}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"sprite",
+			"get rid of sprite", // todo : localize
+			function() {
+				var token = scriptNext.Parse('{RID THIS}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"sprite",
+			"hop a space", // todo : localize
+			function() {
+				var token = scriptNext.Parse('{HOP THIS "DWN"}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"sprite",
+			"change sprite drawing", // todo : localize
+			function() {
+				var token = scriptNext.Parse('{: THIS TIL "1"}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"sprite",
 			localization.GetStringOrFallback("dialog_action_locked_set", "lock / unlock"),
 			function() {
 				var token = scriptNext.Parse('{: THIS LOK YES}', DialogWrapMode.No);
@@ -451,20 +512,10 @@ function ActionBuilder(parentEditor) {
 	div.appendChild(
 		makeActionBuilderButton(
 			"item",
-			localization.GetStringOrFallback("dialog_action_item_decrease", "decrease item count"),
-			function() {
-				var token = scriptNext.Parse('{ITM "0" {SUB {ITM "0"} 1}}', DialogWrapMode.No);
-				var editor = new ExpressionEditor(token, parentEditor);
-				return editor;
-			}));
-
-	div.appendChild(
-		makeActionBuilderButton(
-			"item",
 			localization.GetStringOrFallback("dialog_action_variable_set", "set variable value"),
 			function() {
 				var token = scriptNext.Parse('{SET a 5}', DialogWrapMode.No);
-				var editor = new MathExpressionEditor(token, parentEditor);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 
@@ -474,7 +525,37 @@ function ActionBuilder(parentEditor) {
 			localization.GetStringOrFallback("dialog_action_variable_change", "change variable value"),
 			function() {
 				var token = scriptNext.Parse('{SET a {ADD a 1}}', DialogWrapMode.No);
-				var editor = new MathExpressionEditor(token, parentEditor);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"item",
+			"make local variable", // todo localize
+			function() {
+				var token = scriptNext.Parse('{VAR X 5}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"advanced",
+			"define function", // todo localize
+			function() {
+				var token = scriptNext.Parse('{VAR F {FN {X} {MLT X 2}}}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"advanced",
+			"make table", // todo localize
+			function() {
+				var token = scriptNext.Parse('{VAR T {TBL :A 5 :B 10}}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
 

@@ -200,11 +200,11 @@
 	display: block;
 }
 
-.actionBuilder_flow .actionBuilderButton_flow {
+.actionBuilder_room .actionBuilderButton_room {
 	display: block;
 }
 
-.actionBuilder_exit .actionBuilderButton_exit {
+.actionBuilder_sprite .actionBuilderButton_sprite {
 	display: block;
 }
 
@@ -212,19 +212,27 @@
 	display: block;
 }
 
+.actionBuilder_advanced .actionBuilderButton_advanced {
+	display: block;
+}
+
 .actionBuilder_dialog .actionBuilderButton_back {
 	display: block;
 }
 
-.actionBuilder_flow .actionBuilderButton_back {
+.actionBuilder_room .actionBuilderButton_back {
 	display: block;
 }
 
-.actionBuilder_exit .actionBuilderButton_back {
+.actionBuilder_sprite .actionBuilderButton_back {
 	display: block;
 }
 
 .actionBuilder_item .actionBuilderButton_back {
+	display: block;
+}
+
+.actionBuilder_advanced .actionBuilderButton_back {
 	display: block;
 }
 

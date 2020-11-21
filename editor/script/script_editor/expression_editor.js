@@ -81,6 +81,14 @@ var expressionDescriptionMap = {
 			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "value", },
 		],
 	},
+	"VAR" : {
+		GetName : function() { return "make local variable"; }, // todo : localize
+		GetDescription : function() { return "local variable _ is set to _" }, // todo : localize
+		parameters : [
+			{ types: ["symbol"], index: 0, name: "variable", },
+			{ types: ["number", "boolean", "string", "symbol", "list"], index: 1, name: "value", },
+		],
+	},
 	"HOP" : {
 		GetName : function() { return "hop"; }, // todo : localize
 		GetDescription : function() { return "move _ one space _"; },
@@ -118,40 +126,40 @@ var expressionDescriptionMap = {
 		],
 	},
 	// todo : do I really want this function?
-	"NOT" : {
-		GetName : function() { return "not"; }, // todo : localize
-		GetDescription : function() { return "not _"; },
-		parameters : [
-			{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "value", },
-		],
-		// TODO : add help text?
-	},
-	"FOR" : {
-		GetName : function() { return "for each"; }, // todo : localize
-		GetDescription : function() { return "for each entry in _, do: _"; },
-		parameters : [
-			{ types: ["symbol", "list"], index: 0, name: "table", },
-			{ types: ["symbol", "list"], index: 1, name: "function", },
-		],
-		// TODO : add help text?
-	},
-	"RNG" : {
-		GetName : function() { return "range"; }, // todo : localize
-		GetDescription : function() { return "range of _ to _"; },
-		parameters : [
-			{ types: ["number", "symbol", "list"], index: 0, name: "min", },
-			{ types: ["number", "symbol", "list"], index: 1, name: "max", },
-		],
-		// TODO : add help text?		
-	},
-	"RND" : {
-		GetName : function() { return "random"; }, // todo : localize
-		GetDescription : function() { return "random value from _"; },
-		parameters : [
-			{ types: ["symbol", "list"], index: 0, name: "table", },
-		],
-		// TODO : add help text?		
-	},
+	// "NOT" : {
+	// 	GetName : function() { return "not"; }, // todo : localize
+	// 	GetDescription : function() { return "not _"; },
+	// 	parameters : [
+	// 		{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "value", },
+	// 	],
+	// 	// TODO : add help text?
+	// },
+	// "FOR" : {
+	// 	GetName : function() { return "for each"; }, // todo : localize
+	// 	GetDescription : function() { return "for each entry in _, do: _"; },
+	// 	parameters : [
+	// 		{ types: ["symbol", "list"], index: 0, name: "table", },
+	// 		{ types: ["symbol", "list"], index: 1, name: "function", },
+	// 	],
+	// 	// TODO : add help text?
+	// },
+	// "RNG" : {
+	// 	GetName : function() { return "range"; }, // todo : localize
+	// 	GetDescription : function() { return "range of _ to _"; },
+	// 	parameters : [
+	// 		{ types: ["number", "symbol", "list"], index: 0, name: "min", },
+	// 		{ types: ["number", "symbol", "list"], index: 1, name: "max", },
+	// 	],
+	// 	// TODO : add help text?
+	// },
+	// "RND" : {
+	// 	GetName : function() { return "random"; }, // todo : localize
+	// 	GetDescription : function() { return "random value from _"; },
+	// 	parameters : [
+	// 		{ types: ["symbol", "list"], index: 0, name: "table", },
+	// 	],
+	// 	// TODO : add help text?
+	// },
 	"default" : {
 		GetName : function() { return "function"; }, // todo : localize
 		GetDescription : function() {

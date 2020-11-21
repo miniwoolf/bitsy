@@ -64,6 +64,8 @@ var SYM_KEY = {
 	TABLE : "TBL",
 	ENTRY : ":",
 	THIS : "THIS",
+	TYPE : "TYPE",
+	ID : "ID",
 };
 
 var DEBUG_KEY = {

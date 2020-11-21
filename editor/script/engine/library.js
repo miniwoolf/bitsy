@@ -55,11 +55,16 @@ function createCoreLibrary(parent) {
 		onReturn(curItemCount);
 	});
 
+	return lib;
+}
+
+// TODO : do I want these? what should the final version be?
+function coreLibWIP(parent) {
 	// todo : what about OTHER one parameter math functions? cos? sin? etc...
 	// todo : do I want both NOT and ISNT? how do I surface NOT if not thru math editor
-	// lib.Set("NOT", function(parameters, onReturn) {
-	// 	onReturn(!parameters[0]);
-	// });
+	lib.Set("NOT", function(parameters, onReturn) {
+		onReturn(!parameters[0]);
+	});
 
 	// WIP --- for loops, range, and random for tables
 	// todo :
@@ -114,8 +119,6 @@ function createCoreLibrary(parent) {
 		var k = keys[Math.floor(Math.random() * keys.length)];
 		onReturn(table.Get(k));
 	});
-
-	return lib;
 }
 
 // todo : is this the right place for this?
@@ -125,27 +128,27 @@ function valueToString(value) {
 	console.log(typeof value);
 
 	if (typeof value === "function") {
-		str += "FN";
+		str += SYM_KEY.FUNCTION;
 	}
 	else if (IsATable(value)) {
-		if (value.Has("NAME")) {
-			str += valueToString(value.Get("NAME"));
+		if (value.Has(ARG_KEY.NAME)) {
+			str += valueToString(value.Get(ARG_KEY.NAME));
 		}
-		else if (value.Has("TYPE") && value.Has("ID")) {
-			str += valueToString(value.Get("TYPE")) + " " + valueToString(value.Get("ID"));
+		else if (value.Has(SYM_KEY.TYPE) && value.Has(SYM_KEY.ID)) {
+			str += valueToString(value.Get(SYM_KEY.TYPE)) + " " + valueToString(value.Get(SYM_KEY.ID));
 		}
 		else {
 			str += "TBL";
 		}
 	}
 	else if ((typeof value === "boolean") || value === undefined || value === null) {
-		str += (value ? "YES" : "NO");
+		str += (value ? BOOL_KEY.YES : BOOL_KEY.NO);
 	}
 	else if ((typeof value === "string") || (typeof value === "number")) {
 		str += value;
 	}
 	else {
-		str += "NO";
+		str += BOOL_KEY.NO;
 	}
 
 	return str;
