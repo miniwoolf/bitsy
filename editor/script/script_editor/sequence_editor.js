@@ -78,6 +78,7 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 
 		if (isEditable) {
 			var sequenceTypeSelect = document.createElement("select");
+
 			for (var type in sequenceTypeDescriptionMap) {
 				var typeName = sequenceTypeDescriptionMap[type].GetTypeName();
 				var sequenceTypeOption = document.createElement("option");
@@ -86,13 +87,14 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 				sequenceTypeOption.selected = (type === sequenceType);
 				sequenceTypeSelect.appendChild(sequenceTypeOption);
 			}
-			sequenceTypeSelect.onchange = function() {
-				// todo : reimplement
-				// sequenceNode = scriptUtils.ChangeSequenceType(sequenceNode, sequenceTypeSelect.value);
-				// node.SetChildren([sequenceNode]);
-				// CreateSequenceDescription(true);
+
+			sequenceTypeSelect.onchange = function(e) {
+				sequenceType = e.target.value;
+				sequenceExpression.list[0].value = sequenceType;
+				CreateSequenceDescription(true);
 				parentEditor.NotifyUpdate();
 			}
+
 			descriptionDiv.appendChild(sequenceTypeSelect);
 		}
 		else {
