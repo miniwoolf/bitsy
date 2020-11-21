@@ -187,13 +187,7 @@ function getCoord(line, arg) {
 }
 
 function parseTitle(lines, i) {
-	var results = scriptUtils.ReadDialogScript(lines,i);
-	setTitle(results.script);
-	i = results.index;
-
-	i++;
-
-	return i;
+	return parseScript(lines, i, { id: titleDialogId, });
 }
 
 function parsePalette(lines, i) { //todo this has to go first right now :(
@@ -536,10 +530,21 @@ function parseDrawing(lines, i) {
 	return { i:i, drawingData:frameList };
 }
 
-function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
-	var id = getId(lines[i]);
+function parseScript(lines, i, options) {
+	var backCompatPrefix = options && options.backCompatPrefix ? options.backCompatPrefix : "";
+	var convertImplicitSpriteDialogIds = options && options.convertImplicitSpriteDialogIds;
+
+	var id = null;
+
+	if (options && options.id) {
+		id = options.id;
+	}
+	else {
+		id = getId(lines[i]);
+		i++;
+	}
+
 	id = backCompatPrefix + id;
-	i++;
 
 	var dialogStart = SYM_KEY.OPEN + SYM_KEY.DIALOG;
 
@@ -582,7 +587,7 @@ function parseScript(lines, i, backCompatPrefix, compatibilityFlags) {
 
 	dialog[id] = createScript(id, null, script);
 
-	if (compatibilityFlags.convertImplicitSpriteDialogIds) {
+	if (convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
 		// connected by sharing sprite and dialog IDs in old versions
 		if (tile[id] && tile[id].type === TYPE_KEY.SPRITE) {
@@ -599,7 +604,8 @@ function parseDialog(lines, i, compatibilityFlags) {
 	// hacky but I need to store this so I can set the name below
 	var id = getId(lines[i]);
 
-	i = parseScript(lines, i, "", compatibilityFlags);
+	var options = { convertImplicitSpriteDialogIds: compatibilityFlags.convertImplicitSpriteDialogIds, };
+	i = parseScript(lines, i, options);
 
 	if (lines[i].length > 0 && getType(lines[i]) === ARG_KEY.NAME) {
 		dialog[id].name = lines[i].split(/\s(.+)/)[1]; // TODO : hacky to keep copying this regex around...
@@ -612,7 +618,14 @@ function parseDialog(lines, i, compatibilityFlags) {
 
 // keeping this around to parse old files where endings were separate from dialogs
 function parseEnding(lines, i, compatibilityFlags) {
-	return parseScript(lines, i, "end_", compatibilityFlags);
+	var options = {
+		backCompatPrefix: "end_",
+		convertImplicitSpriteDialogIds: compatibilityFlags.convertImplicitSpriteDialogIds,
+	};
+
+	// todo : need to read in names for back compat?
+
+	return parseScript(lines, i, options);
 }
 
 function parseVariable(lines, i) {

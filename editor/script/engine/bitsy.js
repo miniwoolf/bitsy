@@ -52,12 +52,15 @@ var playerId = "A";
 var spriteInstances = {};
 var nextInstanceId = 0;
 
+// title
 var titleDialogId = NULL_ID;
+
 function getTitle() {
 	return dialog[titleDialogId].src;
 }
+
 function setTitle(titleSrc) {
-	dialog[titleDialogId] = { id:titleDialogId, src:titleSrc, name:null };
+	dialog[titleDialogId].src = titleSrc;
 }
 
 var defaultFontName = "ascii_small";
