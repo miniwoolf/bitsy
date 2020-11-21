@@ -620,13 +620,24 @@ function DialogControl(parentPanelId) {
 
 	var textArea = document.createElement("textarea");
 	textArea.rows = 2;
+	// todo : not updating??
 	textArea.oninput = function(e) {
 		// todo : delete empty dialogs?
 		var curDlgId = selectedDialogId();
 
 		if (curDlgId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
-			dialog[curDlgId].src = e.target.value;
+			var scriptRoot = scriptNext.Parse(e.target.value);
+			var scriptStr = scriptNext.Serialize(scriptRoot);
+
+			// handle one line scripts: a little hard coded
+			if (scriptStr.indexOf("\n") === -1) {
+				var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
+				var endOffset = startOffset + SYM_KEY.CLOSE.length;
+				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+			}
+
+			dialog[curDlgId].src = scriptStr;
 		}
 		else if (curEventId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
 			createNewDialog(dialogEventTypes[curEventId], e.target.value, false);
@@ -647,7 +658,8 @@ function DialogControl(parentPanelId) {
 		var curDlgId = selectedDialogId();
 
 		if (curDlgId != null) {
-			textArea.value = dialog[curDlgId].src;
+			var scriptRoot = scriptNext.Parse(dialog[curDlgId].src);
+			textArea.value = scriptNext.SerializeUnwrapped(scriptRoot);
 		}
 		else {
 			textArea.value = "";

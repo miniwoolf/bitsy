@@ -47,12 +47,16 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 	function CreateOptionEditors() {
 		optionEditors = [];
 
+		var num = 0;
+
 		for (var i = 1; i < choiceExpression.list.length; i += 2) {
 			var optionExpression = choiceExpression.list[i];
 			var resultExpression = choiceExpression.list[i + 1];
-			var optionEditor = new ChoiceOptionEditor(optionExpression, resultExpression, self, i - 1);
+			var optionEditor = new ChoiceOptionEditor(optionExpression, resultExpression, self, num);
 			optionRootDiv.appendChild(optionEditor.GetElement());
 			optionEditors.push(optionEditor);
+
+			num++;
 		}
 	}
 
@@ -87,7 +91,7 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 		optionRootDiv.innerHTML = "";
 		for (var i = 0; i < optionEditors.length; i++) {
 			var editor = optionEditors[i];
-			// editor.SetOrderNumber(i + 1);
+			editor.SetOrderNumber(i + 1);
 			optionRootDiv.appendChild(editor.GetElement());
 		}
 	}
@@ -102,6 +106,31 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 
 		choiceExpression.list = [choiceExpression.list[0]].concat(updatedOptions);
 	}
+
+	/* add choice option */
+	var optionRootDiv = document.createElement("div");
+	optionRootDiv.classList.add("optionRoot");
+	div.appendChild(optionRootDiv);
+
+	var addOptionRootDiv = document.createElement("div");
+	addOptionRootDiv.classList.add("addOption");
+	div.appendChild(addOptionRootDiv);
+
+	// todo : new text for choices?
+	var addOptionButton = document.createElement("button");
+	addOptionButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
+		+ localization.GetStringOrFallback("dialog_conditional_add", "add option");
+	addOptionButton.onclick = function() {
+		var choiceExpression = scriptNext.Parse("{>> choice}", DialogWrapMode.No);
+		var resultExpression = scriptNext.Parse("{>> reply}", DialogWrapMode.No);
+		var optionEditor = new ChoiceOptionEditor(choiceExpression, resultExpression, self);
+		optionEditors.push(optionEditor);
+
+		RefreshOptionsUI();
+		UpdateExpressionList();
+		parentEditor.NotifyUpdate();
+	}
+	addOptionRootDiv.appendChild(addOptionButton);
 }
 
 function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, index) {
@@ -114,6 +143,10 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 
 	var orderControls = new OrderControls(this, parentEditor);
 	topControlsDiv.appendChild(orderControls.GetElement());
+
+	var orderNumLabel = document.createElement("span");
+	orderNumLabel.innerText = (index + 1) + ") ";
+	div.appendChild(orderNumLabel);
 
 	var optionLabel = document.createElement("span");
 	optionLabel.innerText = "if player picks:"; // todo : localize
@@ -143,5 +176,20 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 		parentEditor.NotifyUpdate();
 	}
 
-	AddSelectionBehavior(this);
+	this.SetOrderNumber = function(i) {
+		orderNumLabel.innerText = i + ") ";
+	}
+
+	AddSelectionBehavior(
+		this,
+		function() {
+			if (resultEditor.IsDialogExpression) {
+				resultEditor.Select();
+			}
+		},
+		function() {
+			if (resultEditor.IsDialogExpression) {
+				resultEditor.Deselect();
+			}
+		});
 }

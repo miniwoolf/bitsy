@@ -196,6 +196,17 @@ function serializeWrapped(expressionList, indentDepth) {
 }
 this.SerializeWrapped = serializeWrapped;
 
+function serializeUnwrapped(expression) {
+	var out = "";
+
+	if (expression.type === "list" && expression.list[0].value === SYM_KEY.DIALOG) {
+		out = serializeWrapped(expression.list.slice(1));
+	}
+
+	return out;
+}
+this.SerializeUnwrapped = serializeUnwrapped;
+
 function isDialogExpression(symbol) {
 	return symbol === SYM_KEY.DIALOG;
 }

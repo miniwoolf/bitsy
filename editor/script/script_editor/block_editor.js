@@ -211,6 +211,8 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 function DialogExpressionEditor(dialogExpression, parentEditor) {
 	var div = document.createElement("div");
 
+	this.IsDialogExpression = true; // todo : should I make a more general type getter?
+
 	this.GetElement = function() {
 		return div;
 	}
@@ -230,6 +232,11 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 
 	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
 	div.appendChild(blockEditor.GetElement());
+
+	AddSelectionBehavior(this,
+		function() {},
+		function() {},
+		true);
 
 	this.AddChild = function(childEditor) {
 		blockEditor.AddChild(childEditor);

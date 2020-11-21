@@ -66,7 +66,9 @@ function ScriptEditor(dialogId) {
 
 		// handle one line scripts: a little hard coded
 		if (dialogStr.indexOf("\n") === -1) {
-			dialogStr = dialogStr.substr(4, dialogStr.length - 5);
+			var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
+			var endOffset = startOffset + SYM_KEY.CLOSE.length;
+			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
 		}
 
 		dialog[dialogId].src = dialogStr;
@@ -103,11 +105,12 @@ function ScriptEditor(dialogId) {
 		viewportDiv.style.display = "none";
 	}
 
-	listener.Listen("dialog_update", function(event) {
-		if (event.dialogId === dialogId && event.editorId != editorId) {
-			RefreshEditorUI();
-		}
-	});
+	// todo : reimplement so it doesn't lose focus
+	// listener.Listen("dialog_update", function(event) {
+	// 	if (event.dialogId === dialogId && event.editorId != editorId) {
+	// 		RefreshEditorUI();
+	// 	}
+	// });
 
 	// I only listen to these events at the root of the script editor
 	// since that makes it easier to clean them up when the editor
@@ -188,10 +191,6 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		defaultDialogNameFunc = null; // just to be safe
 	}
 
-	function DoesDialogExist() {
-		return dialogId != undefined && dialogId != null && dialog.hasOwnProperty(dialogId);
-	}
-
 	var editorId = dialogScriptEditorUniqueIdCounter;
 	dialogScriptEditorUniqueIdCounter++;
 
@@ -202,7 +201,7 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 	var self = this;
 
 	function RefreshEditorUI() {
-		var dialogStr = !DoesDialogExist() ? "" : dialog[dialogId].src;
+		var dialogStr = dialog[dialogId].src;
 
 		div.innerHTML = "";
 		scriptRoot = scriptNext.Parse(dialogStr);
@@ -210,10 +209,10 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		codeTextArea = document.createElement("textarea");
 		codeTextArea.classList.add(style);
 		codeTextArea.rows = 2;
-		codeTextArea.value = scriptNext.Serialize(scriptRoot); // todo : do I need to remove the wrapping stuff?
+		codeTextArea.value = scriptNext.SerializeUnwrapped(scriptRoot);
 		function OnTextChangeHandler() {
 			var dialogStr = codeTextArea.value;
-			scriptRoot = scriptNext.Parse(dialogStr);
+			scriptRoot = scriptNext.Parse(dialogStr, DialogWrapMode.Yes);
 
 			OnUpdate();
 		}
@@ -234,42 +233,28 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 	}
 
 	function OnUpdate() {
-		var dialogStr = scriptRoot.Serialize();
+		var dialogStr = scriptNext.Serialize(scriptRoot);
 
-		var didMakeNewDialog = false;
-		if (dialogStr.length > 0 && !DoesDialogExist()) {
-			dialogId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
-			if (dialogId != null) {
-				// init new dialog
-				dialog[dialogId] = createScript(dialogId, defaultDialogNameFunc ? defaultDialogNameFunc() : null, "" );
-				didMakeNewDialog = true;
-			}
-			else {
-				// error message?
-			}
+		// handle one line scripts: a little hard coded
+		if (dialogStr.indexOf("\n") === -1) {
+			var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
+			var endOffset = startOffset + SYM_KEY.CLOSE.length;
+			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
 		}
-
-		if (!DoesDialogExist()) {
-			return;
-		}
-
-		// TODO : do I need to something to handle single line scripts??
 
 		dialog[dialogId].src = dialogStr;
 
 		refreshGameData();
 
 		events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
-		if (didMakeNewDialog) {
-			events.Raise("new_dialog", {id:dialogId});
-		}
 	}
 
-	listener.Listen("dialog_update", function(event) {
-		if (DoesDialogExist() && event.dialogId === dialogId && event.editorId != editorId) {
-			RefreshEditorUI();
-		}
-	});
+	// todo : reimplement so it doesn't lose focus
+	// listener.Listen("dialog_update", function(event) {
+	// 	if (event.dialogId === dialogId && event.editorId != editorId) {
+	// 		RefreshEditorUI();
+	// 	}
+	// });
 
 	this.GetEditorId = function() {
 		return editorId;
