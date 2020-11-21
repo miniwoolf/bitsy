@@ -123,7 +123,7 @@ function DialogTool(controls) {
 
 		if (id != null) {
 			// todo : need shared create method
-			dialog[id] = createScript(id, null, " ");
+			dialog[id] = createScript(id, null, "...");
 			refreshGameData();
 
 			events.Raise("select_dialog", { id: id });
@@ -140,7 +140,7 @@ function DialogTool(controls) {
 			var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
 			if (id != null) {
-				dialog[id] = createScript(id, null, dialog[curDialogId].slice());
+				dialog[id] = createScript(id, null, dialog[curDialogId].src.slice());
 				refreshGameData();
 
 				events.Raise("select_dialog", { id: id });
