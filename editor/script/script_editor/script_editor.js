@@ -107,12 +107,12 @@ function ScriptEditor(dialogId) {
 		viewportDiv.style.display = "none";
 	}
 
-	// todo : reimplement so it doesn't lose focus
-	// listener.Listen("dialog_update", function(event) {
-	// 	if (event.dialogId === dialogId && event.editorId != editorId) {
-	// 		RefreshEditorUI();
-	// 	}
-	// });
+	listener.Listen("dialog_update", function(event) {
+		if (event.dialogId === dialogId && event.editorId != editorId && event.editorId != plaintextEditor.GetEditorId()) {
+			RefreshEditorUI();
+			plaintextEditor.Refresh();
+		}
+	});
 
 	// I only listen to these events at the root of the script editor
 	// since that makes it easier to clean them up when the editor
@@ -212,6 +212,7 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		codeTextArea.classList.add(style);
 		codeTextArea.rows = 2;
 		codeTextArea.value = scriptNext.SerializeUnwrapped(scriptRoot);
+
 		function OnTextChangeHandler() {
 			var dialogStr = codeTextArea.value;
 			scriptRoot = scriptNext.Parse(dialogStr, DialogWrapMode.Yes);
@@ -220,7 +221,12 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		}
 		codeTextArea.onchange = OnTextChangeHandler;
 		codeTextArea.onkeyup = OnTextChangeHandler;
-		codeTextArea.onblur = OnTextChangeHandler;
+
+		codeTextArea.onblur = function() {
+			OnTextChangeHandler();
+			events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
+		};
+
 		div.appendChild(codeTextArea);
 	}
 
@@ -247,8 +253,6 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		dialog[dialogId].src = dialogStr;
 
 		refreshGameData();
-
-		events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
 	}
 
 	this.GetEditorId = function() {

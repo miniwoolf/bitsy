@@ -600,6 +600,8 @@ function DialogControl(parentPanelId) {
 			}
 
 			refreshGameData();
+
+			events.Raise("new_dialog", { id: nextDlgId, });
 		}
 		else {
 			alert("oh no you ran out of dialog! :(");
@@ -608,14 +610,14 @@ function DialogControl(parentPanelId) {
 
 	var textArea = document.createElement("textarea");
 	textArea.rows = 2;
-	// todo : not updating??
+
 	textArea.oninput = function(e) {
 		// todo : delete empty dialogs?
 		var curDlgId = selectedDialogId();
 
 		if (curDlgId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
-			var scriptRoot = scriptNext.Parse(e.target.value);
+			var scriptRoot = scriptNext.Parse(e.target.value, DialogWrapMode.Yes);
 			var scriptStr = scriptNext.Serialize(scriptRoot);
 
 			// handle one line scripts: a little hard coded
@@ -626,12 +628,23 @@ function DialogControl(parentPanelId) {
 			}
 
 			dialog[curDlgId].src = scriptStr;
+
+			refreshGameData();
 		}
 		else if (curEventId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
 			createNewDialog(dialogEventTypes[curEventId], e.target.value, false);
 			openButton.disabled = false;
 		}
 	}
+
+	textArea.onblur = function() {
+		var curDlgId = selectedDialogId();
+
+		if (curDlgId != null) {
+			events.Raise("dialog_update", { dialogId: curDlgId, editorId: "_dialog_control_" });
+		}
+	};
+
 	editorDiv.appendChild(textArea);
 
 	var dialogIdSelectRoot = document.createElement("div");
@@ -747,9 +760,12 @@ function DialogControl(parentPanelId) {
 	UpdateDialogIdSelectOptions();
 
 	events.Listen("new_dialog", function() { UpdateDialogIdSelectOptions(); });
+
 	events.Listen("dialog_update", function(event) {
-		// TODO
-	})
+		if (event.dialogId === selectedDialogId() && event.editorId != "_dialog_control_") {
+			setSelectedEvent(curEventId); // hack to refresh text..
+		}
+	});
 
 	function ChangeSettingsVisibility(visible) {
 		showSettings = visible;
