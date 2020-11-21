@@ -100,10 +100,10 @@ var expressionDescriptionMap = {
 	},
 	"PUT" : {
 		GetName : function() { return "put down new sprite"; }, // todo : localize
-		GetDescription : function() { return "sprite _ put down[ at _| here][,_]"; }, // todo : localize
+		GetDescription : function() { return "put _ [ at _| here][,_]"; }, // todo : localize
 		parameters : [
 			// todo : create special parameter type for sprite IDs
-			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
+			{ types: ["sprite", "string", "symbol", "list"], index: 0, name: "sprite", },
 			// todo : it would be better if these were added all at once instead of piecemeal (command like room pos?)
 			{ types: ["number", "symbol", "list"], index: 1, name: "x position", },
 			{ types: ["number", "symbol", "list"], index: 2, name: "y position", },

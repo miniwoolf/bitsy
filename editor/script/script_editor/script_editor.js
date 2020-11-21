@@ -318,6 +318,9 @@ function createLiteralEditor(expression, parent, isInline, specialEditorType) {
 	else if (specialEditorType && specialEditorType === "palette") {
 		return new PaletteIdEditor(expression, parent, isInline);
 	}
+	else if (specialEditorType && specialEditorType === "sprite") {
+		return new SpriteIdEditor(expression, parent, isInline);
+	}
 	else if (specialEditorType && specialEditorType === "item") {
 		return new ItemIdEditor(expression, parent, isInline);
 	}

@@ -376,6 +376,59 @@ function PaletteIdEditor(expression, parentEditor, isInline) {
 	TryCreatePaletteSelect();
 }
 
+function SpriteIdEditor(expression, parentEditor, isInline) {
+	var spriteSelect;
+
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"sprite select", // todo : localize
+			function() {
+				var span = document.createElement("span");
+
+				TryCreateSpriteSelect();
+
+				if (spriteSelect) {
+					span.appendChild(spriteSelect.GetElement());
+				}
+
+				return span;
+			},
+			function() {
+				return findTool ? findTool.GetDisplayName("drawing", expression.value) : "";
+			},
+		));
+
+	function TryCreateSpriteSelect() {
+		if (findTool && !spriteSelect) {
+			spriteSelect = findTool.CreateSelectControl(
+				"drawing",
+				{
+					onSelectChange : function(id) {
+						expression.value = id;
+
+						if (parentEditor && "NotifyUpdate" in parentEditor) {
+							parentEditor.NotifyUpdate();
+						}
+					},
+					filters: ["sprite", "item", "exit", "ending"],
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select sprite";
+					},
+				});
+
+			spriteSelect.SetSelection(expression.value);
+		}
+	}
+
+	TryCreateSpriteSelect();
+}
+
 function TransitionIdEditor(expression, parentEditor, isInline) {
 	var transitionEffectControl = new TransitionEffectControl(function(id) {
 		expression.value = event.target.value;
@@ -597,8 +650,13 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 		else if (type === "palette" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in palette) {
 			return true;
 		}
-		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in tile && tile[exp.value].type === "ITM") {
-			return true; // todo : this is really long now...
+		else if (type === "sprite" && exp.type === "string" && (typeof exp.value) === "string" &&
+				exp.value in tile && tile[exp.value].type != TYPE_KEY.TILE && tile[exp.value].type != TYPE_KEY.AVATAR) {
+			return true;
+		}
+		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" &&
+				exp.value in tile && tile[exp.value].type === TYPE_KEY.ITEM) {
+			return true;
 		}
 		else if (type === "transition" && exp.type === "string" && (typeof exp.value) === "string") {
 			// todo : test it's valid string?
