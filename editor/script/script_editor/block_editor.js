@@ -559,6 +559,26 @@ function ActionBuilder(parentEditor) {
 				return editor;
 			}));
 
+	div.appendChild(
+		makeActionBuilderButton(
+			"advanced",
+			"evaluate function", // todo localize
+			function() {
+				var token = scriptNext.Parse('{F X}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	div.appendChild(
+		makeActionBuilderButton(
+			"advanced",
+			"set table entry", // todo localize
+			function() {
+				var token = scriptNext.Parse('{: T A 10}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
 	var cancelButton = document.createElement("button");
 	cancelButton.classList.add("actionBuilderButton");
 	cancelButton.classList.add("actionBuilderCancel");
