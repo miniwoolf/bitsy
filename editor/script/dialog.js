@@ -81,22 +81,17 @@ function DialogTool(controls) {
 		var id = titleDialogId; // the title is safe as a default choice
 
 		if (curDialogId != null) {
-			var dialogIdList = sortedDialogIdList();
+			var dialogIdList = sortedIdList(dialog);
 			var dialogIndex = dialogIdList.indexOf(curDialogId);
 
 			// pick the index of the next dialog to open
 			dialogIndex++;
 			if (dialogIndex >= dialogIdList.length) {
-				dialogIndex = -1; // hacky: I'm using -1 to denote the title
+				dialogIndex = 0;
 			}
 
 			// turn the index into an ID
-			if (dialogIndex < 0) {
-				id = titleDialogId;
-			}
-			else {
-				id = dialogIdList[dialogIndex];
-			}
+			id = dialogIdList[dialogIndex];
 		}
 
 		events.Raise("select_dialog", { id: id });
@@ -106,24 +101,17 @@ function DialogTool(controls) {
 		var id = titleDialogId; // the title is safe as a default choice
 
 		if (curDialogId != null) {
-			var dialogIdList = sortedDialogIdList();
+			var dialogIdList = sortedIdList(dialog);
 			var dialogIndex = dialogIdList.indexOf(curDialogId);
 
 			// pick the index of the next dialog to open
-			if (dialogIndex === -1) {
+			dialogIndex--;
+			if (dialogIndex < 0) {
 				dialogIndex = dialogIdList.length - 1;
-			}
-			else {
-				dialogIndex--;
 			}
 
 			// turn the index into an ID
-			if (dialogIndex < 0) {
-				id = titleDialogId;
-			}
-			else {
-				id = dialogIdList[dialogIndex];
-			}
+			id = dialogIdList[dialogIndex];
 		}
 
 		events.Raise("select_dialog", { id: id });

@@ -221,7 +221,7 @@ function MapTool(controls) {
 		}
 
 		// TODO : should I really switch to hex ids? does it even matter if maps are limited to 4?
-		var idList = sortedHexIdList(map);
+		var idList = sortedIdList(map);
 		var idIndex = idList.indexOf(curMapId);
 
 		idIndex++;
@@ -237,7 +237,7 @@ function MapTool(controls) {
 			return;
 		}
 
-		var idList = sortedHexIdList(map);
+		var idList = sortedIdList(map);
 		var idIndex = idList.indexOf(curMapId);
 
 		idIndex--;
@@ -286,7 +286,7 @@ function MapTool(controls) {
 			}
 		}
 
-		var idList = sortedHexIdList(map);
+		var idList = sortedIdList(map);
 		var idIndex = idList.indexOf(curMapId);
 		if (idIndex >= idList.length - 1) {
 			idIndex = 0;
@@ -297,7 +297,7 @@ function MapTool(controls) {
 		refreshGameData();
 
 		var nextId = null;
-		idList = sortedHexIdList(map);
+		idList = sortedIdList(map);
 		if (idList.length > 0) {
 			nextId = idList[idIndex];
 		}
@@ -316,7 +316,7 @@ function MapTool(controls) {
 	events.Listen("select_map", function(e) {
 		curMapId = e.id;
 
-		if (sortedHexIdList(map).length > 0) {
+		if (sortedIdList(map).length > 0) {
 			controls.editRoot.style.display = "block";
 			controls.noMapMessage.style.display = "none";
 

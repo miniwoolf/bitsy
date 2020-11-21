@@ -23,99 +23,6 @@ function selectedColorPal() {
 	return paletteTool.GetSelectedId();
 };
 
-// todo : remove these...
-/* UNIQUE ID METHODS */
-// TODO - lots of duplicated code around stuff (ex: all these things with IDs)
-function nextRoomId() {
-	return nextObjectId( sortedRoomIdList() );
-}
-
-function nextPaletteId() {
-	return nextObjectId( sortedPaletteIdList() );
-}
-
-function nextObjectId(idList) {
-	if (idList.length <= 0) {
-		return "0";
-	}
-
-	var lastId = idList[ idList.length - 1 ];
-	var idInt = parseInt( lastId, 36 );
-	idInt++;
-	return idInt.toString(36);
-}
-
-// TODO : continue using base 36???
-function sortedDrawingIdList() { // TODO : name?
-	return sortedBase36IdList(tile);
-}
-// TODO : add nextDrawingId()
-
-function sortedRoomIdList() {
-	return sortedBase36IdList( room );
-}
-
-function sortedDialogIdList() {
-	var keyList = Object.keys(dialog);
-	keyList.splice(keyList.indexOf("title"), 1);
-	var keyObj = {};
-	for (var i = 0; i < keyList.length; i++) {
-		keyObj[keyList[i]] = {};
-	}
-
-	return sortedBase36IdList(keyObj);
-}
-
-// todo : do I still need this?
-function sortedPaletteIdList() {
-	var keyList = Object.keys(palette);
-	var keyObj = {};
-	for (var i = 0; i < keyList.length; i++) {
-		keyObj[keyList[i]] = {};
-	}
-
-	return sortedBase36IdList(keyObj);
-}
-
-function sortedBase36IdList( objHolder ) {
-	return Object.keys( objHolder ).sort( function(a,b) { return parseInt(a,36) - parseInt(b,36); } );
-}
-
-function nextAvailableDialogId(prefix) {
-	return nextObjectId(sortedDialogIdList());
-}
-
-function nextObjectHexId(idList) {
-	if (idList.length <= 0) {
-		return "0";
-	}
-
-	var lastId = idList[ idList.length - 1 ];
-	var idInt = safeParseHex(lastId);
-	idInt++;
-	return idInt.toString(16);
-}
-
-function sortedHexIdList(objHolder) {
-	var objectKeys = Object.keys(objHolder);
-
-	var hexSortFunc = function(key1,key2) {
-		return safeParseHex(key1,16) - safeParseHex(key2,16);
-	};
-	var hexSortedIds = objectKeys.sort(hexSortFunc);
-
-	return hexSortedIds;
-}
-
-function safeParseHex(str) {
-	var hexInt = parseInt(str,16);
-	if (hexInt == undefined || hexInt == null || isNaN(hexInt)) {
-		return -1;
-	}
-	else {
-		return hexInt;
-	}
-}
 
 /* UTILS */
 function getContrastingColor(palId) {
@@ -649,7 +556,7 @@ function start() {
 		setDefaultGameState();
 	}
 
-	roomIndex = sortedRoomIdList().indexOf(curRoom);
+	roomIndex = sortedIdList(room).indexOf(curRoom);
 
 	// load panel preferences
 	var prefs = getPanelPrefs();
@@ -838,7 +745,7 @@ function start() {
 
 	events.Raise("select_room", { id: curRoom });
 
-	var mapIds = sortedHexIdList(map);
+	var mapIds = sortedIdList(map);
 	if (mapIds.length > 0) {
 		events.Raise("select_map", { id: mapIds[0] });
 	}
@@ -943,7 +850,7 @@ function on_edit_mode() {
 	animationCounter = 0;
 	colorCycleCounter = 0;
 
-	curRoom = sortedRoomIdList()[roomIndex]; //restore current room to pre-play state
+	curRoom = sortedIdList(room)[roomIndex]; //restore current room to pre-play state
 	initRoom(curRoom);
 
 	roomTool.drawEditMap();

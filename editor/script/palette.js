@@ -37,7 +37,7 @@ function PaletteTool(colorPicker, controls) {
 
 	var colorPickerIndex = 0;
 
-	var curPaletteId = sortedPaletteIdList()[0];
+	var curPaletteId = sortedIdList(palette)[0];
 
 	controls.addButton.onclick = function() {
 		var pal = palette[GetSelectedId()];
@@ -127,8 +127,8 @@ function PaletteTool(colorPicker, controls) {
 	events.Listen("game_data_change", function(event) {
 		// make sure we have valid palette id
 		if (palette[curPaletteId] === undefined) {
-			if (sortedPaletteIdList().length > 0) {
-				curPaletteId = sortedPaletteIdList()[0];
+			if (sortedIdList(palette).length > 0) {
+				curPaletteId = sortedIdList(palette)[0];
 			}
 			else {
 				curPaletteId = null;
@@ -191,7 +191,7 @@ function PaletteTool(colorPicker, controls) {
 	});
 
 	function SelectPrev() {
-		var idList = sortedPaletteIdList();
+		var idList = sortedIdList(palette);
 		var index = idList.indexOf(curPaletteId);
 
 		index--;
@@ -204,7 +204,7 @@ function PaletteTool(colorPicker, controls) {
 	this.SelectPrev = SelectPrev;
 
 	this.SelectNext = function() {
-		var idList = sortedPaletteIdList();
+		var idList = sortedIdList(palette);
 		var index = idList.indexOf(curPaletteId);
 
 		index++;
@@ -261,15 +261,15 @@ function PaletteTool(colorPicker, controls) {
 	}
 
 	this.DeleteSelected = function() {
-		if (sortedPaletteIdList().length <= 1) {
+		if (sortedIdList(palette).length <= 1) {
 			alert("You can't delete your only palette!");
 		}
 		else if (confirm("Are you sure you want to delete this palette?")) {
 			delete palette[curPaletteId];
 
 			// replace palettes for rooms using the current palette
-			var replacementPalId = sortedPaletteIdList()[0];
-			var roomIdList = sortedRoomIdList();
+			var replacementPalId = sortedIdList(palette)[0];
+			var roomIdList = sortedIdList(room);
 			for (var i = 0; i < roomIdList.length; i++) {
 				var roomId = roomIdList[i];
 				if (room[roomId].pal === curPaletteId) {

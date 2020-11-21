@@ -405,7 +405,7 @@ function RoomTool(controls) {
 
 	/* nav controls */
 	function nextRoom() {
-		var ids = sortedRoomIdList();
+		var ids = sortedIdList(room);
 		var nextIndex = (roomIndex + 1) % ids.length;
 		var nextId = ids[nextIndex];
 
@@ -413,7 +413,7 @@ function RoomTool(controls) {
 	}
 
 	function prevRoom() {
-		var ids = sortedRoomIdList();
+		var ids = sortedIdList(room);
 		var prevIndex = roomIndex - 1;
 		if (prevIndex < 0) {
 			prevIndex = (ids.length - 1);
@@ -424,7 +424,7 @@ function RoomTool(controls) {
 	}
 
 	function duplicateRoom() {
-		var idList = sortedRoomIdList();
+		var idList = sortedIdList(room);
 		var copyRoomId = idList[roomIndex];
 		var roomToCopy = room[copyRoomId];
 
@@ -457,7 +457,7 @@ function RoomTool(controls) {
 		var roomId = nextB256Id(room, 1, DEFAULT_REGISTRY_SIZE);
 
 		if (roomId != null) {
-			var palIdList = sortedPaletteIdList();
+			var palIdList = sortedIdList(palette);
 			var palId = palIdList.length > 0 ? palIdList[0] : null;
 
 			room[roomId] = createRoom(roomId, palId);
@@ -476,7 +476,7 @@ function RoomTool(controls) {
 			alert("You can't delete your only room!");
 		}
 		else if ( confirm("Are you sure you want to delete this room? You can't get it back.") ) {
-			var roomId = sortedRoomIdList()[roomIndex];
+			var roomId = sortedIdList(room)[roomIndex];
 
 			// delete exits in _other_ rooms that go to this room
 			// todo : re-implement?
@@ -580,7 +580,7 @@ function RoomTool(controls) {
 // TODO : refactor this global function
 function selectRoom(roomId) {
 	// ok watch out this is gonna be hacky
-	var ids = sortedRoomIdList();
+	var ids = sortedIdList(room);
 
 	var nextRoomIndex = -1;
 	for (var i = 0; i < ids.length; i++) {

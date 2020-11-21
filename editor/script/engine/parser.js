@@ -345,7 +345,8 @@ function parseMap(lines, i) {
 
 	for (; i < end; i++) {
 		for (x = 0; x < mapsize; x++) {
-			map[id].map[y][x] = lines[i][x];
+			var roomId = lines[i][x];
+			map[id].map[y][x] = roomId;
 
 			// NOTE: assumes rooms already exist!
 			if (roomId != NULL_ID) {

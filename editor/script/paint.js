@@ -650,7 +650,7 @@ function PaintTool(controls) {
 
 	/* NAVIGATION */
 	function nextDrawing() {
-		var ids = sortedDrawingIdList();
+		var ids = sortedIdList(tile);
 
 		var index = ids.indexOf(drawingId);
 		index = (index + 1) % ids.length;
@@ -661,7 +661,7 @@ function PaintTool(controls) {
 	controls.nav.next.onclick = nextDrawing;
 
 	function prevDrawing() {
-		var ids = sortedDrawingIdList();
+		var ids = sortedIdList(tile);
 
 		var index = ids.indexOf(drawingId);
 		index = (index - 1) % ids.length;
