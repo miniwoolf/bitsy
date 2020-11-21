@@ -111,4 +111,5 @@ var MISC_KEY = {
 var LEGACY_KEY = {
 	ROOM : "SET",
 	POSITION : "POS",
+	SEPARATOR : ",",
 };

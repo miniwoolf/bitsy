@@ -183,7 +183,7 @@ function tryGetArg(line, arg) {
 }
 
 function getCoord(line, arg) {
-	return getArg(line,arg).split(",");
+	return getArg(line, arg).split(LEGACY_KEY.SEPARATOR);
 }
 
 function parseTitle(lines, i) {
@@ -204,7 +204,7 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 		}
 		else {
 			var col = [];
-			lines[i].split(",").forEach(function(i) {
+			lines[i].split(LEGACY_KEY.SEPARATOR).forEach(function(i) {
 				col.push(parseInt(i));
 			});
 			colors.push(col);
@@ -240,7 +240,7 @@ function parseRoom(lines, i, compatibilityFlags) {
 		var end = i + roomsize;
 		var y = 0;
 		for (; i < end; i++) {
-			var lineSep = lines[i].split(",");
+			var lineSep = lines[i].split(LEGACY_KEY.SEPARATOR);
 			for (x = 0; x < roomsize; x++) {
 				room[id].tilemap[y][x] = lineSep[x];
 			}
@@ -253,7 +253,7 @@ function parseRoom(lines, i, compatibilityFlags) {
 		if (getType(lines[i]) === TYPE_KEY.SPRITE || getType(lines[i]) === TYPE_KEY.ITEM) {
 			var sprId = getId(lines[i]);
 			console.log(lines[i]);
-			var sprCoord = lines[i].split(" ")[2].split(",");
+			var sprCoord = lines[i].split(" ")[2].split(LEGACY_KEY.SEPARATOR);
 			var sprLocation = createSpriteLocation(sprId, parseInt(sprCoord[0]), parseInt(sprCoord[1]));
 			room[id].sprites.push(sprLocation);
 
@@ -262,15 +262,15 @@ function parseRoom(lines, i, compatibilityFlags) {
 		else if (getType(lines[i]) === ARG_KEY.IS_WALL) {
 			/* DEFINE COLLISIONS (WALLS) */
 			// TODO : remove this deprecated feature at some point
-			room[id].walls = getId(lines[i]).split(",");
+			room[id].walls = getId(lines[i]).split(LEGACY_KEY.SEPARATOR);
 		}
 		else if (getType(lines[i]) === TYPE_KEY.EXIT) {
 			/* ADD EXIT */
 			var exitArgs = lines[i].split(" ");
 			//arg format: EXT 10,5 M 3,2
-			var exitCoords = exitArgs[1].split(",");
+			var exitCoords = exitArgs[1].split(LEGACY_KEY.SEPARATOR);
 			var destName = exitArgs[2];
-			var destCoords = exitArgs[3].split(",");
+			var destCoords = exitArgs[3].split(LEGACY_KEY.SEPARATOR);
 			var ext = {
 				x : parseInt(exitCoords[0]),
 				y : parseInt(exitCoords[1]),
@@ -450,7 +450,7 @@ function parseTile(lines, i, type) {
 			// NOTE: I still need this to read in old unique position data from sprites
 			var posArgs = lines[i].split(" ");
 			var roomId = posArgs[1];
-			var coordArgs = posArgs[2].split(",");
+			var coordArgs = posArgs[2].split(LEGACY_KEY.SEPARATOR);
 
 			// NOTE: assumes rooms have all been created!
 			room[roomId].sprites.push(
@@ -469,10 +469,8 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === ARG_KEY.EXIT_DESTINATION && type === TYPE_KEY.EXIT) {
 			// TODO : maintain the same format as before with the comma seperation?
 			options.destRoom = getId(lines[i]);
-
-			var coordArgs = getCoord(lines[i], 2);
-			options.destX = parseInt(coordArgs[0]);
-			options.destY = parseInt(coordArgs[1]);
+			options.destX = parseInt(getArg(lines[i], 2));
+			options.destY = parseInt(getArg(lines[i], 3));
 		}
 		else if (getType(lines[i]) === ARG_KEY.TRANSITION_EFFECT && type === TYPE_KEY.EXIT) {
 			options.transition_effect = getId(lines[i]);
@@ -752,7 +750,7 @@ function serializeWorld(skipFonts) {
 
 		for (var j = 0; j < palette[id].colors.length; j++) {
 			var clr = palette[id].colors[j];
-			worldStr += clr[0] + "," + clr[1] + "," + clr[2] + "\n";
+			worldStr += clr[0] + LEGACY_KEY.SEPARATOR + clr[1] + LEGACY_KEY.SEPARATOR + clr[2] + "\n";
 		}
 
 		if (palette[id].name != null) {
@@ -814,7 +812,7 @@ function serializeWorld(skipFonts) {
 				if (!tile[spr.id].isUnique || !tile[spr.id].hasUniqueLocation) {
 					// TODO : for now I'm just using SPR to avoid collisions with EXT and END legacy commands
 					// *but* is that the final format I want to use??
-					worldStr += TYPE_KEY.SPRITE + " " + spr.id + " " + spr.x + "," + spr.y;
+					worldStr += TYPE_KEY.SPRITE + " " + spr.id + " " + spr.x + LEGACY_KEY.SEPARATOR + spr.y;
 					worldStr += "\n";
 				}
 
@@ -919,7 +917,7 @@ function serializeWorld(skipFonts) {
 			}
 		}
 		if (type === TYPE_KEY.EXIT && tile[id].dest.room != null) {
-			worldStr += ARG_KEY.EXIT_DESTINATION + " " + tile[id].dest.room + " " + tile[id].dest.x + "," + tile[id].dest.y + "\n";
+			worldStr += ARG_KEY.EXIT_DESTINATION + " " + tile[id].dest.room + " " + tile[id].dest.x + " " + tile[id].dest.y + "\n";
 		}
 		if (type === TYPE_KEY.EXIT && tile[id].transition_effect != null) {
 			worldStr += ARG_KEY.TRANSITION_EFFECT + " " + tile[id].transition_effect + "\n";
