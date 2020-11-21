@@ -344,6 +344,13 @@ function nextB256Id(objectRegistry, min, max) {
 }
 
 function sortedIdList(objectRegistry) {
-	var keys = Object.keys(objectRegistry);
-	return keys.sort(function(a, b) { return toB256(a) - toB256(b); });
+	var ids = [];
+
+	for (var id in objectRegistry) {
+		ids.push(id);
+	}
+
+	var sorted = ids.sort(function(a, b) { return fromB256(a) - fromB256(b); });
+
+	return sorted;
 }

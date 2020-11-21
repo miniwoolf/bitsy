@@ -696,24 +696,29 @@ function parseFlag(lines, i) {
 
 //TODO this is in progress and doesn't support all features
 function serializeWorld(skipFonts) {
-	if (skipFonts === undefined || skipFonts === null)
+	if (skipFonts === undefined || skipFonts === null) {
 		skipFonts = false;
+	}
 
 	var worldStr = "";
+
 	/* TITLE */
 	worldStr += getTitle() + "\n";
 	worldStr += "\n";
+
 	/* VERSION */
 	worldStr += MISC_KEY.COMMENT + " BITSY VERSION " + getEngineVersion() + "\n"; // add version as a comment for debugging purposes
 	if (version.devBuildPhase != "RELEASE") {
 		worldStr += MISC_KEY.COMMENT + " DEVELOPMENT BUILD -- " + version.devBuildPhase;
 	}
 	worldStr += "\n";
+
 	/* FLAGS */
 	for (f in flags) {
 		worldStr += MISC_KEY.FLAG + " " + f + " " + flags[f] + "\n";
 	}
 	worldStr += "\n";
+
 	/* FONT */
 	if (fontName != defaultFontName) {
 		worldStr += TYPE_KEY.DEFAULT_FONT + " " + fontName + "\n";
@@ -728,8 +733,17 @@ function serializeWorld(skipFonts) {
 		worldStr += TYPE_KEY.TEXT_DIRECTION + " " + textDirection + "\n";
 		worldStr += "\n";
 	}
+
 	/* PALETTE */
-	for (id in palette) {
+	var paletteIdList = sortedIdList(palette);
+	for (var i = 0; i < paletteIdList.length; i++) {
+		var id = paletteIdList[i];
+
+		// TODO
+		// if (id === NULL_ID) {
+		// 	continue;
+		// }
+
 		worldStr += TYPE_KEY.PALETTE + " " + id + "\n";
 
 		// todo : can I put this at the end instead? what about other properties?
@@ -746,8 +760,17 @@ function serializeWorld(skipFonts) {
 		}
 		worldStr += "\n";
 	}
+
 	/* ROOM */
-	for (id in room) {
+	var roomIdList = sortedIdList(room);
+	for (var i = 0; i < roomIdList.length; i++) {
+		var id = roomIdList[i];
+
+		// TODO
+		// if (id === NULL_ID) {
+		// 	continue;
+		// }
+
 		worldStr += TYPE_KEY.ROOM + " " + id + "\n";
 		if ( flags.ROOM_FORMAT == 0 ) {
 			// old non-comma separated format
@@ -806,8 +829,16 @@ function serializeWorld(skipFonts) {
 		}
 		worldStr += "\n";
 	}
+
 	/* MAP */
-	for (id in map) {
+	var mapIdList = sortedIdList(map);
+	for (var i = 0; i < mapIdList.length; i++) {
+		var id = mapIdList[i];
+
+		if (id === NULL_ID) {
+			continue;
+		}
+
 		worldStr += TYPE_KEY.MAP + " " + id + "\n";
 		for (i in map[id].map) {
 			for (j in map[id].map[i]) {
@@ -835,8 +866,16 @@ function serializeWorld(skipFonts) {
 
 		worldStr += "\n";
 	}
-	/* TILES & SPRITES */
-	for (id in tile) {
+
+	/* TILES */
+	var tileIdList = sortedIdList(tile);
+	for (var i = 0; i < tileIdList.length; i++) {
+		var id = tileIdList[i];
+
+		if (id === NULL_ID) {
+			continue;
+		}
+
 		var type = tile[id].type;
 		var isBackgroundTile = type === TYPE_KEY.TILE;
 
@@ -897,23 +936,31 @@ function serializeWorld(skipFonts) {
 		// remove temporary unique placement field
 		delete tile[id].hasUniqueLocation;
 	}
+
 	/* DIALOG */
-	for (id in dialog) {
-		if (id != titleDialogId) {
-			worldStr += TYPE_KEY.DIALOG + " " + id + "\n";
-			worldStr += dialog[id].src + "\n";
-			if (dialog[id].name != null) {
-				worldStr += ARG_KEY.NAME + " " + dialog[id].name + "\n";
-			}
-			worldStr += "\n";
+	var dialogIdList = sortedIdList(dialog);
+	for (var i = 0; i < dialogIdList.length; i++) {
+		var id = dialogIdList[i];
+
+		if (id === NULL_ID) {
+			continue;
 		}
+
+		worldStr += TYPE_KEY.DIALOG + " " + id + "\n";
+		worldStr += dialog[id].src + "\n";
+		if (dialog[id].name != null) {
+			worldStr += ARG_KEY.NAME + " " + dialog[id].name + "\n";
+		}
+		worldStr += "\n";
 	}
+
 	/* VARIABLES */
 	for (id in variable) {
 		worldStr += SYM_KEY.VARIABLE + " " + id + "\n";
 		worldStr += variable[id] + "\n";
 		worldStr += "\n";
 	}
+
 	/* FONT */
 	// TODO : support multiple fonts
 	if (fontName != defaultFontName && !skipFonts) {
