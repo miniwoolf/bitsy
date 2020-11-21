@@ -579,6 +579,27 @@ function ActionBuilder(parentEditor) {
 				return editor;
 			}));
 
+	div.appendChild(
+		makeActionBuilderButton(
+			"advanced",
+			"say variable value", // todo localize
+			function() {
+				var token = scriptNext.Parse('{SAY a}', DialogWrapMode.No);
+				var editor = new ExpressionEditor(token, parentEditor);
+				return editor;
+			}));
+
+	// todo : put this here or in text effect window?
+	// div.appendChild(
+	// 	makeActionBuilderButton(
+	// 		"advanced",
+	// 		"custom text effect", // todo localize
+	// 		function() {
+	// 			var token = scriptNext.Parse('{TFX "0"}', DialogWrapMode.No); // todo : detect first text effect script?
+	// 			var editor = new ExpressionEditor(token, parentEditor);
+	// 			return editor;
+	// 		}));
+
 	var cancelButton = document.createElement("button");
 	cancelButton.classList.add("actionBuilderButton");
 	cancelButton.classList.add("actionBuilderCancel");

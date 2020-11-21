@@ -322,6 +322,60 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 	TryCreateItemSelect();
 }
 
+function PaletteIdEditor(expression, parentEditor, isInline) {
+	var paletteSelect;
+
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"palette select", // todo : localize
+			function() {
+				var span = document.createElement("span");
+
+				TryCreatePaletteSelect();
+
+				if (paletteSelect) {
+					span.appendChild(paletteSelect.GetElement());
+				}
+
+				return span;
+			},
+			function() {
+				return findTool ? findTool.GetDisplayName("palette", expression.value) : "";
+			},
+		));
+
+	function TryCreatePaletteSelect() {
+		if (findTool && !paletteSelect) {
+			paletteSelect = findTool.CreateSelectControl(
+				"palette",
+				{
+					onSelectChange : function(id) {
+						console.log("CHANGE PAL " + id);
+
+						expression.value = id;
+
+						if (parentEditor && "NotifyUpdate" in parentEditor) {
+							parentEditor.NotifyUpdate();
+						}
+					},
+					toolId : "dialogPanel",
+					getSelectMessage : function() {
+						// todo : localize
+						return "select palette";
+					},
+				});
+
+			paletteSelect.SetSelection(expression.value);
+		}
+	}
+
+	TryCreatePaletteSelect();
+}
+
 function TransitionIdEditor(expression, parentEditor, isInline) {
 	var transitionEffectControl = new TransitionEffectControl(function(id) {
 		expression.value = event.target.value;
@@ -538,6 +592,9 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 			return true;
 		}
 		else if (type === "room" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in room) {
+			return true;
+		}
+		else if (type === "palette" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in palette) {
 			return true;
 		}
 		else if (type === "item" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in tile && tile[exp.value].type === "ITM") {

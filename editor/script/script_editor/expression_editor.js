@@ -121,8 +121,7 @@ var expressionDescriptionMap = {
 		GetName : function() { return "palette swap"; }, // todo : localize
 		GetDescription : function() { return "change palette of current room to _"; }, // todo : localize
 		parameters : [
-			// todo : create special parameter type for palette IDs
-			{ types: ["string", "symbol", "list"], index: 0, name: "palette", },
+			{ types: ["palette", "string", "symbol", "list"], index: 0, name: "palette", },
 		],
 	},
 	// todo : do I really want this function?

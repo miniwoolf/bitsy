@@ -735,7 +735,9 @@ function serializeWorld(skipFonts) {
 	}
 
 	/* PALETTE */
+	// TODO : DEBUG!!!
 	var paletteIdList = sortedIdList(palette);
+	console.log(paletteIdList);
 	for (var i = 0; i < paletteIdList.length; i++) {
 		var id = paletteIdList[i];
 
@@ -743,6 +745,8 @@ function serializeWorld(skipFonts) {
 		// if (id === NULL_ID) {
 		// 	continue;
 		// }
+
+		console.log(id + " " + getPal(id));
 
 		worldStr += TYPE_KEY.PALETTE + " " + id + "\n";
 

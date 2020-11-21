@@ -315,6 +315,9 @@ function createLiteralEditor(expression, parent, isInline, specialEditorType) {
 	if (specialEditorType && specialEditorType === "room") {
 		return new RoomIdEditor(expression, parent, isInline);
 	}
+	else if (specialEditorType && specialEditorType === "palette") {
+		return new PaletteIdEditor(expression, parent, isInline);
+	}
 	else if (specialEditorType && specialEditorType === "item") {
 		return new ItemIdEditor(expression, parent, isInline);
 	}
