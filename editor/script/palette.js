@@ -106,7 +106,7 @@ function PaletteTool(colorPicker, controls) {
 		var pal = palette[GetSelectedId()];
 
 		if (pal && pal.name) {
-			controls.nameInput.value = name;
+			controls.nameInput.value = pal.name;
 		}
 		else {
 			controls.nameInput.value = "";

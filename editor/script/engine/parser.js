@@ -750,18 +750,15 @@ function serializeWorld(skipFonts) {
 
 		worldStr += TYPE_KEY.PALETTE + " " + id + "\n";
 
-		// todo : can I put this at the end instead? what about other properties?
+		for (var j = 0; j < palette[id].colors.length; j++) {
+			var clr = palette[id].colors[j];
+			worldStr += clr[0] + "," + clr[1] + "," + clr[2] + "\n";
+		}
+
 		if (palette[id].name != null) {
 			worldStr += ARG_KEY.NAME + " " + palette[id].name + "\n";
 		}
 
-		for (i in getPal(id)) {
-			for (j in getPal(id)[i]) {
-				worldStr += getPal(id)[i][j];
-				if (j < 2) worldStr += ",";
-			}
-			worldStr += "\n";
-		}
 		worldStr += "\n";
 	}
 
