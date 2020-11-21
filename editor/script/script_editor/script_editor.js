@@ -75,6 +75,8 @@ function ScriptEditor(dialogId) {
 
 		refreshGameData();
 
+		plaintextEditor.Refresh();
+
 		events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
 	}
 
@@ -249,13 +251,6 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
 	}
 
-	// todo : reimplement so it doesn't lose focus
-	// listener.Listen("dialog_update", function(event) {
-	// 	if (event.dialogId === dialogId && event.editorId != editorId) {
-	// 		RefreshEditorUI();
-	// 	}
-	// });
-
 	this.GetEditorId = function() {
 		return editorId;
 	}
@@ -268,6 +263,8 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		codeTextArea.style.width = width + "px";
 		codeTextArea.style.height = height + "px";
 	}
+
+	this.Refresh = RefreshEditorUI;
 }
 
 // todo: too many globals?
