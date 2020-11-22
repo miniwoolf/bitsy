@@ -202,12 +202,15 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 		if (args[0] === ARG_KEY.NAME) {
 			name = lines[i].split(/\s(.+)/)[1];
 		}
-		else {
+		else if (flags.PAL_FORMAT === 0) {
 			var col = [];
 			lines[i].split(LEGACY_KEY.SEPARATOR).forEach(function(i) {
 				col.push(parseInt(i));
 			});
 			colors.push(col);
+		}
+		else if (flags.PAL_FORMAT === 1) {
+			colors.push(fromHex(lines[i]));
 		}
 
 		i++;
@@ -698,6 +701,8 @@ function serializeWorld(skipFonts) {
 		skipFonts = false;
 	}
 
+	flags.PAL_FORMAT = 1; // new default pal format
+
 	var worldStr = "";
 
 	/* TITLE */
@@ -750,7 +755,7 @@ function serializeWorld(skipFonts) {
 
 		for (var j = 0; j < palette[id].colors.length; j++) {
 			var clr = palette[id].colors[j];
-			worldStr += clr[0] + LEGACY_KEY.SEPARATOR + clr[1] + LEGACY_KEY.SEPARATOR + clr[2] + "\n";
+			worldStr += toHex(clr) + "\n";
 		}
 
 		if (palette[id].name != null) {

@@ -108,7 +108,8 @@ function getEngineVersion() {
 var flags;
 function resetFlags() {
 	flags = {
-		ROOM_FORMAT : 0 // 0 = non-comma separated, 1 = comma separated
+		ROOM_FORMAT : 0, // 0 = non-comma separated, 1 = comma separated
+		PAL_FORMAT : 0, // 0 = rgb comma separated, 1 = hex
 	};
 }
 resetFlags(); //init flags on load script
