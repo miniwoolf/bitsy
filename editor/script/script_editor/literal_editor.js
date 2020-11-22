@@ -501,6 +501,52 @@ function DirectionEditor(expression, parentEditor, isInline) {
 		));
 }
 
+// todo : localize
+var defaultSpriteEntries = {};
+defaultSpriteEntries[ENTRY_KEY.SPRITE_TYPE] = { name: "type" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_ID] = { name: "ID" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_NAME] = { name: "name" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_X] = { name: "x position" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_Y] = { name: "y position" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_TILE_ID] = { name: "drawing" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_BACKGROUND] = { name: "background color" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_COLOR] = { name: "color" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_WALL] = { name: "wall state" }; // todo : name?
+defaultSpriteEntries[ENTRY_KEY.SPRITE_LOCKED] = { name: "locked state" };
+
+function SpriteEntryKeyEditor(expression, parentEditor, isInline) {
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"entry select", // todo : localize
+			function() {
+				var input = document.createElement("select");
+				input.title = "choose entry";
+
+				for (var id in defaultSpriteEntries) {
+					var entryOption = document.createElement("option");
+					entryOption.value = id;
+					entryOption.innerText = defaultSpriteEntries[id].name;
+					entryOption.selected = id === expression.value;
+					input.appendChild(entryOption);
+				}
+
+				input.onchange = function(event) {
+					expression.value = event.target.value;
+					parentEditor.NotifyUpdate();
+				}
+
+				return input;
+			},
+			function() {
+				return defaultSpriteEntries[expression.value].name;
+			},
+		));
+}
+
 // todo : rename? SetTo? Make? Update?
 function CreateDefaultExpression(type, exp) {
 	if (exp === undefined || exp === null) {
@@ -663,6 +709,9 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 			return true;
 		}
 		else if (type === "direction" && exp.type === "string" && (typeof exp.value) === "string" && exp.value in directionTypes) {
+			return true;
+		}
+		else if (type === "sprite entry" && exp.type === "symbol" && (typeof exp.value) === "string" && exp.value in defaultSpriteEntries) {
 			return true;
 		}
 		else if (type === "list" && exp.type === "list") {

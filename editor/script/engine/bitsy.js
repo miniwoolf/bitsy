@@ -1153,16 +1153,16 @@ function createSpriteInstance(instanceId, location) {
 	// todo : are the names all the way I want?
 	// todo : add read-only
 	// todo : what are all the entries I want?
-	instance.Set("ID", definition.id, { externalKey: "id", isReadOnly: true, });
-	instance.Set("TYPE", definition.type, { externalKey: "type", isReadOnly: true, }); // todo : "long" names ok?
-	instance.Set("NAME", definition.name, { externalKey: "name" }); // todo : should also be read only?
-	instance.Set("TIL", definition.drw, { externalKey: "drw" });
-	instance.Set("BGC", definition.bgc, { externalKey: "bgc" });
-	instance.Set("COL", definition.col, { externalKey: "col" });
-	instance.Set("X", location.x, { externalKey: "x" });
-	instance.Set("Y", location.y, { externalKey: "y" });
-	instance.Set("LOK", false, { externalKey: "lok" });
-	instance.Set("WAL", definition.isWall, { externalKey: "wal" });
+	instance.Set(ENTRY_KEY.SPRITE_ID, definition.id, { externalKey: "id", isReadOnly: true, });
+	instance.Set(ENTRY_KEY.SPRITE_TYPE, definition.type, { externalKey: "type", isReadOnly: true, }); // todo : "long" names ok?
+	instance.Set(ENTRY_KEY.SPRITE_NAME, definition.name, { externalKey: "name" }); // todo : should also be read only?
+	instance.Set(ENTRY_KEY.SPRITE_TILE_ID, definition.drw, { externalKey: "drw" });
+	instance.Set(ENTRY_KEY.SPRITE_BACKGROUND, definition.bgc, { externalKey: "bgc" });
+	instance.Set(ENTRY_KEY.SPRITE_COLOR, definition.col, { externalKey: "col" });
+	instance.Set(ENTRY_KEY.SPRITE_X, location.x, { externalKey: "x" });
+	instance.Set(ENTRY_KEY.SPRITE_Y, location.y, { externalKey: "y" });
+	instance.Set(ENTRY_KEY.SPRITE_LOCKED, false, { externalKey: "lok" });
+	instance.Set(ENTRY_KEY.SPRITE_WALL, definition.isWall, { externalKey: "wal" });
 	// other possibilities: SPD, ANM, ???
 
 	instance.SetSecret("instanceId", instanceId);

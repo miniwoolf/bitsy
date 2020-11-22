@@ -29,7 +29,7 @@ function createGlobalEnvironment(variableStore) {
 
 function createInstanceEnvironment(instance, parent) {
 	var env = new Table(parent);
-	env.Set(SYM_KEY.THIS, instance);
+	env.Set(ENTRY_KEY.THIS_SPRITE, instance);
 	return env;
 }
 
@@ -131,14 +131,14 @@ function valueToString(value) {
 		str += SYM_KEY.FUNCTION;
 	}
 	else if (IsATable(value)) {
-		if (value.Has(ARG_KEY.NAME)) {
-			str += valueToString(value.Get(ARG_KEY.NAME));
+		if (value.Has(ENTRY_KEY.SPRITE_NAME)) {
+			str += valueToString(value.Get(ENTRY_KEY.SPRITE_NAME));
 		}
-		else if (value.Has(SYM_KEY.TYPE) && value.Has(SYM_KEY.ID)) {
-			str += valueToString(value.Get(SYM_KEY.TYPE)) + " " + valueToString(value.Get(SYM_KEY.ID));
+		else if (value.Has(ENTRY_KEY.SPRITE_TYPE) && value.Has(ENTRY_KEY.SPRITE_ID)) {
+			str += valueToString(value.Get(ENTRY_KEY.SPRITE_TYPE)) + " " + valueToString(value.Get(ENTRY_KEY.SPRITE_ID));
 		}
 		else {
-			str += "TBL";
+			str += SYM_KEY.TABLE;
 		}
 	}
 	else if ((typeof value === "boolean") || value === undefined || value === null) {
