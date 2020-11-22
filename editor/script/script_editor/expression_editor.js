@@ -290,6 +290,7 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 	var curParameterEditors = [];
 	var curCommandEditors = []; // store custom commands
 	function CreateExpressionDescription(isEditable) {
+		paramLength = expression.list.length - 1;
 		curParameterEditors = [];
 		descriptionDiv.innerHTML = "";
 
@@ -453,7 +454,28 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		return [expression];
 	}
 
-	this.NotifyUpdate = function() {
+	this.NotifyUpdate = function(event) {
+		if (event && event.changeOtherParameter) {
+			if (event.changeOtherParameter.value === null && expression.list.length >= event.changeOtherParameter.index) {
+				expression.list = expression.list.slice(0, event.changeOtherParameter.index);
+			}
+			else if (expression.list.length >= event.changeOtherParameter.index) {
+				expression.list[event.changeOtherParameter.index] = {
+					type: event.changeOtherParameter.type,
+					value: event.changeOtherParameter.value,
+				};
+			}
+			else {
+				// todo : will this break in some cases?
+				expression.list.push({
+					type: event.changeOtherParameter.type,
+					value: event.changeOtherParameter.value,
+				});
+			}
+
+			CreateExpressionDescription(true);
+		}
+
 		parentEditor.NotifyUpdate();
 	}
 

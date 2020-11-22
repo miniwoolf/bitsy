@@ -503,16 +503,16 @@ function DirectionEditor(expression, parentEditor, isInline) {
 
 // todo : localize
 var defaultSpriteEntries = {};
-defaultSpriteEntries[ENTRY_KEY.SPRITE_TYPE] = { name: "type" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_ID] = { name: "ID" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_NAME] = { name: "name" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_X] = { name: "x position" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_Y] = { name: "y position" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_TILE_ID] = { name: "drawing" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_BACKGROUND] = { name: "background color" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_COLOR] = { name: "color" };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_WALL] = { name: "wall state" }; // todo : name?
-defaultSpriteEntries[ENTRY_KEY.SPRITE_LOCKED] = { name: "locked state" };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_TYPE] = { name: "type", valueType: "string", valueDefault: null, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_ID] = { name: "ID", valueType: "string", valueDefault: null, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_NAME] = { name: "name", valueType: "string", valueDefault: "new name", };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_X] = { name: "x position", valueType: "number", valueDefault: 0, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_Y] = { name: "y position", valueType: "number", valueDefault: 0, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_TILE_ID] = { name: "drawing", valueType: "string", valueDefault: "0", };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_BACKGROUND] = { name: "background color", valueType: "number", valueDefault: 0, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_COLOR] = { name: "color", valueType: "number", valueDefault: 1, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_WALL] = { name: "wall state", valueType: "boolean", valueDefault: false, }; // todo : name?
+defaultSpriteEntries[ENTRY_KEY.SPRITE_LOCKED] = { name: "locked state", valueType: "boolean", valueDefault: false, };
 
 function SpriteEntryKeyEditor(expression, parentEditor, isInline) {
 	Object.assign(
@@ -536,7 +536,14 @@ function SpriteEntryKeyEditor(expression, parentEditor, isInline) {
 
 				input.onchange = function(event) {
 					expression.value = event.target.value;
-					parentEditor.NotifyUpdate();
+
+					parentEditor.NotifyUpdate({
+						changeOtherParameter: {
+							index: 3,
+							type: defaultSpriteEntries[event.target.value].valueType,
+							value: defaultSpriteEntries[event.target.value].valueDefault,
+						},
+					});
 				}
 
 				return input;
@@ -781,8 +788,8 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 		return [expression];
 	}
 
-	this.NotifyUpdate = function() {
-		parentEditor.NotifyUpdate();
+	this.NotifyUpdate = function(event) {
+		parentEditor.NotifyUpdate(event);
 	}
 
 	var isSelected = false;
