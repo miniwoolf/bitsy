@@ -73,6 +73,7 @@ var BOOL_KEY = {
 // some standard variable / entry names
 var ENTRY_KEY = {
 	THIS_SPRITE : "THIS",
+	THAT_SPRITE : "THAT", // sprite you knocked into -- you should this be stored here?
 	SPRITE_TYPE : "TYPE",
 	SPRITE_ID : "ID",
 	SPRITE_NAME : ARG_KEY.NAME,

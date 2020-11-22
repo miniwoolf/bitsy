@@ -333,6 +333,9 @@ function createLiteralEditor(expression, parent, isInline, specialEditorType) {
 	else if (specialEditorType && specialEditorType === "sprite entry") {
 		return new SpriteEntryKeyEditor(expression, parent, isInline);
 	}
+	else if (specialEditorType && specialEditorType === "sprite reference") {
+		return new SpriteReferenceSymbolEditor(expression, parent, isInline);
+	}
 	else if (specialEditorType && specialEditorType === "entry") {
 		return new EntrySymbolEditor(expression, parent, isInline);
 	}

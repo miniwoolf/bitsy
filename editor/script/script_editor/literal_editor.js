@@ -547,6 +547,44 @@ function SpriteEntryKeyEditor(expression, parentEditor, isInline) {
 		));
 }
 
+// todo : localize
+var defaultSpriteReferenceSymbols = {};
+defaultSpriteReferenceSymbols[ENTRY_KEY.THIS_SPRITE] = { name: "this sprite", };
+defaultSpriteReferenceSymbols[ENTRY_KEY.THAT_SPRITE] = { name: "that sprite", };
+
+function SpriteReferenceSymbolEditor(expression, parentEditor, isInline) {
+	Object.assign(
+		this,
+		new LiteralEditor(
+			expression,
+			parentEditor,
+			isInline,
+			"symbol select", // todo : localize
+			function() {
+				var input = document.createElement("select");
+				input.title = "choose symbol";
+
+				for (var id in defaultSpriteReferenceSymbols) {
+					var symbolOption = document.createElement("option");
+					symbolOption.value = id;
+					symbolOption.innerText = defaultSpriteReferenceSymbols[id].name;
+					symbolOption.selected = id === expression.value;
+					input.appendChild(symbolOption);
+				}
+
+				input.onchange = function(event) {
+					expression.value = event.target.value;
+					parentEditor.NotifyUpdate();
+				}
+
+				return input;
+			},
+			function() {
+				return defaultSpriteReferenceSymbols[expression.value].name;
+			},
+		));
+}
+
 // todo : rename? SetTo? Make? Update?
 function CreateDefaultExpression(type, exp) {
 	if (exp === undefined || exp === null) {
@@ -712,6 +750,9 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 			return true;
 		}
 		else if (type === "sprite entry" && exp.type === "symbol" && (typeof exp.value) === "string" && exp.value in defaultSpriteEntries) {
+			return true;
+		}
+		else if (type === "sprite reference" && exp.type === "symbol" && (typeof exp.value) === "string" && exp.value in defaultSpriteReferenceSymbols) {
 			return true;
 		}
 		else if (type === "list" && exp.type === "list") {

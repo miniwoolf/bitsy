@@ -94,7 +94,7 @@ var expressionDescriptionMap = {
 		GetDescription : function() { return "move _ one space _"; },
 		parameters : [
 			// todo : create special parameter type for sprite references
-			{ types: ["symbol", "list"], index: 0, name: "sprite", },
+			{ types: ["sprite reference", "symbol", "list"], index: 0, name: "sprite", },
 			{ types: ["direction", "string", "symbol", "list"], index: 1, name: "direction", },
 		],
 	},
@@ -113,8 +113,7 @@ var expressionDescriptionMap = {
 		GetName : function() { return "get rid of sprite"; }, // todo : localize
 		GetDescription : function() { return "get rid of _"; }, // todo : localize todo : swap title and description?
 		parameters : [
-			// todo : create special parameter type for sprite IDs
-			{ types: ["string", "symbol", "list"], index: 0, name: "sprite", },
+			{ types: ["sprite reference", "symbol", "list"], index: 0, name: "sprite", },
 		],
 	},
 	"PAL" : {
@@ -173,9 +172,8 @@ expressionDescriptionMap[SYM_KEY.ENTRY] = {
 	GetName : function() { return "entry value"; }, // todo : localize
 	GetDescription : function() { return "_ of _[ is set to _]"; }, // todo : localize! and wording?
 	parameters : [
-		// todo : create special parameter type for sprite references
 		{ types: ["sprite entry", "symbol", "list"], index: 1, name: "entry", }, // todo : localize
-		{ types: ["symbol", "list"], index: 0, name: "table", }, // todo : localize
+		{ types: ["sprite reference", "symbol", "list"], index: 0, name: "table", }, // todo : localize
 		{ types: ["number", "boolean", "string", "symbol", "list"], index: 2, name: "value", },
 	],
 	// TODO : add help text?

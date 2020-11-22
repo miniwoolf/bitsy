@@ -479,8 +479,8 @@ function DialogControl(parentPanelId) {
 		propertyId : "knockDlgId",
 		defaultScript : // todo : is this the script I want?
 			'{>>\n' +
-			'    {FN {OTHER}\n' +
-			'        {RID OTHER}\n' +
+			'    {FN {THAT}\n' +
+			'        {RID THAT}\n' +
 			'    }\n' +
 			'}',
 		selectControl : null,
