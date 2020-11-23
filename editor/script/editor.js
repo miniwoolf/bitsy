@@ -119,6 +119,7 @@ function resetGameData() {
 
 	// TODO : localize default_title
 	setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
+	events.Raise("dialog_update", { dialogId: titleDialogId, });
 
 	// todo : turn back on?
 	// dialog["0"] = {
