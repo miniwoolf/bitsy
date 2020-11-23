@@ -716,8 +716,6 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 
 	function render(id, callback, options) {
 		var renderable = getRenderable(id);
-		console.log("RENDERABLE " + id);
-		console.log(renderable);
 
 		var hexPalette = getHexPalette(renderable);
 		var drawingFrameData = onRender(renderable, drawingThumbnailCtx, options);

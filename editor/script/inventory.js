@@ -29,19 +29,21 @@ function updateInventoryItemUI(){
 
 	function createOnItemValueChange(id) {
 		return function(event) {
-			var playerEntry = isPlayMode ? player() : tile[playerId];
+			var playerEntry = isPlayMode ? player() : tile[getPlayerId()];
 
-			if (event.target.value <= 0) {
-				delete playerEntry.inventory[id];
-			}
-			else {
-				playerEntry.inventory[id] = parseFloat(event.target.value);
-			}
+			if (playerEntry) {
+				if (event.target.value <= 0) {
+					delete playerEntry.inventory[id];
+				}
+				else {
+					playerEntry.inventory[id] = parseFloat(event.target.value);
+				}
 
-			events.Raise("item_inventory_change", { id: id, count: event.target.value });
+				events.Raise("item_inventory_change", { id: id, count: event.target.value });
 
-			if (!isPlayMode) {
-				refreshGameData();
+				if (!isPlayMode) {
+					refreshGameData();
+				}
 			}
 		}
 	}
@@ -53,9 +55,7 @@ function updateInventoryItemUI(){
 
 		if (til.type === TYPE_KEY.ITEM) {
 			var itemName = til.name != null ? til.name : itemLabel + " " + id;
-			var playerEntry = isPlayMode ? player() : tile[playerId];
-
-			console.log(playerEntry);
+			var playerEntry = isPlayMode ? player() : tile[getPlayerId()];
 
 			// why is this null?
 			if (playerEntry) {

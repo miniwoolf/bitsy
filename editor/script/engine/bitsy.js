@@ -1054,6 +1054,8 @@ function move(instance, direction, canEnterNeighborRoom) {
 }
 
 function updateLockState(spr) {
+	console.log("LOCK STATE");
+	console.log(spr);
 	if ("lockItem" in spr && spr.lockItem != null) {
 		var itemCount = spr.lockItem in player().inventory ? player().inventory[spr.lockItem] : 0;
 		spr.lok = !(itemCount > 0 && itemCount >= spr.lockToll);
@@ -1225,7 +1227,8 @@ function createSpriteInstance(instanceId, location) {
 	instance.SetSecret("btn", definition.buttonDownDlgId);
 	instance.SetSecret("transition_effect", definition.transition_effect); // exit only
 	instance.SetSecret("dest", definition.dest); // exit only // todo : rename "out"?
-	instance.SetSecret("lockCondition", definition.lock); // exit & ending only (todo : rename definition field?)
+	instance.SetSecret("lockItem", definition.lockItem); // exit & ending only
+	instance.SetSecret("lockToll", definition.lockToll); // exit & ending only
 	instance.SetSecret("animation", definition.animation);
 	instance.SetSecret("createdAtInit", false);
 	instance.SetSecret("originalX", location.x);
@@ -1709,7 +1712,10 @@ function startEndingDialog(ending) {
 	// TODO : remove back compat with old endings once I'm sure I want to use this...
 	var endingId = "dlg" in ending ? ending.dlg : ending.id;
 
+	console.log(ending);
 	updateLockState(ending);
+
+	console.log("ENDING LOCKED? " + ending.lok);
 
 	queueScript(
 		endingId,
