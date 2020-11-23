@@ -92,7 +92,7 @@ function StringEditor(expression, parentEditor, isInline) {
 			"text", // todo : localize
 			function() {
 				var input = document.createElement("input");
-				input.type = "string";
+				input.type = "text";
 				input.value = expression.value;
 				input.onchange = function(event) {
 					expression.value = event.target.value;
@@ -152,7 +152,7 @@ function SymbolEditor(expression, parentEditor, isInline) {
 				var input = document.createElement("span");
 
 				var variableInput = document.createElement("input");
-				variableInput.type = "string";
+				variableInput.type = "text";
 				variableInput.setAttribute("list", "variable_datalist");
 				variableInput.value = expression.value;
 				input.appendChild(variableInput);
@@ -189,7 +189,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 				var input = document.createElement("span");
 
 				var variableInput = document.createElement("input");
-				variableInput.type = "string";
+				variableInput.type = "text";
 				variableInput.setAttribute("list", "variable_datalist");
 				variableInput.value = expression.value.slice(1);
 				input.appendChild(variableInput);

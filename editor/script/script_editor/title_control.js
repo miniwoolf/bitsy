@@ -10,7 +10,7 @@ function TitleControl() {
 
 	var titleTextInput = document.createElement("input");
 	titleTextInput.classList.add("textInputField");
-	titleTextInput.type = "string";
+	titleTextInput.type = "text";
 	titleTextInput.placeholder = localization.GetStringOrFallback("title_placeholder", "Title");
 	div.appendChild(titleTextInput);
 

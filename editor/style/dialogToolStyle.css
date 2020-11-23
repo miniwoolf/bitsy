@@ -717,3 +717,18 @@
 #editDialogTextEffectsControls button.colorPaletteLabelDark .bitsy_icon {
 	fill: white;
 }
+
+.functionInputEditor {
+/* TODO ??? */
+}
+
+.functionInputDescription {
+	margin-bottom: 5px;
+}
+
+.functionInputList {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 5px;
+}

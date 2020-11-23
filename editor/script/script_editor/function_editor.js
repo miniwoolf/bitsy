@@ -36,7 +36,7 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 	AddSelectionBehavior(
 		this,
 		function() {
-			inputEditor.Select();	
+			inputEditor.Select();
 		},
 		function() {
 			inputEditor.Deselect();
@@ -52,12 +52,19 @@ function FunctionInputEditor(expression, parentEditor) {
 	var self = this;
 
 	var span = document.createElement("span");
+	span.classList.add("functionInputEditor");
 
 	var inputDescription = document.createElement("span");
+	inputDescription.classList.add("functionInputDescription");
 	span.appendChild(inputDescription);
 
+	var inputList = document.createElement("span");
+	inputList.classList.add("functionInputList");
+	span.appendChild(inputList);
+
 	var inputEditorRoot = document.createElement("span");
-	span.appendChild(inputEditorRoot);
+	inputEditorRoot.style.marginRight = "5px"; // hack
+	inputList.appendChild(inputEditorRoot);
 
 	var inputEditors = [];
 
@@ -74,8 +81,8 @@ function FunctionInputEditor(expression, parentEditor) {
 	function updateInputEditorList() {
 		// todo : localize
 		inputDescription.innerText = inputEditors.length > 0 ? "a function with input: " : "a function ";
-		inputDescription.style.display = inputEditors.length > 0 ? "block" : "inline";
-		thatDoesSpan.style.display = inputEditors.length > 0 ? "block" : "inline"
+		inputDescription.style.display = inputEditors.length > 0 ? "flex" : "inline-flex";
+		thatDoesSpan.style.display = inputEditors.length > 0 ? "flex" : "inline-flex";
 		removeInputButton.disabled = inputEditors.length <= 0;
 
 		inputEditorRoot.innerHTML = "";
@@ -88,7 +95,7 @@ function FunctionInputEditor(expression, parentEditor) {
 
 			inputEditorRoot.appendChild(inputEditors[i].GetElement());
 
-			inputSeperator = ", ";	
+			inputSeperator = ", ";
 		}
 	}
 
@@ -103,10 +110,11 @@ function FunctionInputEditor(expression, parentEditor) {
 		updateInputEditorList();
 		parentEditor.NotifyUpdate();
 	}
-	span.appendChild(addInputButton);
+	inputList.appendChild(addInputButton);
 
 	var removeInputButton = document.createElement("button");
 	removeInputButton.title = "remove input parameter"; // todo : localize
+	removeInputButton.style.marginRight = "5px";
 	removeInputButton.style.display = "none";
 	removeInputButton.appendChild(iconUtils.CreateIcon("delete")); // todo : different icon?
 	removeInputButton.onclick = function() {
@@ -115,9 +123,10 @@ function FunctionInputEditor(expression, parentEditor) {
 		updateInputEditorList();
 		parentEditor.NotifyUpdate();
 	}
-	span.appendChild(removeInputButton);
+	inputList.appendChild(removeInputButton);
 
 	var thatDoesSpan = document.createElement("span");
+	thatDoesSpan.classList.add("functionInputDescription");
 	thatDoesSpan.innerText = " that does:"; // todo : localize
 	span.appendChild(thatDoesSpan);
 
