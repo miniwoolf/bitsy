@@ -105,6 +105,8 @@ function parseWorld(file) {
 
 	scriptCompatibility(compatibilityFlags);
 
+	curRoom = sortedIdList(room)[0];
+
 	return versionNumber;
 }
 

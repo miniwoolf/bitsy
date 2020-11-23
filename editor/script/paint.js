@@ -1073,7 +1073,7 @@ function InventorySettingsControl(controls) {
 			controls.container.setAttribute("style", "display:flex;");
 
 			var playerId = getPlayerId();
-			var itemCount = (playerId && (drawingId in tile[playerId].inventory)) ? tile[playerId].inventory[drawingId] : 0;
+			var itemCount = (playerId && tile[playerId] && tile[playerId].inventory && (drawingId in tile[playerId].inventory)) ? tile[playerId].inventory[drawingId] : 0;
 
 			controls.input.value = itemCount;
 

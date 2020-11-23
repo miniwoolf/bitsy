@@ -146,7 +146,7 @@ function clearGameData() {
 	textDirection = TEXT_DIRECTION_KEY.LEFT_TO_RIGHT;
 }
 
-var curRoom = "0";
+var curRoom = null;
 
 var key = {
 	left : 37,
