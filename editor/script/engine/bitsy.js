@@ -1585,6 +1585,10 @@ function drawRoom(room, options) {
 		return;
 	}
 
+	function isPosInRoom(x, y) {
+		return x >= 0 && x < roomsize && y >= 0 && y < roomsize;
+	}
+
 	var background = tilemap;
 	var foreground = createGrid(roomsize);
 
@@ -1597,14 +1601,18 @@ function drawRoom(room, options) {
 
 			if (id != NULL_ID) {
 				var instance = spriteInstances[id];
-				foreground[instance.y][instance.x] = instance.id;
+				if (isPosInRoom(instance.x, instance.y)) {
+					foreground[instance.y][instance.x] = instance.id;
+				}
 			}
 		}
 
 		// draw avatar last
 		if (NULL_ID in spriteInstances && spriteInstances[NULL_ID] != null) {
 			var instance = spriteInstances[NULL_ID];
-			foreground[instance.y][instance.x] = instance.id;
+			if (isPosInRoom(instance.x, instance.y)) {
+				foreground[instance.y][instance.x] = instance.id;
+			}
 		}
 	}
 	else {
@@ -1627,7 +1635,7 @@ function drawRoom(room, options) {
 		for (var i = 0; i < room.tileOverlay.length; i++) {
 			var location = room.tileOverlay[i];
 
-			if (location.id != NULL_ID && tile[location.id] != null) {
+			if (location.id != NULL_ID && tile[location.id] != null && isPosInRoom(location.x, location.y)) {
 				if (tile[location.id].type === TYPE_KEY.TILE) {
 					background[i][j] = location.id;
 				}
