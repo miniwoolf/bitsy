@@ -3,6 +3,16 @@ miscellaneous utility functions for the editor
 TODO: encapsulate in an object maybe? or is that overkill?
 */
 
+function getPlayerId() {
+	for (id in tile) {
+		if (tile[id].type === TYPE_KEY.AVATAR) {
+			return id;
+		}
+	}
+
+	return null;
+}
+
 function clamp(val, min, max) {
 	return Math.max(Math.min(val, max), min);
 }
@@ -67,6 +77,7 @@ function rgbToHex(r, g, b) {
 }
 
 function hexToHsl(hex) {
+	console.log(hex);
 	var rgb = hexToRgb(hex);
 	return rgbToHsl(rgb.r, rgb.g, rgb.b);
 }

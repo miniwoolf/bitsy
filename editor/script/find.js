@@ -163,30 +163,23 @@ function FindTool(controls) {
 			}
 
 			if (result && filters.indexOf("cur_room") != -1) {
-				if (til.type === TYPE_KEY.TILE) {
-					var tileInRoom = false;
+				var tileInRoom = false;
 
-					for (var y = 0; y < roomsize; y++) {
-						for (var x = 0; x < roomsize; x++) {
-							if (room[curRoom].tilemap[y][x] === til.id) {
-								tileInRoom = true;
-							}
+				for (var y = 0; y < roomsize; y++) {
+					for (var x = 0; x < roomsize; x++) {
+						if (room[curRoom].tilemap[y][x] === til.id) {
+							tileInRoom = true;
 						}
 					}
-
-					result = tileInRoom;
 				}
-				else {
-					var sprInRoom = false;
 
-					for (var i = 0; i < room[curRoom].sprites.length; i++) {
-						if (room[curRoom].sprites[i].id === til.id) {
-							sprInRoom = true;
-						}
+				for (var i = 0; i < room[curRoom].tileOverlay.length; i++) {
+					if (room[curRoom].tileOverlay[i].id === til.id) {
+						tileInRoom = true;
 					}
-
-					result = sprInRoom;
 				}
+
+				result = result && tileInRoom;
 			}
 
 			return result;
@@ -723,8 +716,14 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 
 	function render(id, callback, options) {
 		var renderable = getRenderable(id);
+		console.log("RENDERABLE " + id);
+		console.log(renderable);
+
 		var hexPalette = getHexPalette(renderable);
 		var drawingFrameData = onRender(renderable, drawingThumbnailCtx, options);
+
+		console.log(hexPalette);
+		console.log(drawingFrameData);
 
 		var cacheId = options && options.cacheId ? options.cacheId : id;
 
@@ -777,6 +776,8 @@ function CreateDrawingThumbnailRenderer() {
 
 	var getHexPalette = function(til) {
 		var palId = getRoomPal(curRoom);
+
+		console.log("HEX ROOM PAL " + palId);
 
 		var hexPalette = [];
 		var roomColors = getPal(palId);

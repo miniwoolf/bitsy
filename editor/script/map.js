@@ -69,7 +69,7 @@ function MapTool(controls) {
 
 	function DrawRoom(roomId, x, y, size, ctx) {
 		var palId = room[roomId].pal;
-		var colors = palette[palId].colors;
+		var colors = (palId in palette) ? palette[palId].colors : color.GetDefaultPalette();
 
 		function hexFromPal(i) {
 			// todo : is this the best way to handle this?
@@ -90,16 +90,16 @@ function MapTool(controls) {
 			for (var rx = 0; rx < roomsize; rx++) {
 				var tileId = room[roomId].tilemap[ry][rx];
 
-				for (var i = 0; i < room[roomId].sprites.length; i++) {
-					var sprite = room[roomId].sprites[i];
-					if (sprite.x === rx && sprite.y === ry) {
-						tileId = sprite.id;
-					}
-				}
-
-				if (tileId != "0" && (tileId in tile)) {
+				if (tileId != NULL_ID && (tileId in tile)) {
 					ctx.fillStyle = hexFromPal(parseInt(tile[tileId].col));
 					DrawRoomTile(x, y, rx, ry, size, ctx);
+				}
+
+				for (var i = 0; i < room[roomId].tileOverlay.length; i++) {
+					var location = room[roomId].tileOverlay[i];
+					if (location.x === rx && location.y === ry) {
+						tileId = location.id;
+					}
 				}
 			}
 		}

@@ -317,9 +317,10 @@ function createSpriteLibrary(contextInstance, parent) {
 			location.y = contextInstance.y;
 		}
 
-		instance = createSpriteInstance(nextInstanceId, location);
-		spriteInstances[nextInstanceId] = instance;
-		nextInstanceId++;
+		var instanceId = toB256(instanceCount);
+		instance = createSpriteInstance(instanceId, location);
+		spriteInstances[instanceId] = instance;
+		instanceCount++;
 
 		onReturn(instance);
 	});

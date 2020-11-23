@@ -40,17 +40,19 @@ TODO choices
 	- what if you put long running stuff inside a choice option?
 */
 
+// World Data
 var map = {};
 var room = {};
 var tile = {};
 var dialog = {};
 var palette = {};
-var variable = {}; // these are starting variable values -- they don't update (or I don't think they will)
-var playerId = "A";
+var variable = {}; // todo : fix bugs now that these are actually used during the game..
 
-// Instances
+// Game State
+var playerId = null;
+var tilemap = [];
 var spriteInstances = {};
-var nextInstanceId = 0;
+var instanceCount = 0;
 
 // title
 var titleDialogId = NULL_ID;
@@ -189,7 +191,10 @@ function load_game(game_data, startWithTitle) {
 
 	parser.ParseWorld(game_data);
 
-	spriteInstances[0] = createAvatarInstance();
+	var instance = createAvatarInstance(NULL_ID);
+	if (instance != null) {
+		spriteInstances[NULL_ID] = instance;
+	}
 
 	// set the first room
 	var roomIds = Object.keys(room);
@@ -458,7 +463,7 @@ function updateInput() {
 		}
 
 		function tryButtonDownActions(keyName, isButtonHeld, afterButtonPressFunc) {
-			if (player().btn != null) {
+			if (player() && player().btn != null) {
 				queueScript(
 					player().btn,
 					player(),
@@ -473,7 +478,7 @@ function updateInput() {
 					[keyName, isButtonHeld]);
 			}
 			else {
-				if (!player().lok && afterButtonPressFunc) {
+				if (player() && !player().lok && afterButtonPressFunc) {
 					afterButtonPressFunc();
 				}
 
@@ -869,21 +874,21 @@ function movePlayer(direction) {
 
 	var ext = getExit(player().x, player().y);
 	var end = getEnding(player().x, player().y);
-	var itmIndex = getItemIndex(player().x, player().y);
+	var itemInstanceId = getItemId(player().x, player().y);
 
 	// do items first, because you can pick up an item AND go through a door
-	if (itmIndex > -1) {
-		var itm = spriteInstances[itmIndex];
+	if (itemInstanceId != null) {
+		var itm = spriteInstances[itemInstanceId];
+		var createdAtInit = itm.createdAtInit;
 		var itemRoom = player().room;
 
 		startItemDialog(itm, function() {
 			// remove item from room
-			delete spriteInstances[itmIndex];
+			delete spriteInstances[itemInstanceId];
 
 			// mark item as removed permanently
-			// (assumes instanceId === location index)
-			if (room[itemRoom].sprites[itm.instanceId]) {
-				room[itemRoom].sprites[itm.instanceId].removed = true;
+			if (createdAtInit) {
+				room[itemRoom].pickedUpItems.push("_" + itm.id + "_" + itm.originalX + "_" + itm.originalY + "_");
 			}
 
 			// update player inventory
@@ -1107,24 +1112,70 @@ function movePlayerThroughExit(ext) {
 function initRoom(roomId) {
 	// invalidate old sprites
 	for (var id in spriteInstances) {
-		if (id != 0) { // skip the avatar
+		if (id != NULL_ID) { // skip the avatar
 			spriteInstances[id].isValid = false;
 			delete spriteInstances[id];
 		}
 	}
 
-	// init sprites
-	nextInstanceId = 0;
-	for (var i = 0; i < room[roomId].sprites.length; i++) {
-		var location = room[roomId].sprites[i];
-		nextInstanceId++;
-		if (location.id != playerId && !location.removed) {
-			var instance = createSpriteInstance(nextInstanceId, location);
-			spriteInstances[nextInstanceId] = instance;
+	instanceCount = 0;
+	tilemap = createGrid(roomsize);
+
+	function canCreateSpriteInstance(id, x, y) {
+		var canCreate = true;
+
+		if (tile[id].type === TYPE_KEY.AVATAR) {
+			// avatar creation is handled elsewhere
+			canCreate = false;
+		}
+		else if (tile[id].type === TYPE_KEY.ITEM) {
+			var pickUpId = "_" + id + "_" + x + "_" + y + "_";
+			if (room[roomId].pickedUpItems.indexOf(pickUpId) != -1) {
+				canCreate = false;
+			}
+		}
+
+		return canCreate;
+	}
+
+	// from tilemap
+	for (var i = 0; i < roomsize; i++) {
+		for (var j = 0; j < roomsize; j++) {
+			var tileId = room[roomId].tilemap[i][j];
+			if (tileId != NULL_ID) {
+				if (tile[tileId].type === TYPE_KEY.TILE) {
+					tilemap[i][j] = tileId;
+				}
+				else if (canCreateSpriteInstance(tileId, j, i)) {
+					instanceCount++;
+					var instanceId = toB256(instanceCount);
+					var instance = createSpriteInstance(instanceId, createSpriteLocation(tileId, j, i));
+					instance.createdAtInit = true;
+					spriteInstances[instanceId] = instance;
+				}
+			}
 		}
 	}
 
-	nextInstanceId++;
+	// from tile overlay
+	for (var i = 0; i < room[roomId].tileOverlay.length; i++) {
+		var location = room[roomId].tileOverlay[i];
+
+		if (location.id != NULL_ID) {
+			if (tile[location.id].type === TYPE_KEY.TILE) {
+				tilemap[location.y][location.x] = location.id;
+			}
+			else if (canCreateSpriteInstance(location.id, location.x, location.y)) {
+				instanceCount++;
+				var instanceId = toB256(instanceCount);
+				var instance = createSpriteInstance(instanceId, location);
+				instance.createdAtInit = true;
+				spriteInstances[instanceId] = instance;
+			}
+		}
+	}
+
+	instanceCount++;
 
 	var palId = room[roomId].pal;
 	color.StoreRoomPalette();
@@ -1176,40 +1227,58 @@ function createSpriteInstance(instanceId, location) {
 	instance.SetSecret("dest", definition.dest); // exit only // todo : rename "out"?
 	instance.SetSecret("lockCondition", definition.lock); // exit & ending only (todo : rename definition field?)
 	instance.SetSecret("animation", definition.animation);
+	instance.SetSecret("createdAtInit", false);
+	instance.SetSecret("originalX", location.x);
+	instance.SetSecret("originalY", location.y);
 
 	return instance;
 }
 
-function createAvatarInstance() {
-	var avatarLocation = createSpriteLocation(playerId, -1, -1);
-	var startingRoomId = null;
-	var startingInventory = {};
+function createAvatarInstance(instanceId) {
+	var instance = null;
 
-	// try to find a room containing the player
-	for (id in room) {
-		for (var i = 0; i < room[id].sprites.length; i++) {
-			var location = room[id].sprites[i];
-			if (location.id === playerId) {
-				startingRoomId = id;
-				avatarLocation = location;
+	if (playerId != null) {
+		var avatarLocation = createSpriteLocation(playerId, -1, -1);
+		var startingRoomId = null;
+		var startingInventory = {};
+
+		// find first room containing the player
+		for (id in room) {
+			for (var y = 0; y < roomsize; y++) {
+				for (var x = 0; x < roomsize; x++) {
+					if (startingRoomId === null && room[id].tilemap[y][x] === playerId) {
+						startingRoomId = id;
+						avatarLocation.x = x;
+						avatarLocation.y = y;
+					}
+				}
+			}
+
+			for (var i = 0; i < room[id].tileOverlay.length; i++) {
+				var location = room[id].tileOverlay[i];
+				if (startingRoomId === null && location.id === playerId) {
+					startingRoomId = id;
+					avatarLocation.x = location.x;
+					avatarLocation.y = location.y;
+				}
 			}
 		}
+
+		var instance = createSpriteInstance(instanceId, avatarLocation);
+
+		// copy initial inventory values
+		for (id in tile[playerId].inventory) {
+			startingInventory[id] = tile[playerId].inventory[id];
+		}
+
+		instance.SetSecret("room", startingRoomId);
+		instance.SetSecret("inventory", startingInventory);
 	}
-
-	var instance = createSpriteInstance(0, avatarLocation);
-
-	// copy initial inventory values
-	for (id in tile[playerId].inventory) {
-		startingInventory[id] = tile[playerId].inventory[id];
-	}
-
-	instance.SetSecret("room", startingRoomId);
-	instance.SetSecret("inventory", startingInventory);
 
 	return instance;
 }
 
-function getItemIndex(x, y) {
+function getItemId(x, y) {
 	for (var i in spriteInstances) {
 		if (spriteInstances[i].type === "ITM") {
 			var itm = spriteInstances[i];
@@ -1219,7 +1288,7 @@ function getItemIndex(x, y) {
 		}
 	}
 
-	return -1;
+	return null;
 }
 
 function isRoomEdgeWall(x, y, roomId, canEnterNeighborRoom) {
@@ -1272,17 +1341,6 @@ function isWall(x, y, roomId) {
 	return tile[tileId].isWall;
 }
 
-function getSpriteLocation(roomId, x, y) {
-	for (i in room[roomId].sprites) {
-		var spr = room[roomId].sprites[i];
-		if (x == spr.x && y == spr.y) {
-			return spr;
-		}
-	}
-
-	return null;
-}
-
 function getItem(roomId, x, y) {
 	for (i in spriteInstances) {
 		if (spriteInstances[i].type === "ITM") {
@@ -1333,8 +1391,8 @@ function player() {
 
 // Sort of a hack for legacy palette code (when it was just an array)
 function getPal(id) {
-	if (palette[id] === undefined) {
-		return []; // is this going to break things?
+	if (id === NULL_ID || palette[id] === null || palette[id] === undefined) {
+		return color.GetDefaultPalette();
 	}
 
 	return palette[ id ].colors;
@@ -1351,55 +1409,43 @@ function isExitValid(e) {
 	return hasValidStartPos && hasDest && hasValidRoomDest;
 }
 
+function createGrid(size) {
+	var grid = [];
+
+	for (var i = 0; i < size; i++) {
+		var row = [];
+		for (var j = 0; j < size; j++) {
+			row.push(NULL_ID);
+		}
+
+		grid.push(row);
+	}
+
+	return grid;
+}
+
 function createMap(id) {
-	var map = {
+	return {
 		id : id,
 		name : null,
-		map : [], // todo: name? room_map? world_map?
+		map : createGrid(mapsize), // todo: name? room_map? world_map?
 		transition_effect_up : null,
 		transition_effect_down : null,
 		transition_effect_left : null,
 		transition_effect_right : null,
 	};
-
-	for (var i = 0; i < mapsize; i++) {
-		map.map.push([]);
-
-		for (var j = 0; j < mapsize; j++) {
-			map.map[i].push("0");
-		}
-	}
-
-	return map;
 }
 
-// todo : stop hard coding the room size?
 function createRoom(id, palId) {
 	return {
 		id : id,
 		name : null,
-		tilemap : [
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
-				["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"]
-			],
-		sprites : [],
+		tilemap : createGrid(roomsize),
+		tileOverlay : [],
 		walls : [], // todo : remove?
 		pal : (palId === undefined || palId === null) ? NULL_ID : palId,
-		mapLocation : { id: null, x:-1, y:-1 },
+		mapLocation : { id: null, x: -1, y :-1, },
+		pickedUpItems : [],
 	};
 }
 
@@ -1536,39 +1582,77 @@ function drawRoom(room, options) {
 		return;
 	}
 
-	//draw tiles
-	for (i in room.tilemap) {
-		for (j in room.tilemap[i]) {
-			var id = room.tilemap[i][j];
-			if (id != "0") {
-				if (tile[id] == null) { // hack-around to avoid corrupting files (not a solution though!)
-					id = "0";
-					room.tilemap[i][j] = id;
+	var background = tilemap;
+	var foreground = createGrid(roomsize);
+
+	if (drawInstances) {
+		// make sprite grid
+		var spriteIdList = sortedIdList(spriteInstances); // perf?
+
+		for (var i = 0; i < spriteIdList.length; i++) {
+			var id = spriteIdList[i];
+
+			if (id != NULL_ID) {
+				var instance = spriteInstances[id];
+				foreground[instance.y][instance.x] = instance.id;
+			}
+		}
+
+		// draw avatar last
+		if (NULL_ID in spriteInstances && spriteInstances[NULL_ID] != null) {
+			var instance = spriteInstances[NULL_ID];
+			foreground[instance.y][instance.x] = instance.id;
+		}
+	}
+	else {
+		// for edit mode // todo : consolidate?
+		for (var i = 0; i < room.tilemap.length; i++) {
+			for (var j = 0; j < room.tilemap[i].length; j++) {
+				var id = room.tilemap[i][j];
+
+				if (id != NULL_ID && tile[id] != null) {
+					if (tile[id].type === TYPE_KEY.TILE) {
+						background[i][j] = id;
+					}
+					else {
+						foreground[i][j] = id;
+					}
+				}
+			}
+		}
+
+		for (var i = 0; i < room.tileOverlay.length; i++) {
+			var location = room.tileOverlay[i];
+
+			if (location.id != NULL_ID && tile[location.id] != null) {
+				if (tile[location.id].type === TYPE_KEY.TILE) {
+					background[i][j] = location.id;
 				}
 				else {
-					renderTarget.DrawTile(id, j, i, renderOptions);
+					foreground[i][j] = location.id;
 				}
 			}
 		}
 	}
 
-	if (drawInstances) {
-		// draw sprite instances
-		for (var id in spriteInstances) {
-			var instance = spriteInstances[id];
-			renderTarget.DrawSprite(instance, instance.x, instance.y, renderOptions);
+	// draw tiles
+	for (var i = 0; i < background.length; i++) {
+		for (var j = 0; j < background[i].length; j++) {
+			var id = background[i][j];
+
+			if (id != NULL_ID && tile[id] != null) {
+				renderTarget.DrawTile(id, j, i, renderOptions);
+			}
 		}
 	}
-	else {
-		// draw sprite initial locations
-		for (var i = 0; i < room.sprites.length; i++) {
-			var location = room.sprites[i];
-			if (location.id in tile) {
-				var definition = tile[location.id];
-				renderTarget.DrawSprite(definition, location.x, location.y, renderOptions);
-			}
-			else {
-				console.log("CAN'T PREVIEW MISSING SPRITE "); // + location.id);
+
+	// draw sprites
+	for (var i = 0; i < foreground.length; i++) {
+		for (var j = 0; j < foreground[i].length; j++) {
+			var id = foreground[i][j];
+
+			if (id != NULL_ID && tile[id] != null) {
+				renderTarget.DrawSprite(tile[id], j, i, renderOptions);
 			}
 		}
 	}
@@ -1594,6 +1678,7 @@ function getRoomPal(roomId) {
 			return defaultId;
 		}
 	}
+
 	return defaultId;
 }
 

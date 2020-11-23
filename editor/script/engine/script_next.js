@@ -811,12 +811,6 @@ function Table(parent) {
 		var value = false;
 		var internalKey = GetInternalKey(key, isSecret);
 
-		console.log(internalKey);
-
-		// console.log(entries);
-		console.log(hasInternalKey(internalKey));
-
-
 		if (hasInternalKey(internalKey)) {
 			value = entries[internalKey];
 		}
@@ -841,8 +835,6 @@ function Table(parent) {
 			parent.Set(key, value, options);
 		}
 		else if (!readOnlyEntries[internalKey]) {
-			console.log("set local " + key + " " + value);
-
 			if (!hasInternalEntry) {
 				if (!isSecret) {
 					keyList.push(key);
@@ -856,8 +848,6 @@ function Table(parent) {
 			}
 
 			entries[internalKey] = value;
-
-			// console.log(entries);
 		}
 
 		return value;

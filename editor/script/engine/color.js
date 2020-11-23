@@ -141,6 +141,10 @@ function Color() {
 		return CreateDefaultPalette()[index];
 	}
 
+	this.GetDefaultPalette = function() {
+		return CreateDefaultPalette();
+	}
+
 	ResetRoomPalette();
 	UpdateSystemPalette();
 }

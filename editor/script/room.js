@@ -29,7 +29,7 @@ function RoomTool(controls) {
 
 	var isMouseDown = false;
 
-	var drawingId = "A";
+	var drawingId = sortedIdList(tile)[0];
 	events.Listen("select_drawing", function(event) {
 		drawingId = event.id;
 	});
@@ -57,19 +57,17 @@ function RoomTool(controls) {
 		}
 		else if (curEditTool === EditTool.Paint) {
 			if (drawingId != null) {
-				if (tile[drawingId].type === TYPE_KEY.TILE) {
-					room[curRoom].tilemap[y][x] = drawingId;
-					isDragAddingTiles = true;
+				removeAllOverlayTilesAtLocation(curRoom, x, y);
+
+				// only one instance of the avatar allowed
+				if (tile[drawingId].type === TYPE_KEY.AVATAR) {
+					removeAllTiles(drawingId);
 				}
-				else {
-					removeAllSpritesAtLocation(curRoom, x, y);
 
-					// only one instance of the avatar allowed
-					if (tile[drawingId].type === TYPE_KEY.AVATAR) {
-						removeAllSprites(drawingId);
-					}
+				room[curRoom].tilemap[y][x] = drawingId;
 
-					room[curRoom].sprites.push(createSpriteLocation(drawingId, x, y));
+				if (tile[drawingId].type === TYPE_KEY.TILE) {
+					isDragAddingTiles = true;
 				}
 
 				refreshGameData();
@@ -78,8 +76,8 @@ function RoomTool(controls) {
 			}
 		}
 		else if (curEditTool === EditTool.Erase) {
-			room[curRoom].tilemap[y][x] = "0";
-			removeAllSpritesAtLocation(curRoom, x, y);
+			room[curRoom].tilemap[y][x] = NULL_ID;
+			removeAllOverlayTilesAtLocation(curRoom, x, y);
 			refreshGameData();
 			self.drawEditMap();
 			events.Raise("change_room", { id: curRoom });
@@ -91,12 +89,12 @@ function RoomTool(controls) {
 			else {
 				var selectId = null;
 
-				var locations = getAllSpritesAtLocation(curRoom, x, y);
+				var locations = getAllOverlayTilesAtLocation(curRoom, x, y);
 
 				if (locations.length > 0) {
 					selectId = locations[locations.length - 1].id;
 				}
-				else if (room[curRoom].tilemap[y][x] != "0") {
+				else if (room[curRoom].tilemap[y][x] != NULL_ID) {
 					selectId = room[curRoom].tilemap[y][x];
 				}
 
@@ -144,8 +142,8 @@ function RoomTool(controls) {
 			events.Raise("change_room", { id: curRoom });
 		}
 		else if (curEditTool === EditTool.Erase) {
-			room[curRoom].tilemap[y][x] = "0";
-			removeAllSpritesAtLocation(curRoom, x, y);
+			room[curRoom].tilemap[y][x] = NULL_ID;
+			removeAllOverlayTilesAtLocation(curRoom, x, y);
 			refreshGameData();
 			self.drawEditMap();
 			events.Raise("change_room", { id: curRoom });
@@ -441,7 +439,7 @@ function RoomTool(controls) {
 
 			room[newRoomId] = createRoom(newRoomId, roomToCopy.pal);
 			room[newRoomId].tilemap = duplicateTilemap;
-			room[newRoomId].sprites = roomToCopy.sprites.slice(0);
+			room[newRoomId].tileOverlay = roomToCopy.tileOverlay.slice(0);
 
 			refreshGameData();
 

@@ -140,7 +140,8 @@ function resetGameData() {
 	updateInventoryUI();
 	updateFontSelectUI(); // hmm is this really the place for this?
 
-	paintTool.SelectDrawing("A");
+	paintTool.SelectDrawing(sortedIdList(tile)[0]);
+
 	roomTool.drawEditMap();
 
 	events.Raise("game_data_change"); // TODO -- does this need to have a specific reset event or flag?
@@ -574,7 +575,7 @@ function start() {
 
 	// todo : refactor to remove these...
 	//draw everything
-	paintTool.SelectDrawing("A");
+	paintTool.SelectDrawing(sortedIdList(tile)[0]);
 	roomTool.Update();
 
 	updateInventoryUI();
@@ -771,10 +772,10 @@ function duplicateExit(exit) {
 	return newExit;
 }
 
-function removeAllSprites(id) {
-	function getFirstSpriteIndex(roomId, id) {
-		for (var i = 0; i < room[roomId].sprites.length; i++) {
-			if (room[roomId].sprites[i].id === id) {
+function removeAllTiles(id) {
+	function getFirstOverlayIndex(roomId, id) {
+		for (var i = 0; i < room[roomId].tileOverlay.length; i++) {
+			if (room[roomId].tileOverlay[i].id === id) {
 				return i;
 			}
 		}
@@ -783,21 +784,31 @@ function removeAllSprites(id) {
 	}
 
 	for (roomId in room) {
-		var i = getFirstSpriteIndex(roomId, id);
+		// remove from map
+		for (var y = 0; y < roomsize; y++) {
+			for (var x = 0; x < roomsize; x++) {
+				if (room[roomId].tilemap[y][x] === id) {
+					room[roomId].tilemap[y][x] = NULL_ID;
+				}
+			}
+		}
+
+		// and from overlay
+		var i = getFirstOverlayIndex(roomId, id);
 
 		while (i > -1) {
-			room[roomId].sprites.splice(i, 1);
-			i = getFirstSpriteIndex(roomId, id);
+			room[roomId].tileOverlay.splice(i, 1);
+			i = getFirstOverlayIndex(roomId, id);
 		}
 	}
 }
 
-function getAllSpritesAtLocation(roomId, x, y) {
+function getAllOverlayTilesAtLocation(roomId, x, y) {
 	var locations = [];
 
 	if (roomId in room) {
-		for (var i = 0; i < room[roomId].sprites.length; i++) {
-			var l = room[roomId].sprites[i];
+		for (var i = 0; i < room[roomId].tileOverlay.length; i++) {
+			var l = room[roomId].tileOverlay[i];
 
 			if (l.x === x && l.y === y) {
 				locations.push(l);
@@ -808,15 +819,15 @@ function getAllSpritesAtLocation(roomId, x, y) {
 	return locations;
 }
 
-function removeAllSpritesAtLocation(roomId, x, y) {
+function removeAllOverlayTilesAtLocation(roomId, x, y) {
 	if (roomId in room) {
-		var locations = getAllSpritesAtLocation(roomId, x, y);
+		var locations = getAllOverlayTilesAtLocation(roomId, x, y);
 
 		while (locations.length > 0) {
 			var l = locations.pop();
-			var i = room[roomId].sprites.indexOf(l);
+			var i = room[roomId].tileOverlay.indexOf(l);
 
-			room[roomId].sprites.splice(i, 1);
+			room[roomId].tileOverlay.splice(i, 1);
 		}
 	}
 }
@@ -964,7 +975,7 @@ function on_game_data_change_core() {
 	// TODO RENDERER : refresh images
 
 	roomTool.drawEditMap();
-	paintTool.SelectDrawing("A");
+	paintTool.SelectDrawing(sortedIdList(tile)[0]);
 
 	// if user pasted in a custom font into game data - update the stored custom font
 	if (defaultFonts.indexOf(fontName + fontManager.GetExtension()) == -1) {

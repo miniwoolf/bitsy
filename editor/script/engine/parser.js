@@ -103,21 +103,6 @@ function parseWorld(file) {
 		}
 	}
 
-	// clean up any excess unique sprites (TODO : is this the best way to do this?)
-	var foundUniqueSpr = {};
-	for (id in room) {
-		for (var i = room[id].sprites.length - 1; i >= 0; i--) {
-			var sprId = room[id].sprites[i].id;
-			if (foundUniqueSpr[sprId]) {
-				// this unique sprite already has a location!
-				room[id].sprites.splice(i, 1);
-			}
-			else if (tile[sprId].isUnique) {
-				foundUniqueSpr[sprId] = true;
-			}
-		}
-	}
-
 	scriptCompatibility(compatibilityFlags);
 
 	return versionNumber;
@@ -228,18 +213,19 @@ function parseRoom(lines, i, compatibilityFlags) {
 
 	// create tile map
 	if (flags.ROOM_FORMAT == 0) {
-		// old way: no commas, single char tile ids
+		// single char tile ids, no commas
 		var end = i + roomsize;
 		var y = 0;
 		for (; i < end; i++) {
 			for (x = 0; x < roomsize; x++) {
 				room[id].tilemap[y][x] = lines[i].charAt(x);
 			}
+
 			y++;
 		}
 	}
 	else if (flags.ROOM_FORMAT == 1) {
-		// new way: comma separated, multiple char tile ids
+		// multiple char tile ids, comma separated
 		var end = i + roomsize;
 		var y = 0;
 		for (; i < end; i++) {
@@ -247,26 +233,46 @@ function parseRoom(lines, i, compatibilityFlags) {
 			for (x = 0; x < roomsize; x++) {
 				room[id].tilemap[y][x] = lineSep[x];
 			}
+
 			y++;
 		}
 	}
 
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
-		// console.log(getType(lines[i]));
-		if (getType(lines[i]) === TYPE_KEY.SPRITE || getType(lines[i]) === TYPE_KEY.ITEM) {
+		/* NAME */
+		if (getType(lines[i]) === ARG_KEY.NAME) {
+			var name = lines[i].split(/\s(.+)/)[1];
+			room[id].name = name;
+			names.room.set(name, id);
+		}
+		/* PALETTE */
+		else if (getType(lines[i]) === TYPE_KEY.PALETTE) {
+			room[id].pal = getId(lines[i]);
+		}
+		/* ADDITIONAL TILES & SPRITES */
+		else if (getType(lines[i]) === TYPE_KEY.TILE) {
+			// todo : does this work the way I want?
+			var tileId = getId(lines[i]);
+			var tileX = parseInt(getArg(lines[i], 2));
+			var tileY = parseInt(getArg(lines[i], 3));
+			room[id].tileOverlay.push(createSpriteLocation(tileId, tileX, tileY));
+		}
+		// LEGACY SPRITE AND ITEM // TODO : only allow for old files?
+		else if (getType(lines[i]) === TYPE_KEY.SPRITE || getType(lines[i]) === TYPE_KEY.ITEM) {
 			var sprId = getId(lines[i]);
-			console.log(lines[i]);
 			var sprCoord = lines[i].split(" ")[2].split(LEGACY_KEY.SEPARATOR);
 			var sprLocation = createSpriteLocation(sprId, parseInt(sprCoord[0]), parseInt(sprCoord[1]));
-			room[id].sprites.push(sprLocation);
+			room[id].tileOverlay.push(sprLocation);
 
 			// TODO : do I need to support reading in the old "find and replace" sprite format for back compat?
 		}
+		// LEGACY WALLS
 		else if (getType(lines[i]) === ARG_KEY.IS_WALL) {
 			/* DEFINE COLLISIONS (WALLS) */
 			// TODO : remove this deprecated feature at some point
 			room[id].walls = getId(lines[i]).split(LEGACY_KEY.SEPARATOR);
 		}
+		// LEGACY EXITS
 		else if (getType(lines[i]) === TYPE_KEY.EXIT) {
 			/* ADD EXIT */
 			var exitArgs = lines[i].split(" ");
@@ -304,6 +310,7 @@ function parseRoom(lines, i, compatibilityFlags) {
 
 			// TODO : back compat
 		}
+		// LEGACY ENDINGS
 		else if (getType(lines[i]) === TYPE_KEY.ENDING) {
 			/* ADD ENDING */
 			var endId = getId(lines[i]);
@@ -317,19 +324,10 @@ function parseRoom(lines, i, compatibilityFlags) {
 			var end = {
 				id : endId,
 				x : parseInt(endCoords[0]),
-				y : parseInt(endCoords[1])
+				y : parseInt(endCoords[1]),
 			};
 
 			// TODO : back compat
-		}
-		else if (getType(lines[i]) === TYPE_KEY.PALETTE) {
-			/* CHOOSE PALETTE (that's not default) */
-			room[id].pal = getId(lines[i]);
-		}
-		else if (getType(lines[i]) === ARG_KEY.NAME) {
-			var name = lines[i].split(/\s(.+)/)[1];
-			room[id].name = name;
-			names.room.set(name, id);
 		}
 
 		i++;
@@ -398,16 +396,22 @@ function parseTile(lines, i, type) {
 	i = drawingResult.i;
 	options.drawingData = drawingResult.drawingData;
 
-	// todo : is this the best way to handle back compat?
-	var isPlayer = (type === TYPE_KEY.AVATAR) || (type === TYPE_KEY.SPRITE && id === playerId);
+	// todo : how do we handle back compat for SPR A?
+	var isPlayer = (type === TYPE_KEY.AVATAR) && playerId === null;
 
 	if (isPlayer) {
+		playerId = id;
 		type = TYPE_KEY.AVATAR;
 		options.inventory = {};
 	}
 
+	// turn extra avatars into sprites
+	if (!isPlayer && (type === TYPE_KEY.AVATAR)) {
+		type === TYPE_KEY.SPRITE;
+	}
+
 	// background tiles are restricted from several properties
-	var isNotBackgroundTile = type != TYPE_KEY.TILE;
+	var isNotBackgroundTile = (type != TYPE_KEY.TILE);
 
 	// read all other properties
 	while (i < lines.length && lines[i].length > 0) { // stop at empty line
@@ -456,7 +460,7 @@ function parseTile(lines, i, type) {
 			var coordArgs = posArgs[2].split(LEGACY_KEY.SEPARATOR);
 
 			// NOTE: assumes rooms have all been created!
-			room[roomId].sprites.push(
+			room[roomId].tileOverlay.push(
 				createSpriteLocation(
 					id,
 					parseInt(coordArgs[0]),
@@ -701,7 +705,7 @@ function serializeWorld(skipFonts) {
 		skipFonts = false;
 	}
 
-	flags.PAL_FORMAT = 1; // new default pal format
+	flags.PAL_FORMAT = 1; // new default format (hex)
 
 	var worldStr = "";
 
@@ -722,16 +726,18 @@ function serializeWorld(skipFonts) {
 	}
 	worldStr += "\n";
 
-	/* FONT */
+	/* TEXT SETTINGS */
 	if (fontName != defaultFontName) {
 		worldStr += TYPE_KEY.DEFAULT_FONT + " " + fontName + "\n";
 		worldStr += "\n";
 	}
+
 	// todo : what should be the default?
 	if (text_scale === scale) {
 		worldStr += TYPE_KEY.TEXT_SCALE + " 1\n";
 		worldStr += "\n";
 	}
+
 	if (textDirection != TEXT_DIRECTION_KEY.LEFT_TO_RIGHT) {
 		worldStr += TYPE_KEY.TEXT_DIRECTION + " " + textDirection + "\n";
 		worldStr += "\n";
@@ -740,7 +746,6 @@ function serializeWorld(skipFonts) {
 	/* PALETTE */
 	// TODO : DEBUG!!!
 	var paletteIdList = sortedIdList(palette);
-	console.log(paletteIdList);
 	for (var i = 0; i < paletteIdList.length; i++) {
 		var id = paletteIdList[i];
 
@@ -749,20 +754,7 @@ function serializeWorld(skipFonts) {
 		// 	continue;
 		// }
 
-		console.log(id + " " + getPal(id));
-
-		worldStr += TYPE_KEY.PALETTE + " " + id + "\n";
-
-		for (var j = 0; j < palette[id].colors.length; j++) {
-			var clr = palette[id].colors[j];
-			worldStr += toHex(clr) + "\n";
-		}
-
-		if (palette[id].name != null) {
-			worldStr += ARG_KEY.NAME + " " + palette[id].name + "\n";
-		}
-
-		worldStr += "\n";
+		worldStr += serializePalette(id) + "\n";
 	}
 
 	/* ROOM */
@@ -775,63 +767,7 @@ function serializeWorld(skipFonts) {
 		// 	continue;
 		// }
 
-		worldStr += TYPE_KEY.ROOM + " " + id + "\n";
-		if ( flags.ROOM_FORMAT == 0 ) {
-			// old non-comma separated format
-			for (i in room[id].tilemap) {
-				for (j in room[id].tilemap[i]) {
-					worldStr += room[id].tilemap[i][j];
-				}
-				worldStr += "\n";
-			}
-		}
-		else if ( flags.ROOM_FORMAT == 1 ) {
-			// new comma separated format
-			for (i in room[id].tilemap) {
-				for (j in room[id].tilemap[i]) {
-					worldStr += room[id].tilemap[i][j];
-					if (j < room[id].tilemap[i].length-1) worldStr += ","
-				}
-				worldStr += "\n";
-			}
-		}
-		if (room[id].name != null) {
-			/* NAME */
-			worldStr += ARG_KEY.NAME + " " + room[id].name + "\n";
-		}
-		if (room[id].walls.length > 0) {
-			/* WALLS */
-			worldStr += ARG_KEY.IS_WALL + " ";
-			for (j in room[id].walls) {
-				worldStr += room[id].walls[j];
-				if (j < room[id].walls.length-1) {
-					worldStr += ",";
-				}
-			}
-			worldStr += "\n";
-		}
-		if (room[id].sprites.length > 0) {
-			/* SPRITES */
-			for (j in room[id].sprites) {
-				var spr = room[id].sprites[j];
-				if (!tile[spr.id].isUnique || !tile[spr.id].hasUniqueLocation) {
-					// TODO : for now I'm just using SPR to avoid collisions with EXT and END legacy commands
-					// *but* is that the final format I want to use??
-					worldStr += TYPE_KEY.SPRITE + " " + spr.id + " " + spr.x + LEGACY_KEY.SEPARATOR + spr.y;
-					worldStr += "\n";
-				}
-
-				// temporary field to ensure unique objects are only placed once! (necessary for the player)
-				if (tile[spr.id].isUnique) {
-					tile[spr.id].hasUniqueLocation = true;
-				}
-			}
-		}
-		if (room[id].pal != null && room[id].pal != NULL_ID) {
-			/* PALETTE */
-			worldStr += TYPE_KEY.PALETTE + " " + room[id].pal + "\n";
-		}
-		worldStr += "\n";
+		worldStr += serializeRoom(id) + "\n";
 	}
 
 	/* MAP */
@@ -843,32 +779,7 @@ function serializeWorld(skipFonts) {
 			continue;
 		}
 
-		worldStr += TYPE_KEY.MAP + " " + id + "\n";
-		for (i in map[id].map) {
-			for (j in map[id].map[i]) {
-				worldStr += map[id].map[i][j];
-			}
-			worldStr += "\n";
-		}
-
-		if (map[id].name) {
-			worldStr += ARG_KEY.NAME + " " + map[id].name + "\n";
-		}
-
-		if (map[id].transition_effect_up) {
-			worldStr += ARG_KEY.TRANSITION_EFFECT_UP + " " + map[id].transition_effect_up + "\n";
-		}
-		if (map[id].transition_effect_down) {
-			worldStr += ARG_KEY.TRANSITION_EFFECT_DOWN + " " + map[id].transition_effect_down + "\n";
-		}
-		if (map[id].transition_effect_left) {
-			worldStr += ARG_KEY.TRANSITION_EFFECT_LEFT + " " + map[id].transition_effect_left + "\n";
-		}
-		if (map[id].transition_effect_right) {
-			worldStr += ARG_KEY.TRANSITION_EFFECT_RIGHT + " " + map[id].transition_effect_right + "\n";
-		}
-
-		worldStr += "\n";
+		worldStr += serializeMap(id) + "\n";
 	}
 
 	/* TILES */
@@ -880,65 +791,7 @@ function serializeWorld(skipFonts) {
 			continue;
 		}
 
-		var type = tile[id].type;
-		var isBackgroundTile = type === TYPE_KEY.TILE;
-
-		worldStr += type + " " + id + "\n";
-		worldStr += serializeDrawing(id);
-		if (tile[id].name != null && tile[id].name != undefined) {
-			/* NAME */
-			worldStr += ARG_KEY.NAME + " " + tile[id].name + "\n";
-		}
-		if (ENABLE_COLOR_OVERRIDE && tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
-			/* BACKGROUND COLOR OVERRIDE */
-			worldStr += ARG_KEY.BACKGROUND + " " + tile[id].bgc + "\n";
-		}
-		if (ENABLE_COLOR_OVERRIDE && tile[id].col != null && tile[id].col != undefined) {
-			var defaultColor = isBackgroundTile ? 1 : 2;
-			if (tile[id].col != defaultColor) {
-				/* COLOR OVERRIDE */
-				worldStr += ARG_KEY.COLOR +  " " + tile[id].col + "\n";
-			}
-		}
-		if (isBackgroundTile && tile[id].isWall != null && tile[id].isWall != undefined && tile[id].isWall != false) {
-			/* WALL */
-			worldStr += ARG_KEY.IS_WALL + " " + (tile[id].isWall ? BOOL_KEY.YES : BOOL_KEY.NO) + "\n";
-		}
-		if (!isBackgroundTile && tile[id].dlg != null) {
-			worldStr += ARG_KEY.DIALOG_SCRIPT + " " + tile[id].dlg + "\n";
-		}
-		if (!isBackgroundTile && tile[id].tickDlgId != null) {
-			worldStr += ARG_KEY.FRAME_TICK_SCRIPT + " " + tile[id].tickDlgId + "\n";
-		}
-		if (!isBackgroundTile && tile[id].knockDlgId != null) {
-			worldStr += ARG_KEY.KNOCK_INTO_SCRIPT + " " + tile[id].knockDlgId + "\n";
-		}
-		if (!isBackgroundTile && tile[id].buttonDownDlgId != null) {
-			worldStr += ARG_KEY.BUTTON_DOWN_SCRIPT + " " + tile[id].buttonDownDlgId + "\n";
-		}
-		if (type === TYPE_KEY.SPRITE && id === playerId && tile[id].inventory != null) {
-			for (itemId in tile[id].inventory) {
-				worldStr += TYPE_KEY.ITEM + " " + itemId + " " + tile[id].inventory[itemId] + "\n";
-			}
-		}
-		if (type === TYPE_KEY.EXIT && tile[id].dest.room != null) {
-			worldStr += ARG_KEY.EXIT_DESTINATION + " " + tile[id].dest.room + " " + tile[id].dest.x + " " + tile[id].dest.y + "\n";
-		}
-		if (type === TYPE_KEY.EXIT && tile[id].transition_effect != null) {
-			worldStr += ARG_KEY.TRANSITION_EFFECT + " " + tile[id].transition_effect + "\n";
-		}
-		if ((type === TYPE_KEY.EXIT || type === TYPE_KEY.ENDING) && tile[id].lockItem != null) {
-			worldStr += ARG_KEY.LOCK + " " + tile[id].lockItem;
-			if (tile[id].lockToll > 0) {
-				worldStr += " " + tile[id].lockToll;
-			}
-			worldStr += "\n";
-		}
-
-		worldStr += "\n";
-
-		// remove temporary unique placement field
-		delete tile[id].hasUniqueLocation;
+		worldStr += serializeTile(id) + "\n";
 	}
 
 	/* DIALOG */
@@ -952,9 +805,11 @@ function serializeWorld(skipFonts) {
 
 		worldStr += TYPE_KEY.DIALOG + " " + id + "\n";
 		worldStr += dialog[id].src + "\n";
+
 		if (dialog[id].name != null) {
 			worldStr += ARG_KEY.NAME + " " + dialog[id].name + "\n";
 		}
+
 		worldStr += "\n";
 	}
 
@@ -972,6 +827,216 @@ function serializeWorld(skipFonts) {
 	}
 
 	return worldStr;
+}
+
+function serializePalette(id) {
+	console.log("SERIALIZE PAL " + id);
+	console.log(palette[id]);
+
+	var out = "";
+
+	out += TYPE_KEY.PALETTE + " " + id + "\n";
+
+	for (var i = 0; i < palette[id].colors.length; i++) {
+		var clr = palette[id].colors[i];
+		out += toHex(clr) + "\n";
+	}
+
+	if (palette[id].name != null) {
+		out += ARG_KEY.NAME + " " + palette[id].name + "\n";
+	}
+
+	return out;
+}
+
+function serializeRoom(id) {
+	var out = "";
+
+	out += TYPE_KEY.ROOM + " " + id + "\n";
+
+	// make tilemap and overlay consistent
+	var tilemap = createGrid(roomsize);
+	var tileOverlay = []; // for extra tiles/sprites that don't fit in the grid
+
+	for (var i = 0; i < roomsize; i++) {
+		for (var j = 0; j < roomsize; j++) {
+			var tileId = room[id].tilemap[i][j];
+			var isIdShortEnough = (tileId.length <= 1 || flags.ROOM_FORMAT === 1);
+
+			if (isIdShortEnough) {
+				tilemap[i][j] = tileId;
+			}
+			else {
+				tileOverlay.push({ x: j, y: i, id: tileId, });
+			}
+		}
+	}
+
+	for (var i = 0; i < room[id].tileOverlay.length; i++) {
+		var tileLocation = room[id].tileOverlay[i];
+		var isTileEmpty = (tilemap[tileLocation.y][tileLocation.x] === NULL_ID);
+		var isIdShortEnough = (tileLocation.id.length <= 1 || flags.ROOM_FORMAT === 1);
+
+		if (isTileEmpty && isIdShortEnough) {
+			tilemap[tileLocation.y][tileLocation.x] = tileLocation.id;
+		}
+		else {
+			tileOverlay.push({ x: tileLocation.x, y: tileLocation.y, id: tileLocation.id, });
+		}
+	}
+
+	/* TILEMAP */
+	for (var i = 0; i < roomsize; i++) {
+		for (var j = 0; j < roomsize; j++) {
+			out += tilemap[i][j];
+
+			if (j < roomsize - 1 && flags.ROOM_FORMAT === 1) {
+				out += LEGACY_KEY.SEPARATOR;
+			}
+		}
+
+		out += "\n";
+	}
+
+	/* NAME */
+	if (room[id].name != null) {
+		out += ARG_KEY.NAME + " " + room[id].name + "\n";
+	}
+
+	/* PALETTE */
+	if (room[id].pal != null && room[id].pal != NULL_ID) {
+		out += TYPE_KEY.PALETTE + " " + room[id].pal + "\n";
+	}
+
+	/* TILE OVERLAY */
+	for (var i = 0; i < tileOverlay.length; i++) {
+		out += TYPE_KEY.TILE + " " + tileOverlay[i].id + " " + tileOverlay[i].x + " " + tileOverlay[i].y;
+		out += "\n";
+	}
+
+	/* LEGACY WALL SETTINGS */
+	if (room[id].walls.length > 0) {
+		out += ARG_KEY.IS_WALL + " ";
+		for (j in room[id].walls) {
+			out += room[id].walls[j];
+			if (j < room[id].walls.length - 1) {
+				out += LEGACY_KEY.SEPARATOR;
+			}
+		}
+		out += "\n";
+	}
+
+	return out;
+}
+
+function serializeMap(id) {
+	var out = "";
+
+	out += TYPE_KEY.MAP + " " + id + "\n";
+
+	for (i in map[id].map) {
+		for (j in map[id].map[i]) {
+			out += map[id].map[i][j];
+		}
+		out += "\n";
+	}
+
+	if (map[id].name) {
+		out += ARG_KEY.NAME + " " + map[id].name + "\n";
+	}
+
+	if (map[id].transition_effect_up) {
+		out += ARG_KEY.TRANSITION_EFFECT_UP + " " + map[id].transition_effect_up + "\n";
+	}
+
+	if (map[id].transition_effect_down) {
+		out += ARG_KEY.TRANSITION_EFFECT_DOWN + " " + map[id].transition_effect_down + "\n";
+	}
+
+	if (map[id].transition_effect_left) {
+		out += ARG_KEY.TRANSITION_EFFECT_LEFT + " " + map[id].transition_effect_left + "\n";
+	}
+
+	if (map[id].transition_effect_right) {
+		out += ARG_KEY.TRANSITION_EFFECT_RIGHT + " " + map[id].transition_effect_right + "\n";
+	}
+
+	return out;
+}
+
+function serializeTile(id) {
+	var out = "";
+
+	var type = tile[id].type;
+	var isBackgroundTile = (type === TYPE_KEY.TILE);
+
+	out += type + " " + id + "\n";
+	out += serializeDrawing(id);
+
+	if (tile[id].name != null && tile[id].name != undefined) {
+		/* NAME */
+		out += ARG_KEY.NAME + " " + tile[id].name + "\n";
+	}
+
+	if (ENABLE_COLOR_OVERRIDE && tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
+		/* BACKGROUND COLOR OVERRIDE */
+		out += ARG_KEY.BACKGROUND + " " + tile[id].bgc + "\n";
+	}
+
+	if (ENABLE_COLOR_OVERRIDE && tile[id].col != null && tile[id].col != undefined) {
+		var defaultColor = isBackgroundTile ? 1 : 2;
+		if (tile[id].col != defaultColor) {
+			/* COLOR OVERRIDE */
+			out += ARG_KEY.COLOR +  " " + tile[id].col + "\n";
+		}
+	}
+
+	if (isBackgroundTile && tile[id].isWall != null && tile[id].isWall != undefined && tile[id].isWall != false) {
+		/* WALL */
+		out += ARG_KEY.IS_WALL + " " + (tile[id].isWall ? BOOL_KEY.YES : BOOL_KEY.NO) + "\n";
+	}
+
+	if (!isBackgroundTile && tile[id].dlg != null) {
+		out += ARG_KEY.DIALOG_SCRIPT + " " + tile[id].dlg + "\n";
+	}
+
+	if (!isBackgroundTile && tile[id].tickDlgId != null) {
+		out += ARG_KEY.FRAME_TICK_SCRIPT + " " + tile[id].tickDlgId + "\n";
+	}
+
+	if (!isBackgroundTile && tile[id].knockDlgId != null) {
+		out += ARG_KEY.KNOCK_INTO_SCRIPT + " " + tile[id].knockDlgId + "\n";
+	}
+
+	if (!isBackgroundTile && tile[id].buttonDownDlgId != null) {
+		out += ARG_KEY.BUTTON_DOWN_SCRIPT + " " + tile[id].buttonDownDlgId + "\n";
+	}
+
+	if (type === TYPE_KEY.SPRITE && id === playerId && tile[id].inventory != null) {
+		for (itemId in tile[id].inventory) {
+			out += TYPE_KEY.ITEM + " " + itemId + " " + tile[id].inventory[itemId] + "\n";
+		}
+	}
+
+	if (type === TYPE_KEY.EXIT && tile[id].dest.room != null) {
+		out += ARG_KEY.EXIT_DESTINATION + " " + tile[id].dest.room + " " + tile[id].dest.x + " " + tile[id].dest.y + "\n";
+	}
+
+	if (type === TYPE_KEY.EXIT && tile[id].transition_effect != null) {
+		out += ARG_KEY.TRANSITION_EFFECT + " " + tile[id].transition_effect + "\n";
+	}
+
+	if ((type === TYPE_KEY.EXIT || type === TYPE_KEY.ENDING) && tile[id].lockItem != null) {
+		out += ARG_KEY.LOCK + " " + tile[id].lockItem;
+
+		if (tile[id].lockToll > 0) {
+			out += " " + tile[id].lockToll;
+		}
+
+		out += "\n";
+	}
+
+	return out;
 }
 
 function serializeDrawing(drwId) {

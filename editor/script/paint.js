@@ -10,7 +10,7 @@ function PaintTool(controls) {
 	var isPainting = false;
 	var drawPaintGrid = true;
 
-	var drawingId = "A";
+	var drawingId = sortedIdList(tile)[0];
 	var curDrawingFrameIndex = 0;
 
 	var animationControl = new AnimationControl(
@@ -335,6 +335,8 @@ function PaintTool(controls) {
 
 	// TODO : remove this after moving everything to events
 	this.SelectDrawing = function(id) {
+		console.log("SELECT DRAWING " + id);
+
 		events.Raise("select_drawing", { id: id });
 	}
 
@@ -1070,17 +1072,22 @@ function InventorySettingsControl(controls) {
 
 			controls.container.setAttribute("style", "display:flex;");
 
-			var itemCount = drawingId in tile[playerId].inventory ? tile[playerId].inventory[drawingId] : 0;
+			var playerId = getPlayerId();
+			var itemCount = (playerId && (drawingId in tile[playerId].inventory)) ? tile[playerId].inventory[drawingId] : 0;
 
 			controls.input.value = itemCount;
 
 			controls.input.oninput = function(e) {
-				if (e.target.value <= 0) {
-					delete tile[playerId].inventory[drawingId];
-				}
-				else {
-					tile[playerId].inventory[drawingId] = e.target.value;
-					refreshGameData();
+				var playerId = getPlayerId();
+
+				if (playerId) {
+					if (e.target.value <= 0) {
+						delete tile[playerId].inventory[drawingId];
+					}
+					else {
+						tile[playerId].inventory[drawingId] = e.target.value;
+						refreshGameData();
+					}
 				}
 
 				events.Raise("item_inventory_change", { id: drawingId, count: e.target.value, });

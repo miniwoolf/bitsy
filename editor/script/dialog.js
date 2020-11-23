@@ -383,7 +383,7 @@ function TextEffectsControl() {
 			seperatorSpan.style.marginRight = "4px";
 			textEffectsPrintDrawingSpan.appendChild(seperatorSpan);
 
-			var textEffectDrwId = "A"; // todo : is this ok?
+			var textEffectDrwId = sortedIdList(tile)[0];
 
 			var textEffectDrwSelect = findTool.CreateSelectControl(
 				"drawing",
