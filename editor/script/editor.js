@@ -119,14 +119,16 @@ function resetGameData() {
 
 	// TODO : localize default_title
 	setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
-	dialog["0"] = {
-		src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"), // hacky to do this in two places :(
-		name: "cat dialog", // todo : localize
-	};
-	dialog["1"] = {
-		src: localization.GetStringOrFallback("default_item_dlg", "You found a nice warm cup of tea"),
-		name: "tea dialog", // todo : localize
-	};
+
+	// todo : turn back on?
+	// dialog["0"] = {
+	// 	src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"), // hacky to do this in two places :(
+	// 	name: "cat dialog", // todo : localize
+	// };
+	// dialog["1"] = {
+	// 	src: localization.GetStringOrFallback("default_item_dlg", "You found a nice warm cup of tea"),
+	// 	name: "tea dialog", // todo : localize
+	// };
 
 	pickDefaultFontForLanguage(localization.GetLanguage());
 
@@ -1730,25 +1732,26 @@ function on_change_language_inner(language) {
 		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
 	}
 
+	// todo : turn back on?
 	// update default sprite
-	var defaultSpriteDlgExists = dialog["0"] != null && localization.LocalizationContains("default_sprite_dlg", dialog["0"]);
-	if (defaultSpriteDlgExists) {
-		dialog["0"] = {
-			src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"),
-			name: null,
-		};
-		paintTool.ReloadDrawing();
-	}
+	// var defaultSpriteDlgExists = dialog["0"] != null && localization.LocalizationContains("default_sprite_dlg", dialog["0"]);
+	// if (defaultSpriteDlgExists) {
+	// 	dialog["0"] = {
+	// 		src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"),
+	// 		name: null,
+	// 	};
+	// 	paintTool.ReloadDrawing();
+	// }
 
 	// update default item
-	var defaultItemDlgExists = dialog["1"] != null && localization.LocalizationContains("default_item_dlg", dialog["1"]);
-	if (defaultItemDlgExists) {
-		dialog["1"] = {
-			src: localization.GetStringOrFallback("default_item_dlg", "You found a nice warm cup of tea"),
-			name: null,
-		};
-		paintTool.ReloadDrawing(); // hacky to do this twice
-	}
+	// var defaultItemDlgExists = dialog["1"] != null && localization.LocalizationContains("default_item_dlg", dialog["1"]);
+	// if (defaultItemDlgExists) {
+	// 	dialog["1"] = {
+	// 		src: localization.GetStringOrFallback("default_item_dlg", "You found a nice warm cup of tea"),
+	// 		name: null,
+	// 	};
+	// 	paintTool.ReloadDrawing(); // hacky to do this twice
+	// }
 
 	refreshGameData();
 }
