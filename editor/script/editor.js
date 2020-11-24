@@ -281,17 +281,17 @@ function hideUnsupportedFeatureWarning() {
 var defaultPanelPrefs = {
 	workspace : [
 		{ id:"aboutPanel", 			visible:true, 	position:0  },
-		{ id:"roomPanel", 			visible:true, 	position:1  },
-		{ id:"paintPanel", 			visible:true, 	position:2  },
-		{ id:"colorsPanel", 		visible:true, 	position:3  },
-		{ id:"downloadPanel", 		visible:true, 	position:4  },
-		{ id:"gifPanel", 			visible:false, 	position:5  },
-		{ id:"dataPanel", 			visible:false, 	position:6  },
-		{ id:"exitsPanel", 			visible:false, 	position:7  },
-		{ id:"findPanel",			visible:false,	position:9  },
-		{ id:"dialogPanel",			visible:false,	position:10 },
-		{ id:"inventoryPanel",		visible:false,	position:11 },
-		{ id:"settingsPanel",		visible:false,	position:12 },
+		{ id:"paintPanel", 			visible:true, 	position:1  },
+		{ id:"roomPanel", 			visible:true, 	position:2  },
+		{ id:"mapPanel", 			visible:true, 	position:3  },
+		{ id:"findPanel",			visible:true,	position:4  },
+		{ id:"downloadPanel", 		visible:true, 	position:5  },
+		{ id:"colorsPanel", 		visible:false, 	position:6  },
+		{ id:"dialogPanel",			visible:false,	position:7  },
+		{ id:"inventoryPanel",		visible:false,	position:8  },
+		{ id:"gifPanel", 			visible:false, 	position:9  },
+		{ id:"dataPanel", 			visible:false, 	position:10 },
+		{ id:"settingsPanel",		visible:false,	position:11 },
 	]
 };
 // console.log(defaultPanelPrefs);
@@ -300,7 +300,7 @@ function getPanelPrefs() {
 	// (TODO: weird that engine version and editor version are the same??)
 	var useDefaultPrefs = ( localStorage.engine_version == null ) ||
 							( localStorage.panel_prefs == null ) ||
-							( JSON.parse(localStorage.engine_version).major < 6 ) ||
+							( JSON.parse(localStorage.engine_version).major < 8 ) ||
 							( JSON.parse(localStorage.engine_version).minor < 0 );
 
 	var prefs = useDefaultPrefs ? defaultPanelPrefs : JSON.parse( localStorage.panel_prefs );
@@ -357,9 +357,6 @@ function start() {
 	events.Listen("game_data_change", function(event) {
 		// TODO -- over time I can move more things in here
 		// on the other hand this is still sort of global thing that we don't want TOO much of
-
-		// force re-load the dialog tool
-		events.Raise("select_dialog", { id: titleDialogId });
 	});
 
 	isPlayerEmbeddedInEditor = true; // flag for game player to make changes specific to editor
@@ -717,8 +714,6 @@ function start() {
 			},
 		},
 	});
-
-	events.Raise("select_dialog", { id: titleDialogId }); // start with the title open
 
 	// create find tool
 	findTool = new FindTool({

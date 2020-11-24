@@ -251,6 +251,9 @@ function DialogTool(controls) {
 	events.Listen("select_dialog", function(e) {
 		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
 	});
+
+	// init to title
+	openDialogTool(NULL_ID, null, false);
 }
 
 function TextEffectsControl() {
