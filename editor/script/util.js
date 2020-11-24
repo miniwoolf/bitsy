@@ -13,6 +13,104 @@ function getPlayerId() {
 	return null;
 }
 
+function makeCountLabel(id, objectRegistry, registrySize) {
+	var label = "";
+
+	if (registrySize != null) {
+		var idList = sortedIdList(objectRegistry);
+		var index = idList.indexOf(id);
+
+		// if "0" isn't in the registry it still exists implicitly
+		if (!(NULL_ID in objectRegistry)) {
+			index++;
+		}
+
+		label += "(" + (index) + "/" + (registrySize - 1) + ")";
+	}
+
+	return label;
+}
+
+function debugFillAllTiles() {
+	tile = {};
+
+	for (var i = 1; i < DEFAULT_REGISTRY_SIZE; i++) {
+		var id = toB256(i);
+
+		var binaryString = i.toString(2).padStart(8, "0");
+		var binaryArr = [];
+		for (var j = 0; j < 8; j++) {
+			binaryArr.push(parseInt(binaryString[j]));
+		}
+
+		// console.log(id + "\n" + binaryString);
+
+		createTile(id, TYPE_KEY.TILE, {
+			drawingData : [
+				[
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+					binaryArr.slice(),
+				]
+			],
+		});
+	}
+
+	refreshGameData();
+
+	events.Raise("game_data_change");
+}
+
+function debugFillAllRooms() {
+	room = {};
+
+	for (var i = 1; i < DEFAULT_REGISTRY_SIZE; i++) {
+		var id = toB256(i);
+		room[id] = createRoom(id, "1");
+
+		for (var y = 0; y < roomsize; y++) {
+			for (var x = 0; x < roomsize; x++) {
+				var tileIndex = (y * roomsize) + x;
+				if (tileIndex <= i) {
+					room[id].tilemap[y][x] = toB256(tileIndex);
+				}
+			}
+		}
+	}
+
+	refreshGameData();
+
+	events.Raise("game_data_change");
+}
+
+function debugFillAllMaps() {
+	map = {}
+
+	var roomIndex = 0;
+
+	for (var i = 1; i < MAP_REGISTRY_SIZE; i++) {
+		var id = toB256(i);
+		map[id] = createMap(id);
+
+		for (var y = 0; y < mapsize; y++) {
+			for (var x = 0; x < mapsize; x++) {
+				var roomId = toB256(roomIndex);
+				roomIndex++;
+				map[id].map[y][x] = roomId;
+			}
+		}
+	}
+
+	refreshGameData();
+
+	events.Raise("game_data_change");
+}
+
 function clamp(val, min, max) {
 	return Math.max(Math.min(val, max), min);
 }

@@ -500,7 +500,7 @@ function RoomTool(controls) {
 		// document.getElementById("roomId").innerHTML = curRoom;
 		var roomLabel = localization.GetStringOrFallback("room_label", "room");
 		document.getElementById("roomName").placeholder =
-			roomLabel + " " + curRoom + " (" + fromB256(curRoom) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+			roomLabel + " " + curRoom + " " + makeCountLabel(curRoom, room, DEFAULT_REGISTRY_SIZE);
 
 		if(room[curRoom].name != null) {
 			document.getElementById("roomName").value = room[curRoom].name;

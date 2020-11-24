@@ -126,3 +126,7 @@ var LEGACY_KEY = {
 	POSITION : "POS",
 	SEPARATOR : ",",
 };
+
+var SECRET_KEY = {
+	INFINITE_MEM : "INFINITE_MEM",
+};

@@ -38,8 +38,7 @@ function DialogTool(controls) {
 		dialogEditorViewport.appendChild(curScriptEditor.GetElement());
 
 		// todo : localize!
-		controls.nameInput.placeholder = "dialog " + dialogId +
-			" (" + fromB256(dialogId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+		controls.nameInput.placeholder = "dialog " + dialogId + " " + makeCountLabel(dialogId, dialog, DEFAULT_REGISTRY_SIZE);
 
 		if (dialogId === titleDialogId) {
 			controls.nameInput.readOnly = true;

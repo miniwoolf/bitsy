@@ -101,7 +101,7 @@ function PaletteTool(colorPicker, controls) {
 		var palettePlaceholderName = localization.GetStringOrFallback("palette_label", "palette");
 
 		controls.nameInput.placeholder = palettePlaceholderName + " " + GetSelectedId() +
-			" (" + fromB256(GetSelectedId()) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")";
+			" " + makeCountLabel(GetSelectedId(), palette, DEFAULT_REGISTRY_SIZE);
 
 		var pal = palette[GetSelectedId()];
 

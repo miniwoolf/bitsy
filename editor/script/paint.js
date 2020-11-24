@@ -621,8 +621,7 @@ function PaintTool(controls) {
 		// will this safety conditional bite me? can I have the find tool load earlier?
 		if (findTool) {
 			controls.nameInput.placeholder =
-				findTool.GetDisplayName("drawing", drawingId, true)
-				+ " (" + fromB256(drawingId) + "/" + (DEFAULT_REGISTRY_SIZE - 1) + ")"; // todo : this will break right?
+				findTool.GetDisplayName("drawing", drawingId, true) + " " + makeCountLabel(drawingId, tile, DEFAULT_REGISTRY_SIZE);
 		}
 
 		controls.nameInput.readOnly = (til.type === TYPE_KEY.AVATAR);

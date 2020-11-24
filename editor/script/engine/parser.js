@@ -695,6 +695,13 @@ function parseFlag(lines, i) {
 	var id = getId(lines[i]);
 	var valStr = lines[i].split(" ")[2];
 	flags[id] = parseInt(valStr);
+
+	// handle secret flags
+	if (id === SECRET_KEY.INFINITE_MEM && flags[id] != 0) {
+		DEFAULT_REGISTRY_SIZE = null;
+		MAP_REGISTRY_SIZE = null;
+	}
+
 	i++;
 	return i;
 }
@@ -744,35 +751,36 @@ function serializeWorld(skipFonts) {
 	}
 
 	/* PALETTE */
-	// TODO : DEBUG!!!
 	var paletteIdList = sortedIdList(palette);
-	for (var i = 0; i < paletteIdList.length; i++) {
+	// NOTE: The -1 is because we don't store the entry at "0"
+	var paletteCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE - 1, paletteIdList.length) : paletteIdList.length;
+	for (var i = 0; i < paletteCount; i++) {
 		var id = paletteIdList[i];
 
-		// TODO
-		// if (id === NULL_ID) {
-		// 	continue;
-		// }
+		if (id === NULL_ID) {
+			continue;
+		}
 
 		worldStr += serializePalette(id) + "\n";
 	}
 
 	/* ROOM */
 	var roomIdList = sortedIdList(room);
-	for (var i = 0; i < roomIdList.length; i++) {
+	var roomCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE - 1, roomIdList.length) : roomIdList.length;
+	for (var i = 0; i < roomCount; i++) {
 		var id = roomIdList[i];
 
-		// TODO
-		// if (id === NULL_ID) {
-		// 	continue;
-		// }
+		if (id === NULL_ID) {
+			continue;
+		}
 
 		worldStr += serializeRoom(id) + "\n";
 	}
 
 	/* MAP */
 	var mapIdList = sortedIdList(map);
-	for (var i = 0; i < mapIdList.length; i++) {
+	var mapCount = MAP_REGISTRY_SIZE ? Math.min(MAP_REGISTRY_SIZE - 1, mapIdList.length) : mapIdList.length;
+	for (var i = 0; i < mapCount; i++) {
 		var id = mapIdList[i];
 
 		if (id === NULL_ID) {
@@ -784,7 +792,9 @@ function serializeWorld(skipFonts) {
 
 	/* TILES */
 	var tileIdList = sortedIdList(tile);
-	for (var i = 0; i < tileIdList.length; i++) {
+	var tileCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE - 1, tileIdList.length) : tileIdList.length;
+	console.log("SERIALIZE TILES " + tileCount);
+	for (var i = 0; i < tileCount; i++) {
 		var id = tileIdList[i];
 
 		if (id === NULL_ID) {
@@ -796,7 +806,8 @@ function serializeWorld(skipFonts) {
 
 	/* DIALOG */
 	var dialogIdList = sortedIdList(dialog);
-	for (var i = 0; i < dialogIdList.length; i++) {
+	var dialogCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE, dialogIdList.length) : dialogIdList.length;
+	for (var i = 0; i < dialogCount; i++) {
 		var id = dialogIdList[i];
 
 		if (id === NULL_ID) {

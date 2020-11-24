@@ -21,6 +21,40 @@ function FindTool(controls) {
 		return category.getCaption(category.categoryStore[id], forceDefault);
 	};
 
+	var scrollEndTimer = null;
+	controls.scrollRoot
+		.addEventListener("scroll", function() {
+			if (scrollEndTimer != null) {
+				clearTimeout(scrollEndTimer);
+			}
+
+			scrollEndTimer = setTimeout(function() {
+				renderOutOfDateThumbnailsInViewport();
+			}, 100);
+		});
+
+	var prevViewportBounds = controls.scrollRoot.getBoundingClientRect();
+	var resizeCheckTimer = setInterval(function() {
+		var viewportBounds = controls.scrollRoot.getBoundingClientRect();
+
+		if (viewportBounds.width != prevViewportBounds.width
+			|| viewportBounds.height != prevViewportBounds.height)
+		{
+			renderOutOfDateThumbnailsInViewport();
+		}
+
+		prevViewportBounds = viewportBounds;
+	},100);
+
+	function renderOutOfDateThumbnailsInViewport() {
+		console.log("SCROLL END!");
+		var viewportBounds = controls.scrollRoot.getBoundingClientRect();
+
+		for (id in categories) {
+			categories[id].RenderOutOfDateThumbs(viewportBounds);
+		}
+	};
+
 	// keep UI in sync
 	events.Listen("change_find_filter", function(e) {
 		if (searchText != e.searchText) {
@@ -346,12 +380,10 @@ function FindTool(controls) {
 
 			categoryDiv.appendChild(thumbDiv);
 
-			renderThumbnail(id);
+			markThumbnailOutOfDate(id);
 		}
 
 		function removeThumbFromCategory(id) {
-			console.log(id);
-			console.log(getThumbId(id));
 			categoryDiv.removeChild(document.getElementById(getThumbId(id)));
 		}
 
@@ -364,6 +396,12 @@ function FindTool(controls) {
 				if (!isExcluded) {
 					addThumbToCategory(id);
 				}
+			}
+		}
+
+		function markThumbnailOutOfDate(id) {
+			if (categoryInfo.thumbnailRenderer) {
+				categoryInfo.thumbnailRenderer.GetCacheEntry(id).outOfDate = true;
 			}
 		}
 
@@ -428,7 +466,7 @@ function FindTool(controls) {
 
 		if (categoryInfo.refreshThumbEventIdList) {
 			var onRefreshThumb = function(e) {
-				renderThumbnail(e.id);
+				markThumbnailOutOfDate(e.id);
 			}
 
 			for (var i = 0; i < categoryInfo.refreshThumbEventIdList.length; i++) {
@@ -444,7 +482,7 @@ function FindTool(controls) {
 					var isExcluded = categoryInfo.idExclusionList && categoryInfo.idExclusionList.indexOf(id) != -1;
 
 					if (!isExcluded) {
-						renderThumbnail(id);
+						markThumbnailOutOfDate(id);
 					}
 				}
 			}
@@ -483,6 +521,21 @@ function FindTool(controls) {
 
 		// init category
 		refreshThumbs();
+
+		categories[categoryInfo.name].RenderOutOfDateThumbs = function(viewportRect) {
+			if (categoryInfo.thumbnailRenderer) {
+				for (id in thumbCache) {
+					var thumbRect = thumbCache[id].getBoundingClientRect();
+					var imgId = getThumbImgId(id);
+					var isInViewport = !(thumbRect.bottom < viewportRect.top || thumbRect.top > viewportRect.bottom);
+					var cacheEntry = categoryInfo.thumbnailRenderer.GetCacheEntry(imgId);
+
+					if (isInViewport && cacheEntry.outOfDate) {
+						renderThumbnail(id);
+					}
+				}
+			}
+		};
 	}
 
 	function CreateThumbnail(thumbId, thumbImgId, thumbNameTextId, categoryItem, caption, iconId, onClick, hasRenderer) {

@@ -722,6 +722,7 @@ function start() {
 
 	// create find tool
 	findTool = new FindTool({
+		scrollRoot : document.getElementById("findViewport"),
 		contentRoot : document.getElementById("findContent"),
 		searchInput : document.getElementById("findSearchInput"),
 		filterVisibleCheck : document.getElementById("findFilterVisibleCheck"),

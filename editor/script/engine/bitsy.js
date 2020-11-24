@@ -113,6 +113,8 @@ function resetFlags() {
 		ROOM_FORMAT : 0, // 0 = non-comma separated, 1 = comma separated
 		PAL_FORMAT : 0, // 0 = rgb comma separated, 1 = hex
 	};
+
+	flags[SECRET_KEY.INFINITE_MEM] = 0; // 1 = unlimited registry size
 }
 resetFlags(); //init flags on load script
 
@@ -1140,7 +1142,7 @@ function initRoom(roomId) {
 	for (var i = 0; i < roomsize; i++) {
 		for (var j = 0; j < roomsize; j++) {
 			var tileId = room[roomId].tilemap[i][j];
-			if (tileId != NULL_ID) {
+			if (tileId != NULL_ID && tileId in tile) {
 				if (tile[tileId].type === TYPE_KEY.TILE) {
 					tilemap[i][j] = tileId;
 				}
@@ -1159,7 +1161,7 @@ function initRoom(roomId) {
 	for (var i = 0; i < room[roomId].tileOverlay.length; i++) {
 		var location = room[roomId].tileOverlay[i];
 
-		if (location.id != NULL_ID) {
+		if (location.id != NULL_ID && tileId in tile) {
 			if (tile[location.id].type === TYPE_KEY.TILE) {
 				tilemap[location.y][location.x] = location.id;
 			}
@@ -1633,10 +1635,10 @@ function drawRoom(room, options) {
 
 			if (location.id != NULL_ID && tile[location.id] != null && isPosInRoom(location.x, location.y)) {
 				if (tile[location.id].type === TYPE_KEY.TILE) {
-					background[i][j] = location.id;
+					background[location.y][location.x] = location.id;
 				}
 				else {
-					foreground[i][j] = location.id;
+					foreground[location.y][location.x] = location.id;
 				}
 			}
 		}

@@ -324,8 +324,8 @@ function MapTool(controls) {
 
 			controls.nameInput.readOnly = false;
 			controls.nameInput.value = map[curMapId].name;
-			controls.nameInput.placeholder = "map " + curMapId +
-				" (" + fromB256(curMapId) + "/" + (MAP_REGISTRY_SIZE - 1) + ")"; // todo : LOCALIZE
+			// todo : localize
+			controls.nameInput.placeholder = "map " + curMapId + " " + makeCountLabel(curMapId, map, MAP_REGISTRY_SIZE);
 
 			transitionEffectUpControl.SetSelection(map[curMapId].transition_effect_up);
 			transitionEffectDownControl.SetSelection(map[curMapId].transition_effect_down);
