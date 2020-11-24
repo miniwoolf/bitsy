@@ -1054,15 +1054,11 @@ function move(instance, direction, canEnterNeighborRoom) {
 }
 
 function updateLockState(spr) {
-	console.log("LOCK STATE");
-	console.log(spr);
 	if ("lockItem" in spr && spr.lockItem != null) {
-		var itemCount = spr.lockItem in player().inventory ? player().inventory[spr.lockItem] : 0;
-		spr.lok = !(itemCount > 0 && itemCount >= spr.lockToll);
+		var itemCount = (spr.lockItem in player().inventory) ? player().inventory[spr.lockItem] : 0;
+		spr.lok = itemCount <= 0;
 
 		if (!spr.lok) {
-			player().inventory[spr.lockItem] -= spr.lockToll;
-
 			// show inventory change in UI
 			if (onInventoryChanged != null) {
 				onInventoryChanged(spr.lockItem);
@@ -1228,7 +1224,6 @@ function createSpriteInstance(instanceId, location) {
 	instance.SetSecret("transition_effect", definition.transition_effect); // exit only
 	instance.SetSecret("dest", definition.dest); // exit only // todo : rename "out"?
 	instance.SetSecret("lockItem", definition.lockItem); // exit & ending only
-	instance.SetSecret("lockToll", definition.lockToll); // exit & ending only
 	instance.SetSecret("animation", definition.animation);
 	instance.SetSecret("createdAtInit", false);
 	instance.SetSecret("originalX", location.x);
@@ -1551,7 +1546,6 @@ function createTile(id, type, options) {
 			y : valueOrDefault(options.destY, 0), // exit only
 		},
 		lockItem : valueOrDefault(options.lockItem, null), // exit & ending only
-		lockToll : valueOrDefault(options.lockToll, 0), // exit & ending only
 	};
 }
 

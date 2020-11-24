@@ -424,7 +424,6 @@ function PaintTool(controls) {
 
 		if (tile[drawingId].type === TYPE_KEY.EXIT || tile[drawingId].type === TYPE_KEY.ENDING) {
 			tile[drawingId].lockItem = null;
-			tile[drawingId].lockToll = 0;
 		}
 
 		// when swapping between background-tile and non-background-tile types
@@ -1275,30 +1274,20 @@ function LockSettingsControl(controls) {
 
 			controls.itemInput.appendChild(lockItemSelect.GetElement());
 
-			controls.tollInput.onchange = function(e) {
-				if (tile[drawingId].type === "EXT" || tile[drawingId].type === "END") {
-					tile[drawingId].lockToll = e.target.value;
-
-					if (e.target.value < 1) {
-						controls.typeSelect.value = 0;
-						UpdateLockSettingControls(true);
-					}
-
-					refreshGameData();
-				}
-			};
-
 			controls.typeSelect.onchange = function(e) {
 				if (e.target.value > -1) {
-					tile[drawingId].lockToll = e.target.value;
+					tile[drawingId].lockItem = null;
 
-					if (tile[drawingId].lockItem === null) {
-						// todo : how to pick the starting item?
-						tile[drawingId].lockItem = "1";
+					var idList = sortedIdList(tile);
+
+					for (var i = 0; (i < idList.length) && (tile[drawingId].lockItem === null); i++) {
+						var id = idList[i];
+						if (tile[id].type === TYPE_KEY.ITEM) {
+							tile[drawingId].lockItem = id;
+						}
 					}
 				}
 				else {
-					tile[drawingId].lockToll = 0;
 					tile[drawingId].lockItem = null;
 				}
 
@@ -1317,16 +1306,11 @@ function LockSettingsControl(controls) {
 			if (tile[drawingId].lockItem === null) {
 				controls.typeSelect.value = -1;
 				controls.itemInput.style.display = "none";
-				controls.tollContainer.style.display = "none";
 			}
 			else {
-				controls.typeSelect.value = Math.min(1, tile[drawingId].lockToll);
-
-				controls.tollContainer.style.display =
-					tile[drawingId].lockToll <= 0 ? "none" : "inline";
-				controls.tollInput.value = tile[drawingId].lockToll;
-
+				controls.typeSelect.value = tile[drawingId].lockItem != null ? 0 : -1;
 				controls.itemInput.style.display = "inline";
+
 				if (lockItemSelect) {
 					lockItemSelect.SetSelection(tile[drawingId].lockItem);
 				}

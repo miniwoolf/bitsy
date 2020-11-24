@@ -486,8 +486,6 @@ function parseTile(lines, i, type) {
 		}
 		else if (getType(lines[i]) === ARG_KEY.LOCK && (type === TYPE_KEY.EXIT || type === TYPE_KEY.ENDING)) {
 			options.lockItem = getId(lines[i]);
-			var tollArg = tryGetArg(lines[i], 2);
-			options.lockToll = Math.max(0, parseInt(tollArg != null ? tollArg : 0));
 		}
 
 		i++;
@@ -1029,13 +1027,7 @@ function serializeTile(id) {
 	}
 
 	if ((type === TYPE_KEY.EXIT || type === TYPE_KEY.ENDING) && tile[id].lockItem != null) {
-		out += ARG_KEY.LOCK + " " + tile[id].lockItem;
-
-		if (tile[id].lockToll > 0) {
-			out += " " + tile[id].lockToll;
-		}
-
-		out += "\n";
+		out += ARG_KEY.LOCK + " " + tile[id].lockItem + "\n";
 	}
 
 	return out;
