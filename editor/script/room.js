@@ -66,10 +66,6 @@ function RoomTool(controls) {
 
 				room[curRoom].tilemap[y][x] = drawingId;
 
-				if (tile[drawingId].type === TYPE_KEY.TILE) {
-					isDragAddingTiles = true;
-				}
-
 				refreshGameData();
 				self.drawEditMap();
 				events.Raise("change_room", { id: curRoom });
@@ -78,6 +74,7 @@ function RoomTool(controls) {
 		else if (curEditTool === EditTool.Erase) {
 			room[curRoom].tilemap[y][x] = NULL_ID;
 			removeAllOverlayTilesAtLocation(curRoom, x, y);
+
 			refreshGameData();
 			self.drawEditMap();
 			events.Raise("change_room", { id: curRoom });
@@ -137,6 +134,7 @@ function RoomTool(controls) {
 
 		if (curEditTool === EditTool.Paint && tile[drawingId].type === TYPE_KEY.TILE) {
 			room[curRoom].tilemap[y][x] = drawingId;
+
 			refreshGameData();
 			self.drawEditMap();
 			events.Raise("change_room", { id: curRoom });
@@ -144,6 +142,7 @@ function RoomTool(controls) {
 		else if (curEditTool === EditTool.Erase) {
 			room[curRoom].tilemap[y][x] = NULL_ID;
 			removeAllOverlayTilesAtLocation(curRoom, x, y);
+
 			refreshGameData();
 			self.drawEditMap();
 			events.Raise("change_room", { id: curRoom });
@@ -166,10 +165,6 @@ function RoomTool(controls) {
 
 	function onTouchEnd(e) {
 		e.preventDefault();
-		// var fakeEvent = { target:e.target, clientX:e.touches[0].clientX, clientY:e.touches[0].clientY };
-		// map_onMouseUp( fakeEvent );
-		isDragAddingTiles = false;
-		isDragDeletingTiles = false;
 	}
 
 	var mapEditAnimationLoop;

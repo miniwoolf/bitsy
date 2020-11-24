@@ -358,7 +358,7 @@ function PaintTool(controls) {
 		if (nextId != null) {
 			var tileOptions = {
 				drawingData: imageData,
-				destRoom: type === "EXT" ? "0" : null, // what if there's no room "0"?
+				destRoom: (type === "EXT") ? sortedIdList(room)[0] : null,
 			};
 
 			createTile(nextId, type, tileOptions);

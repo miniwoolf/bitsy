@@ -1616,6 +1616,8 @@ function drawRoom(room, options) {
 		}
 	}
 	else {
+		background = createGrid(roomsize);
+
 		// for edit mode // todo : consolidate?
 		for (var i = 0; i < room.tilemap.length; i++) {
 			for (var j = 0; j < room.tilemap[i].length; j++) {
