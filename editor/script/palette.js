@@ -42,10 +42,11 @@ function PaletteTool(colorPicker, controls) {
 	controls.addButton.onclick = function() {
 		var pal = palette[GetSelectedId()];
 		var nextIndex = pal.colors.length;
-		var shiftedIndex = color.ShiftedColorIndex(nextIndex, pal.indexOffset);
+		var shiftedIndex = color.ShiftedColorIndex(GetSelectedId(), nextIndex);
 		pal.colors.push(color.GetDefaultColor(shiftedIndex).slice(0,3));
 		colorPickerIndex = nextIndex;
 		refreshGameData();
+		initRoom(curRoom);
 		UpdatePaletteUI();
 	};
 
@@ -54,10 +55,13 @@ function PaletteTool(colorPicker, controls) {
 		pal.colors.pop();
 		colorPickerIndex = pal.colors.length - 1;
 		refreshGameData();
+		initRoom(curRoom);
 		UpdatePaletteUI();
 	};
 
 	function AppendColorSelectInput(form, index, shiftedIndex) {
+		console.log("SHIFTED INDEX " + shiftedIndex);
+
 		var description = shiftedIndex < PaletteColorDescriptions.length ?
 			PaletteColorDescriptions[shiftedIndex] : null;
 
@@ -88,7 +92,7 @@ function PaletteTool(colorPicker, controls) {
 		colorLabel.appendChild(iconSpan);
 
 		var textSpan = document.createElement("span");
-		textSpan.innerText = description ? description.name : "color " + shiftedIndex; // todo : localize
+		textSpan.innerText = description ? description.name : "color " + index; // todo : localize
 		colorLabel.appendChild(textSpan);
 
 		return colorLabel;
@@ -116,7 +120,7 @@ function PaletteTool(colorPicker, controls) {
 		controls.colorSelectForm.innerHTML = "";
 
 		for (var i = 0; i < pal.colors.length; i++) {
-			var shiftedIndex = color.ShiftedColorIndex(i, pal.indexOffset);
+			var shiftedIndex = color.ShiftedColorIndex(GetSelectedId(), i);
 			var label = AppendColorSelectInput(controls.colorSelectForm, i, shiftedIndex);
 			labelElements.push(label);
 		}

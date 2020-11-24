@@ -50,7 +50,7 @@ function bitsyTextureCreate(width, height) {
 // todo : revisit how I handle pixel scaling?
 function bitsyTextureSetPixel(textureId, x, y, scale, colorIndex) {
 	var img = textureCache[textureId].img;
-	var color = paletteMemory[colorIndex];
+	var color = (colorIndex >= 0 && colorIndex < paletteMemory.length) ? paletteMemory[colorIndex] : paletteMemory[0];
 
 	for (var sy = 0; sy < scale; sy++) {
 		for (var sx = 0; sx < scale; sx++) {
@@ -66,7 +66,7 @@ function bitsyTextureSetPixel(textureId, x, y, scale, colorIndex) {
 
 function bitsyTextureFill(textureId, colorIndex) {
 	var img = textureCache[textureId].img;
-	var color = paletteMemory[colorIndex];
+	var color = (colorIndex >= 0 && colorIndex < paletteMemory.length) ? paletteMemory[colorIndex] : paletteMemory[0];
 
 	for (var i = 0; i < img.data.length; i += 4) {
 		img.data[i + 0] = color[0];
@@ -108,5 +108,5 @@ function bitsyPaletteSetColor(index, r, g, b, a) {
 }
 
 function bitsyPaletteIsTransparent(index) {
-	return paletteMemory[index][3] === 0;
+	return index < paletteMemory.length ? paletteMemory[index][3] === 0 : false;
 }

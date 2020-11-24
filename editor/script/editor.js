@@ -596,8 +596,10 @@ function start() {
 			deleteButton : document.getElementById("deletePaletteColor"),
 		});
 
+	// tood... move into palette tool?
 	events.Listen("palette_change", function(event) {
 		refreshGameData();
+		initRoom(curRoom);
 	});
 
 	events.Listen("palette_list_change", function(event) {

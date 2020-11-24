@@ -879,11 +879,12 @@ function ColorSettingsControl(controls, onColorChange) {
 	this.Update = function(id) {
 		drawingId = id;
 		var isVisible = ENABLE_COLOR_OVERRIDE;
-		UpdateControls(isVisible);
+		var isOtherVisible = (WRITABLE_COLOR_START < COLOR_INDEX.BACKGROUND) || (PALETTE_SIZE === null);
+		UpdateControls(isVisible, isOtherVisible);
 		return isVisible;
 	}
 
-	function UpdateControls(isVisible) {
+	function UpdateControls(isVisible, isOtherVisible) {
 		if (isVisible) {
 			// color
 			controls.colorContainer.style.display = "flex";
@@ -892,7 +893,7 @@ function ColorSettingsControl(controls, onColorChange) {
 				controls.colorSelect.value = tile[drawingId].col;
 				controls.colorIndexInput.style.display = "none";
 			}
-			else {
+			else if (isOtherVisible) {
 				controls.colorSelect.value = "other";
 				controls.colorIndexInput.style.display = "flex";
 				controls.colorIndexInput.value = tile[drawingId].col;
@@ -905,11 +906,14 @@ function ColorSettingsControl(controls, onColorChange) {
 				controls.backgroundSelect.value = tile[drawingId].bgc;
 				controls.backgroundIndexInput.style.display = "none";
 			}
-			else {
+			else if (isOtherVisible) {
 				controls.backgroundSelect.value = "other";
 				controls.backgroundIndexInput.style.display = "flex";
 				controls.backgroundIndexInput.value = tile[drawingId].bgc;
 			}
+
+			controls.colorOtherOption.style.display = isOtherVisible ? "block" : "none";
+			controls.backgroundOtherOption.style.display = isOtherVisible ? "block" : "none";
 		}
 		else {
 			controls.colorContainer.style.display = "none";

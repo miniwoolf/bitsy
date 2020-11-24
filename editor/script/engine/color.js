@@ -48,8 +48,15 @@ function Color() {
 	}
 
 	// todo : name?
-	function ShiftedColorIndex(index, indexOffset) {
-		return (index + indexOffset) % PALETTE_SIZE;
+	function ShiftedColorIndex(palId, index) {
+		var offset = (palId in palette) ? palette[palId].indexOffset : COLOR_INDEX.BACKGROUND;
+		var shiftedIndex = index + offset;
+
+		if (PALETTE_SIZE) {
+			shiftedIndex = shiftedIndex % PALETTE_SIZE;
+		}
+
+		return shiftedIndex;
 	}
 	this.ShiftedColorIndex = ShiftedColorIndex;
 
@@ -60,11 +67,21 @@ function Color() {
 
 		if (pal != undefined && pal != null) {
 			for (var i = 0; i < pal.colors.length; i++) {
-				var index = ShiftedColorIndex(i, pal.indexOffset);
+				var index = ShiftedColorIndex(pal.id, i);
 				var alpha = (index === COLOR_INDEX.TRANSPARENT) ? 0 : 255;
-				palette[index] = pal.colors[i].concat([alpha]);
+
+				if (index < palette.length) {
+					palette[index] = pal.colors[i].concat([alpha]);
+				}
+				else {
+					palette.push(pal.colors[i].concat([alpha]));
+				}
 			}
 		}
+	};
+
+	this.RoomPaletteSize = function() {
+		return palettes[PALETTE_ID.ROOM] ? palettes[PALETTE_ID.ROOM].length : 0;
 	};
 
 	this.StoreRoomPalette = function() {
@@ -74,29 +91,30 @@ function Color() {
 	this.CreateFadePalette = function(clearIndex) {
 		palettes[PALETTE_ID.FADE] = [];
 
-		for (var i = 0; i < PALETTE_SIZE; i++) {
+		for (var i = 0; i < palettes[PALETTE_ID.FADE].length; i++) {
 			palettes[PALETTE_ID.FADE].push(palettes[PALETTE_ID.PREV][clearIndex]);
 		}
 	};
 
 	function UpdateSystemPalette(paletteIdA, paletteIdB, delta) {
-		bitsyPaletteRequestSize(PALETTE_SIZE); // todo : do this on every update?
-
 		if (paletteIdA === undefined || paletteIdA === null) {
 			paletteIdA = PALETTE_ID.ROOM;
 		}
 
+		bitsyPaletteRequestSize(palettes[paletteIdA].length); // todo : do this on every update?
+
 		if (paletteIdB != undefined && paletteIdB != null && delta != undefined && delta != null) {
-			for (var i = 0; i < PALETTE_SIZE; i++) {
+			for (var i = 0; i < palettes[paletteIdA].length; i++) {
 				var colorA = palettes[paletteIdA][i];
-				var colorB = palettes[paletteIdB][i];
+				var colorB = i < palettes[paletteIdB].length ? palettes[paletteIdB][i] : palettes[paletteIdB][COLOR_INDEX.BACKGROUND];
 				var deltaColor = LerpColor(colorA, colorB, delta);
 				bitsyPaletteSetColor(i, deltaColor[0], deltaColor[1], deltaColor[2], deltaColor[3]);
 			}
 		}
 		else {
-			for (var i = 0; i < PALETTE_SIZE; i++) {
+			for (var i = 0; i < palettes[paletteIdA].length; i++) {
 				var color = palettes[paletteIdA][i];
+				console.log(color);
 				bitsyPaletteSetColor(i, color[0], color[1], color[2], color[3]);
 			}
 		}
@@ -125,7 +143,14 @@ function Color() {
 
 	function GetColor(index, id) {
 		var palette = palettes[id ? id : PALETTE_ID.ROOM];
-		return palette[GetColorIndex(index)];
+
+		var i = GetColorIndex(index);
+
+		if (i < 0 || index >= palette.length) {
+			i = COLOR_INDEX.BACKGROUND;
+		}
+
+		return palette[i];
 	};
 	this.GetColor = GetColor;
 
@@ -138,7 +163,9 @@ function Color() {
 	}
 
 	this.GetDefaultColor = function(index) {
-		return CreateDefaultPalette()[index];
+		var defaultPalette = CreateDefaultPalette();
+
+		return index >= defaultPalette.length ? [0,0,0,0] : CreateDefaultPalette()[index];
 	}
 
 	this.GetDefaultPalette = function() {

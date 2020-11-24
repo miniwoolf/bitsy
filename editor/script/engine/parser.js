@@ -184,20 +184,29 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 	var colors = [];
 	var name = null;
 
+	var maxWritablePaletteSize = (PALETTE_SIZE ? (PALETTE_SIZE - WRITABLE_COLOR_START) : PALETTE_SIZE);
+
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
 		var args = lines[i].split(" ");
+
 		if (args[0] === ARG_KEY.NAME) {
 			name = lines[i].split(/\s(.+)/)[1];
 		}
 		else if (flags.PAL_FORMAT === 0) {
 			var col = [];
+
 			lines[i].split(LEGACY_KEY.SEPARATOR).forEach(function(i) {
 				col.push(parseInt(i));
 			});
-			colors.push(col);
+
+			if (maxWritablePaletteSize === null || colors.length < maxWritablePaletteSize) {
+				colors.push(col);
+			}
 		}
 		else if (flags.PAL_FORMAT === 1) {
-			colors.push(fromHex(lines[i]));
+			if (maxWritablePaletteSize === null || colors.length < maxWritablePaletteSize) {
+				colors.push(fromHex(lines[i]));
+			}
 		}
 
 		i++;
@@ -387,6 +396,10 @@ function parseMap(lines, i) {
 	return i;
 }
 
+function isColorIndexInValidRange(index) {
+	return (index >= WRITABLE_COLOR_START) && (PALETTE_SIZE === null || index < PALETTE_SIZE);
+}
+
 function parseTile(lines, i, type) {
 	var id = getId(lines[i]);
 	i++;
@@ -421,13 +434,25 @@ function parseTile(lines, i, type) {
 			/* NAME */
 			options.name = lines[i].split(/\s(.+)/)[1];
 		}
-		else if (getType(lines[i]) === ARG_KEY.COLOR && ENABLE_COLOR_OVERRIDE) {
-			/* COLOR OFFSET INDEX */
-			options.col = parseInt(getId(lines[i]));
+		else if (getType(lines[i]) === ARG_KEY.COLOR) {
+			if (ENABLE_COLOR_OVERRIDE) {
+				/* COLOR OFFSET INDEX */
+				var colorIndexOffset = parseInt(getId(lines[i]));
+				var colorIndex = COLOR_INDEX.BACKGROUND + colorIndexOffset;
+				if (isColorIndexInValidRange(colorIndex)) {
+					options.col = colorIndexOffset;
+				}
+			}
 		}
-		else if (getType(lines[i]) === ARG_KEY.BACKGROUND && ENABLE_COLOR_OVERRIDE) {
-			/* BACKGROUND COLOR OFFSET INDEX */
-			options.bgc = parseInt(getId(lines[i]));
+		else if (getType(lines[i]) === ARG_KEY.BACKGROUND) {
+			if (ENABLE_COLOR_OVERRIDE) {
+				/* BACKGROUND COLOR OFFSET INDEX */
+				var colorIndexOffset = parseInt(getId(lines[i]));
+				var colorIndex = COLOR_INDEX.BACKGROUND + colorIndexOffset;
+				if (isColorIndexInValidRange(colorIndex)) {
+					options.bgc = colorIndexOffset;
+				}
+			}
 		}
 		else if (getType(lines[i]) === ARG_KEY.IS_WALL && type === TYPE_KEY.TILE) {
 			// only tiles set their initial collision mode
@@ -697,12 +722,29 @@ function parseFlag(lines, i) {
 	flags[id] = parseInt(valStr);
 
 	// handle secret flags
-	if (id === SECRET_KEY.INFINITE_MEM && flags[id] != 0) {
+	if (id === SECRET_KEY.INFINITE_MEMORY && flags[id] != 0) {
 		DEFAULT_REGISTRY_SIZE = null;
 		MAP_REGISTRY_SIZE = null;
 	}
 
+	if (id === SECRET_KEY.SUPER_PALETTE && flags[id] != 0) {
+		PALETTE_SIZE = null;
+	}
+
+	if (id === SECRET_KEY.SUPER_ANIMATION && flags[id] != 0) {
+		ANIMATION_SIZE = null;
+	}
+
+	if (id === SECRET_KEY.SUPER_COLOR && flags[id] != 0) {
+		ENABLE_COLOR_OVERRIDE = true;
+	}
+
+	if (id === SECRET_KEY.SECRET_COLOR && flags[id] != 0) {
+		WRITABLE_COLOR_START = COLOR_INDEX.TEXTBOX;
+	}
+
 	i++;
+
 	return i;
 }
 
@@ -841,16 +883,24 @@ function serializeWorld(skipFonts) {
 }
 
 function serializePalette(id) {
-	console.log("SERIALIZE PAL " + id);
-	console.log(palette[id]);
-
 	var out = "";
 
 	out += TYPE_KEY.PALETTE + " " + id + "\n";
 
-	for (var i = 0; i < palette[id].colors.length; i++) {
+	var maxWritablePaletteSize = (PALETTE_SIZE ? (PALETTE_SIZE - WRITABLE_COLOR_START) : PALETTE_SIZE);
+
+	var paletteSize = maxWritablePaletteSize ?
+		Math.min(maxWritablePaletteSize, palette[id].colors.length) : palette[id].colors.length;
+
+	for (var i = 0; i < paletteSize; i++) {
 		var clr = palette[id].colors[i];
 		out += toHex(clr) + "\n";
+	}
+
+	if (paletteSize < 3) {
+		for (var i = 0; i < (3 - paletteSize); i++) {
+			out += toHex([0, 0, 0]) + "\n";
+		}
 	}
 
 	if (palette[id].name != null) {
@@ -990,13 +1040,17 @@ function serializeTile(id) {
 	}
 
 	if (ENABLE_COLOR_OVERRIDE && tile[id].bgc != null && tile[id].bgc != undefined && tile[id].bgc != 0) {
-		/* BACKGROUND COLOR OVERRIDE */
-		out += ARG_KEY.BACKGROUND + " " + tile[id].bgc + "\n";
+		var inValidRange = isColorIndexInValidRange(COLOR_INDEX.BACKGROUND + tile[id].bgc);
+		if (inValidRange) {
+			/* BACKGROUND COLOR OVERRIDE */
+			out += ARG_KEY.BACKGROUND + " " + tile[id].bgc + "\n";
+		}
 	}
 
 	if (ENABLE_COLOR_OVERRIDE && tile[id].col != null && tile[id].col != undefined) {
 		var defaultColor = isBackgroundTile ? 1 : 2;
-		if (tile[id].col != defaultColor) {
+		var inValidRange = isColorIndexInValidRange(COLOR_INDEX.BACKGROUND + tile[id].col);
+		if (tile[id].col != defaultColor && inValidRange) {
 			/* COLOR OVERRIDE */
 			out += ARG_KEY.COLOR +  " " + tile[id].col + "\n";
 		}

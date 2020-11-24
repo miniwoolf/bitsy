@@ -113,8 +113,6 @@ function resetFlags() {
 		ROOM_FORMAT : 0, // 0 = non-comma separated, 1 = comma separated
 		PAL_FORMAT : 0, // 0 = rgb comma separated, 1 = hex
 	};
-
-	flags[SECRET_KEY.INFINITE_MEM] = 0; // 1 = unlimited registry size
 }
 resetFlags(); //init flags on load script
 

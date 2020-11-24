@@ -32,6 +32,11 @@ function createTextureFromTileSource(tileSource, bgcIndex, colIndex) {
 		for (var x = 0; x < tilesize; x++) {
 			var px = tileSource[y][x];
 			var colorIndex = (px === 1) ? foregroundColorIndex : backgroundColorIndex;
+
+			if (colorIndex < 0 || colorIndex >= color.RoomPaletteSize()) {
+				colorIndex = COLOR_INDEX.BACKGROUND;
+			}
+
 			bitsyTextureSetPixel(textureId, x, y, scale, colorIndex);
 		}
 	}
