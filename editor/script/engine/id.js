@@ -67,8 +67,6 @@ var ID_CHAR_MAPPING = [
 	0x0058,
 	0x0059,
 	0x005A,
-	// @ (avatar): // todo : move?
-	0x0040,
 	// other symbols from page 437:
 	0x263A, // row 0
 	0x263B,
@@ -122,6 +120,7 @@ var ID_CHAR_MAPPING = [
 	0x003D,
 	0x003E,
 	0x003F,
+	0x0040, // row 4
 	0x005B, // row 5
 	0x005C,
 	0x005D,
