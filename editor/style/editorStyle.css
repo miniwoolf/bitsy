@@ -676,6 +676,8 @@ span.controlBox {
 	background: #d9d9d9;
 	border-radius: 5px 0px 0px 5px;
 	line-height: 100%;
+	display: flex;
+	align-items: center;
 }
 
 .textInputFieldIcon .bitsy_icon {
