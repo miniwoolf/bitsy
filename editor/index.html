@@ -1347,6 +1347,51 @@
 								<span class="localize text_direction_description">Option for languages that read right to left</span>
 							</div>
 						</div>
+						<div class="controlBox">
+							<div style="display: flex; align-items: center;">
+								<span class="bitsy_icon icon_space_right" style="display: inline-flex; margin-right: 5px;">help</span>
+								secret codes
+							</div>
+							<div style="display: flex;">
+								<input type="text" id="secretInput" class="darkTextInput" style="flex-grow: 1;" placeholder="~~~ try: SECRET_COL ~~~"></input>
+								<button style="margin-left: 5px;" onclick="trySecret();">
+									<span class="bitsy_icon">sprite</span>
+								</button>
+							</div>
+							<!-- don't look! you've found some ~~~~secretssss~~~ -->
+							<div style="padding: 5px;">
+								<div id="secret_INFINITE_MEM" style="display: flex; align-items: center;">
+									<button style="margin-right: 5px;" onclick="clear_INFINITE_MEM();">
+										<span class="bitsy_icon">close</span>
+									</button>
+									<span>INFINITE_MEM</span>
+								</div>
+								<div id="secret_SUPER_PAL" style="display: flex; align-items: center;">
+									<button style="margin-right: 5px;" onclick="clear_SUPER_PAL();">
+										<span class="bitsy_icon">close</span>
+									</button>
+									<span>SUPER_PAL</span>
+								</div>
+								<div id="secret_SUPER_ANM" style="display: flex; align-items: center;">
+									<button style="margin-right: 5px;" onclick="clear_SUPER_ANM();">
+										<span class="bitsy_icon">close</span>
+									</button>
+									<span>SUPER_ANM</span>
+								</div>
+								<div id="secret_SUPER_COL" style="display: flex; align-items: center;">
+									<button style="margin-right: 5px;" onclick="clear_SUPER_COL();">
+										<span class="bitsy_icon">close</span>
+									</button>
+									<span>SUPER_COL</span>
+								</div>
+								<div id="secret_SECRET_COL" style="display: flex; align-items: center;">
+									<button style="margin-right: 5px;" onclick="clear_SECRET_COL();">
+										<span class="bitsy_icon">close</span>
+									</button>
+									<span>SECRET_COL</span>
+								</div>
+							</div>
+						</div>
 						<div>
 							<!-- todo : localize -->
 							<span>export settings</span>

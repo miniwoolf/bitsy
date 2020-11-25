@@ -108,6 +108,14 @@ input {
 	font-family: Menlo, Consolas, monospace;
 }
 
+.darkTextInput {
+	background: black;
+	color: white;
+	border: none;
+	padding: 5px;
+	border-radius: 2px;
+}
+
 .warning {
 	padding: 10px;
 }

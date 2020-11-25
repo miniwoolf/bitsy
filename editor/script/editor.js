@@ -354,11 +354,6 @@ function isPortraitOrientation() {
 }
 
 function start() {
-	events.Listen("game_data_change", function(event) {
-		// TODO -- over time I can move more things in here
-		// on the other hand this is still sort of global thing that we don't want TOO much of
-	});
-
 	isPlayerEmbeddedInEditor = true; // flag for game player to make changes specific to editor
 
 	var versionLabelElements = document.getElementsByClassName("curVersionLabel");
@@ -960,16 +955,15 @@ function on_game_data_change() {
 	on_game_data_change_core();
 
 	refreshGameData();
-
-	// ui stuff
-	refreshGameData();
 }
 
 function on_game_data_change_core() {
-	// console.log(document.getElementById("game_data").value);
+	console.log(document.getElementById("game_data").value);
 
 	clearGameData();
 	var version = parser.ParseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data
+
+	updateSecrets();
 
 	// TODO RENDERER : refresh images
 
@@ -1938,3 +1932,64 @@ function hideFontMissingCharacterWarning() {
 
 /* ICONS */
 var iconUtils = new IconUtils(); // TODO : move?
+
+/* ??? */
+function updateSecrets() {
+	document.getElementById("secret_INFINITE_MEM").style.display =
+		(flags.INFINITE_MEM === 1) ? "flex" : "none";
+	document.getElementById("secret_SUPER_PAL").style.display =
+		(flags.SUPER_PAL === 1) ? "flex" : "none";
+	document.getElementById("secret_SUPER_ANM").style.display =
+		(flags.SUPER_ANM === 1) ? "flex" : "none";
+	document.getElementById("secret_SUPER_COL").style.display =
+		(flags.SUPER_COL === 1) ? "flex" : "none";
+	document.getElementById("secret_SECRET_COL").style.display =
+		(flags.SECRET_COL === 1) ? "flex" : "none";
+}
+
+function trySecret() {
+	var secretCode = document.getElementById("secretInput").value;
+
+	for (id in SECRET_KEY) {
+		if (SECRET_KEY[id] === secretCode) {
+			flags[SECRET_KEY[id]] = 1;
+
+			alert("found one! :)"); // todo : ?
+		}
+	}
+
+	document.getElementById("secretInput").value = "";
+
+	refreshGameData();
+	updateSecrets();
+}
+
+function clear_INFINITE_MEM() {
+	delete flags.INFINITE_MEM;
+	refreshGameData();
+	updateSecrets();
+}
+
+function clear_SUPER_PAL() {
+	delete flags.SUPER_PAL;
+	refreshGameData();
+	updateSecrets();
+}
+
+function clear_SUPER_ANM() {
+	delete flags.SUPER_ANM;
+	refreshGameData();
+	updateSecrets();
+}
+
+function clear_SUPER_COL() {
+	delete flags.SUPER_COL;
+	refreshGameData();
+	updateSecrets();
+}
+
+function clear_SECRET_COL() {
+	delete flags.SECRET_COL;
+	refreshGameData();
+	updateSecrets();
+}

@@ -229,6 +229,12 @@ function PaletteTool(colorPicker, controls) {
 				hslToRgb(Math.random(), 1.0, 0.5),
 				hslToRgb(Math.random(), 1.0, 0.5) ];
 
+			// todo : do I want this?
+			if (flags.SECRET_COL === 1) {
+				randomColors.push([0,0,0]);
+				randomColors.push([255,255,255]);
+			}
+
 			palette[id] = createPalette(id, null, randomColors);
 
 			events.Raise("add_palette", { id: id });
