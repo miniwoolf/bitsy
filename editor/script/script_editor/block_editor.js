@@ -206,6 +206,11 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		var editor = new ConditionalEditor(token, self);
 		self.AddChild(editor);
 	};
+
+	AddSelectionBehavior(this,
+		function() {},
+		function() {},
+		true);
 }
 
 function DialogExpressionEditor(dialogExpression, parentEditor) {

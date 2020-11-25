@@ -371,6 +371,7 @@ function FindTool(controls) {
 				getThumbImgId(id),
 				getThumbNameTextId(id),
 				categoryItem,
+				categoryInfo.name,
 				categoryInfo.getCaption(categoryItem),
 				categoryInfo.getIconId(categoryItem),
 				createOnClick(id),
@@ -538,10 +539,11 @@ function FindTool(controls) {
 		};
 	}
 
-	function CreateThumbnail(thumbId, thumbImgId, thumbNameTextId, categoryItem, caption, iconId, onClick, hasRenderer) {
+	function CreateThumbnail(thumbId, thumbImgId, thumbNameTextId, categoryItem, categoryName, caption, iconId, onClick, hasRenderer) {
 		var div = document.createElement("div");
 		div.id = thumbId;
 		div.classList.add("findToolItem");
+		div.title = caption + " (" + categoryName + ")";
 
 		var thumbnail = document.createElement("div");
 		thumbnail.classList.add("findToolThumbnail");

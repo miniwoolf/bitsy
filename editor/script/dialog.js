@@ -468,7 +468,7 @@ function DialogControl(parentPanelId) {
 		defaultScript :
 			'{>>\n' +
 			'    {FN {FRM}\n' +
-			'        {HOP "RGT"}\n' +
+			'        {HOP THIS "DWN"}\n' +
 			'    }\n' +
 			'}',
 		selectControl : null,

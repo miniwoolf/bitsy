@@ -246,10 +246,10 @@ function serializeList(expression, indentDepth) {
 	else if (isSequence(listType)) {
 		out += serializeMulti(expression.list, indentDepth);
 	}
-	else if (isChoice(listType)) {
+	else if (isConditional(listType) || isChoice(listType)) {
 		out += serializeAlternating(expression.list, indentDepth);
 	}
-	else if (isConditional(listType) || isTable(listType)) {
+	else if (isTable(listType)) {
 		out += serializePaired(expression.list, indentDepth);
 	}
 	else if (isFunctionDefinition(listType)) {

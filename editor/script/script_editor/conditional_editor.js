@@ -41,6 +41,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		addButton.style.display = "none";
 		addItemCondition.style.display = "block";
 		addVariableCondition.style.display = "block";
+		addSpriteEntryCondition.style.display = "block";
 		addDefaultCondition.style.display = "block";
 		cancelButton.style.display = "block";
 
@@ -48,13 +49,14 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	}
 	addConditionRootDiv.appendChild(addButton);
 
+	// todo : localize?
 	var addItemCondition = document.createElement("button");
 	addItemCondition.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
 		+ localization.GetStringOrFallback("branch_type_item", "item branch");
 	addItemCondition.style.display = "none";
 	addItemCondition.onclick = function() {
-		var conditionToken = scriptNext.Parse('{GT {ITM "1"} 0}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
+		var conditionToken = scriptNext.Parse('{GT {ITM "3"} 0}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{>> you have tea!}', DialogWrapMode.No);
 
 		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
@@ -63,6 +65,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		addButton.style.display = "block";
 		addItemCondition.style.display = "none";
 		addVariableCondition.style.display = "none";
+		addSpriteEntryCondition.style.display = "none";
 		addDefaultCondition.style.display = "none";
 		cancelButton.style.display = "none";
 	}
@@ -73,8 +76,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_variable", "variable branch");
 	addVariableCondition.style.display = "none";
 	addVariableCondition.onclick = function() {
-		var conditionToken = scriptNext.Parse('{GT a 5}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
+		var conditionToken = scriptNext.Parse('{GT A 5}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse('{>> variable A is more than 5}', DialogWrapMode.No);
 
 		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
@@ -83,10 +86,33 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		addButton.style.display = "block";
 		addItemCondition.style.display = "none";
 		addVariableCondition.style.display = "none";
+		addSpriteEntryCondition.style.display = "none";
 		addDefaultCondition.style.display = "none";
 		cancelButton.style.display = "none";
 	}
 	addConditionRootDiv.appendChild(addVariableCondition);
+
+	var addSpriteEntryCondition = document.createElement("button");
+	// todo : localize
+	addSpriteEntryCondition.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
+		+ "sprite state branch";
+	addSpriteEntryCondition.style.display = "none";
+	addSpriteEntryCondition.onclick = function() {
+		var conditionToken = scriptNext.Parse('{IS {: THIS TYPE} "SPR"}', DialogWrapMode.No);
+		var resultToken = scriptNext.Parse("{>> I'm a sprite!}", DialogWrapMode.No);
+
+		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
+		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
+		self.InsertChild(optionEditor, insertIndex);
+
+		addButton.style.display = "block";
+		addItemCondition.style.display = "none";
+		addVariableCondition.style.display = "none";
+		addSpriteEntryCondition.style.display = "none";
+		addDefaultCondition.style.display = "none";
+		cancelButton.style.display = "none";
+	}
+	addConditionRootDiv.appendChild(addSpriteEntryCondition);
 
 	var addDefaultCondition = document.createElement("button");
 	addDefaultCondition.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
@@ -101,9 +127,11 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		UpdateNodeOptions();
 		parentEditor.NotifyUpdate();
 
+		// todo : make this a shared function?
 		addButton.style.display = "block";
 		addItemCondition.style.display = "none";
 		addVariableCondition.style.display = "none";
+		addSpriteEntryCondition.style.display = "none";
 		addDefaultCondition.style.display = "none";
 		cancelButton.style.display = "none";
 	}
@@ -302,8 +330,14 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 
 	AddSelectionBehavior(
 		this,
-		function() { comparisonEditor.Select(); },
-		function() { comparisonEditor.Deselect(); });
+		function() {
+			comparisonEditor.Select();
+			resultEditor.Select();
+		},
+		function() {
+			comparisonEditor.Deselect();
+			resultEditor.Deselect();
+		});
 }
 
 function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {

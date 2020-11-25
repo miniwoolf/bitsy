@@ -1031,7 +1031,6 @@ function move(instance, direction, canEnterNeighborRoom) {
 		}
 	}
 
-
 	// queue knock into scripts
 	for (var i = 0; i < knockIntoInstances.length; i++) {
 		var other = knockIntoInstances[i];
@@ -1379,7 +1378,7 @@ function getEnding(x, y) {
 }
 
 function getTile(x, y) {
-	var t = getRoom().tilemap[y][x];
+	var t = tilemap[y][x];
 	return t;
 }
 

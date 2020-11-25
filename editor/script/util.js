@@ -111,6 +111,32 @@ function debugFillAllMaps() {
 	events.Raise("game_data_change");
 }
 
+function debugPrintGrid(grid) {
+	var gridStr = ""
+	for (var i = 0; i < grid.length; i++) {
+		for (var j = 0; j < grid[i].length; j++) {
+			gridStr += grid[i][j];
+		}
+		gridStr += "\n";
+	}
+
+	console.log(gridStr);
+}
+
+function debugPrintActiveTilemap() {
+	debugPrintGrid(tilemap);
+}
+
+function debugPrintActiveSpritemap() {
+	var grid = createGrid(roomsize);
+
+	for (var id in spriteInstances) {
+		grid[spriteInstances[id].y][spriteInstances[id].x] = spriteInstances[id].id;
+	}
+
+	debugPrintGrid(grid);
+}
+
 function clamp(val, min, max) {
 	return Math.max(Math.min(val, max), min);
 }
