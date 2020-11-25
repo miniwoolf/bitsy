@@ -289,5 +289,12 @@ function SequenceOptionEditor(optionExpression, parentEditor) {
 		editor.OnNodeExit(event);
 	}
 
-	AddSelectionBehavior(this);
+	AddSelectionBehavior(
+		this,
+		function() {
+			editor.Select();
+		},
+		function() {
+			editor.Select();
+		});
 }
