@@ -1407,13 +1407,13 @@ function isExitValid(e) {
 	return hasValidStartPos && hasDest && hasValidRoomDest;
 }
 
-function createGrid(size) {
+function createGrid(size, fill) {
 	var grid = [];
 
 	for (var i = 0; i < size; i++) {
 		var row = [];
 		for (var j = 0; j < size; j++) {
-			row.push(NULL_ID);
+			row.push((fill != undefined && fill != null) ? fill : NULL_ID);
 		}
 
 		grid.push(row);

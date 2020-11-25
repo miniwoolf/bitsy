@@ -158,8 +158,8 @@ function PaintTool(controls) {
 		ctx.fillStyle = "rgb(" + foregroundColor[0] + "," + foregroundColor[1] + "," + foregroundColor[2] + ")";
 
 		//draw pixels
-		for (var x = 0; x < 8; x++) {
-			for (var y = 0; y < 8; y++) {
+		for (var x = 0; x < tilesize; x++) {
+			for (var y = 0; y < tilesize; y++) {
 				// draw alternate frame
 				if (isCurDrawingAnimated() && curDrawingAltFrameData()[y][x] === 1) {
 					ctx.globalAlpha = 0.3;

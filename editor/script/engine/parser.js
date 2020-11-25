@@ -86,9 +86,9 @@ function parseWorld(file) {
 		else if (getType(curLine) === TYPE_KEY.DEFAULT_FONT) {
 			i = parseFontName(lines, i);
 		}
-		else if (getType(curLine) === TYPE_KEY.TEXT_SCALE) {
-			i = parseTextScale(lines, i);
-		}
+		// else if (getType(curLine) === TYPE_KEY.TEXT_SCALE) {
+		// 	i = parseTextScale(lines, i);
+		// }
 		else if (getType(curLine) === TYPE_KEY.TEXT_DIRECTION) {
 			i = parseTextDirection(lines, i);
 		}
@@ -476,9 +476,6 @@ function parseTile(lines, i, type) {
 		else if (getType(lines[i]) === ARG_KEY.BUTTON_DOWN_SCRIPT && isNotBackgroundTile) {
 			options.buttonDownDlgId = getId(lines[i]);
 		}
-		else if (getType(lines[i]) === "BUP" && isNotBackgroundTile) { // todo : implement? name? BNU? RLS?
-			// todo ... "BUTTON UP"
-		}
 		else if (getType(lines[i]) === LEGACY_KEY.POSITION && type === TYPE_KEY.SPRITE) {
 			/* STARTING POSITION */
 			// NOTE: I still need this to read in old unique position data from sprites
@@ -522,24 +519,27 @@ function parseTile(lines, i, type) {
 }
 
 function parseDrawing(lines, i) {
-	var frameList = []; //init list of frames
-	var curFrame = [];; //init first frame
+	var frameList = []; // init list of frames
+	var curFrame = createGrid(tilesize, 0); // init first frame
 
 	var y = 0;
 
-	while (y < tilesize) {
-		var l = lines[i+y];
+	// use first row to detect input tile size (must be square)
+	var inputTileSize = lines[i].length;
+	console.log(inputTileSize);
 
-		var row = [];
-		for (x = 0; x < tilesize; x++) {
-			row.push(parseInt(l.charAt(x)));
+	while (y < inputTileSize) {
+		var l = lines[i + y];
+
+		for (x = 0; x < inputTileSize; x++) {
+			if (x < tilesize && y < tilesize) {
+				curFrame[y][x] = parseInt(l.charAt(x));
+			}
 		}
-
-		curFrame.push(row);
 
 		y++;
 
-		if (y === tilesize) {
+		if (y === inputTileSize) {
 			if (ANIMATION_SIZE === null || frameList.length < ANIMATION_SIZE) {
 				frameList.push(curFrame);
 			}
@@ -548,7 +548,7 @@ function parseDrawing(lines, i) {
 
 			if (lines[i] != undefined && lines[i].charAt(0) === MISC_KEY.NEXT) {
 				// start next frame!
-				curFrame = [];
+				curFrame = createGrid(tilesize, 0);
 
 				//start the count over again for the next frame
 				i++;
@@ -558,7 +558,7 @@ function parseDrawing(lines, i) {
 		}
 	}
 
-	return { i:i, drawingData:frameList };
+	return { i: i, drawingData: frameList };
 }
 
 function parseScript(lines, i, options) {
@@ -743,6 +743,19 @@ function parseFlag(lines, i) {
 		WRITABLE_COLOR_START = COLOR_INDEX.TEXTBOX;
 	}
 
+	// TODO : ???
+	// if (id === SECRET_KEY.GRAPHICS_MODE && flags[id] === 2) {
+		// width = width * 2;
+		// height = height * 2;
+		// tilesize = tilesize * 2;
+		// scale = scale / 2;
+		// text_scale = scale;
+		// width = 256;
+		// height = 256;
+		// tilesize = 16;
+		// scale = 2;
+	// }
+
 	i++;
 
 	return i;
@@ -782,10 +795,10 @@ function serializeWorld(skipFonts) {
 	}
 
 	// todo : what should be the default?
-	if (text_scale === scale) {
-		worldStr += TYPE_KEY.TEXT_SCALE + " 1\n";
-		worldStr += "\n";
-	}
+	// if (text_scale === scale) {
+	// 	worldStr += TYPE_KEY.TEXT_SCALE + " 1\n";
+	// 	worldStr += "\n";
+	// }
 
 	if (textDirection != TEXT_DIRECTION_KEY.LEFT_TO_RIGHT) {
 		worldStr += TYPE_KEY.TEXT_DIRECTION + " " + textDirection + "\n";
