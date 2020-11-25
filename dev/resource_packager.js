@@ -17,13 +17,19 @@ var resourceFiles = [
 	"resources/export/exportStyleFixed.css",
 	"resources/export/exportStyleFull.css",
 	/* engine scripts */
-	"../editor/script/engine/bitsy.js",
-	"../editor/script/engine/font.js",
-	"../editor/script/engine/dialog.js",
-	"../editor/script/engine/script.js",
+	"../editor/script/engine/core/core_render.js",
+	"../editor/script/engine/spec.js",
+	"../editor/script/engine/keyword.js",
+	"../editor/script/engine/id.js",
+	"../editor/script/engine/parser.js",
 	"../editor/script/engine/color.js",
-	"../editor/script/engine/renderer.js",
+	"../editor/script/engine/font.js",
 	"../editor/script/engine/transition.js",
+	"../editor/script/engine/library.js",
+	"../editor/script/engine/script_next.js",
+	"../editor/script/engine/dialog.js",
+	"../editor/script/engine/renderer.js",
+	"../editor/script/engine/bitsy.js",
 ];
 
 var resourceDirectories = [
