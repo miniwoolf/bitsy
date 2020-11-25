@@ -12,35 +12,48 @@ function replaceTemplateMarker(template, marker, text) {
 	return template.substr( 0, markerIndex ) + text + template.substr( markerIndex + marker.length );
 }
 
+function insertIntoTemplate(template, resourceId, tag) {
+	var templateMarkerComment = "<!-- {" + resourceId + "} -->";
+	var resourceInTag = "<" + tag + ">" + "\n" + Resources[resourceId] + "\n" + "</" + tag + ">";
+	return replaceTemplateMarker(template, templateMarkerComment, resourceInTag);
+}
+
 this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size) {
 	var html = Resources["exportTemplate.html"].substr(); //copy template
 	// console.log(html);
 
-	html = replaceTemplateMarker( html, "@@T", title );
+	html = replaceTemplateMarker(html, "{title}", title);
 
 	if( isFixedSize ) {
-		html = replaceTemplateMarker( html, "@@C", Resources["exportStyleFixed.css"] );
-		html = replaceTemplateMarker( html, "@@Z", size + "px" );
+		html = replaceTemplateMarker(html, "{export_style}", Resources["exportStyleFixed.css"]);
+		html = replaceTemplateMarker(html, "{game_size}", size + "px");
 	}
 	else {
-		html = replaceTemplateMarker( html, "@@C", Resources["exportStyleFull.css"] );
+		html = replaceTemplateMarker(html, "{export_style}", Resources["exportStyleFull.css"]);
 	}
 
-	html = replaceTemplateMarker( html, "@@B", pageColor );
+	html = replaceTemplateMarker(html, "{background_color}", pageColor);
 
-	html = replaceTemplateMarker( html, "@@U", Resources["color_util.js"] );
-	html = replaceTemplateMarker( html, "@@X", Resources["transition.js"] );
-	html = replaceTemplateMarker( html, "@@F", Resources["font.js"] );
-	html = replaceTemplateMarker( html, "@@S", Resources["script.js"] );
-	html = replaceTemplateMarker( html, "@@L", Resources["dialog.js"] );
-	html = replaceTemplateMarker( html, "@@R", Resources["renderer.js"] );
-	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
+	// scripts
+	html = insertIntoTemplate(html, "core_render.js", "script");
+	html = insertIntoTemplate(html, "spec.js", "script");
+	html = insertIntoTemplate(html, "keyword.js", "script");
+	html = insertIntoTemplate(html, "id.js", "script");
+	html = insertIntoTemplate(html, "parser.js", "script");
+	html = insertIntoTemplate(html, "color.js", "script");
+	html = insertIntoTemplate(html, "font.js", "script");
+	html = insertIntoTemplate(html, "transition.js", "script");
+	html = insertIntoTemplate(html, "library.js", "script");
+	html = insertIntoTemplate(html, "script_next.js", "script");
+	html = insertIntoTemplate(html, "dialog.js", "script");
+	html = insertIntoTemplate(html, "renderer.js", "script");
+	html = insertIntoTemplate(html, "bitsy.js", "script");
 
 	// export the default font in its own script tag (TODO : remove if unused)
-	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
-	html = replaceTemplateMarker( html, "@@M", fontManager.GetData("ascii_small") );
+	html = replaceTemplateMarker(html, "{default_font_data_id}", "ascii_small");
+	html = replaceTemplateMarker(html, "{default_font_data}", fontManager.GetData("ascii_small"));
 
-	html = replaceTemplateMarker( html, "@@D", gameData );
+	html = replaceTemplateMarker(html, "{game_data}", gameData);
 
 	// console.log(html);
 
