@@ -52,7 +52,8 @@ var variable = {}; // todo : fix bugs now that these are actually used during th
 var playerId = null;
 var tilemap = [];
 var spriteInstances = {};
-var instanceCount = 0;
+var instanceCount = 1;
+var playerInstanceId = "1"; // todo : is this ok hardcoded?
 
 // title
 var titleDialogId = NULL_ID;
@@ -191,9 +192,9 @@ function load_game(game_data, startWithTitle) {
 
 	parser.ParseWorld(game_data);
 
-	var instance = createAvatarInstance(NULL_ID);
+	var instance = createAvatarInstance("1");
 	if (instance != null) {
-		spriteInstances[NULL_ID] = instance;
+		spriteInstances["1"] = instance;
 	}
 
 	// set the first room
@@ -541,8 +542,8 @@ function updateScriptQueue() {
 		if (animationCounter === 0) {
 			for (var i in spriteInstances) {
 				var spr = spriteInstances[i];
-				if (spr.tik != null) {
-					queueScript(spr.tik, spr, function() {}, [spr.animation.frameIndex]);
+				if (spr.tik != null && spr.id in tile) {
+					queueScript(spr.tik, spr, function() {}, [tile[spr.drw].animation.frameIndex]);
 				}
 			}
 		}
@@ -598,6 +599,7 @@ var animationTime = 400;
 function updateAnimation() {
 	animationCounter += deltaTime;
 
+	// todo : should sprites have their own animation counter? or share the global one?
 	if (animationCounter >= animationTime) {
 		for (id in tile) {
 			var til = tile[id];
@@ -1109,13 +1111,13 @@ function movePlayerThroughExit(ext) {
 function initRoom(roomId) {
 	// invalidate old sprites
 	for (var id in spriteInstances) {
-		if (id != NULL_ID) { // skip the avatar
+		if (id != playerInstanceId) { // skip the avatar
 			spriteInstances[id].isValid = false;
 			delete spriteInstances[id];
 		}
 	}
 
-	instanceCount = 0;
+	instanceCount = 1;
 	tilemap = createGrid(roomsize);
 
 	function canCreateSpriteInstance(id, x, y) {
@@ -1223,7 +1225,6 @@ function createSpriteInstance(instanceId, location) {
 	instance.SetSecret("transition_effect", definition.transition_effect); // exit only
 	instance.SetSecret("dest", definition.dest); // exit only // todo : rename "out"?
 	instance.SetSecret("lockItem", definition.lockItem); // exit & ending only
-	instance.SetSecret("animation", definition.animation);
 	instance.SetSecret("createdAtInit", false);
 	instance.SetSecret("originalX", location.x);
 	instance.SetSecret("originalY", location.y);
@@ -1383,7 +1384,7 @@ function getTile(x, y) {
 }
 
 function player() {
-	return (0 in spriteInstances) ? spriteInstances[0] : null;
+	return (playerInstanceId in spriteInstances) ? spriteInstances[playerInstanceId] : null;
 }
 
 // Sort of a hack for legacy palette code (when it was just an array)
@@ -1592,19 +1593,19 @@ function drawRoom(room, options) {
 		for (var i = 0; i < spriteIdList.length; i++) {
 			var id = spriteIdList[i];
 
-			if (id != NULL_ID) {
+			if (id != playerInstanceId) {
 				var instance = spriteInstances[id];
 				if (isPosInRoom(instance.x, instance.y)) {
-					foreground[instance.y][instance.x] = instance.id;
+					foreground[instance.y][instance.x] = id;
 				}
 			}
 		}
 
 		// draw avatar last
-		if (NULL_ID in spriteInstances && spriteInstances[NULL_ID] != null) {
-			var instance = spriteInstances[NULL_ID];
+		if (playerInstanceId in spriteInstances && spriteInstances[playerInstanceId] != null) {
+			var instance = spriteInstances[playerInstanceId];
 			if (isPosInRoom(instance.x, instance.y)) {
-				foreground[instance.y][instance.x] = instance.id;
+				foreground[instance.y][instance.x] = playerInstanceId;
 			}
 		}
 	}
@@ -1653,12 +1654,25 @@ function drawRoom(room, options) {
 	}
 
 	// draw sprites
-	for (var i = 0; i < foreground.length; i++) {
-		for (var j = 0; j < foreground[i].length; j++) {
-			var id = foreground[i][j];
+	if (drawInstances) {
+		for (var i = 0; i < foreground.length; i++) {
+			for (var j = 0; j < foreground[i].length; j++) {
+				var id = foreground[i][j];
 
-			if (id != NULL_ID && tile[id] != null) {
-				renderTarget.DrawSprite(tile[id], j, i, renderOptions);
+				if (id != NULL_ID && spriteInstances[id] != null) {
+					renderTarget.DrawSprite(spriteInstances[id], j, i, renderOptions);
+				}
+			}
+		}
+	}
+	else {
+		for (var i = 0; i < foreground.length; i++) {
+			for (var j = 0; j < foreground[i].length; j++) {
+				var id = foreground[i][j];
+
+				if (id != NULL_ID && tile[id] != null) {
+					renderTarget.DrawSprite(tile[id], j, i, renderOptions);
+				}
 			}
 		}
 	}

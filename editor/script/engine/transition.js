@@ -143,15 +143,8 @@ var TransitionManager = function() {
 	function UpdateTileEffect(effect, step, maxStep) {
 		renderer.ResetRenderCache();
 
-		// kind of hacky way to allow drawing to empty spaces during transitions
-		var emptyTile = [[]];
-		for (var y = 0; y < tilesize; y++) {
-			emptyTile[0].push([]);
-			for (var x = 0; x < tilesize; x++) {
-				emptyTile[0][y].push(0);
-			}
-		}
-		renderer.SetTileSource("0", emptyTile);
+		// kind of hacky (?) way to allow drawing to empty spaces during transitions
+		renderer.SetTileSource(NULL_ID, createGrid(tilesize, 0));
 
 		effect.onStep(transitionStart, transitionEnd, (step / maxStep));
 

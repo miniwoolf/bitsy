@@ -113,6 +113,17 @@ this.ResetRenderCache = function() {
 	resetAllTextures();
 }
 
+// with this here can I simplify the sprite instance?
+function CreateDrawingDataFromSpriteInstance(sprite) {
+	return {
+		drw: sprite.drw,
+		col: sprite.col,
+		bgc: sprite.bgc,
+		colorOffset: sprite.colorOffset,
+		animation: tile[sprite.drw].animation, // currently animation state is global
+	};
+}
+
 function ScreenRenderTarget() {
 	var width = roomsize * tilesize * scale;
 	var height = roomsize * tilesize * scale;
@@ -125,12 +136,12 @@ function ScreenRenderTarget() {
 	function Draw(drawing, x, y, options) {
 		var frameOverride = options && options.frameIndex ? options.frameIndex : null;
 
-		if (drawing.id in tile) {
+		if (drawing.drw in tile) {
 			var renderedTile = getOrRenderTile(drawing, frameOverride);
 			bitsyCanvasPutTexture(renderedTile, x * tileIncrement, y * tileIncrement);
 		}
 		else {
-			console.log("TRYING TO DRAW MISSING TILE " + drawing.id);
+			console.log("TRYING TO DRAW MISSING TILE " + drawing.drw);
 		}
 	}
 
@@ -139,12 +150,13 @@ function ScreenRenderTarget() {
 	};
 
 	this.DrawSprite = function(sprite, x, y, options) {
-		if (sprite === undefined) {
+		if (sprite === undefined || !(sprite.id in tile)) {
 			console.log("TRYING TO DRAW MISSING SPRITE!");
 			return;
 		}
 
-		Draw(sprite, x, y, options);
+		// todo : do I need the x and y passed in?
+		Draw(CreateDrawingDataFromSpriteInstance(sprite), x, y, options);
 	};
 }
 
@@ -193,7 +205,7 @@ function PaletteIndexBufferRenderTarget() {
 	};
 
 	this.DrawSprite = function(sprite, x, y, options) {
-		Draw(sprite, x, y, options);
+		Draw(CreateDrawingDataFromSpriteInstance(sprite), x, y, options);
 	};
 
 	this.Width = width;
