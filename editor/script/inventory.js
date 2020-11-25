@@ -97,8 +97,8 @@ function updateInventoryVariableUI(){
 	function createOnVariableValueChange(varInfo) {
 		return function(event) {
 			console.log("VARIABLE CHANGE " + event.target.value);
-			if(isPlayMode) {
-				scriptInterpreter.SetVariable( varInfo.id, event.target.value, false /*useHandler*/ );
+			if (isPlayMode) {
+				// TODO : rewrite
 			}
 			else {
 				variable[varInfo.id] = event.target.value;
@@ -110,13 +110,10 @@ function updateInventoryVariableUI(){
 	function createOnVariableNameChange(varInfo,varDiv) {
 		return function(event) {
 			console.log("VARIABLE NAME CHANGE " + event.target.value);
-			if(isPlayMode) {
+			if (isPlayMode) {
 				var value = ""; // default empty string in case there is no variable yet
-				if( scriptInterpreter.HasVariable(varInfo.id) ) {
-					value = scriptInterpreter.GetVariable( varInfo.id );
-					scriptInterpreter.DeleteVariable( varInfo.id, false /*useHandler*/ );
-				}
-				scriptInterpreter.SetVariable( event.target.value, value, false /*useHandler*/ );
+
+				// TODO : rewrite
 
 				varInfo.id = event.target.value;
 			}
@@ -135,7 +132,7 @@ function updateInventoryVariableUI(){
 	function createOnVariableDelete(varInfo) {
 		return function () {
 			if(isPlayMode) {
-				scriptInterpreter.DeleteVariable( varInfo.id );
+				// todo : rewrite
 			}
 			else {
 				delete variable[varInfo.id];
@@ -147,7 +144,6 @@ function updateInventoryVariableUI(){
 
 	function addVariableRegister(id) {
 		var varName = id;
-		// var varValue = isPlayMode ? scriptInterpreter.GetVariable(id) : variable[id];
 		var varValue = variable[id];
 
 		if(id === null)
@@ -193,21 +189,13 @@ function updateInventoryVariableUI(){
 		deleteVarEl.appendChild(iconUtils.CreateIcon("delete"));
 		deleteVarEl.addEventListener('click', createOnVariableDelete(varInfo));
 		deleteVarEl.title = "delete this variable";
-		varDiv.appendChild(deleteVarEl);	
+		varDiv.appendChild(deleteVarEl);
 	}
 
-	// if(isPlayMode) {
-	// 	var variableNames = scriptInterpreter.GetVariableNames();
-	// 	for(var i = 0; i < variableNames.length; i++) {
-	// 		var id = variableNames[i];
-	// 		addVariableRegister(id);
-	// 	}
-	// }
-	// else {
-		for(id in variable) {
-			addVariableRegister(id);
-		}
-	// }
+	// TODO : is this good?
+	for (id in variable) {
+		addVariableRegister(id);
+	}
 
 	function createAddButton() {
 		var addVarEl = document.createElement("button");

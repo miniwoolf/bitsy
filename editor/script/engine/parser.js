@@ -103,46 +103,47 @@ function parseWorld(file) {
 		}
 	}
 
-	scriptCompatibility(compatibilityFlags);
+	// scriptCompatibility(compatibilityFlags);
 
 	curRoom = sortedIdList(room)[0];
 
 	return versionNumber;
 }
 
+// TODO : rewrite
 function scriptCompatibility(compatibilityFlags) {
-	if (compatibilityFlags.convertSayToPrint) {
-		console.log("CONVERT SAY TO PRINT!");
+	// if (compatibilityFlags.convertSayToPrint) {
+	// 	console.log("CONVERT SAY TO PRINT!");
 
-		var PrintFunctionVisitor = function() {
-			var didChange = false;
-			this.DidChange = function() { return didChange; };
+	// 	var PrintFunctionVisitor = function() {
+	// 		var didChange = false;
+	// 		this.DidChange = function() { return didChange; };
 
-			this.Visit = function(node) {
-				if (node.type != "function") {
-					return;
-				}
+	// 		this.Visit = function(node) {
+	// 			if (node.type != "function") {
+	// 				return;
+	// 			}
 
-				if (node.name === "say") {
-					node.name = "print";
-					didChange = true;
-				}
-			};
-		};
+	// 			if (node.name === "say") {
+	// 				node.name = "print";
+	// 				didChange = true;
+	// 			}
+	// 		};
+	// 	};
 
-		for (dlgId in dialog) {
-			var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
-			var visitor = new PrintFunctionVisitor();
-			dialogScript.VisitAll(visitor);
-			if (visitor.DidChange()) {
-				var newDialog = dialogScript.Serialize();
-				if (newDialog.indexOf("\n") > -1) {
-					newDialog = '"""\n' + newDialog + '\n"""';
-				}
-				dialog[dlgId].src = newDialog;
-			}
-		}
-	}
+	// 	for (dlgId in dialog) {
+	// 		var dialogScript = scriptInterpreter.Parse(dialog[dlgId].src);
+	// 		var visitor = new PrintFunctionVisitor();
+	// 		dialogScript.VisitAll(visitor);
+	// 		if (visitor.DidChange()) {
+	// 			var newDialog = dialogScript.Serialize();
+	// 			if (newDialog.indexOf("\n") > -1) {
+	// 				newDialog = '"""\n' + newDialog + '\n"""';
+	// 			}
+	// 			dialog[dlgId].src = newDialog;
+	// 		}
+	// 	}
+	// }
 }
 
 /* ARGUMENT GETTERS */

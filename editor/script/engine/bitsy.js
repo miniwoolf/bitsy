@@ -185,7 +185,6 @@ function load_game(game_data, startWithTitle) {
 	curGameData = game_data; //remember the current game (used to reset the game)
 
 	dialogBuffer.Reset();
-	scriptInterpreter.ResetEnvironment(); // ensures variables are reset -- is this the best way?
 	scriptNext.Reset();
 
 	renderer.ResetRenderCache();
@@ -1781,35 +1780,9 @@ function startSpriteDialog(spriteInstance) {
 // TODO : re-implement
 var isDialogPreview = false;
 function startPreviewDialog(script, dialogCallback) {
-	isNarrating = true;
-
-	isDialogMode = true;
-
-	isDialogPreview = true;
-
-	dialogRenderer.Reset();
-	dialogRenderer.SetCentered(true);
-	dialogBuffer.Reset();
-	scriptInterpreter.SetDialogBuffer(dialogBuffer);
-
-	// TODO : do I really need a seperate callback for this debug mode??
-	onDialogPreviewEnd = dialogCallback;
-
-	var onScriptEndCallback = function(scriptResult) {
-		dialogBuffer.OnDialogEnd(function() {
-			onExitDialog(scriptResult, null);
-		});
-	};
-
-	scriptInterpreter.Eval(script, onScriptEndCallback);
+	// TODO
 }
 
-/* NEW SCRIPT STUFF */
-var scriptModule = new Script();
-var scriptInterpreter = scriptModule.CreateInterpreter();
-var scriptUtils = scriptModule.CreateUtils(); // TODO: move to editor.js?
-// scriptInterpreter.SetDialogBuffer( dialogBuffer );
-
-/* SCRIPT NEXT */
+/* SCRIPTING */
 var library = new Library();
 var scriptNext = new ScriptNext();
