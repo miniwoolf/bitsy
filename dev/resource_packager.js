@@ -55,8 +55,10 @@ for (var i = 0; i < resourceDirectories.length; i++) {
 	var fileNames = fs.readdirSync(dir);
 	for (var j = 0; j < fileNames.length; j++) {
 		var fileName = fileNames[j];
-		var result = fs.readFileSync(dir + "/" + fileName, "utf8");
-		resourcePackage[fileName] = result;
+		if (fileName != ".DS_Store") {
+			var result = fs.readFileSync(dir + "/" + fileName, "utf8");
+			resourcePackage[fileName] = result;
+		}
 	}
 }
 
