@@ -20,6 +20,7 @@ function MapTool(controls) {
 	};
 
 	curMode = Mode.Select;
+	controls.canvas.classList.add("selectCursorWhite");
 
 	function DrawMap() {
 		context.fillStyle = "black";
@@ -353,8 +354,17 @@ function MapTool(controls) {
 	}
 
 	controls.selectButton.checked = true;
-	controls.selectButton.onclick = function() { curMode = Mode.Select; };
-	controls.moveButton.onclick = function() { curMode = Mode.Move; };
+	controls.selectButton.onclick = function() {
+		curMode = Mode.Select;
+		controls.canvas.classList.remove("placeCursorWhite");
+		controls.canvas.classList.add("selectCursorWhite");
+	};
+
+	controls.moveButton.onclick = function() {
+		curMode = Mode.Move;
+		controls.canvas.classList.remove("selectCursorWhite");
+		controls.canvas.classList.add("placeCursorWhite");
+	};
 
 	controls.prevButton.onclick = PrevMap;
 	controls.nextButton.onclick = NextMap;

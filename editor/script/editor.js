@@ -609,12 +609,6 @@ function start() {
 		document.getElementById("downloadHelp").style.display = "block";
 	}
 
-	// gif recording init (should this go in its own file?)
-	gifCaptureCanvas = document.createElement("canvas");
-	gifCaptureCanvas.width = width * scale;
-	gifCaptureCanvas.height = width * scale;
-	gifCaptureCtx = gifCaptureCanvas.getContext("2d");
-
 	onInventoryChanged = function(id) {
 		updateInventoryUI();
 	
@@ -1264,9 +1258,9 @@ function startRecordingGif() {
 	document.getElementById("gifPreview").style.display="none";
 	document.getElementById("gifPlaceholder").style.display="block";
 
-	gifRecordingInterval = setInterval( function() {
-		gifFrameData.push( ctx.getImageData(0,0,512,512).data );
-	}, 100 );
+	gifRecordingInterval = setInterval(function() {
+		gifFrameData.push(context.getImageData(0, 0, canvas.width, canvas.height).data);
+	}, 100);
 }
 
 var gifCaptureCanvas; // initialized in start() -- should be in own module?
@@ -1296,14 +1290,17 @@ function takeSnapshotGif(e) {
 		delay: animationTime / 10
 	};
 
+	gifCaptureCanvas = canvas;
+	gifCaptureCtx = context;
+
 	gifCaptureCanvas.width = 512; // stop hardcoding 512?
 	gifCaptureCanvas.height = 512;
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 0, drawInstances: false, palId: curPal(), } );
-	var frame0 = gifCaptureCtx.getImageData(0,0,512,512);
+	drawRoom(room[curRoom], { frameIndex: 0, drawInstances: false, palId: curPal(), } );
+	var frame0 = gifCaptureCtx.getImageData(0, 0, 512, 512);
 
-	drawRoom(room[curRoom], { context: gifCaptureCtx, frameIndex: 1, drawInstances: false, palId: curPal(), } );
-	var frame1 = gifCaptureCtx.getImageData(0,0,512,512);
+	drawRoom(room[curRoom], { frameIndex: 1, drawInstances: false, palId: curPal(), } );
+	var frame1 = gifCaptureCtx.getImageData(0, 0, 512, 512);
 
 	if (isGifSnapshotLandscape) {
 		/* widescreen */
@@ -1316,17 +1313,17 @@ function takeSnapshotGif(e) {
 		var widescreenY = (gifCaptureWidescreenSize.height / 2) - (512 / 2);
 
 		gifCaptureCtx.fillStyle = "rgb(" + getPal(curPal())[0][0] + "," + getPal(curPal())[0][1] + "," + getPal(curPal())[0][2] + ")";
-		gifCaptureCtx.fillRect(0,0,gifCaptureWidescreenSize.width,gifCaptureWidescreenSize.height);
+		gifCaptureCtx.fillRect(0, 0, gifCaptureWidescreenSize.width, gifCaptureWidescreenSize.height);
 
-		gifCaptureCtx.putImageData(frame0,widescreenX,widescreenY);
-		frame0 = gifCaptureCtx.getImageData(0,0,gifCaptureWidescreenSize.width,gifCaptureWidescreenSize.height);
+		gifCaptureCtx.putImageData(frame0, widescreenX, widescreenY);
+		frame0 = gifCaptureCtx.getImageData(0, 0, gifCaptureWidescreenSize.width ,gifCaptureWidescreenSize.height);
 
-		gifCaptureCtx.putImageData(frame1,widescreenX,widescreenY);
-		frame1 = gifCaptureCtx.getImageData(0,0,gifCaptureWidescreenSize.width,gifCaptureWidescreenSize.height);
+		gifCaptureCtx.putImageData(frame1, widescreenX, widescreenY);
+		frame1 = gifCaptureCtx.getImageData(0, 0, gifCaptureWidescreenSize.width, gifCaptureWidescreenSize.height);
 	}
 
-	gif.frames.push( frame0.data );
-	gif.frames.push( frame1.data );
+	gif.frames.push(frame0.data);
+	gif.frames.push(frame1.data);
 
 	finishRecordingGif(gif);
 }
@@ -1343,10 +1340,9 @@ function stopRecordingGif() {
 	finishRecordingGif(gif);
 }
 
-// TODO - palette for rainbow text
 function finishRecordingGif(gif) {
-	if(gifRecordingInterval != null) {
-		clearInterval( gifRecordingInterval );
+	if (gifRecordingInterval != null) {
+		clearInterval(gifRecordingInterval);
 		gifRecordingInterval = null;
 	}
 
@@ -1358,48 +1354,51 @@ function finishRecordingGif(gif) {
 	document.getElementById("gifEncodingText").style.display="inline";
 	document.getElementById("gifEncodingProgress").innerText = "0";
 
-	if(gif.frames.length <= 0) {
+	bitsyCanvasAttach(document.getElementById("game"), width * scale);
+
+	if (gif.frames.length <= 0) {
 		document.getElementById("gifEncodingText").style.display="none";
 		document.getElementById("gifStartButton").style.display="inline";
 		return; // nothing recorded, nothing to encode
 	}
 
-	setTimeout( function() {
+	setTimeout(function() {
 		var hexPalette = [];
 
-		// add black & white
-		hexPalette.push( rgbToHex(0,0,0).slice(1) ); // need to slice off leading # (should that safeguard go in gif.js?)
-		hexPalette.push( rgbToHex(255,255,255).slice(1) );
+		var defaultPalette = color.GetDefaultPalette();
 
-		// add rainbow colors (for rainbow text effect)
-		hexPalette.push( hslToHex(0.0,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.1,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.2,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.3,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.4,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.5,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.6,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.7,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.8,1,0.5).slice(1) );
-		hexPalette.push( hslToHex(0.9,1,0.5).slice(1) );
+		// add default colors (todo : what if they are overriden?)
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.TEXTBOX]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.TEXT]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 0]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 1]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 2]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 3]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 4]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 5]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 6]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 7]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 8]));
+		hexPalette.push(toHex(defaultPalette[COLOR_INDEX.RAINBOW_START + 9]));
 
 		// add all user defined palette colors
 		for (id in palette) {
 			for (i in getPal(id)){
-				var hexStr = rgbToHex( getPal(id)[i][0], getPal(id)[i][1], getPal(id)[i][2] ).slice(1);
+				var hexStr = toHex(getPal(id)[i]);
 
 				// gif palettes max out at 256 colors
 				// this avoids totally breaking the gif if a game has more colors than that
 				// TODO : make this smarter by keeping track palettes of visited rooms
 				if (hexPalette.length < 256) {
-					hexPalette.push( hexStr );
+					hexPalette.push(hexStr);
 				}
 			}
 		}
 
 		gif.palette = hexPalette; // hacky
 
-		gifencoder.encode( gif, 
+		gifencoder.encode(
+			gif,
 			function(uri, blob) {
 				document.getElementById("gifEncodingText").style.display="none";
 				document.getElementById("gifStartButton").style.display="inline";
@@ -1409,7 +1408,7 @@ function finishRecordingGif(gif) {
 				document.getElementById("gifSnapshotButton").style.display="inline";
 				document.getElementById("gifSnapshotModeButton").style.display="inline";
 
-				if( browserFeatures.blobURL ) {
+				if (browserFeatures.blobURL) {
 					document.getElementById("gifDownload").href = makeURL.createObjectURL( blob );
 				}
 				else {

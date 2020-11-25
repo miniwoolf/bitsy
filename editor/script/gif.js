@@ -189,10 +189,10 @@ function logicalScreenDescription(gifArr, width, height, colorTableSize) {
 }
 
 function pushColorString(gifArr, colorStr) {
-	var r = parseInt( "0x" + colorStr.substring(0,2) );
-	var g = parseInt( "0x" + colorStr.substring(2,4) );
-	var b = parseInt( "0x" + colorStr.substring(4,6) );
-	return gifArr.concat( [r,g,b] );
+	var r = parseInt("0x" + colorStr.substring(0, 2));
+	var g = parseInt("0x" + colorStr.substring(2, 4));
+	var b = parseInt("0x" + colorStr.substring(4, 6));
+	return gifArr.concat([r, g, b]);
 }
 
 function globalColorTable(gifArr, colors) {

@@ -12,9 +12,35 @@ body {
 
 	height: 100%;
 }
+
 canvas {
 	background: black;
 	/*margin-top: 4px;*/
+	/*cursor: not-allowed;*/;
+}
+
+.paintCursor {
+	cursor: url(../image/icon_paint.svg) 0 16, auto;
+}
+
+.eraseCursor {
+	cursor: url(../image/icon_erase.svg) 8 8, auto;
+}
+
+.selectCursor {
+	cursor: url(../image/icon_select.svg) 8 8, auto;
+}
+
+.placeCursor {
+	cursor: url(../image/icon_place.svg) 8 16, auto;
+}
+
+.selectCursorWhite {
+	cursor: url(../image/icon_select_white.svg) 8 8, auto;
+}
+
+.placeCursorWhite {
+	cursor: url(../image/icon_place_white.svg) 8 16, auto;
 }
 
 input[type=text] {

@@ -321,6 +321,10 @@ function RoomTool(controls) {
 
 		controls.toolSelect.select.checked = true;
 		curEditTool = EditTool.Select;
+		controls.canvas.classList.remove("eraseCursor");
+		controls.canvas.classList.remove("selectCursor");
+		controls.canvas.classList.remove("paintCursor");
+		controls.canvas.classList.add("selectCursor");
 
 		if (onSelectBehavior != null) {
 			onSelectBehavior.OnFinish();
@@ -517,8 +521,18 @@ function RoomTool(controls) {
 		}
 
 		curEditTool = EditTool.Paint;
+
+		controls.canvas.classList.remove("eraseCursor");
+		controls.canvas.classList.remove("selectCursor");
+		controls.canvas.classList.remove("paintCursor");
+		controls.canvas.classList.add("paintCursor");
 	};
+
 	controls.toolSelect.paint.checked = true;
+	controls.canvas.classList.remove("eraseCursor");
+	controls.canvas.classList.remove("selectCursor");
+	controls.canvas.classList.remove("paintCursor");
+	controls.canvas.classList.add("paintCursor");
 
 	controls.toolSelect.erase.onclick = function() {
 		if (onSelectBehavior) {
@@ -526,10 +540,20 @@ function RoomTool(controls) {
 		}
 
 		curEditTool = EditTool.Erase;
+
+		controls.canvas.classList.remove("eraseCursor");
+		controls.canvas.classList.remove("selectCursor");
+		controls.canvas.classList.remove("paintCursor");
+		controls.canvas.classList.add("eraseCursor");
 	};
 
 	controls.toolSelect.select.onclick = function() {
 		curEditTool = EditTool.Select;
+
+		controls.canvas.classList.remove("eraseCursor");
+		controls.canvas.classList.remove("selectCursor");
+		controls.canvas.classList.remove("paintCursor");
+		controls.canvas.classList.add("selectCursor");
 	};
 
 	/* visibility controls */
