@@ -16,9 +16,11 @@ var TransitionManager = function() {
 		if (effectId in transitionEffects) {
 			curEffect = transitionEffects[effectId];
 		}
-		else if (effectId in dialog) {
-			curEffect = CreateCustomEffect(effectId);
-		}
+
+		// TODO : WIP
+		// else if (effectId in dialog) {
+		// 	curEffect = CreateTileEffect(effectId);
+		// }
 
 		var tmpRoom = player().room;
 		var tmpX = player().x;
@@ -383,166 +385,80 @@ var TransitionManager = function() {
 		},
 	});
 
-	// NOTE: Custom pixel effects are currently too slow with my script interpreter... going to try something else
-	// function CreateCustomEffect(dlgId) {
+	var EffectType = {
+		Pixel : 0,
+		Tile : 0,
+	};
+
+	// TODO : WIP
+	// function CreateTileEffect(dlgId) {
 	// 	var script = dialog[dlgId];
 
+	// 	function CreateTileInfoTable(tileInfo) {
+	// 		var table = new Table();
+	// 		table.Set("DRW", tileInfo.drw);
+	// 		table.Set("COL", tileInfo.col);
+	// 		table.Set("BGC", tileInfo.bgc);
+	// 		return table;
+	// 	}
+
 	// 	var effect = {
+	// 		type : EffectType.Tile,
 	// 		showPlayerStart : false,
 	// 		showPlayerEnd : true,
 	// 		duration : 1000,
 	// 		onStep : function(start, end, delta) {
 	// 			color.UpdateSystemPalette(start.PaletteId, end.PaletteId, delta);
 	// 		},
-	// 		pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
-	// 			var colorIndex = COLOR_INDEX.BACKGROUND;
+	// 		tileEffectFunc : function(start, end, tileX, tileY, step) {
+	// 			var result = {
+	// 				drw: "0",
+	// 				col: 0,
+	// 				bgc: 0,
+	// 				colorOffset: COLOR_INDEX.BACKGROUND,
+	// 				animation: { isAnimated: false, frameIndex: 0, frameCount: 1, },
+	// 			};
 
-	// 			scriptNext.RunCallback(script, null, [], function(result) {
-	// 				colorIndex += result;
-	// 			});
+	// 			var startTile = CreateTileInfoTable(start.Buffer.GetTile(tileX, tileY));
+	// 			var endTile = CreateTileInfoTable(end.Buffer.GetTile(tileX, tileY));
 
-	// 			return colorIndex;
+	// 			scriptNext.RunCallback(
+	// 				script,
+	// 				null,
+	// 				[tileX, tileY, startTile, endTile, step], // param order?
+	// 				function(out) {
+	// 					if (out) {
+	// 						if (out.Has("DRW")) {
+	// 							result.drw = out.Get("DRW");
+	// 						}
+
+	// 						if (out.Has("COL")) {
+	// 							result.col = out.Get("COL");
+	// 						}
+
+	// 						if (out.Has("BGC")) {
+	// 							result.bgc = out.Get("BGC");
+	// 						}
+	// 					}
+	// 				});
+
+	// 			if (result.drw in tile) {
+	// 				// todo : will this cause any bugs to access the global animation state?
+	// 				result.animation = tile[result.drw].animation;
+	// 			}
+
+	// 			return result;
 	// 		},
 	// 	};
 
 	// 	return effect;
 	// }
 
-	var EffectType = {
-		Pixel : 0,
-		Tile : 0,
-	};
-
-	function CreateCustomEffect(dlgId) {
-		var script = dialog[dlgId];
-
-		function CreateTileInfoTable(tileInfo) {
-			var table = new Table();
-			table.Set("DRW", tileInfo.drw);
-			table.Set("COL", tileInfo.col);
-			table.Set("BGC", tileInfo.bgc);
-			return table;
-		}
-
-		var effect = {
-			type : EffectType.Tile,
-			showPlayerStart : false,
-			showPlayerEnd : true,
-			duration : 1000,
-			onStep : function(start, end, delta) {
-				color.UpdateSystemPalette(start.PaletteId, end.PaletteId, delta);
-			},
-			tileEffectFunc : function(start, end, tileX, tileY, step) {
-				var result = {
-					drw: "0",
-					col: 0,
-					bgc: 0,
-					colorOffset: COLOR_INDEX.BACKGROUND,
-					animation: { isAnimated: false, frameIndex: 0, frameCount: 1, },
-				};
-
-				var startTile = CreateTileInfoTable(start.Buffer.GetTile(tileX, tileY));
-				var endTile = CreateTileInfoTable(end.Buffer.GetTile(tileX, tileY));
-
-				scriptNext.RunCallback(
-					script,
-					null,
-					[tileX, tileY, startTile, endTile, step], // param order?
-					function(out) {
-						if (out) {
-							if (out.Has("DRW")) {
-								result.drw = out.Get("DRW");
-							}
-
-							if (out.Has("COL")) {
-								result.col = out.Get("COL");
-							}
-
-							if (out.Has("BGC")) {
-								result.bgc = out.Get("BGC");
-							}
-						}
-					});
-
-				if (result.drw in tile) {
-					// todo : will this cause any bugs to access the global animation state?
-					result.animation = tile[result.drw].animation;
-				}
-
-				return result;
-			},
-		};
-
-		return effect;
-	}
-
 	function clampLerp(deltaIn, clampDuration) {
 		var clampOffset = (1.0 - clampDuration) / 2;
 		var deltaOut = Math.min(clampDuration, Math.max(0.0, deltaIn - clampOffset)) / clampDuration;
 		return deltaOut;
 	}
-
-	// todo : this sort of works but also breaks -- palIndex === undefined - why?
-	// TODO : WIP // TODO : do I really want to bring this back?
-	// this.RegisterTransitionEffect("fuzz", {
-	// 	showPlayerStart : true,
-	// 	showPlayerEnd : true,
-	// 	duration : 1500,
-	// 	pixelEffectFunc : function(start, end, pixelX, pixelY, delta) {
-	// 		var curScreen = delta <= 0.5 ? start : end;
-	// 		var sampleSize = delta <= 0.5 ? (2 + Math.floor(14 * (delta/0.5))) : (16 - Math.floor(14 * ((delta-0.5)/0.5)));
-
-	// 		var palIndex = 0;
-
-	// 		var sampleX = Math.floor(pixelX / sampleSize) * sampleSize;
-	// 		var sampleY = Math.floor(pixelY / sampleSize) * sampleSize;
-
-	// 		var frameState = transitionEffects["fuzz"].frameState;
-
-	// 		if (frameState.time != delta) {
-	// 			frameState.time = delta;
-	// 			frameState.preCalcSampleValues = {};
-	// 		}
-
-	// 		if (frameState.preCalcSampleValues[[sampleX,sampleY]]) {
-	// 			palIndex = frameState.preCalcSampleValues[[sampleX,sampleY]];
-	// 		}
-	// 		else {
-	// 			var paletteCount = {};
-	// 			var foregroundValue = 1.0;
-	// 			var backgroundValue = 0.4;
-	// 			for (var y = sampleY; y < sampleY + sampleSize; y++) {
-	// 				for (var x = sampleX; x < sampleX + sampleSize; x++) {
-	// 					palIndex = curScreen.Buffer.GetPixel(x, y);
-	// 					if (palIndex != -1) {
-	// 						if (paletteCount[palIndex]) {
-	// 							paletteCount[palIndex] += (palIndex != 0) ? foregroundValue : backgroundValue;
-	// 						}
-	// 						else {
-	// 							paletteCount[palIndex] = (palIndex != 0) ? foregroundValue : backgroundValue;
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-
-	// 			var maxCount = 0;
-	// 			for (var i in paletteCount) {
-	// 				if (paletteCount[i] > maxCount) {
-	// 					palIndex = i;
-	// 					maxCount = paletteCount[i];
-	// 				}
-	// 			}
-
-	// 			frameState.preCalcSampleValues[[sampleX,sampleY]] = palIndex;
-	// 		}
-
-	// 		return color.GetColor(palIndex, curScreen.PaletteId);
-	// 	},
-	// 	frameState : { // ok this is hacky but it's for performance ok
-	// 		time : -1,
-	// 		preCalcSampleValues : {}
-	// 	},
-	// });
 }; // TransitionManager()
 
 var TransitionInfo = function(pixelBuffer, paletteId, playerX, playerY) {
