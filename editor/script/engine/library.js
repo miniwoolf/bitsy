@@ -262,7 +262,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 			}
 		}
 
-		if (waitForInput && dialogBuffer) {
+		if (waitForInput && dialogBuffer && dialogBuffer.IsActive()) {
 			dialogBuffer.AddPagebreak();
 			dialogBuffer.AddScriptReturn(beginExit);
 		}
@@ -283,7 +283,7 @@ function createRoomLibrary(dialogBuffer, dialogRenderer, parent) {
 			onReturn(false);
 		}
 
-		if (waitForInput) {
+		if (waitForInput && dialogBuffer && dialogBuffer.IsActive()) {
 			dialogBuffer.AddPagebreak();
 			dialogBuffer.AddScriptReturn(beginEnding);
 		}
