@@ -1,11 +1,9 @@
 function FunctionDefinitionEditor(expression, parentEditor, isInline) {
-	var div = document.createElement("div");
-	div.classList.add("actionEditor");
+	var actionEditor = new ActionEditor(this, parentEditor, { isInlineBlock: isInline, });
 
-	if (!isInline) {
-		var orderControls = new OrderControls(this, parentEditor);
-		div.appendChild(orderControls.GetElement());
-	}
+	var div = document.createElement("div");
+
+	actionEditor.AddContentControl(div);
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -19,7 +17,7 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 	div.appendChild(blockEditor.GetElement());
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {

@@ -1,15 +1,13 @@
 function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateInput, getDisplayValue) {
+	var actionEditor = new ActionEditor(this, parentEditor, { isInline: isInline, });
+
 	var div = isInline ? document.createElement("span") : document.createElement("div");
 
-	if (!isInline) {
-		div.classList.add("actionEditor");
+	if (isInline) {
+		// todo
 	}
 
-	var orderControls = null;
-	if (!isInline) {
-		orderControls = new OrderControls(this, parentEditor);
-		div.appendChild(orderControls.GetElement());
-	}
+	actionEditor.AddContentControl(div);
 
 	if (!isInline) {
 		var titleDiv = document.createElement("div");
@@ -40,7 +38,7 @@ function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateIn
 	}
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.NotifyUpdate = function() {

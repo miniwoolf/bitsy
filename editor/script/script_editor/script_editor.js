@@ -370,6 +370,9 @@ function createExpressionEditor(expression, parent, isInline, specialEditorType)
 var dialogScriptEditorUniqueIdCounter = 0;
 
 function ActionEditor(editor, parentEditor, options) {
+	var isInline = options && options.isInline;
+	var isInlineBlock = options && options.isInlineBlock;
+
 	var div = document.createElement("div");
 	div.classList.add("actionEditor");
 
@@ -382,17 +385,28 @@ function ActionEditor(editor, parentEditor, options) {
 		div.classList.add("defaultColor");
 	}
 
+	if (isInline) {
+		div.classList.add("inline");
+	}
+	else if (isInlineBlock) {
+		div.classList.add("inlineBlock");
+	}
+
 	console.log(div.classList);
 
-	var orderControls = new OrderControls(editor, parentEditor, false);
-	div.appendChild(orderControls.GetElement());
+	if (!isInline && !isInlineBlock) {
+		var orderControls = new OrderControls(editor, parentEditor, false);
+		div.appendChild(orderControls.GetElement());
+	}
 
 	var contentControlDiv = document.createElement("div");
 	contentControlDiv.classList.add("contentControlsRoot");
 	div.appendChild(contentControlDiv);
 
-	var deleteControls = new DeleteControls(editor, parentEditor);
-	div.appendChild(deleteControls.GetElement());
+	if (!isInline && !isInlineBlock) {
+		var deleteControls = new DeleteControls(editor, parentEditor);
+		div.appendChild(deleteControls.GetElement());
+	}
 
 	this.GetElement = function() {
 		return div;

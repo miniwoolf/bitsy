@@ -1,13 +1,11 @@
 function TableEditor(expression, parentEditor, isInline) {
 	var self = this;
 
-	var div = document.createElement("div");
-	div.classList.add("actionEditor");
+	var actionEditor = new ActionEditor(this, parentEditor, { isInlineBlock: isInline, });
 
-	if (!isInline) {
-		var orderControls = new OrderControls(this, parentEditor);
-		div.appendChild(orderControls.GetElement());
-	}
+	var div = document.createElement("div");
+
+	actionEditor.AddContentControl(div);
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -53,7 +51,7 @@ function TableEditor(expression, parentEditor, isInline) {
 	addEntryRootDiv.appendChild(addEntryButton);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {
@@ -107,11 +105,11 @@ function TableEditor(expression, parentEditor, isInline) {
 
 // todo : needs style so it's ok to have inline math expressions inside these
 function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
-	var div = document.createElement("div");
-	div.classList.add("tableEntryEditor");
+	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
 
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	var div = document.createElement("div");
+
+	actionEditor.AddContentControl(div);
 
 	var editValueType = false;
 	var toggleEditTypeButton = document.createElement("button");
@@ -121,8 +119,9 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 		editValueType = !editValueType;
 		valueEditor.SetTypeEditable(editValueType);
 	}
-	var customControls = orderControls.GetCustomControlsContainer();
-	customControls.appendChild(toggleEditTypeButton);
+
+	// var customControls = orderControls.GetCustomControlsContainer();
+	// customControls.appendChild(toggleEditTypeButton);
 
 	var nameEditor = createExpressionEditor(nameExpression, this, true, "entry");
 	div.appendChild(nameEditor.GetElement());
@@ -140,7 +139,7 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	div.appendChild(valueEditor.GetElement());
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {

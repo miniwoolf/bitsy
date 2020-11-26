@@ -6,12 +6,12 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 
 	var self = this;
 
-	var div = document.createElement(isInline ? "span" : "div");
-	div.classList.add("actionEditor");
+	var actionEditor = new ActionEditor(this, parentEditor, { isInline: isInline, });
+
+	var div = document.createElement("div");
 	div.classList.add("expressionEditor");
-	if (isInline) {
-		div.classList.add("inline");
-	}
+
+	actionEditor.AddContentControl(div);
 
 	var editExpressionButton = document.createElement("button");
 	editExpressionButton.title = "edit expression"; // TODO : localize
@@ -45,12 +45,9 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 	}
 
 	if (!isInline) {
-		var orderControls = new OrderControls(this, parentEditor);
-		div.appendChild(orderControls.GetElement());
-
-		var customControls = orderControls.GetCustomControlsContainer();
-		customControls.appendChild(editExpressionButton);
-		customControls.appendChild(toggleParameterTypesButton);
+		// var customControls = orderControls.GetCustomControlsContainer();
+		// customControls.appendChild(editExpressionButton);
+		// customControls.appendChild(toggleParameterTypesButton);
 
 		var titleDiv = document.createElement("div");
 		titleDiv.classList.add("actionTitle");
@@ -148,7 +145,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 	CreateExpressionControls(false);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	AddSelectionBehavior(
