@@ -196,16 +196,16 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 
 	var div = document.createElement(isInline ? "span" : "div");
 	div.classList.add("functionEditor");
-	div.classList.add("actionEditor");
+
 	if (isInline) {
 		div.classList.add("inline");
 	}
 
-	var orderControls = null;
+	var actionEditor = null;
 
 	if (!isInline) {
-		orderControls = new OrderControls(this, parentEditor);
-		div.appendChild(orderControls.GetElement());
+		actionEditor = new ActionEditor(this, parentEditor);
+		actionEditor.AddContentControl(div);
 	}
 
 	if (!isInline) {
@@ -278,8 +278,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			}
 		}
 
-		var customControls = orderControls.GetCustomControlsContainer();
-		customControls.appendChild(toggleParameterTypesButton);
+		// var customControls = orderControls.GetCustomControlsContainer();
+		// customControls.appendChild(toggleParameterTypesButton);
 
 		if (hasHelpText) {
 			customControls.appendChild(toggleHelpButton);
@@ -447,7 +447,7 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 	CreateExpressionDescription(false);
 
 	this.GetElement = function() {
-		return div;
+		return isInline ? div : actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {

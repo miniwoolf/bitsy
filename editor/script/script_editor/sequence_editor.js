@@ -42,12 +42,11 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 
 	var div = document.createElement("div");
 	div.classList.add("sequenceEditor");
-	div.classList.add("actionEditor");
 
 	var sequenceType = sequenceExpression.list[0].value;
 
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	var actionEditor = new ActionEditor(this, parentEditor);
+	actionEditor.AddContentControl(div);
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -134,7 +133,7 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 	addOptionRootDiv.appendChild(addOptionButton);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	AddSelectionBehavior(
@@ -247,15 +246,15 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 }
 
 function SequenceOptionEditor(optionExpression, parentEditor) {
+	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
+
 	var div = document.createElement("div");
 	div.classList.add("optionEditor");
+	actionEditor.AddContentControl(div);
 
 	var topControlsDiv = document.createElement("div");
 	topControlsDiv.classList.add("optionControls");
 	div.appendChild(topControlsDiv);
-
-	var orderControls = new OrderControls(this, parentEditor);
-	topControlsDiv.appendChild(orderControls.GetElement());
 
 	var orderLabel = document.createElement("span");
 	orderLabel.innerText = "#)";
@@ -265,7 +264,7 @@ function SequenceOptionEditor(optionExpression, parentEditor) {
 	div.appendChild(editor.GetElement());
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {

@@ -369,10 +369,44 @@ function createExpressionEditor(expression, parent, isInline, specialEditorType)
 // oh noooo more globals....???!?!?!
 var dialogScriptEditorUniqueIdCounter = 0;
 
+function ActionEditor(editor, parentEditor, options) {
+	var div = document.createElement("div");
+	div.classList.add("actionEditor");
+
+	console.log(options);
+
+	if (options && options.isAltColor) {
+		div.classList.add("altColor");
+	}
+	else {
+		div.classList.add("defaultColor");
+	}
+
+	console.log(div.classList);
+
+	var orderControls = new OrderControls(editor, parentEditor, false);
+	div.appendChild(orderControls.GetElement());
+
+	var contentControlDiv = document.createElement("div");
+	contentControlDiv.classList.add("contentControlsRoot");
+	div.appendChild(contentControlDiv);
+
+	var deleteControls = new DeleteControls(editor, parentEditor);
+	div.appendChild(deleteControls.GetElement());
+
+	this.GetElement = function() {
+		return div;
+	};
+
+	// todo : pass in with constructor?
+	this.AddContentControl = function(control) {
+		contentControlDiv.appendChild(control);
+	};
+}
+
 function OrderControls(editor, parentEditor, disableMoveControls) {
 	var div = document.createElement("div");
 	div.classList.add("orderControls");
-	div.style.display = "none";
 
 	var moveUpButton = document.createElement("button");
 	// moveUpButton.innerText = "up";
@@ -396,10 +430,41 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 	}
 	div.appendChild(moveDownButton);
 
-	var customButtonsContainer = document.createElement("div");
-	customButtonsContainer.style.display = "inline-block";
-	customButtonsContainer.style.marginLeft = "5px";
-	div.appendChild(customButtonsContainer);
+	// var customButtonsContainer = document.createElement("div");
+	// customButtonsContainer.style.display = "inline-block";
+	// customButtonsContainer.style.marginLeft = "5px";
+	// div.appendChild(customButtonsContainer);
+
+	this.GetElement = function() {
+		return div;
+	}
+
+	this.GetCustomControlsContainer = function() {
+		return document.createElement("div");
+	}
+
+	editor.ShowOrderControls = function() {
+		// if (!disableMoveControls && parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
+		// 	// TODO : replace w/ added class name?
+		// 	moveUpButton.disabled = false;
+		// 	moveDownButton.disabled = false;
+		// }
+		// else {
+		// 	moveUpButton.disabled = true;
+		// 	moveDownButton.disabled = true;
+		// }
+
+		// div.style.display = "flex";
+	}
+
+	editor.HideOrderControls = function() {
+		// div.style.display = "none";
+	}
+}
+
+function DeleteControls(editor, parentEditor) {
+	var div = document.createElement("div");
+	div.classList.add("deleteControls");
 
 	var deleteButton = document.createElement("button");
 	// deleteButton.innerText = "delete";
@@ -416,28 +481,6 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 
 	this.GetElement = function() {
 		return div;
-	}
-
-	this.GetCustomControlsContainer = function() {
-		return customButtonsContainer;
-	}
-
-	editor.ShowOrderControls = function() {
-		if (!disableMoveControls && parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
-			// TODO : replace w/ added class name?
-			moveUpButton.disabled = false;
-			moveDownButton.disabled = false;
-		}
-		else {
-			moveUpButton.disabled = true;
-			moveDownButton.disabled = true;
-		}
-
-		div.style.display = "block";
-	}
-
-	editor.HideOrderControls = function() {
-		div.style.display = "none";
 	}
 }
 

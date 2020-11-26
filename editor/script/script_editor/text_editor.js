@@ -1,14 +1,9 @@
 function DialogTextEditor(expressionList, parentEditor) {
+	var actionEditor = new ActionEditor(this, parentEditor);
+
 	var div = document.createElement("div");
 	div.classList.add("dialogEditor");
-	div.classList.add("actionEditor");
-
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
-
-	// var span = document.createElement("div");
-	// span.innerText = "dialog";
-	// div.appendChild(span);
+	actionEditor.AddContentControl(div);
 
 	function OnDialogTextChange() {
 		console.log("TEXT CHANGE!!!");
@@ -33,7 +28,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 	textArea.onkeyup = OnDialogTextChange;
 	textArea.onblur = OnDialogTextChange;
 
-	textArea.rows = Math.max(2, dialogText.split("\n").length + 1);
+	textArea.rows = Math.max(4, dialogText.split("\n").length + 1);
 
 	textArea.addEventListener('click', textSelectionChangeHandler);
 	textArea.addEventListener('select', textSelectionChangeHandler);
@@ -48,7 +43,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 	div.appendChild(textHolderDiv);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	AddSelectionBehavior(

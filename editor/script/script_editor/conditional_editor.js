@@ -1,12 +1,11 @@
 function ConditionalEditor(conditionalExpression, parentEditor) {
 	var self = this;
 
+	var actionEditor = new ActionEditor(this, parentEditor);
+
 	var div = document.createElement("div");
 	div.classList.add("conditionalEditor");
-	div.classList.add("actionEditor");
-
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	actionEditor.AddContentControl(div);
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -153,7 +152,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 	addConditionRootDiv.appendChild(cancelButton);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	AddSelectionBehavior(this);
@@ -269,15 +268,16 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 }
 
 function ConditionalOptionEditor(conditionPair, parentEditor, index) {
+	var shouldDisable = conditionPair.length < 2; // todo
+	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
+
 	var div = document.createElement("div");
 	div.classList.add("optionEditor");
+	actionEditor.AddContentControl(div);
 
 	var topControlsDiv = document.createElement("div");
 	topControlsDiv.classList.add("optionControls");
 	div.appendChild(topControlsDiv);
-
-	var orderControls = new OrderControls(this, parentEditor, conditionPair.length < 2);
-	topControlsDiv.appendChild(orderControls.GetElement());
 
 	// condition
 	var comparisonExpression = conditionPair.length >= 2 ? conditionPair[0] : null;
@@ -294,7 +294,7 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 	}
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {

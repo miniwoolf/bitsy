@@ -74,10 +74,48 @@
 	border: none;
 	border-radius: 2px;
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	flex-grow: 1;
 	margin-top: 5px;
 	margin-bottom: 5px;
+}
+
+.actionEditor.defaultColor {
+	background: white;
+}
+
+.actionEditor.defaultColor > .orderControls button {
+	background: #e8e8ff;
+}
+
+.actionEditor.defaultColor > .deleteControls button {
+	background: #e8e8ff;
+}
+
+.actionEditor.altColor {
+	background: #e8e8ff;
+}
+
+.actionEditor.altColor > .orderControls button {
+	background: #ccccff;
+}
+
+.actionEditor.altColor > .deleteControls button {
+	background: #ccccff;
+}
+
+.orderControls {
+	display: flex;
+	flex-direction: column;
+	margin-right: 5px;
+}
+
+.deleteControls {
+	margin-left: 5px;
+}
+
+.contentControlsRoot {
+	flex-grow: 1;
 }
 
 .actionTitle {
@@ -131,7 +169,6 @@
 .dialogEditor textarea {
 	background: black;
 	color: white;
-	/*width: 96%;*/
 	border: none;
 	resize: vertical;
 }
@@ -140,11 +177,13 @@
 	margin-bottom: 10px;
 }
 
+.optionRoot {
+	display: flex;
+	flex-direction: column;
+}
+
 .optionEditor {
-	background: #e8e8ff;
-	margin-bottom: 5px;
 	padding: 5px;
-	border-radius: 2px;
 }
 
 .optionControls {
@@ -234,11 +273,6 @@
 
 .actionBuilder_advanced .actionBuilderButton_back {
 	display: block;
-}
-
-.orderControls {
-	display: block;
-	margin-bottom: 5px;
 }
 
 .optionEditor.selectedEditor {

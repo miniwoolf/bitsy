@@ -1,12 +1,11 @@
 function ChoiceEditor(choiceExpression, parentEditor) {
 	var self = this;
 
+	var actionEditor = new ActionEditor(this, parentEditor);
+
 	var div = document.createElement("div");
 	div.classList.add("choiceEditor");
-	div.classList.add("actionEditor");
-
-	var orderControls = new OrderControls(this, parentEditor);
-	div.appendChild(orderControls.GetElement());
+	actionEditor.AddContentControl(div);
 
 	var titleDiv = document.createElement("div");
 	titleDiv.classList.add("actionTitle");
@@ -30,7 +29,7 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 	div.appendChild(optionRootDiv);
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	};
 
 	this.GetExpressionList = function() {
@@ -134,15 +133,15 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 }
 
 function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, index) {
+	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
+
 	var div = document.createElement("div");
 	div.classList.add("optionEditor");
+	actionEditor.AddContentControl(div);
 
 	var topControlsDiv = document.createElement("div");
 	topControlsDiv.classList.add("optionControls");
 	div.appendChild(topControlsDiv);
-
-	var orderControls = new OrderControls(this, parentEditor);
-	topControlsDiv.appendChild(orderControls.GetElement());
 
 	var orderNumLabel = document.createElement("span");
 	orderNumLabel.innerText = (index + 1) + ") ";
@@ -165,7 +164,7 @@ function ChoiceOptionEditor(choiceExpression, resultExpression, parentEditor, in
 	div.appendChild(resultEditor.GetElement());
 
 	this.GetElement = function() {
-		return div;
+		return actionEditor.GetElement();
 	}
 
 	this.GetExpressionList = function() {
