@@ -13,47 +13,37 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 
 	actionEditor.AddContentControl(div);
 
-	var editExpressionButton = document.createElement("button");
-	editExpressionButton.title = "edit expression"; // TODO : localize
-	editExpressionButton.appendChild(iconUtils.CreateIcon("expression_edit"));
-	editExpressionButton.onclick = function() {
-		parentEditor.OpenExpressionBuilder(
-			expressionRootNode.Serialize(),
-			function(expressionNode) {
-				expressionRootNode = expressionNode;
-				if (node.type === "code_block" &&
-					(node.children[0].type === "operator" ||
-						node.children[0].type === "literal" ||
-						node.children[0].type === "symbol")) {
-					node.children[0] = expressionRootNode;
-				}
-				else {
-					node = expressionRootNode;
-				}
-				CreateExpressionControls(true);
-				parentEditor.NotifyUpdate();
-			});
-	};
-
-	var editParameterTypes = false;
-	var toggleParameterTypesButton = document.createElement("button");
-	toggleParameterTypesButton.title = "toggle editing parameter types";
-	toggleParameterTypesButton.appendChild(iconUtils.CreateIcon("settings"));
-	toggleParameterTypesButton.onclick = function() {
-		editParameterTypes = !editParameterTypes;
-		CreateExpressionControls(true);
-	}
+	// TODO : refactor..
+	// var editExpressionButton = document.createElement("button");
+	// editExpressionButton.title = "edit expression"; // TODO : localize
+	// editExpressionButton.appendChild(iconUtils.CreateIcon("expression_edit"));
+	// editExpressionButton.onclick = function() {
+	// 	parentEditor.OpenExpressionBuilder(
+	// 		expressionRootNode.Serialize(),
+	// 		function(expressionNode) {
+	// 			expressionRootNode = expressionNode;
+	// 			if (node.type === "code_block" &&
+	// 				(node.children[0].type === "operator" ||
+	// 					node.children[0].type === "literal" ||
+	// 					node.children[0].type === "symbol")) {
+	// 				node.children[0] = expressionRootNode;
+	// 			}
+	// 			else {
+	// 				node = expressionRootNode;
+	// 			}
+	// 			CreateExpressionControls(true);
+	// 			parentEditor.NotifyUpdate();
+	// 		});
+	// };
 
 	if (!isInline) {
-		// var customControls = orderControls.GetCustomControlsContainer();
-		// customControls.appendChild(editExpressionButton);
-		// customControls.appendChild(toggleParameterTypesButton);
-
 		var titleDiv = document.createElement("div");
 		titleDiv.classList.add("actionTitle");
-		titleDiv.innerText = "calculate"; // TODO : is this right? localize
+		titleDiv.innerText = "math"; // TODO : is this right? localize
 		div.appendChild(titleDiv);
 	}
+
+	var editParameterTypes = false;
 
 	var expressionSpan = document.createElement("span");
 	expressionSpan.classList.add("actionDescription");
@@ -61,15 +51,27 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 
 	// todo : I don't need to recreate these all the time anymore!
 	function CreateExpressionControls(isEditable) {
+		actionEditor.ClearCommands();
+
 		expressionSpan.innerHTML = "";
 
 		AddOperatorControlRecursive(expression, isEditable);
 
-		if (isInline && isEditable) {
-			var editExpressionButtonSpan = document.createElement("span");
-			editExpressionButtonSpan.classList.add("inlineEditButtonHolder");
-			editExpressionButtonSpan.appendChild(editExpressionButton);
-			expressionSpan.appendChild(editExpressionButtonSpan);
+		// TODO:
+		// if (isInline && isEditable) {
+		// 	var editExpressionButtonSpan = document.createElement("span");
+		// 	editExpressionButtonSpan.classList.add("inlineEditButtonHolder");
+		// 	editExpressionButtonSpan.appendChild(editExpressionButton);
+		// 	expressionSpan.appendChild(editExpressionButtonSpan);
+		// }
+
+		if (isEditable) {
+			actionEditor.AddCommand("settings", "edit input types", function() {
+				editParameterTypes = !editParameterTypes;
+				CreateExpressionControls(true);
+			});
+
+			// todo : add command to open the math editor
 		}
 	}
 

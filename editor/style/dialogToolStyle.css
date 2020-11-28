@@ -104,6 +104,10 @@
 	background: #ccccff;
 }
 
+.actionEditor.altColor > .actionEditorMiddleColumn .customControlsRoot button {
+	background: #ccccff;
+}
+
 .orderControls {
 	display: flex;
 	flex-direction: column;

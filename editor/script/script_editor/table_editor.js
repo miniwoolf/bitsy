@@ -121,16 +121,6 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	actionEditor.AddContentControl(div);
 
 	var editValueType = false;
-	var toggleEditTypeButton = document.createElement("button");
-	toggleEditTypeButton.title = "toggle editing entry type";
-	toggleEditTypeButton.appendChild(iconUtils.CreateIcon("settings"));
-	toggleEditTypeButton.onclick = function() {
-		editValueType = !editValueType;
-		valueEditor.SetTypeEditable(editValueType);
-	}
-
-	// var customControls = orderControls.GetCustomControlsContainer();
-	// customControls.appendChild(toggleEditTypeButton);
 
 	var nameEditor = createExpressionEditor(nameExpression, this, true, "entry");
 	div.appendChild(nameEditor.GetElement());
@@ -166,9 +156,16 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 			nameEditor.Select();
 			valueEditor.Select();
 			valueEditor.SetTypeEditable(editValueType);
+
+			actionEditor.ClearCommands();
+			actionEditor.AddCommand("settings", "edit value type", function() {
+				editValueType = !editValueType;
+				valueEditor.SetTypeEditable(editValueType);
+			});
 		},
 		function() {
 			nameEditor.Deselect();
 			valueEditor.Deselect();
+			actionEditor.ClearCommands();
 		});
 }

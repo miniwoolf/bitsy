@@ -158,7 +158,7 @@ expressionDescriptionMap[SYM_KEY.ENTRY] = {
 	// TODO : add help text?
 };
 
-var isHelpTextOn = true;
+var isHelpTextOn = false;
 
 // TODO : support UNDESCRIBED functions! need a new editor?
 function ExpressionEditor(expression, parentEditor, isInline) {
@@ -182,10 +182,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 
 	var actionEditor = null;
 
-	if (!isInline) {
-		actionEditor = new ActionEditor(this, parentEditor);
-		actionEditor.AddContentControl(div);
-	}
+	actionEditor = new ActionEditor(this, parentEditor, { isInline: isInline, });
+	actionEditor.AddContentControl(div);
 
 	if (!isInline) {
 		var titleText = expressionDescriptionMap[descriptionId].GetName();
