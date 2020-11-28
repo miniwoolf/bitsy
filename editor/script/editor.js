@@ -386,6 +386,48 @@ function start() {
 	//game canvas & context
 	bitsyCanvasAttach(document.getElementById("game"), width * scale);
 
+	// load custom font
+	if (localStorage.custom_font != null) {
+		var fontStorage = JSON.parse(localStorage.custom_font);
+		fontManager.AddResource(fontStorage.name + ".bitsyfont", fontStorage.fontdata);
+	}
+	resetMissingCharacterWarning();
+
+	//load last auto-save
+	if (localStorage.game_data) {
+		//console.log("~~~ found old save data! ~~~");
+		//console.log(localStorage.game_data);
+		document.getElementById("game_data").value = localStorage.game_data;
+		on_game_data_change_core();
+	}
+	else {
+		setDefaultGameState();
+	}
+
+	// create find tool
+	findTool = new FindTool({
+		scrollRoot : document.getElementById("findViewport"),
+		contentRoot : document.getElementById("findContent"),
+		searchInput : document.getElementById("findSearchInput"),
+		filterVisibleCheck : document.getElementById("findFilterVisibleCheck"),
+		filterRoot : document.getElementById("findFilters"),
+		filterAvatarCheck : document.getElementById("findFilterAvatarCheck"),
+		filterTileCheck : document.getElementById("findFilterTileCheck"),
+		filterSpriteCheck : document.getElementById("findFilterSpriteCheck"),
+		filterItemCheck : document.getElementById("findFilterItemCheck"),
+		filterExitCheck : document.getElementById("findFilterExitCheck"),
+		filterEndingCheck : document.getElementById("findFilterEndingCheck"),
+		filterRoomCheck : document.getElementById("findFilterRoomCheck"),
+		filterMapCheck : document.getElementById("findFilterMapCheck"),
+		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),
+		filterDialogCheck : document.getElementById("findFilterDialogCheck"),
+		filterCurRoomCheck : document.getElementById("findFilterCurRoomCheck"),
+		selectRoot : document.getElementById("findSelect"),
+		selectCancelButton : document.getElementById("findSelectCancel"),
+		selectConfirmButton : document.getElementById("findSelectConfirm"),
+		selectMessage : document.getElementById("findSelectMessage"),
+	});
+
 	//init tool controllers
 	roomTool = new RoomTool({
 		canvas: canvas,
@@ -531,24 +573,6 @@ function start() {
 	drawingThumbnailCanvas.width = 8 * scale;
 	drawingThumbnailCanvas.height = 8 * scale;
 	drawingThumbnailCtx = drawingThumbnailCanvas.getContext("2d");
-
-	// load custom font
-	if (localStorage.custom_font != null) {
-		var fontStorage = JSON.parse(localStorage.custom_font);
-		fontManager.AddResource(fontStorage.name + ".bitsyfont", fontStorage.fontdata);
-	}
-	resetMissingCharacterWarning();
-
-	//load last auto-save
-	if (localStorage.game_data) {
-		//console.log("~~~ found old save data! ~~~");
-		//console.log(localStorage.game_data);
-		document.getElementById("game_data").value = localStorage.game_data;
-		on_game_data_change_core();
-	}
-	else {
-		setDefaultGameState();
-	}
 
 	roomIndex = sortedIdList(room).indexOf(curRoom);
 
@@ -704,30 +728,6 @@ function start() {
 				conditional : document.getElementById("dialogAddConditional"),
 			},
 		},
-	});
-
-	// create find tool
-	findTool = new FindTool({
-		scrollRoot : document.getElementById("findViewport"),
-		contentRoot : document.getElementById("findContent"),
-		searchInput : document.getElementById("findSearchInput"),
-		filterVisibleCheck : document.getElementById("findFilterVisibleCheck"),
-		filterRoot : document.getElementById("findFilters"),
-		filterAvatarCheck : document.getElementById("findFilterAvatarCheck"),
-		filterTileCheck : document.getElementById("findFilterTileCheck"),
-		filterSpriteCheck : document.getElementById("findFilterSpriteCheck"),
-		filterItemCheck : document.getElementById("findFilterItemCheck"),
-		filterExitCheck : document.getElementById("findFilterExitCheck"),
-		filterEndingCheck : document.getElementById("findFilterEndingCheck"),
-		filterRoomCheck : document.getElementById("findFilterRoomCheck"),
-		filterMapCheck : document.getElementById("findFilterMapCheck"),
-		filterPaletteCheck : document.getElementById("findFilterPaletteCheck"),
-		filterDialogCheck : document.getElementById("findFilterDialogCheck"),
-		filterCurRoomCheck : document.getElementById("findFilterCurRoomCheck"),
-		selectRoot : document.getElementById("findSelect"),
-		selectCancelButton : document.getElementById("findSelectCancel"),
-		selectConfirmButton : document.getElementById("findSelectConfirm"),
-		selectMessage : document.getElementById("findSelectMessage"),
 	});
 
 	initLanguageOptions();
@@ -961,8 +961,13 @@ function on_game_data_change_core() {
 
 	// TODO RENDERER : refresh images
 
-	roomTool.drawEditMap();
-	paintTool.SelectDrawing(sortedIdList(tile)[0]);
+	if (roomTool) {
+		roomTool.drawEditMap();
+	}
+
+	if (paintTool) {
+		paintTool.SelectDrawing(sortedIdList(tile)[0]);
+	}
 
 	// if user pasted in a custom font into game data - update the stored custom font
 	if (defaultFonts.indexOf(fontName + fontManager.GetExtension()) == -1) {

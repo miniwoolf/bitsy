@@ -1,6 +1,9 @@
 function TableEditor(expression, parentEditor, isInline) {
 	var self = this;
 
+	console.log("-- TABLE EDITOR --");
+	console.log(parentEditor);
+
 	var actionEditor = new ActionEditor(this, parentEditor, { isInlineBlock: isInline, });
 
 	var div = document.createElement("div");
@@ -12,12 +15,16 @@ function TableEditor(expression, parentEditor, isInline) {
 	titleDiv.innerText = "table"; // todo : localize
 	div.appendChild(titleDiv);
 
+	var mainDiv = document.createElement("div");
+	mainDiv.style.padding = "5px"; // hack
+	div.appendChild(mainDiv);
+
 	var inputDescription = document.createElement("div");
 	inputDescription.innerText = "make table containing entries:";
-	div.appendChild(inputDescription);
+	mainDiv.appendChild(inputDescription);
 
 	var entryRoot = document.createElement("div");
-	div.appendChild(entryRoot);
+	mainDiv.appendChild(entryRoot);
 
 	var entryEditors = [];
 
@@ -30,7 +37,7 @@ function TableEditor(expression, parentEditor, isInline) {
 
 	var addEntryRootDiv = document.createElement("div");
 	addEntryRootDiv.classList.add("addOption");
-	div.appendChild(addEntryRootDiv);
+	mainDiv.appendChild(addEntryRootDiv);
 
 	var addEntryButton = document.createElement("button");
 	// todo localize!
@@ -108,6 +115,8 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
 
 	var div = document.createElement("div");
+	div.classList.add("tableEntryEditor");
+	div.classList.add("actionDescription");
 
 	actionEditor.AddContentControl(div);
 
@@ -127,7 +136,8 @@ function TableEntryEditor(nameExpression, valueExpression, parentEditor) {
 	div.appendChild(nameEditor.GetElement());
 
 	var seperatorSpan = document.createElement("span");
-	seperatorSpan.innerText = " : ";
+	seperatorSpan.innerText = ":";
+	seperatorSpan.style.marginRight = "5px"; // hack...
 	div.appendChild(seperatorSpan);
 
 	// todo : add expression builder handler?

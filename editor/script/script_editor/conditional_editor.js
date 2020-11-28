@@ -268,8 +268,9 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 }
 
 function ConditionalOptionEditor(conditionPair, parentEditor, index) {
-	var shouldDisable = conditionPair.length < 2; // todo
-	var actionEditor = new ActionEditor(this, parentEditor, { isAltColor: true, });
+	var options = { isAltColor: true, disableMoveControls: conditionPair.length < 2, };
+	console.log(options);
+	var actionEditor = new ActionEditor(this, parentEditor, options);
 
 	var div = document.createElement("div");
 	div.classList.add("optionEditor");
@@ -349,6 +350,7 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 
 	var div = document.createElement("div");
 	div.classList.add("conditionalComparisonEditor");
+	div.classList.add("actionDescription");
 
 	function CreateComparisonControls() { // TODO : isEditable?
 		div.innerHTML = "";
@@ -372,7 +374,7 @@ function ConditionalComparisonEditor(conditionExpression, parentEditor, index) {
 
 		conditionEndSpan = document.createElement("span");
 		if (conditionExpression != null) {
-			conditionEndSpan.innerText = ", " + localization.GetStringOrFallback("condition_then_label", "then") + ":";
+			conditionEndSpan.innerText = localization.GetStringOrFallback("condition_then_label", "then") + ":";
 		}
 		else {
 			conditionEndSpan.innerText = ":";

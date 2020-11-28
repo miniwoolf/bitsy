@@ -237,7 +237,16 @@ function FindTool(controls) {
 	AddCategory({
 		name: "room",
 		categoryStore: room,
-		getCaption: function(r) { return r.name ? r.name : "room " + r.id; }, // TODO : localize
+		getCaption: function(r) {
+			// TODO : localize
+			var caption = "";
+
+			if (r) {
+				caption = r.name ? r.name : "room " + r.id
+			}
+
+			return caption;
+		},
 		getIconId: function(r) { return "room"; },
 		includedInFilter: function(r, filters) { 
 			var result = filters.indexOf("room") != -1;

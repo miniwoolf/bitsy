@@ -56,7 +56,7 @@ function MathExpressionEditor(expression, parentEditor, isInline) {
 	}
 
 	var expressionSpan = document.createElement("span");
-	expressionSpan.style.display = "inline-flex";
+	expressionSpan.classList.add("actionDescription");
 	div.appendChild(expressionSpan);
 
 	// todo : I don't need to recreate these all the time anymore!
@@ -187,8 +187,6 @@ var mathOperators = {
 // todo : rename MathOperatorEditor
 function ExpressionOperatorEditor(expression, parentEditor, isEditable) {
 	var operatorSpan = document.createElement("span");
-	operatorSpan.style.marginLeft = "5px";
-	operatorSpan.style.marginRight = "5px";
 
 	function CreateOperatorControl(isEditable) {
 		operatorSpan.innerHTML = "";

@@ -619,7 +619,7 @@ function CreateDefaultExpression(type, exp) {
 	}
 	else if (type === "symbol") {
 		exp.type = "symbol";
-		exp.value = "a"; // TODO : find first var instead?
+		exp.value = "A"; // TODO : find first var instead?
 	}
 	else if (type === "room") {
 		exp.type = "string";
@@ -670,6 +670,11 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 	var typeSelect;
 
 	var span = document.createElement("span");
+	span.classList.add("expressionTypePicker");
+
+	this.GetElement = function() {
+		return span;
+	}
 
 	this.SkipAutoSelect = false;
 
@@ -703,14 +708,13 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 	function ChangeEditorType(type) {
 		CreateDefaultExpression(type, expression);
 
-		console.log(expression);
-
 		UpdateEditor(type);
 
 		// kind of hacky...
 		if (isSelected) {
 			editor.Select();
 		}
+
 		typeSelect.style.display = isTypeEditable ? "inline" : "none";
 
 		parentEditor.NotifyUpdate();
@@ -777,10 +781,6 @@ function ExpressionTypePicker(expression, parentEditor, types, options) {
 	}
 
 	UpdateEditor(curType);
-
-	this.GetElement = function() {
-		return span;
-	}
 
 	this.GetExpressionList = function() {
 		return [expression];

@@ -70,8 +70,8 @@
 
 .actionEditor {
 	background: white;
-	padding: 10px;
-	border: none;
+	padding: 5px;
+	border: solid 2px white;
 	border-radius: 2px;
 	display: flex;
 	flex-direction: row;
@@ -122,7 +122,7 @@
 	display: flex;
 	align-items: center;
 	font-weight: bold;
-	margin-bottom: 5px;
+	margin: 5px;
 }
 
 .actionTitle .bitsy_icon.icon_space_right {
@@ -147,7 +147,7 @@
 }
 
 .conditionalComparisonEditor > .actionEditor.inline {
-	/* TODO */
+	padding: 0px;
 }
 
 @keyframes executingLeaveAnimation {
@@ -161,7 +161,7 @@
 }
 
 .selectedEditor.actionEditor {
-	border: solid 2px #6767b2;
+	border-color: #6767b2;
 }
 
 .selectedEditor.actionEditor.inline {
@@ -176,7 +176,7 @@
 }
 
 .sequenceDescription {
-	margin-bottom: 10px;
+	/*margin-bottom: 10px;*/
 }
 
 .optionRoot {
@@ -196,14 +196,9 @@
 }
 
 .actionBuilder {
-	/*display: flex;*/
-	display: none;
+	display: flex;
 	flex-direction: column;
 	margin-top: 5px;
-}
-
-.selectedEditor > .blockEditor > .actionBuilder {
-	display: flex;
 }
 
 .actionBuilder button {
@@ -278,7 +273,7 @@
 }
 
 .optionEditor.selectedEditor {
-	border: solid 2px #6767b2;
+	border-color: #6767b2;
 }
 
 .addOption {
@@ -286,12 +281,8 @@
 }
 
 .addOption button {
-	display: none;
-	flex-grow: 1;
-}
-
-.selectedEditor > .addOption button {
 	display: block;
+	flex-grow: 1;
 }
 
 .functionEditor input[type="text"] {
@@ -330,7 +321,7 @@
 }
 
 .parameterUneditable {
-	/*padding: 2px;*/
+	padding: 2px;
 	border-radius: 2px;
 	background: #e8e8ff;
 }
@@ -347,9 +338,11 @@
 
 .helpText {
 	padding: 5px;
-	max-width: 350px;
+	/*max-width: 350px;*/
 	background: #ccccff;
 	border-radius: 2px;
+	display: flex;
+	align-items: center;
 }
 
 .helpTextImg img {
@@ -756,4 +749,47 @@
 	align-items: center;
 	flex-wrap: wrap;
 	margin-bottom: 5px;
+}
+
+.actionDescription {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.actionDescription > span {
+	margin-left: 5px;
+}
+
+.actionDescription > div {
+	margin-left: 5px !important;
+}
+
+.parentOfInlineBlock {
+	flex-basis: 100%;
+}
+
+.tableEntryEditor {
+	width: auto !important;
+}
+
+.tableEntryEditor > .actionEditor {
+	padding: 5px;
+}
+
+.tableEntryEditor > .expressionTypePicker > .actionEditor {
+	padding: 5px;
+}
+
+.expressionTypePicker {
+	margin-left: 0px !important;
+}
+
+.expressionTypePicker .parameterEditor {
+	margin-left: 5px;
+}
+
+.tableEntryEditor .parameterEditor {
+	margin-left: 0px !important;
 }

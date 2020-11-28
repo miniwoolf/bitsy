@@ -10,11 +10,15 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 	titleDiv.innerText = "define function"; // todo : localize
 	div.appendChild(titleDiv);
 
+	var mainDiv = document.createElement("div");
+	mainDiv.style.padding = "5px"; // hack
+	div.appendChild(mainDiv);
+
 	var inputEditor = new FunctionInputEditor(expression.list[1], this);
-	div.appendChild(inputEditor.GetElement());
+	mainDiv.appendChild(inputEditor.GetElement());
 
 	var blockEditor = new BlockEditor(expression.list.slice(2), this, false);
-	div.appendChild(blockEditor.GetElement());
+	mainDiv.appendChild(blockEditor.GetElement());
 
 	this.GetElement = function() {
 		return actionEditor.GetElement();

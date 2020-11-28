@@ -54,6 +54,7 @@ function SequenceEditor(sequenceExpression, parentEditor) {
 
 	var descriptionDiv = document.createElement("div");
 	descriptionDiv.classList.add("sequenceDescription");
+	descriptionDiv.classList.add("actionDescription");
 	div.appendChild(descriptionDiv);
 
 	function CreateSequenceDescription(isEditable) {

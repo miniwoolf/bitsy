@@ -372,11 +372,10 @@ var dialogScriptEditorUniqueIdCounter = 0;
 function ActionEditor(editor, parentEditor, options) {
 	var isInline = options && options.isInline;
 	var isInlineBlock = options && options.isInlineBlock;
+	var disableMoveControls = options && options.disableMoveControls;
 
 	var div = document.createElement("div");
 	div.classList.add("actionEditor");
-
-	console.log(options);
 
 	if (options && options.isAltColor) {
 		div.classList.add("altColor");
@@ -390,12 +389,18 @@ function ActionEditor(editor, parentEditor, options) {
 	}
 	else if (isInlineBlock) {
 		div.classList.add("inlineBlock");
+
+		console.log("-- ACTION EDITOR INLINE BLOCK --");
+		console.log(parentEditor);
+
+		if (parentEditor && parentEditor.GetElement) {
+			console.log(parentEditor.GetElement());
+			parentEditor.GetElement().classList.add("parentOfInlineBlock"); // hack
+		}
 	}
 
-	console.log(div.classList);
-
 	if (!isInline && !isInlineBlock) {
-		var orderControls = new OrderControls(editor, parentEditor, false);
+		var orderControls = new OrderControls(editor, parentEditor, disableMoveControls);
 		div.appendChild(orderControls.GetElement());
 	}
 
@@ -430,6 +435,8 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 		parentEditor.RemoveChild(editor);
 		insertIndex -= 1;
 		parentEditor.InsertChild(editor, insertIndex);
+
+		UpdateControls(disableMoveControls);
 	}
 	div.appendChild(moveUpButton);
 
@@ -441,6 +448,8 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 		parentEditor.RemoveChild(editor);
 		insertIndex += 1;
 		parentEditor.InsertChild(editor, insertIndex);
+
+		UpdateControls(disableMoveControls);
 	}
 	div.appendChild(moveDownButton);
 
@@ -457,23 +466,18 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 		return document.createElement("div");
 	}
 
-	editor.ShowOrderControls = function() {
-		// if (!disableMoveControls && parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
-		// 	// TODO : replace w/ added class name?
-		// 	moveUpButton.disabled = false;
-		// 	moveDownButton.disabled = false;
-		// }
-		// else {
-		// 	moveUpButton.disabled = true;
-		// 	moveDownButton.disabled = true;
-		// }
-
-		// div.style.display = "flex";
+	function UpdateControls(forceDisable) {
+		if (/*!forceDisable &&*/ parentEditor.ChildCount && parentEditor.ChildCount() > 1) {
+			moveUpButton.disabled = false;
+			moveDownButton.disabled = false;
+		}
+		else {
+			moveUpButton.disabled = true;
+			moveDownButton.disabled = true;
+		}
 	}
 
-	editor.HideOrderControls = function() {
-		// div.style.display = "none";
-	}
+	// UpdateControls(disableMoveControls);
 }
 
 function DeleteControls(editor, parentEditor) {
@@ -508,9 +512,7 @@ function SelectionBehaviorController() {
 
 		editor.Select = function() {
 			editor.GetElement().classList.add("selectedEditor");
-			if (editor.ShowOrderControls) {
-				editor.ShowOrderControls();
-			}
+
 			if (onSelect) {
 				onSelect();
 			}
@@ -518,9 +520,7 @@ function SelectionBehaviorController() {
 
 		editor.Deselect = function() {
 			editor.GetElement().classList.remove("selectedEditor");
-			if (editor.HideOrderControls) {
-				editor.HideOrderControls();
-			}
+
 			if (onDeselect) {
 				onDeselect();
 			}

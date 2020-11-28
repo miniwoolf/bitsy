@@ -55,7 +55,9 @@ var expressionDescriptionMap = {
 		},
 		GetDescription : function() {
 			// todo : update text to match "is set to" convention?
-			return localization.GetStringOrFallback("function_item_description", "_ in inventory[ = _]");
+			// return localization.GetStringOrFallback("function_item_description", "_ in inventory[ = _]");
+			// todo : localize
+			return "_ in inventory[ is set to _]";
 		},
 		parameters : [
 			{ types: ["item", "string", "symbol"], index: 0, name: "item", },
@@ -194,7 +196,7 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 	var descriptionId = symbol in expressionDescriptionMap ? symbol : "default";
 	var paramLength = expression.list.length - 1;
 
-	var div = document.createElement(isInline ? "span" : "div");
+	var div = document.createElement("div");
 	div.classList.add("functionEditor");
 
 	if (isInline) {
@@ -216,7 +218,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		div.appendChild(titleDiv);
 	}
 
-	var descriptionDiv = document.createElement(isInline ? "span" : "div");
+	var descriptionDiv = document.createElement("div");
+	descriptionDiv.classList.add("actionDescription");
 	div.appendChild(descriptionDiv);
 
 	var customCommandsDiv = null;
@@ -281,9 +284,10 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		// var customControls = orderControls.GetCustomControlsContainer();
 		// customControls.appendChild(toggleParameterTypesButton);
 
-		if (hasHelpText) {
-			customControls.appendChild(toggleHelpButton);
-		}
+		// TODO : fix
+		// if (hasHelpText) {
+		// 	customControls.appendChild(toggleHelpButton);
+		// }
 	}
 
 	// TODO : populate default values!!
@@ -305,10 +309,8 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 		var i = 0;
 
 		for (; i < descriptionTextSplit.length; i++) {
-			var descriptionSpan = document.createElement("span");
-			descriptionDiv.appendChild(descriptionSpan);
-
 			var text = descriptionTextSplit[i];
+
 			if (text.indexOf("][") >= 0) {
 				// hacky way to handle multiple optional parameters D:
 				var optionalTextMidSplit = text.split("][");
@@ -316,40 +318,46 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 
 				var prevParam = expressionDescriptionMap[descriptionId].parameters[i - 1];
 				if (paramLength > prevParam.index) {
-					descriptionSpan.innerText = optionalTextMidDefaultSplit[0];
+					text = optionalTextMidDefaultSplit[0];
 				}
 				else if (optionalTextMidDefaultSplit.length > 1) {
-					descriptionSpan.innerText = optionalTextMidDefaultSplit[1];
+					text = optionalTextMidDefaultSplit[1];
 				}
 
 				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
 				if (paramLength > nextParam.index && optionalTextStartSplit.length > 1) {
-					descriptionSpan.innerText += optionalTextMidSplit[1];
+					text += optionalTextMidSplit[1];
 				}
 			}
 			else if (text.indexOf("[") >= 0) { // optional parameter text start
 				var optionalTextStartSplit = text.split("[");
-				descriptionSpan.innerText = optionalTextStartSplit[0];
+				text = optionalTextStartSplit[0];
+
 				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
 				if (paramLength > nextParam.index && optionalTextStartSplit.length > 1) {
-					descriptionSpan.innerText += optionalTextStartSplit[1];
+					text += optionalTextStartSplit[1];
 				}
 			}
 			else if (text.indexOf("]") >= 0) { // optional parameter text end
+				console.log(descriptionText);
+				console.log(text);
+
 				var optionalTextEndSplit = text.split("]");
 				var optionalTextEndDefaultSplit = optionalTextEndSplit[0].split("|");
 
 				var prevParam = expressionDescriptionMap[descriptionId].parameters[i - 1];
 
-				if (paramLength > prevParam.index) {
-					descriptionSpan.innerText = optionalTextEndDefaultSplit[0];
-				}
-				else if (optionalTextEndDefaultSplit.length > 1) {
-					descriptionSpan.innerText = optionalTextEndDefaultSplit[1];
+				text = optionalTextEndDefaultSplit[0]
+
+				if (optionalTextEndDefaultSplit.length > 1) {
+					text = optionalTextEndDefaultSplit[1];
 				}
 			}
-			else { // regular description text
+
+			if (text.length > 0 && text != " ") {
+				var descriptionSpan = document.createElement("span");
 				descriptionSpan.innerText = text;
+				descriptionDiv.appendChild(descriptionSpan);
 			}
 
 			if (i < descriptionTextSplit.length - 1) {
