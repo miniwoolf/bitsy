@@ -1441,10 +1441,12 @@ function importGameFromFile(e) {
 	var files = e.target.files;
 	var file = files[0];
 	var reader = new FileReader();
-	reader.readAsText( file );
+
+	reader.readAsText(file);
 
 	reader.onloadend = function() {
 		var fileText = reader.result;
+
 		gameDataStr = exporter.importGame( fileText );
 
 		// change game data & reload everything
@@ -1464,7 +1466,6 @@ function importFontFromFile(e) {
 
 	reader.onloadend = function() {
 		var fileText = reader.result;
-		console.log(fileText);
 
 		var customFontName = (fontManager.Create(fileText)).getName();
 

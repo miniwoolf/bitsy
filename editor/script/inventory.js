@@ -58,7 +58,7 @@ function updateInventoryItemUI(){
 			var playerEntry = isPlayMode ? player() : tile[getPlayerId()];
 
 			// why is this null?
-			if (playerEntry) {
+			if (playerEntry && playerEntry.inventory) {
 				var itemCount = playerEntry.inventory[id] != undefined ? parseFloat(playerEntry.inventory[id]) : 0;
 
 				var itemDiv = document.createElement("div");
