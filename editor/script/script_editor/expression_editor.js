@@ -27,7 +27,12 @@ var expressionDescriptionMap = {
 			{ types: ["number", "symbol"], index: 2, name: "y", },
 			{ types: ["transition", "string", "symbol"], index: 3, name: "transition effect", },
 		],
-		commands : [RoomMoveDestinationCommand],
+		commands :
+			[{
+				iconId: "set_exit_location",
+				getName: function() { return localization.GetStringOrFallback("exit_destination_move", "move destination"); },
+				createCommand: CreateSelectExitLocationCommand,
+			}],
 	},
 	// todo : add to text effects instead? along with BR?
 	"BR" : {
@@ -110,6 +115,13 @@ var expressionDescriptionMap = {
 			{ types: ["number", "symbol", "list"], index: 1, name: "x position", },
 			{ types: ["number", "symbol", "list"], index: 2, name: "y position", },
 		],
+		commands :
+			[{
+				iconId: "set_exit_location",
+				// todo : localize
+				getName: function() { return "select sprite location"; },
+				createCommand: CreateSelectSpriteLocationCommand,
+			}],
 	},
 	"RID" : {
 		GetName : function() { return "get rid of sprite"; }, // todo : localize
@@ -125,41 +137,6 @@ var expressionDescriptionMap = {
 			{ types: ["palette", "string", "symbol", "list"], index: 0, name: "palette", },
 		],
 	},
-	// todo : do I really want this function?
-	// "NOT" : {
-	// 	GetName : function() { return "not"; }, // todo : localize
-	// 	GetDescription : function() { return "not _"; },
-	// 	parameters : [
-	// 		{ types: ["number", "boolean", "string", "symbol", "list"], index: 0, name: "value", },
-	// 	],
-	// 	// TODO : add help text?
-	// },
-	// "FOR" : {
-	// 	GetName : function() { return "for each"; }, // todo : localize
-	// 	GetDescription : function() { return "for each entry in _, do: _"; },
-	// 	parameters : [
-	// 		{ types: ["symbol", "list"], index: 0, name: "table", },
-	// 		{ types: ["symbol", "list"], index: 1, name: "function", },
-	// 	],
-	// 	// TODO : add help text?
-	// },
-	// "RNG" : {
-	// 	GetName : function() { return "range"; }, // todo : localize
-	// 	GetDescription : function() { return "range of _ to _"; },
-	// 	parameters : [
-	// 		{ types: ["number", "symbol", "list"], index: 0, name: "min", },
-	// 		{ types: ["number", "symbol", "list"], index: 1, name: "max", },
-	// 	],
-	// 	// TODO : add help text?
-	// },
-	// "RND" : {
-	// 	GetName : function() { return "random"; }, // todo : localize
-	// 	GetDescription : function() { return "random value from _"; },
-	// 	parameters : [
-	// 		{ types: ["symbol", "list"], index: 0, name: "table", },
-	// 	],
-	// 	// TODO : add help text?
-	// },
 	"default" : {
 		GetName : function() { return "function"; }, // todo : localize
 		GetDescription : function() {
@@ -222,86 +199,46 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 	descriptionDiv.classList.add("actionDescription");
 	div.appendChild(descriptionDiv);
 
-	var customCommandsDiv = null;
-	var addParameterDiv = null;
+	var editParameterTypes = false;
+
 	var helpTextDiv = null;
 	var helpTextContent = null;
 	var hasHelpText = false;
+	var helpTextFunc = expressionDescriptionMap[descriptionId].GetHelpText;
+	hasHelpText = helpTextFunc != undefined && helpTextFunc != null;
 
-	var editParameterTypes = false;
-	var toggleParameterTypesButton = document.createElement("button");
-	toggleParameterTypesButton.title = "toggle editing parameter types";
-	toggleParameterTypesButton.appendChild(iconUtils.CreateIcon("settings"));
-	toggleParameterTypesButton.onclick = function() {
-		editParameterTypes = !editParameterTypes;
-		CreateExpressionDescription(true);
-	}
-
-	if (!isInline) {
-		customCommandsDiv = document.createElement("div");
-		customCommandsDiv.style.marginTop = "5px"; // hack : need to hide these spacers...
-		div.appendChild(customCommandsDiv);
-
-		addParameterDiv = document.createElement("div");
-		addParameterDiv.style.marginTop = "5px"; // hack
-		div.appendChild(addParameterDiv);
-
+	if (!isInline && hasHelpText) {
 		helpTextDiv = document.createElement("div");
 		helpTextDiv.classList.add("helpText");
 		helpTextDiv.style.display = "none";
 		div.appendChild(helpTextDiv);
+
 		var helpTextImgHolder = document.createElement("div");
 		helpTextImgHolder.classList.add("helpTextImg");
 		helpTextDiv.appendChild(helpTextImgHolder);
+
 		var catImg = document.createElement("img");
+
 		catImg.src = "image/cat.svg";
 		helpTextImgHolder.appendChild(catImg);
 		helpTextContent = document.createElement("div");
 		helpTextContent.classList.add("helpTextContent");
 		helpTextDiv.appendChild(helpTextContent);
 
-		var helpTextFunc = expressionDescriptionMap[descriptionId].GetHelpText;
-		hasHelpText = helpTextFunc != undefined && helpTextFunc != null;
-		if (hasHelpText) {
-			helpTextContent.innerText = helpTextFunc();
-		}
-
-		var toggleHelpButton = document.createElement("button");
-		toggleHelpButton.title = "turn help text on/off";
-		toggleHelpButton.appendChild(iconUtils.CreateIcon("help"));
-		toggleHelpButton.onclick = function() {
-			isHelpTextOn = !isHelpTextOn;
-
-			// hacky
-			if (hasHelpText && isHelpTextOn) {
-				helpTextDiv.style.display = "flex";
-			}
-			else {
-				helpTextDiv.style.display = "none";
-			}
-		}
-
-		// var customControls = orderControls.GetCustomControlsContainer();
-		// customControls.appendChild(toggleParameterTypesButton);
-
-		// TODO : fix
-		// if (hasHelpText) {
-		// 	customControls.appendChild(toggleHelpButton);
-		// }
+		helpTextContent.innerText = helpTextFunc();
 	}
 
 	// TODO : populate default values!!
+	var curEditableState = false;
 	var curParameterEditors = [];
 	var curCommandEditors = []; // store custom commands
 	function CreateExpressionDescription(isEditable) {
+		curEditableState = isEditable;
+		actionEditor.ClearCommands();
+
 		paramLength = expression.list.length - 1;
 		curParameterEditors = [];
 		descriptionDiv.innerHTML = "";
-
-		if (!isInline) {
-			customCommandsDiv.innerHTML = "";
-			addParameterDiv.innerHTML = "";
-		}
 
 		var descriptionText = expressionDescriptionMap[descriptionId].GetDescription();
 		var descriptionTextSplit = descriptionText.split("_");
@@ -389,10 +326,7 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 						}
 					}
 
-					var addParameterButton = document.createElement('button');
-					addParameterButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + parameterInfo.name;
-					addParameterButton.onclick = createAddParameterHandler(expression, parameterInfo);
-					addParameterDiv.appendChild(addParameterButton);
+					actionEditor.AddCommand("add", parameterInfo.name, createAddParameterHandler(expression, parameterInfo));
 				}
 			}
 		}
@@ -425,30 +359,42 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			inputSeperator = ", ";
 		}
 
+		// add custom edit commands
+		var commands = expressionDescriptionMap[descriptionId].commands;
+		if (isEditable && commands) {
+			for (var i = 0; i < commands.length; i++) {
+				actionEditor.AddCommand(commands[i].iconId, commands[i].getName(), commands[i].createCommand(expression, self));
+			}
+		}
 
 		if (!isInline) {
-			// clean up and reset command editors
-			for (var i = 0; i < curCommandEditors.length; i++) {
-				curCommandEditors[i].OnDestroy();
-			}
-			curCommandEditors = [];
-
-			// add custom edit commands
-			var commands = expressionDescriptionMap[descriptionId].commands;
-			if (isEditable && commands) {
-				for (var i = 0; i < commands.length; i++) {
-					var commandEditor = new commands[i](expression, parentEditor, CreateExpressionDescription);
-					curCommandEditors.push(commandEditor);
-					customCommandsDiv.appendChild(commandEditor.GetElement());
-				}
-			}
-
-			if (isEditable && hasHelpText && isHelpTextOn) {
+			if (isEditable && hasHelpText && isHelpTextOn && helpTextDiv) {
 				helpTextDiv.style.display = "flex";
 			}
-			else {
+			else if (helpTextDiv) {
 				helpTextDiv.style.display = "none";
 			}
+		}
+
+		if (isEditable) {
+			if (hasHelpText) {
+				actionEditor.AddCommand("help", "help", function() {
+					isHelpTextOn = !isHelpTextOn;
+
+					// hacky
+					if (hasHelpText && isHelpTextOn && helpTextDiv) {
+						helpTextDiv.style.display = "flex";
+					}
+					else if (helpTextDiv) {
+						helpTextDiv.style.display = "none";
+					}
+				});
+			}
+
+			actionEditor.AddCommand("settings", "edit input types", function() {
+				editParameterTypes = !editParameterTypes;
+				CreateExpressionDescription(true);
+			});
 		}
 	}
 
@@ -482,6 +428,9 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 			}
 
 			CreateExpressionDescription(true);
+		}
+		else if (event && event.forceUpdate) {
+			CreateExpressionDescription(curEditableState);
 		}
 
 		parentEditor.NotifyUpdate();
@@ -522,64 +471,58 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 	};
 }
 
-function RoomMoveDestinationCommand(functionNode, parentEditor, createExpressionDescriptionFunc) {
-	var listener = new EventListener(events);
+function CreateSelectExitLocationCommand(expression, parentEditor) {
+	return function() {
+		roomTool.OnSelectLocation(
+			function(roomId, x, y) {
+				if (expression.list.length >= 4) {
+					expression.list[1] = { type: "string", value: roomId, };
+					expression.list[2] = { type: "number", value: x, };
+					expression.list[3] = { type: "number", value: y, };
 
-	var isMoving = false;
-
-	var commandDescription = iconUtils.CreateIcon("set_exit_location").outerHTML + " "
-		+ localization.GetStringOrFallback("exit_destination_move", "move destination");
-
-	var moveCommand = document.createElement("div");
-
-	var moveMessageSpan = document.createElement("span");
-	moveCommand.appendChild(moveMessageSpan);
-
-	var moveButton = document.createElement("button");
-	moveButton.innerHTML = commandDescription;
-	moveButton.title = "click to select new destination";
-	moveButton.onclick = function() {
-		isMoving = !isMoving;
-
-		if (isMoving) {
-			moveMessageSpan.innerHTML = "<i>" + localization.GetStringOrFallback("marker_move_click", "click in room") + "</i> ";
-			moveButton.innerHTML = iconUtils.CreateIcon("cancel").outerHTML + " "
-				+ localization.GetStringOrFallback("action_cancel", "cancel");
-			events.Raise("disable_room_tool"); // TODO : don't know if I like this design
-		}
-		else {
-			moveMessageSpan.innerHTML = "";
-			moveButton.innerHTML = commandDescription;
-			events.Raise("enable_room_tool");
-		}
+					parentEditor.NotifyUpdate({ forceUpdate: true, });
+				}
+				// todo : what if no location exists?
+			},
+			function() {
+				// todo
+			},
+			{
+				// todo : localize
+				message: "click in room to select exit location",
+			});
 	}
-	moveCommand.appendChild(moveButton);
+}
 
-	listener.Listen("click_room", function(event) {
-		if (isMoving) {
-			roomId = event.roomId;
-			roomPosX = event.x;
-			roomPosY = event.y;
+function CreateSelectSpriteLocationCommand(expression, parentEditor) {
+	return function() {
+		roomTool.OnSelectLocation(
+			function(roomId, x, y) {
+				if (expression.list.length >= 4) {
+					expression.list[2] = { type: "number", value: x, };
+					expression.list[3] = { type: "number", value: y, };
 
-			functionNode.args.splice(0, 1, scriptUtils.CreateStringLiteralNode(roomId));
-			functionNode.args.splice(1, 1, scriptUtils.CreateLiteralNode(roomPosX));
-			functionNode.args.splice(2, 1, scriptUtils.CreateLiteralNode(roomPosY));
+					parentEditor.NotifyUpdate({ forceUpdate: true, });
+				}
+				else if (expression.list.length >= 3) {
+					expression.list[2] = { type: "number", value: x, };
+					expression.list.push({ type: "number", value: y, });
 
-			isMoving = false;
-			moveMessageSpan.innerHTML = "";
-			moveButton.innerHTML = commandDescription;
+					parentEditor.NotifyUpdate({ forceUpdate: true, });
+				}
+				else if (expression.list.length >= 2) {
+					expression.list.push({ type: "number", value: x, });
+					expression.list.push({ type: "number", value: y, });
 
-			createExpressionDescriptionFunc(true);
-			parentEditor.NotifyUpdate();
-			events.Raise("enable_room_tool");
-		}
-	});
-
-	this.GetElement = function() {
-		return moveCommand;
-	}
-
-	this.OnDestroy = function() {
-		listener.UnlistenAll();
+					parentEditor.NotifyUpdate({ forceUpdate: true, });
+				}
+			},
+			function() {
+				// todo
+			},
+			{
+				// todo : localize
+				message: "click in room to select new sprite location",
+			});
 	}
 }

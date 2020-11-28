@@ -404,9 +404,21 @@ function ActionEditor(editor, parentEditor, options) {
 		div.appendChild(orderControls.GetElement());
 	}
 
+	var middleColumnDiv = document.createElement("div");
+	middleColumnDiv.classList.add("actionEditorMiddleColumn");
+	div.appendChild(middleColumnDiv);
+
 	var contentControlDiv = document.createElement("div");
 	contentControlDiv.classList.add("contentControlsRoot");
-	div.appendChild(contentControlDiv);
+	middleColumnDiv.appendChild(contentControlDiv);
+
+	var customCommandDiv = document.createElement("div");
+	customCommandDiv.classList.add("customControlsRoot");
+	middleColumnDiv.appendChild(customCommandDiv);
+
+	if (isInline) {
+		customCommandDiv.style.display = "none";
+	}
 
 	if (!isInline && !isInlineBlock) {
 		var deleteControls = new DeleteControls(editor, parentEditor);
@@ -420,6 +432,24 @@ function ActionEditor(editor, parentEditor, options) {
 	// todo : pass in with constructor?
 	this.AddContentControl = function(control) {
 		contentControlDiv.appendChild(control);
+	};
+
+	this.AddCommand = function(iconId, name, onClickFunc) {
+		var commandButton = document.createElement("button");
+		commandButton.onclick = onClickFunc;
+		customCommandDiv.appendChild(commandButton);
+
+		var commandIcon = iconUtils.CreateIcon(iconId);
+		commandIcon.classList.add("icon_space_right");
+		commandButton.appendChild(commandIcon);
+
+		var commandName = document.createElement("span");
+		commandName.innerText = name;
+		commandButton.appendChild(commandName);
+	};
+
+	this.ClearCommands = function() {
+		customCommandDiv.innerHTML = "";
 	};
 }
 
@@ -453,17 +483,8 @@ function OrderControls(editor, parentEditor, disableMoveControls) {
 	}
 	div.appendChild(moveDownButton);
 
-	// var customButtonsContainer = document.createElement("div");
-	// customButtonsContainer.style.display = "inline-block";
-	// customButtonsContainer.style.marginLeft = "5px";
-	// div.appendChild(customButtonsContainer);
-
 	this.GetElement = function() {
 		return div;
-	}
-
-	this.GetCustomControlsContainer = function() {
-		return document.createElement("div");
 	}
 
 	function UpdateControls(forceDisable) {

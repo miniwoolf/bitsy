@@ -343,6 +343,7 @@
 	border-radius: 2px;
 	display: flex;
 	align-items: center;
+	margin-top: 5px;
 }
 
 .helpTextImg img {
@@ -766,6 +767,12 @@
 	margin-left: 5px !important;
 }
 
+.actionEditorMiddleColumn {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
 .parentOfInlineBlock {
 	flex-basis: 100%;
 }
@@ -792,4 +799,16 @@
 
 .tableEntryEditor .parameterEditor {
 	margin-left: 0px !important;
+}
+
+.customControlsRoot {
+	margin-top: 5px;
+}
+
+.customControlsRoot button {
+	margin-right: 5px;
+}
+
+.customControlsRoot .bitsy_icon.icon_space_right {
+	margin-right: 5px;
 }

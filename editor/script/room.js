@@ -316,6 +316,10 @@ function RoomTool(controls) {
 
 	var onSelectBehavior = null;
 	this.OnSelectLocation = function(onSelect, onFinish, options) {
+		if (onSelectBehavior != null) {
+			onSelectBehavior.OnFinish();
+		}
+
 		controls.nav.container.style.display = "none";
 		controls.locationSelect.container.style.display = "flex";
 
@@ -325,10 +329,6 @@ function RoomTool(controls) {
 		controls.canvas.classList.remove("selectCursor");
 		controls.canvas.classList.remove("paintCursor");
 		controls.canvas.classList.add("selectCursor");
-
-		if (onSelectBehavior != null) {
-			onSelectBehavior.OnFinish();
-		}
 
 		onSelectBehavior = {
 			OnSelect : function(curRoom, x, y) {
