@@ -29,6 +29,7 @@ function DialogTextEditor(expressionList, parentEditor) {
 	textArea.onblur = OnDialogTextChange;
 
 	textArea.rows = Math.max(4, dialogText.split("\n").length + 1);
+	textArea.cols = 1; // hack to allow these to get as small as possible..
 
 	textArea.addEventListener('click', textSelectionChangeHandler);
 	textArea.addEventListener('select', textSelectionChangeHandler);
