@@ -172,7 +172,7 @@ function getCoord(line, arg) {
 }
 
 function parseTitle(lines, i) {
-	return parseScript(lines, i, { id: titleDialogId, });
+	return parseScript(lines, i, { id: titleId, });
 }
 
 function parsePalette(lines, i) { //todo this has to go first right now :(

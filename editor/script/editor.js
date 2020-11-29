@@ -57,7 +57,7 @@ function on_change_title(e) {
 	tryWarnAboutMissingCharacters(getTitle());
 
 	// make sure all editors with a title know to update
-	events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
+	events.Raise("dialog_update", { dialogId:titleId, editorId:null });
 }
 
 /* MOBILE */
@@ -119,7 +119,7 @@ function resetGameData() {
 
 	// TODO : localize default_title
 	setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
-	events.Raise("dialog_update", { dialogId: titleDialogId, });
+	events.Raise("dialog_update", { dialogId: titleId, });
 
 	// todo : turn back on?
 	// dialog["0"] = {
@@ -188,7 +188,7 @@ var editMode = EditMode.Edit; // TODO : move to core.js?
 var roomTool;
 var paintTool;
 var mapTool;
-var dialogTool;
+var scriptTool;
 var findTool;
 
 /* ROOM */
@@ -700,7 +700,7 @@ function start() {
 	}
 
 	// init dialog tool
-	dialogTool = new DialogTool({
+	scriptTool = new ScriptTool({
 		panelRoot : document.getElementById("scriptPanel"),
 		nameInput : document.getElementById("dialogName"),
 		previewToggle : document.getElementById("previewDialogCheck"),
@@ -1725,7 +1725,7 @@ function on_change_language_inner(language) {
 	if (localization.LocalizationContains("default_title", getTitle())) {
 		setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
 		// make sure all editors with a title know to update
-		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
+		events.Raise("dialog_update", { dialogId:titleId, editorId:null });
 	}
 
 	// todo : turn back on?

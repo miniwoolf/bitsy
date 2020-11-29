@@ -5,27 +5,31 @@ var expressionDescriptionMap = {
 			return localization.GetStringOrFallback("function_end_name", "end");
 		},
 		GetDescription : function() {
-			return localization.GetStringOrFallback("function_end_description", "stop the game");
+			// todo : localize
+			return "stop the game [-- wait for input first? _]";
 		},
 		GetHelpText : function() {
-			return localization.GetStringOrFallback(
-				"function_end_help",
-				"the game stops immediately, but if there is dialog after this action, it will still play");
+			// todo : localize
+			return "the game stops after the current page, but dialog after this action will still play";
 		},
-		parameters : [],
+		parameters : [
+			{ types: ["boolean", "symbol"], index: 0, name: "wait for input?", },
+		],
 	},
 	"EXT" : {
 		GetName : function() {
 			return localization.GetStringOrFallback("function_exit_name", "exit");
 		},
 		GetDescription : function() {
-			return localization.GetStringOrFallback("function_exit_description", "move player to _ at (_,_)[ with effect _]");
+			// todo : localize
+			return "move player to _ at (_,_)[ with effect _] [-- wait for input first? _]";
 		},
 		parameters : [
 			{ types: ["room", "string", "symbol"], index: 0, name: "room", },
 			{ types: ["number", "symbol"], index: 1, name: "x", },
 			{ types: ["number", "symbol"], index: 2, name: "y", },
 			{ types: ["transition", "string", "symbol"], index: 3, name: "transition effect", },
+			{ types: ["boolean", "symbol"], index: 4, name: "wait for input?", },
 		],
 		commands :
 			[{
@@ -107,7 +111,7 @@ var expressionDescriptionMap = {
 	},
 	"PUT" : {
 		GetName : function() { return "put down new sprite"; }, // todo : localize
-		GetDescription : function() { return "put _ [ at _| here][,_]"; }, // todo : localize
+		GetDescription : function() { return "put _ [ at (_| here][,_)]"; }, // todo : localize
 		parameters : [
 			// todo : create special parameter type for sprite IDs
 			{ types: ["sprite", "string", "symbol", "list"], index: 0, name: "sprite", },
@@ -269,25 +273,32 @@ function ExpressionEditor(expression, parentEditor, isInline) {
 				text = optionalTextStartSplit[0];
 
 				var nextParam = expressionDescriptionMap[descriptionId].parameters[i];
+
 				if (paramLength > nextParam.index && optionalTextStartSplit.length > 1) {
 					text += optionalTextStartSplit[1];
 				}
 			}
 			else if (text.indexOf("]") >= 0) { // optional parameter text end
-				console.log(descriptionText);
-				console.log(text);
-
 				var optionalTextEndSplit = text.split("]");
 				var optionalTextEndDefaultSplit = optionalTextEndSplit[0].split("|");
 
 				var prevParam = expressionDescriptionMap[descriptionId].parameters[i - 1];
 
-				text = optionalTextEndDefaultSplit[0]
-
-				if (optionalTextEndDefaultSplit.length > 1) {
+				if (paramLength > prevParam.index) {
+					text = optionalTextEndDefaultSplit[0];
+				}
+				else if (optionalTextEndDefaultSplit.length > 1) {
 					text = optionalTextEndDefaultSplit[1];
 				}
+				else {
+					text = "";
+				}
 			}
+
+			// clean up text: I feel like I should be able to make this not necessary..
+			text = text.replaceAll("[", " ").replaceAll("]", " ").trim();
+
+			console.log(text);
 
 			if (text.length > 0 && text != " ") {
 				var descriptionSpan = document.createElement("span");

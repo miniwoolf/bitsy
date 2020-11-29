@@ -56,14 +56,14 @@ var instanceCount = 1;
 var playerInstanceId = "1"; // todo : is this ok hardcoded?
 
 // title
-var titleDialogId = NULL_ID;
+var titleId = NULL_ID;
 
 function getTitle() {
-	return dialog[titleDialogId].src;
+	return dialog[titleId].src;
 }
 
 function setTitle(titleSrc) {
-	dialog[titleDialogId].src = titleSrc;
+	dialog[titleId].src = titleSrc;
 }
 
 var defaultFontName = "ascii_small";
@@ -1716,7 +1716,7 @@ function startTitle() {
 	dialogRenderer.SetCentered(true);
 	dialogBuffer.Reset();
 
-	scriptNext.Run(dialog[titleDialogId], null, function() {
+	scriptNext.Run(dialog[titleId], null, function() {
 		// TODO : can we refactor this part? do script queue scripts need this?
 		dialogBuffer.OnDialogEnd(function() {
 			isNarrating = false;

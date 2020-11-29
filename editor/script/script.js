@@ -1,17 +1,21 @@
-function DialogTool(controls) {
-	var curDialogId = null;
+function ScriptTool(controls) {
+	var curScriptId = null;
 	var curScriptEditor = null;
 
 	var textEffects = new TextEffectsControl();
 	textEffects.Update(false);
 
-	// todo : rename since it doesn't always "open" it?
-	function openDialogTool(dialogId, insertNextToId, showIfHidden) {
+	var scriptCues = new ScriptCues();
+
+	function OnSelect(id, insertNextToId, showIfHidden) {
 		if (showIfHidden === undefined || showIfHidden === null) {
 			showIfHidden = true;
 		}
 
-		controls.nav.del.disabled = dialogId === titleDialogId;
+		curScriptId = id;
+		var isTitle = (curScriptId === titleId);
+
+		controls.nav.del.disabled = isTitle;
 
 		var showCode = controls.showCodeToggle.checked;
 
@@ -24,31 +28,29 @@ function DialogTool(controls) {
 			delete curScriptEditor;
 		}
 
-		curDialogId = dialogId;
-		curScriptEditor = new ScriptEditor(dialogId);
+		curScriptEditor = new ScriptEditor(curScriptId);
 		curScriptEditor.SetPlaintextMode(showCode);
 
 		if (size != null) {
 			curScriptEditor.SetSize(size.width, size.height);
 		}
 
-		var dialogEditorViewport = controls.scriptEditorViewport;
-		dialogEditorViewport.innerHTML = "";
-
-		dialogEditorViewport.appendChild(curScriptEditor.GetElement());
+		controls.scriptEditorViewport.innerHTML = "";
+		controls.scriptEditorViewport.appendChild(curScriptEditor.GetElement());
 
 		// todo : localize!
-		controls.nameInput.placeholder = "dialog " + dialogId + " " + makeCountLabel(dialogId, dialog, DEFAULT_REGISTRY_SIZE);
+		controls.nameInput.placeholder = "dialog " + curScriptId +
+			" " + makeCountLabel(curScriptId, dialog, DEFAULT_REGISTRY_SIZE);
 
-		if (dialogId === titleDialogId) {
+		if (isTitle) {
 			controls.nameInput.readOnly = true;
 			// todo : localize
 			controls.nameInput.value = "title";
 		}
 		else {
 			controls.nameInput.readOnly = false;
-			if (dialog[dialogId].name != null) {
-				controls.nameInput.value = dialog[dialogId].name;
+			if (dialog[curScriptId].name != null) {
+				controls.nameInput.value = dialog[curScriptId].name;
 			}
 			else {
 				controls.nameInput.value = "";
@@ -63,61 +65,60 @@ function DialogTool(controls) {
 		}
 	}
 
-	function onDialogNameChange(event) {
+	function onNameChange(event) {
 		if (event.target.value != null && event.target.value.length > 0) {
-			dialog[curDialogId].name = event.target.value;
+			dialog[curScriptId].name = event.target.value;
 		}
 		else {
-			dialog[curDialogId].name = null;
+			dialog[curScriptId].name = null;
 		}
 
 		refreshGameData();
 
-		events.Raise("change_dialog_name", { id: curDialogId, name: dialog[curDialogId].name });
+		events.Raise("change_dialog_name", { id: curScriptId, name: dialog[curScriptId].name, });
 	}
 
-	function nextDialog() {
-		var id = titleDialogId; // the title is safe as a default choice
+	function nextScript() {
+		var id = titleId; // the title is safe as a default choice
 
-		if (curDialogId != null) {
-			var dialogIdList = sortedIdList(dialog);
-			var dialogIndex = dialogIdList.indexOf(curDialogId);
+		if (curScriptId != null) {
+			var scriptIdList = sortedIdList(dialog);
+			var scriptIndex = scriptIdList.indexOf(curScriptId);
 
 			// pick the index of the next dialog to open
-			dialogIndex++;
-			if (dialogIndex >= dialogIdList.length) {
-				dialogIndex = 0;
+			scriptIndex++;
+			if (scriptIndex >= scriptIdList.length) {
+				scriptIndex = 0;
 			}
 
 			// turn the index into an ID
-			id = dialogIdList[dialogIndex];
+			id = scriptIdList[scriptIndex];
 		}
 
 		events.Raise("select_dialog", { id: id });
 	}
 
-	function prevDialog() {
-		var id = titleDialogId; // the title is safe as a default choice
+	function prevScript() {
+		var id = titleId; // the title is safe as a default choice
 
-		if (curDialogId != null) {
-			var dialogIdList = sortedIdList(dialog);
-			var dialogIndex = dialogIdList.indexOf(curDialogId);
+		if (curScriptId != null) {
+			var scriptIdList = sortedIdList(dialog);
+			var scriptIndex = scriptIdList.indexOf(curScriptId);
 
 			// pick the index of the next dialog to open
-			dialogIndex--;
-			if (dialogIndex < 0) {
-				dialogIndex = dialogIdList.length - 1;
+			scriptIndex--;
+			if (scriptIndex < 0) {
+				scriptIndex = scriptIdList.length - 1;
 			}
 
 			// turn the index into an ID
-			id = dialogIdList[dialogIndex];
+			id = scriptIdList[scriptIndex];
 		}
 
 		events.Raise("select_dialog", { id: id });
 	}
 
-	// todo : move into its own tool?
-	function addNewDialog() {
+	function addNewScript() {
 		var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
 		if (id != null) {
@@ -126,53 +127,50 @@ function DialogTool(controls) {
 			refreshGameData();
 
 			events.Raise("select_dialog", { id: id });
-
-			events.Raise("new_dialog", { id:id });
+			events.Raise("new_dialog", { id: id });
 		}
 		else {
-			alert("oh no you ran out of dialog! :(");
+			alert("oh no you ran out of scripts! :(");
 		}
 	}
 
-	function duplicateDialog() {
-		if (curDialogId != null) {
+	function duplicateScript() {
+		if (curScriptId != null) {
 			var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
 			if (id != null) {
-				dialog[id] = createScript(id, null, dialog[curDialogId].src.slice());
+				dialog[id] = createScript(id, null, dialog[curScriptId].src.slice());
 				refreshGameData();
 
 				events.Raise("select_dialog", { id: id });
+				events.Raise("new_dialog", { id: id });
 			}
 			else {
-				alert("oh no you ran out of dialog! :(");
+				alert("oh no you ran out of scripts! :(");
 			}
 		}
 	}
 
-	function deleteDialog() {
-		var shouldDelete = confirm("Are you sure you want to delete this dialog?");
+	function deleteScript() {
+		var shouldDelete = confirm("Are you sure you want to delete this script?");
 
-		if (shouldDelete && curDialogId != null && curDialogId != titleDialogId) {
-			var tempDialogId = curDialogId;
+		if (shouldDelete && curScriptId != null && curScriptId != titleId) {
+			var tempScriptId = curScriptId;
 
-			nextDialog();
+			nextScript();
 
-			// delete all references to deleted dialog (TODO : should this go in a wrapper function somewhere?)
 			for (id in tile) {
-				if (tile[id].dlg === tempDialogId) {
-					tile[id].dlg = null;
-				}
+				scriptCues.ClearAllContainingScript(tempScriptId, id);
 			}
 
-			delete dialog[tempDialogId];
+			delete dialog[tempScriptId];
 			refreshGameData();
 
-			events.Raise("dialog_delete", { dialogId:tempDialogId, editorId:null });
+			events.Raise("dialog_delete", { dialogId:tempScriptId, editorId:null });
 		}
 	}
 
-	function toggleDialogCode(e) {
+	function togglePlaintextCode(e) {
 		var showCode = e.target.checked;
 		curScriptEditor.SetPlaintextMode(showCode);
 
@@ -201,14 +199,14 @@ function DialogTool(controls) {
 	}
 
 	/* controls */
-	controls.nameInput.onchange = onDialogNameChange;
+	controls.nameInput.onchange = onNameChange;
 	controls.previewToggle.onclick = togglePreviewDialog;
-	controls.showCodeToggle.onclick = toggleDialogCode;
-	controls.nav.prev.onclick = prevDialog;
-	controls.nav.next.onclick = nextDialog;
-	controls.nav.add.onclick = addNewDialog;
-	controls.nav.copy.onclick = duplicateDialog;
-	controls.nav.del.onclick = deleteDialog;
+	controls.showCodeToggle.onclick = togglePlaintextCode;
+	controls.nav.prev.onclick = prevScript;
+	controls.nav.next.onclick = nextScript;
+	controls.nav.add.onclick = addNewScript;
+	controls.nav.copy.onclick = duplicateScript;
+	controls.nav.del.onclick = deleteScript;
 
 	controls.editControls.editDialogAdd.onclick = function() {
 		controls.editControls.dialogAddControls.style.display = "flex";
@@ -249,11 +247,11 @@ function DialogTool(controls) {
 
 	/* events */
 	events.Listen("select_dialog", function(e) {
-		openDialogTool(e.id, e.insertNextToId, e.showIfHidden);
+		OnSelect(e.id, e.insertNextToId, e.showIfHidden);
 	});
 
 	// init to title
-	openDialogTool(NULL_ID, null, false);
+	OnSelect(titleId, null, false);
 }
 
 function TextEffectsControl() {
@@ -449,11 +447,11 @@ function TextEffectsControl() {
 	});
 }
 
-function DialogControl(parentPanelId) {
+function ScriptCues() {
 	// todo : localize
-	var dialogEventTypes = {};
+	var scriptCueTypes = {};
 
-	dialogEventTypes[ARG_KEY.DIALOG_SCRIPT] = {
+	scriptCueTypes[ARG_KEY.DIALOG_SCRIPT] = {
 		name : "dialog",
 		shortName : "dialog",
 		propertyId : "dlg",
@@ -461,7 +459,7 @@ function DialogControl(parentPanelId) {
 		selectControl : null,
 	};
 
-	dialogEventTypes[ARG_KEY.FRAME_TICK_SCRIPT] = {
+	scriptCueTypes[ARG_KEY.FRAME_TICK_SCRIPT] = {
 		name : "on frame tick",
 		shortName : "tick",
 		propertyId : "tickDlgId",
@@ -475,7 +473,7 @@ function DialogControl(parentPanelId) {
 		selectRoot : null,
 	};
 
-	dialogEventTypes[ARG_KEY.KNOCK_INTO_SCRIPT] = {
+	scriptCueTypes[ARG_KEY.KNOCK_INTO_SCRIPT] = {
 		name : "on knock into",
 		shortName : "knock",
 		propertyId : "knockDlgId",
@@ -489,7 +487,7 @@ function DialogControl(parentPanelId) {
 		selectRoot : null,
 	};
 
-	dialogEventTypes[ARG_KEY.BUTTON_DOWN_SCRIPT] = {
+	scriptCueTypes[ARG_KEY.BUTTON_DOWN_SCRIPT] = {
 		name : "on button",
 		shortName : "button",
 		propertyId : "buttonDownDlgId",
@@ -503,14 +501,35 @@ function DialogControl(parentPanelId) {
 		selectRoot : null,
 	};
 
+	// todo : better API?
+	this.GetDefinitions = function() {
+		return scriptCueTypes;
+	};
+
+	// todo : name?
+	this.ClearAllContainingScript = function(scriptId, tileId) {
+		for (var id in scriptCueTypes) {
+			if (id in tile[tileId] && tile[tileId][id] === scriptId) {
+				tile[tileId][id] = null;
+			}
+		}
+
+		refreshGameData();
+	}
+}
+
+function DialogControl(parentPanelId) {
 	var drawingId = null;
-	var curEventId = ARG_KEY.DIALOG_SCRIPT;
+
+	var curCueId = ARG_KEY.DIALOG_SCRIPT;
+	var scriptCues = new ScriptCues();
+	var cueTypes = scriptCues.GetDefinitions();
 
 	this.SetDrawing = function(id) {
 		drawingId = id;
-		UpdateDialogIdSelectOptions();
-		
-		setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
+		UpdateScriptIdSelectOptions();
+
+		setSelected(ARG_KEY.DIALOG_SCRIPT);
 
 		if (tile[drawingId].type === TYPE_KEY.AVATAR) {
 			ChangeSettingsVisibility(true);
@@ -524,7 +543,7 @@ function DialogControl(parentPanelId) {
 		var id = null;
 
 		if (tile[drawingId]) {
-			id = tile[drawingId][dialogEventTypes[curEventId].propertyId];
+			id = tile[drawingId][cueTypes[curCueId].propertyId];
 		}
 
 		return id;
@@ -575,7 +594,7 @@ function DialogControl(parentPanelId) {
 	editorDiv.classList.add("dialogBoxContainer");
 	div.appendChild(editorDiv);
 
-	function createNewDialog(dialogEvent, src, openTool) {
+	function createNewScript(scriptCue, src, openTool) {
 		var nextDlgId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
 		if (nextDlgId != null) {
@@ -586,7 +605,7 @@ function DialogControl(parentPanelId) {
 				nextName += " ";
 			}
 
-			nextName += dialogEvent.shortName;
+			nextName += scriptCue.shortName;
 
 			nextName = CreateDefaultName(nextName, dialog, true);
 
@@ -594,11 +613,11 @@ function DialogControl(parentPanelId) {
 
 			curDlgId = nextDlgId;
 
-			dialogEvent.selectControl.UpdateOptions();
-			dialogEvent.selectControl.SetSelection(curDlgId);
+			scriptCue.selectControl.UpdateOptions();
+			scriptCue.selectControl.SetSelection(curDlgId);
 
 			if (openTool) {
-				dialogEvent.selectControl.OpenTool();
+				scriptCue.selectControl.OpenTool();
 			}
 
 			refreshGameData();
@@ -633,8 +652,8 @@ function DialogControl(parentPanelId) {
 
 			refreshGameData();
 		}
-		else if (curEventId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
-			createNewDialog(dialogEventTypes[curEventId], e.target.value, false);
+		else if (curCueId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
+			createNewScript(cueTypes[curCueId], e.target.value, false);
 			openButton.disabled = false;
 		}
 	}
@@ -653,9 +672,9 @@ function DialogControl(parentPanelId) {
 	dialogIdSelectRoot.style.display = "none";
 	div.appendChild(dialogIdSelectRoot);
 
-	function setSelectedEvent(id) {
-		curEventId = id;
-		labelTextSpan.innerText = dialogEventTypes[curEventId].name;
+	function setSelected(id) {
+		curCueId = id;
+		labelTextSpan.innerText = cueTypes[curCueId].name;
 
 		// todo : strip off the outer dialog block stuff
 		var curDlgId = selectedDialogId();
@@ -669,103 +688,104 @@ function DialogControl(parentPanelId) {
 		}
 	}
 
-	function UpdateDialogIdSelectOptions() {
-		function createDialogSelectControl(eventId) {
-			var dialogEvent = dialogEventTypes[eventId];
+	function UpdateScriptIdSelectOptions() {
+		function createScriptSelectControl(cueId) {
+			var scriptCue = cueTypes[cueId];
 
-			var selectEvent = document.createElement("div");
-			selectEvent.classList.add("dialogEvent");
-			dialogIdSelectRoot.appendChild(selectEvent);
+			var selectCue = document.createElement("div");
+			selectCue.classList.add("dialogEvent");
+			dialogIdSelectRoot.appendChild(selectCue);
 
-			var selectEventEditButton = document.createElement("button");
-			selectEvent.appendChild(selectEventEditButton);
+			var selectCueEditButton = document.createElement("button");
+			selectCue.appendChild(selectCueEditButton);
 
-			function updateEventEditButton() {
-				var curDlgId = tile[drawingId][dialogEvent.propertyId];
+			function updateCueEditButton() {
+				var curDlgId = tile[drawingId][scriptCue.propertyId];
 				var curIcon = curDlgId === null ? "add" : "edit";
-				selectEventEditButton.innerHTML = "";
-				selectEventEditButton.appendChild(iconUtils.CreateIcon(curIcon));
+				selectCueEditButton.innerHTML = "";
+				selectCueEditButton.appendChild(iconUtils.CreateIcon(curIcon));
 			}
 
-			selectEventEditButton.onclick = function() {
-				var curDlgId = tile[drawingId][dialogEvent.propertyId];
+			selectCueEditButton.onclick = function() {
+				var curDlgId = tile[drawingId][scriptCue.propertyId];
+
 				if (curDlgId === null) {
-					createNewDialog(dialogEvent, dialogEvent.defaultScript, true);
-					curEventId = eventId;
+					createNewScript(scriptCue, scriptCue.defaultScript, true);
+					curCueId = cueId;
 				}
 				else {
-					setSelectedEvent(eventId);
+					setSelected(cueId);
 					ChangeSettingsVisibility(false);
 				}
 
-				updateEventEditButton();
+				updateCueEditButton();
 			}
 
-			var selectEventName = document.createElement("span");
-			selectEventName.innerText = dialogEvent.name + ":";
-			selectEvent.appendChild(selectEventName);
+			var selectCueName = document.createElement("span");
+			selectCueName.innerText = scriptCue.name + ":";
+			selectCue.appendChild(selectCueName);
 
 			var spacer = document.createElement("span");
 			spacer.classList.add("expandingSpacer");
-			selectEvent.appendChild(spacer);
+			selectCue.appendChild(spacer);
 
-			dialogEvent.selectControl = findTool.CreateSelectControl(
+			scriptCue.selectControl = findTool.CreateSelectControl(
 				"script",
 				{
 					onSelectChange : function(id) {
-						tile[drawingId][dialogEvent.propertyId] = id;
-						updateEventEditButton();
-						UpdateSettingsButtingDisabled(true);
+						tile[drawingId][scriptCue.propertyId] = id;
+						updateCueEditButton();
+						UpdateSettingsButtonDisabled(true);
 						refreshGameData();
 					},
 					toolId : parentPanelId,
-					filters : ["dialog", "no_title"],
+					filters : ["script", "no_title"],
 					getSelectMessage : function() {
 						// todo : make less awkward sounding!
-						return "select dialog for " + dialogEvent.name + "...";
+						return "select script for " + scriptCue.name + "...";
 					},
 					hasNoneOption : true,
 				});
 
-			selectEvent.appendChild(dialogEvent.selectControl.GetElement());
+			selectCue.appendChild(scriptCue.selectControl.GetElement());
 
-			dialogEvent.selectRoot = selectEvent;
+			scriptCue.selectRoot = selectCue;
 		}
 
 		if (findTool) {
-			for (var id in dialogEventTypes) {
-				var dialogEvent = dialogEventTypes[id];
-				if (dialogEvent.selectControl === null) {
-					createDialogSelectControl(id);
+			for (var id in cueTypes) {
+				var scriptCue = cueTypes[id];
+				if (scriptCue.selectControl === null) {
+					createScriptSelectControl(id);
 				}
 			}
 		}
 
 		if (tile[drawingId]) { // todo : why would this fail?
-			for (var id in dialogEventTypes) {
-				var dialogEvent = dialogEventTypes[id];
-				if (dialogEvent.selectControl) {
+			for (var id in cueTypes) {
+				var scriptCue = cueTypes[id];
+				if (scriptCue.selectControl) {
 					if (id === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type === TYPE_KEY.AVATAR) {
-						dialogEvent.selectRoot.style.display = "none";
+						scriptCue.selectRoot.style.display = "none";
 					}
 					else {
-						var curDlgId = tile[drawingId][dialogEvent.propertyId];
-						dialogEvent.selectControl.UpdateOptions();
-						dialogEvent.selectControl.SetSelection(curDlgId);
-						dialogEvent.selectRoot.style.display = "flex";
+						var curScriptId = tile[drawingId][scriptCue.propertyId];
+						scriptCue.selectControl.UpdateOptions();
+						scriptCue.selectControl.SetSelection(curScriptId);
+						scriptCue.selectRoot.style.display = "flex";
 					}
 				}
 			}
 		}
 	}
 
-	UpdateDialogIdSelectOptions();
+	UpdateScriptIdSelectOptions();
 
-	events.Listen("new_dialog", function() { UpdateDialogIdSelectOptions(); });
+	events.Listen("new_dialog", function() { UpdateScriptIdSelectOptions(); });
 
 	events.Listen("dialog_update", function(event) {
 		if (event.dialogId === selectedDialogId() && event.editorId != "_dialog_control_") {
-			setSelectedEvent(curEventId); // hack to refresh text..
+			setSelected(curCueId); // hack to refresh text..
 		}
 	});
 
@@ -776,29 +796,29 @@ function DialogControl(parentPanelId) {
 		openButton.style.display = showSettings ? "none" : "inline";
 
 		openButton.disabled = false;
-		var eventPropertyId = dialogEventTypes[curEventId].propertyId;
-		var doesEventExist = (eventPropertyId in tile[drawingId]) && (tile[drawingId][eventPropertyId] != null);
-		if (!showSettings && !doesEventExist) {
+		var cuePropertyId = cueTypes[curCueId].propertyId;
+		var doesCueExist = (cuePropertyId in tile[drawingId]) && (tile[drawingId][cuePropertyId] != null);
+		if (!showSettings && !doesCueExist) {
 			openButton.disabled = true;
 		}
 
 		settingsButton.innerHTML = "";
 		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "settings"));
 
-		UpdateSettingsButtingDisabled(visible);
+		UpdateSettingsButtonDisabled(visible);
 	}
 
 	// todo : UI question.. do I really want the settings button on in settings mode??
-	function UpdateSettingsButtingDisabled(visible) {
+	function UpdateSettingsButtonDisabled(visible) {
 		settingsButton.disabled = false;
 
-		var eventPropertyId = dialogEventTypes[curEventId].propertyId;
+		var cuePropertyId = cueTypes[curCueId].propertyId;
 
 		if (visible) {
-			var doesEventExist = (eventPropertyId in tile[drawingId]) && (tile[drawingId][eventPropertyId] != null);
-			var allowsTextboxToCreate = (curEventId === ARG_KEY.DIALOG_SCRIPT) && (tile[drawingId].type != TYPE_KEY.AVATAR);
+			var doesCueExist = (cuePropertyId in tile[drawingId]) && (tile[drawingId][cuePropertyId] != null);
+			var allowsTextboxToCreate = (curCueId === ARG_KEY.DIALOG_SCRIPT) && (tile[drawingId].type != TYPE_KEY.AVATAR);
 
-			settingsButton.disabled = !doesEventExist && !allowsTextboxToCreate;
+			settingsButton.disabled = !doesCueExist && !allowsTextboxToCreate;
 		}
 	}
 
@@ -806,10 +826,10 @@ function DialogControl(parentPanelId) {
 		ChangeSettingsVisibility(!showSettings);
 
 		if (showSettings) {
-			labelTextSpan.innerText = "script cues"; // "dialog events"; // todo : localize // todo : best name?
+			labelTextSpan.innerText = "script cues"; // todo : localize // todo : best name?
 		}
 		else {
-			setSelectedEvent(curEventId);
+			setSelected(curCueId);
 		}
 	}
 
@@ -817,7 +837,7 @@ function DialogControl(parentPanelId) {
 		return div;
 	}
 
-	setSelectedEvent(ARG_KEY.DIALOG_SCRIPT);
+	setSelected(ARG_KEY.DIALOG_SCRIPT);
 }
 
 // todo : keep as global for now?

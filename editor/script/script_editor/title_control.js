@@ -19,7 +19,7 @@ function TitleControl() {
 	openButton.title = "open title in dialog editor"; // todo : localize
 	openButton.appendChild(iconUtils.CreateIcon("open_tool"));
 	openButton.onclick = function() {
-		events.Raise("select_dialog", { id: titleDialogId });
+		events.Raise("select_dialog", { id: titleId });
 	}
 	div.appendChild(openButton);
 
@@ -34,7 +34,7 @@ function TitleControl() {
 	titleTextInput.onchange = function() {
 		setTitle(titleTextInput.value);
 		refreshGameData();
-		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:editorId });
+		events.Raise("dialog_update", { dialogId:titleId, editorId:editorId });
 	}
 
 	titleTextInput.onfocus = function() {
@@ -52,7 +52,7 @@ function TitleControl() {
 	}
 
 	events.Listen("dialog_update", function(event) {
-		if (event.dialogId === titleDialogId && event.editorId != editorId) {
+		if (event.dialogId === titleId && event.editorId != editorId) {
 			updateWidgetContent();
 		}
 	});

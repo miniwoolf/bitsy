@@ -313,7 +313,7 @@ function FindTool(controls) {
 		name: "script",
 		categoryStore: dialog,
 		getCaption: function(dlg) {
-			if (dlg.id === titleDialogId) {
+			if (dlg.id === titleId) {
 				// todo : localize
 				return "title";
 			}
@@ -325,7 +325,7 @@ function FindTool(controls) {
 		includedInFilter: function(dlg, filters) {
 			return (filters.indexOf("cur_room") === -1
 				&& filters.indexOf("script") != -1
-				&& (dlg.id != titleDialogId || filters.indexOf("no_title") === -1));
+				&& (dlg.id != titleId || filters.indexOf("no_title") === -1));
 		},
 		selectEventId: "select_dialog",
 		toolId: "scriptPanel",
