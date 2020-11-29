@@ -1,4 +1,4 @@
-function ScriptEditor(dialogId) {
+function ScriptEditor(scriptId) {
 	var isPlaintextMode = false;
 
 	var listener = new EventListener(events);
@@ -14,13 +14,16 @@ function ScriptEditor(dialogId) {
 	var viewportDiv;
 	var expressionBuilderDiv;
 
-	var plaintextEditor = new PlaintextScriptEditor(dialogId, "largeDialogPlaintextArea");
+	var plaintextEditor = new PlaintextScriptEditor(scriptId, "largeDialogPlaintextArea");
+
+	var isDialogScript = (dialog[scriptId].type === ScriptType.Dialog);
 
 	function RefreshEditorUI(width, height) {
 		div.innerHTML = "";
-		scriptRoot = scriptInterpreter.Compile(dialog[dialogId]);
+		scriptRoot = scriptInterpreter.Compile(dialog[scriptId]);
 
-		rootEditor = createExpressionEditor(scriptRoot, self);
+		rootEditor = createExpressionEditor(scriptRoot, self, !isDialogScript);
+		console.log(rootEditor);
 
 		viewportDiv = document.createElement("div");
 		viewportDiv.classList.add("dialogContentViewport");
@@ -31,8 +34,6 @@ function ScriptEditor(dialogId) {
 		}
 
 		viewportDiv.appendChild(rootEditor.GetElement());
-
-		rootEditor.GetElement().classList.add("selectedEditor");
 
 		expressionBuilderDiv = document.createElement("div");
 		expressionBuilderDiv.classList.add("dialogExpressionBuilderHolder");
@@ -62,22 +63,23 @@ function ScriptEditor(dialogId) {
 	}
 
 	function OnUpdate() {
-		var dialogStr = rootEditor.Serialize();
+		console.log(rootEditor);
+		var scriptStr = rootEditor.Serialize();
 
 		// handle one line scripts: a little hard coded
-		if (dialogStr.indexOf("\n") === -1) {
+		if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
 			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
 			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
-			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
+			scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
 		}
 
-		dialog[dialogId].src = dialogStr;
+		dialog[scriptId].src = scriptStr;
 
 		refreshGameData();
 
 		plaintextEditor.Refresh();
 
-		events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
+		events.Raise("dialog_update", { dialogId: scriptId, editorId: editorId });
 	}
 
 	this.NotifyUpdate = function() {
@@ -108,7 +110,7 @@ function ScriptEditor(dialogId) {
 	}
 
 	listener.Listen("dialog_update", function(event) {
-		if (event.dialogId === dialogId && event.editorId != editorId && event.editorId != plaintextEditor.GetEditorId()) {
+		if (event.dialogId === scriptId && event.editorId != editorId && event.editorId != plaintextEditor.GetEditorId()) {
 			RefreshEditorUI();
 			plaintextEditor.Refresh();
 		}
@@ -186,7 +188,7 @@ function ScriptEditor(dialogId) {
 	};
 }
 
-function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
+function PlaintextScriptEditor(scriptId, style, defaultDialogNameFunc) {
 	var listener = new EventListener(events);
 
 	if (defaultDialogNameFunc === undefined) {
@@ -202,20 +204,23 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 
 	var self = this;
 
+	var isDialogScript = (dialog[scriptId].type === ScriptType.Dialog);
+
 	function RefreshEditorUI() {
-		var dialogStr = dialog[dialogId].src;
+		var scriptStr = dialog[scriptId].src;
 
 		div.innerHTML = "";
-		scriptRoot = scriptInterpreter.Parse(dialogStr);
+		scriptRoot = scriptInterpreter.Parse(scriptStr);
 
 		codeTextArea = document.createElement("textarea");
 		codeTextArea.classList.add(style);
 		codeTextArea.rows = 2;
-		codeTextArea.value = scriptInterpreter.SerializeUnwrapped(scriptRoot);
+		codeTextArea.value = isDialogScript ?
+			scriptInterpreter.SerializeUnwrapped(scriptRoot) : scriptInterpreter.Serialize(scriptRoot);
 
 		function OnTextChangeHandler() {
-			var dialogStr = codeTextArea.value;
-			scriptRoot = scriptInterpreter.Parse(dialogStr, DialogWrapMode.Yes);
+			var scriptStr = codeTextArea.value;
+			scriptRoot = scriptInterpreter.Parse(scriptStr, isDialogScript ? DialogWrapMode.Yes : DialogWrapMode.No);
 
 			OnUpdate();
 		}
@@ -224,7 +229,7 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 
 		codeTextArea.onblur = function() {
 			OnTextChangeHandler();
-			events.Raise("dialog_update", { dialogId:dialogId, editorId:editorId });
+			events.Raise("dialog_update", { dialogId: scriptId, editorId: editorId });
 		};
 
 		div.appendChild(codeTextArea);
@@ -241,16 +246,16 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 	}
 
 	function OnUpdate() {
-		var dialogStr = scriptInterpreter.Serialize(scriptRoot);
+		var scriptStr = scriptInterpreter.Serialize(scriptRoot);
 
 		// handle one line scripts: a little hard coded
-		if (dialogStr.indexOf("\n") === -1) {
+		if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
 			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
 			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
-			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
+			scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
 		}
 
-		dialog[dialogId].src = dialogStr;
+		dialog[scriptId].src = scriptStr;
 
 		refreshGameData();
 	}

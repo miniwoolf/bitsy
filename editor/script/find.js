@@ -312,13 +312,19 @@ function FindTool(controls) {
 	AddCategory({
 		name: "script",
 		categoryStore: dialog,
-		getCaption: function(dlg) {
-			if (dlg.id === titleId) {
+		getCaption: function(script) {
+			console.log("name of script " + script.type + " " + script.id + " " + script.name);
+			if (script.id === titleId) {
 				// todo : localize
 				return "title";
 			}
+			else if (script.type === ScriptType.Dialog) {
+				// todo : localize
+				return script.name ? script.name : "dialog " + script.id;
+			}
 			else {
-				return dlg.name ? dlg.name : "dialog " + dlg.id;
+				// todo : localize
+				return script.name ? script.name : "cue " + script.id;
 			}
 		}, // TODO : localize
 		getIconId: function(dlg) { return "dialog"; },

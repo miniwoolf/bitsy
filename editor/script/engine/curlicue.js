@@ -192,7 +192,7 @@ function serializeUnwrapped(expression) {
 		out = serializeWrapped(expression.list.slice(1));
 	}
 
-	return out;
+	return out.trim();
 }
 this.SerializeUnwrapped = serializeUnwrapped;
 

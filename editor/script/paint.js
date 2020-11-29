@@ -132,8 +132,6 @@ function PaintTool(controls) {
 			til.name = null;
 		}
 
-		updateNamesFromCurData(); // todo : does this even work anymore?
-
 		// make sure items referenced in scripts update their names
 		if (til.type === TYPE_KEY.ITEM) {
 			// console.log("SWAP ITEM NAMES");
@@ -621,7 +619,8 @@ function PaintTool(controls) {
 		// will this safety conditional bite me? can I have the find tool load earlier?
 		if (findTool) {
 			controls.nameInput.placeholder =
-				findTool.GetDisplayName("drawing", drawingId, true) + " " + makeCountLabel(drawingId, tile, DEFAULT_REGISTRY_SIZE);
+				findTool.GetDisplayName("drawing", drawingId, true)
+					+ " " + makeCountLabel(drawingId, tile, DEFAULT_REGISTRY_SIZE);
 		}
 
 		controls.nameInput.readOnly = (til.type === TYPE_KEY.AVATAR);

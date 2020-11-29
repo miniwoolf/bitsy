@@ -80,6 +80,9 @@ function parseWorld(file) {
 			// parse endings for back compat
 			i = parseEnding(lines, i, compatibilityFlags);
 		}
+		else if (getType(curLine) === TYPE_KEY.SCRIPT) {
+			i = parseFunctionScript(lines, i);
+		}
 		else if (getType(curLine) === CURLICUE_KEY.VARIABLE) {
 			i = parseVariable(lines, i);
 		}
@@ -573,15 +576,26 @@ function parseScript(lines, i, options) {
 		i++;
 	}
 
+	var type = ScriptType.Dialog;
+	if (options && options.type) {
+		type = options.type;
+	}
+
 	id = backCompatPrefix + id;
 
 	var dialogStart = CURLICUE_KEY.OPEN + CURLICUE_KEY.DIALOG;
+	var functionStart = CURLICUE_KEY.OPEN + CURLICUE_KEY.FUNCTION;
 
 	var script = "";
-	var startsWithDialogExpression = (lines[i].length >= 3) && (lines[i].indexOf(dialogStart) === 0);
 
-	if (startsWithDialogExpression) {
-		// multi-line dialog script
+	var startsWithDialogExpression = (type === ScriptType.Dialog)
+		&& (lines[i].length >= 3) && (lines[i].indexOf(dialogStart) === 0);
+
+	var startsWithFunctionDefinition = (type === ScriptType.Function)
+		&& (lines[i].length >= 3) && (lines[i].indexOf(functionStart) === 0);
+
+	if (startsWithDialogExpression || startsWithFunctionDefinition) {
+		// multi-line script
 		// TODO : handle strings inside quotes
 		script += lines[i][0];
 		var bracesCount = 1;
@@ -607,14 +621,17 @@ function parseScript(lines, i, options) {
 			}
 		}
 	}
-	else {
+	else if (type === ScriptType.Dialog) {
 		// single line dialog script
 		script += lines[i];
+	}
+	else {
+		// oh no!
 	}
 
 	i++;
 
-	dialog[id] = createScript(id, null, script);
+	dialog[id] = createScript(id, null, script, type);
 
 	if (convertImplicitSpriteDialogIds) {
 		// explicitly hook up dialog that used to be implicitly
@@ -655,6 +672,10 @@ function parseEnding(lines, i, compatibilityFlags) {
 	// todo : need to read in names for back compat?
 
 	return parseScript(lines, i, options);
+}
+
+function parseFunctionScript(lines, i) {
+	return parseScript(lines, i, { type: ScriptType.Function, });
 }
 
 function parseVariable(lines, i) {
@@ -852,17 +873,17 @@ function serializeWorld(skipFonts) {
 		worldStr += serializeTile(id) + "\n";
 	}
 
-	/* DIALOG */
-	var dialogIdList = sortedIdList(dialog);
-	var dialogCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE, dialogIdList.length) : dialogIdList.length;
-	for (var i = 0; i < dialogCount; i++) {
-		var id = dialogIdList[i];
+	/* SCRIPTS */
+	var scriptIdList = sortedIdList(dialog);
+	var scriptCount = DEFAULT_REGISTRY_SIZE ? Math.min(DEFAULT_REGISTRY_SIZE, scriptIdList.length) : scriptIdList.length;
+	for (var i = 0; i < scriptCount; i++) {
+		var id = scriptIdList[i];
 
 		if (id === NULL_ID) {
 			continue;
 		}
 
-		worldStr += TYPE_KEY.DIALOG + " " + id + "\n";
+		worldStr += dialog[id].type + " " + id + "\n";
 		worldStr += dialog[id].src + "\n";
 
 		if (dialog[id].name != null) {

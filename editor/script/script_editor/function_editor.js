@@ -45,6 +45,11 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 		});
 
 	this.SkipAutoSelect = true;
+
+	// this can also be a root editor so it needs a serialize method
+	this.Serialize = function() {
+		return scriptInterpreter.Serialize(expression);
+	}
 }
 
 // todo : name: input vs parameter?

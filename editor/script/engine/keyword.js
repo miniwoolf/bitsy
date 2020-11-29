@@ -48,6 +48,7 @@ var BUTTON_KEY = {
 	// CANCEL : "X",
 };
 
+/* SCRIPT SYMBOLS */
 var CURLICUE_KEY = {
 	OPEN : "{",
 	CLOSE : "}",

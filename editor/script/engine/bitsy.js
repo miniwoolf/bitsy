@@ -70,33 +70,6 @@ var defaultFontName = "ascii_small";
 var fontName = defaultFontName;
 var textDirection = TEXT_DIRECTION_KEY.LEFT_TO_RIGHT;
 
-// should I keep this thing? seems kind unwieldy
-var names = {
-	room : new Map(),
-	tile : new Map(), // Note: Not currently enabled in the UI
-	sprite : new Map(),
-	item : new Map(),
-	dialog : new Map(),
-};
-function updateNamesFromCurData() {
-
-	function createNameMap(objectStore) {
-		var map = new Map();
-		for (id in objectStore) {
-			if (objectStore[id].name != undefined && objectStore[id].name != null) {
-				map.set(objectStore[id].name, id);
-			}
-		}
-		return map;
-	}
-
-	names.room = createNameMap(room);
-	names.tile = createNameMap(tile); // rename back to tile?
-	// names.sprite = createNameMap(sprite);
-	// names.item = createNameMap(item);
-	names.dialog = createNameMap(dialog);
-}
-
 /* VERSION */
 var version = {
 	major: 8, // major changes
@@ -1548,11 +1521,20 @@ function createTile(id, type, options) {
 	};
 }
 
-// todo : name of function?
-function createScript(id, name, script) {
+var ScriptType = {
+	Dialog : TYPE_KEY.DIALOG,
+	Function : TYPE_KEY.SCRIPT,
+};
+
+function createScript(id, name, script, type) {
+	if (type === undefined || type === null) {
+		type = ScriptType.Dialog;
+	}
+
 	return {
 		id : id,
 		name : name,
+		type : type,
 		src : script,
 	};
 }

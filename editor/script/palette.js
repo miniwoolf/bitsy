@@ -311,8 +311,6 @@ function PaletteTool(colorPicker, controls) {
 				pal.name = null;
 			}
 
-			updateNamesFromCurData() // TODO ... this should really be an event?
-
 			events.Raise("change_palette_name", { id: pal.id, name: pal.name });
 			events.Raise("palette_list_change");
 		}

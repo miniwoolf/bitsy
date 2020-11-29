@@ -393,8 +393,6 @@ function RoomTool(controls) {
 			room[curRoom].name = null;
 		}
 
-		updateNamesFromCurData()
-
 		refreshGameData();
 
 		events.Raise("change_room_name", { id: curRoom, name: room[curRoom].name });

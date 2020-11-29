@@ -38,23 +38,24 @@ function ScriptTool(controls) {
 		controls.scriptEditorViewport.innerHTML = "";
 		controls.scriptEditorViewport.appendChild(curScriptEditor.GetElement());
 
-		// todo : localize!
-		controls.nameInput.placeholder = "dialog " + curScriptId +
-			" " + makeCountLabel(curScriptId, dialog, DEFAULT_REGISTRY_SIZE);
+		controls.nameInput.readOnly = false;
+
+		if (findTool) {
+			controls.nameInput.placeholder =
+				findTool.GetDisplayName("script", curScriptId, true)
+					+ " " + makeCountLabel(curScriptId, dialog, DEFAULT_REGISTRY_SIZE);
+		}
 
 		if (isTitle) {
 			controls.nameInput.readOnly = true;
 			// todo : localize
 			controls.nameInput.value = "title";
 		}
+		else if (dialog[curScriptId].name != null) {
+			controls.nameInput.value = dialog[curScriptId].name;
+		}
 		else {
-			controls.nameInput.readOnly = false;
-			if (dialog[curScriptId].name != null) {
-				controls.nameInput.value = dialog[curScriptId].name;
-			}
-			else {
-				controls.nameInput.value = "";
-			}
+			controls.nameInput.value = "";
 		}
 
 		var isHiddenOrShouldMove = (controls.panelRoot.style.display === "none") ||
@@ -139,7 +140,7 @@ function ScriptTool(controls) {
 			var id = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
 			if (id != null) {
-				dialog[id] = createScript(id, null, dialog[curScriptId].src.slice());
+				dialog[id] = createScript(id, null, dialog[curScriptId].src.slice(), dialog[curScriptId].type);
 				refreshGameData();
 
 				events.Raise("select_dialog", { id: id });
@@ -455,6 +456,7 @@ function ScriptCues() {
 		name : "dialog",
 		shortName : "dialog",
 		propertyId : "dlg",
+		type: ScriptType.Dialog,
 		defaultScript : 'hi there!', // todo : changed based on sprite type?
 		selectControl : null,
 	};
@@ -463,10 +465,18 @@ function ScriptCues() {
 		name : "on frame tick",
 		shortName : "tick",
 		propertyId : "tickDlgId",
+		type: ScriptType.Function,
 		defaultScript :
-			'{>>\n' +
-			'    {FN {FRM}\n' +
-			'        {HOP THIS "DWN"}\n' +
+			'{FN {FRM}\n' +
+			'    {IF\n' +
+			'        {IS FRM 0}\n' +
+			'            {>>\n' + 
+			'                {HOP THIS "RGT"}\n' +
+			'            }\n' +
+			'        {IS FRM 1}\n' +
+			'            {>>\n' + 
+			'                {HOP THIS "LFT"}\n' +
+			'            }\n' +
 			'    }\n' +
 			'}',
 		selectControl : null,
@@ -477,11 +487,11 @@ function ScriptCues() {
 		name : "on knock into",
 		shortName : "knock",
 		propertyId : "knockDlgId",
-		defaultScript : // todo : is this the script I want?
-			'{>>\n' +
-			'    {FN {THAT}\n' +
-			'        {RID THAT}\n' +
-			'    }\n' +
+		type: ScriptType.Function,
+		defaultScript :
+			'{FN {THAT DIR}\n' +
+			'    {: THAT TIL "2"}\n' +
+			'    {HOP THIS DIR}\n' +
 			'}',
 		selectControl : null,
 		selectRoot : null,
@@ -491,10 +501,14 @@ function ScriptCues() {
 		name : "on button",
 		shortName : "button",
 		propertyId : "buttonDownDlgId",
-		defaultScript : // todo : is this the script I want?
-			'{>>\n' +
-			'    {FN {BTN HLD}\n' +
-			'        {>> player pressed {SAY BTN}}\n' +
+		type: ScriptType.Function,
+		defaultScript :
+			'{FN {BTN}\n' +
+			'    {IF\n' +
+			'        {IS BTN "OK"}\n' +
+			'            {>>\n' + 
+			'                {: THIS TIL "2"}\n' +
+			'            }\n' +
 			'    }\n' +
 			'}',
 		selectControl : null,
@@ -595,9 +609,9 @@ function ScriptCueControl(parentPanelId) {
 	div.appendChild(editorDiv);
 
 	function createNewScript(scriptCue, src, openTool) {
-		var nextDlgId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
+		var nextScriptId = nextB256Id(dialog, 1, DEFAULT_REGISTRY_SIZE);
 
-		if (nextDlgId != null) {
+		if (nextScriptId != null) {
 			var nextName = "";
 
 			if (findTool) {
@@ -609,12 +623,12 @@ function ScriptCueControl(parentPanelId) {
 
 			nextName = CreateDefaultName(nextName, dialog, true);
 
-			dialog[nextDlgId] = createScript(nextDlgId, nextName, src);
+			dialog[nextScriptId] = createScript(nextScriptId, nextName, src, scriptCue.type);
 
-			curDlgId = nextDlgId;
+			curScriptId = nextScriptId;
 
 			scriptCue.selectControl.UpdateOptions();
-			scriptCue.selectControl.SetSelection(curDlgId);
+			scriptCue.selectControl.SetSelection(curScriptId);
 
 			if (openTool) {
 				scriptCue.selectControl.OpenTool();
@@ -622,7 +636,7 @@ function ScriptCueControl(parentPanelId) {
 
 			refreshGameData();
 
-			events.Raise("new_dialog", { id: nextDlgId, });
+			events.Raise("new_dialog", { id: nextScriptId, });
 		}
 		else {
 			alert("oh no you ran out of dialog! :(");
@@ -634,21 +648,23 @@ function ScriptCueControl(parentPanelId) {
 
 	textArea.oninput = function(e) {
 		// todo : delete empty dialogs?
-		var curDlgId = selectedDialogId();
+		var curScriptId = selectedDialogId();
 
-		if (curDlgId != null) {
+		var isDialogScript = (dialog[curScriptId].type === ScriptType.Dialog);
+
+		if (curScriptId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
-			var scriptRoot = scriptInterpreter.Parse(e.target.value, DialogWrapMode.Yes);
+			var scriptRoot = scriptInterpreter.Parse(e.target.value, isDialogScript ? DialogWrapMode.Yes : DialogWrapMode.No);
 			var scriptStr = scriptInterpreter.Serialize(scriptRoot);
 
 			// handle one line scripts: a little hard coded
-			if (scriptStr.indexOf("\n") === -1) {
+			if (isDialogScript && scriptStr.indexOf("\n") === -1) {
 				var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
 				var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
 				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
 			}
 
-			dialog[curDlgId].src = scriptStr;
+			dialog[curScriptId].src = scriptStr;
 
 			refreshGameData();
 		}
@@ -659,10 +675,10 @@ function ScriptCueControl(parentPanelId) {
 	}
 
 	textArea.onblur = function() {
-		var curDlgId = selectedDialogId();
+		var curScriptId = selectedDialogId();
 
-		if (curDlgId != null) {
-			events.Raise("dialog_update", { dialogId: curDlgId, editorId: "_dialog_control_" });
+		if (curScriptId != null) {
+			events.Raise("dialog_update", { dialogId: curScriptId, editorId: "_dialog_control_" });
 		}
 	};
 
@@ -677,11 +693,15 @@ function ScriptCueControl(parentPanelId) {
 		labelTextSpan.innerText = cueTypes[curCueId].name;
 
 		// todo : strip off the outer dialog block stuff
-		var curDlgId = selectedDialogId();
+		var curScriptId = selectedDialogId();
 
-		if (curDlgId != null) {
-			var scriptRoot = scriptInterpreter.Parse(dialog[curDlgId].src);
-			textArea.value = scriptInterpreter.SerializeUnwrapped(scriptRoot);
+		if (curScriptId != null) {
+			var isDialogScript = (dialog[curScriptId].type === ScriptType.Dialog);
+
+			var scriptRoot = scriptInterpreter.Parse(dialog[curScriptId].src);
+
+			textArea.value = isDialogScript ?
+				scriptInterpreter.SerializeUnwrapped(scriptRoot) : scriptInterpreter.Serialize(scriptRoot);
 		}
 		else {
 			textArea.value = "";
@@ -700,16 +720,16 @@ function ScriptCueControl(parentPanelId) {
 			selectCue.appendChild(selectCueEditButton);
 
 			function updateCueEditButton() {
-				var curDlgId = tile[drawingId][scriptCue.propertyId];
-				var curIcon = curDlgId === null ? "add" : "edit";
+				var curScriptId = tile[drawingId][scriptCue.propertyId];
+				var curIcon = (curScriptId === null) ? "add" : "edit";
 				selectCueEditButton.innerHTML = "";
 				selectCueEditButton.appendChild(iconUtils.CreateIcon(curIcon));
 			}
 
 			selectCueEditButton.onclick = function() {
-				var curDlgId = tile[drawingId][scriptCue.propertyId];
+				var curScriptId = tile[drawingId][scriptCue.propertyId];
 
-				if (curDlgId === null) {
+				if (curScriptId === null) {
 					createNewScript(scriptCue, scriptCue.defaultScript, true);
 					curCueId = cueId;
 				}
