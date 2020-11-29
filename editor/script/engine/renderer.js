@@ -1,7 +1,3 @@
-/* TODO
- - sprite batching?
-*/
-
 function Renderer(roomsize, tilesize, scale) {
 
 var cache = {

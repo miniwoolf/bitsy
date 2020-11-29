@@ -26,7 +26,7 @@ var resourceFiles = [
 	"../editor/script/engine/font.js",
 	"../editor/script/engine/transition.js",
 	"../editor/script/engine/library.js",
-	"../editor/script/engine/script_next.js",
+	"../editor/script/engine/curlicue.js",
 	"../editor/script/engine/dialog.js",
 	"../editor/script/engine/renderer.js",
 	"../editor/script/engine/bitsy.js",

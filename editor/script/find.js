@@ -1,10 +1,3 @@
-/*
-TODO
-- test out performance for large games
-- hide default palette
-- get rid of old explorer.js
-*/
-
 function FindTool(controls) {
 	var searchText = controls.searchInput.value;
 	var activeFilters = [];

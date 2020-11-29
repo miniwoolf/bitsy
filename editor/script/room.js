@@ -2,17 +2,6 @@
 	ROOM
 */
 
-/*
-TODO:
-drawingId -> drawingId.id
-paintMode -> drawingId.type
-
-what other methods do I need to move into this class? exit stuff??
-- exits
-- endings
-- items
-- etc.
-*/
 function RoomTool(controls) {
 	var self = this; // feels a bit hacky
 
