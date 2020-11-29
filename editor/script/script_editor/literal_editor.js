@@ -253,7 +253,7 @@ function RoomIdEditor(expression, parentEditor, isInline) {
 							parentEditor.NotifyUpdate();
 						}
 					},
-					toolId : "dialogPanel",
+					toolId : "scriptPanel",
 					getSelectMessage : function() {
 						// todo : localize
 						return "select room";
@@ -306,7 +306,7 @@ function ItemIdEditor(expression, parentEditor, isInline) {
 						}
 					},
 					filters : ["item"],
-					toolId : "dialogPanel",
+					toolId : "scriptPanel",
 					getSelectMessage : function() {
 						// todo : localize
 						return "select item";
@@ -360,7 +360,7 @@ function PaletteIdEditor(expression, parentEditor, isInline) {
 							parentEditor.NotifyUpdate();
 						}
 					},
-					toolId : "dialogPanel",
+					toolId : "scriptPanel",
 					getSelectMessage : function() {
 						// todo : localize
 						return "select palette";
@@ -413,7 +413,7 @@ function SpriteIdEditor(expression, parentEditor, isInline) {
 						}
 					},
 					filters: ["sprite", "item", "exit", "ending"],
-					toolId : "dialogPanel",
+					toolId : "scriptPanel",
 					getSelectMessage : function() {
 						// todo : localize
 						return "select sprite";

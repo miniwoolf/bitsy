@@ -107,7 +107,7 @@ function FindTool(controls) {
 	CreateFilterToggleHandler("room", controls.filterRoomCheck);
 	CreateFilterToggleHandler("map", controls.filterMapCheck);
 	CreateFilterToggleHandler("palette", controls.filterPaletteCheck);
-	CreateFilterToggleHandler("dialog", controls.filterDialogCheck);
+	CreateFilterToggleHandler("script", controls.filterDialogCheck);
 
 	CreateFilterToggleHandler("cur_room", controls.filterCurRoomCheck);
 	var onRoomChangeUpdateFilter = function() {
@@ -310,7 +310,7 @@ function FindTool(controls) {
 	});
 
 	AddCategory({
-		name: "dialog",
+		name: "script",
 		categoryStore: dialog,
 		getCaption: function(dlg) {
 			if (dlg.id === titleDialogId) {
@@ -324,11 +324,11 @@ function FindTool(controls) {
 		getIconId: function(dlg) { return "dialog"; },
 		includedInFilter: function(dlg, filters) {
 			return (filters.indexOf("cur_room") === -1
-				&& filters.indexOf("dialog") != -1
+				&& filters.indexOf("script") != -1
 				&& (dlg.id != titleDialogId || filters.indexOf("no_title") === -1));
 		},
 		selectEventId: "select_dialog",
-		toolId: "dialogPanel",
+		toolId: "scriptPanel",
 		addEventId: "new_dialog",
 		deleteEventId: "dialog_delete", // todo : seems broken?
 		changeNameEventId: "change_dialog_name",

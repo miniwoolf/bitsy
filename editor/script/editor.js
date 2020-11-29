@@ -287,7 +287,7 @@ var defaultPanelPrefs = {
 		{ id:"findPanel",			visible:true,	position:4  },
 		{ id:"downloadPanel", 		visible:true, 	position:5  },
 		{ id:"colorsPanel", 		visible:false, 	position:6  },
-		{ id:"dialogPanel",			visible:false,	position:7  },
+		{ id:"scriptPanel",			visible:false,	position:7  },
 		{ id:"inventoryPanel",		visible:false,	position:8  },
 		{ id:"gifPanel", 			visible:false, 	position:9  },
 		{ id:"dataPanel", 			visible:false, 	position:10 },
@@ -701,7 +701,7 @@ function start() {
 
 	// init dialog tool
 	dialogTool = new DialogTool({
-		panelRoot : document.getElementById("dialogPanel"),
+		panelRoot : document.getElementById("scriptPanel"),
 		nameInput : document.getElementById("dialogName"),
 		previewToggle : document.getElementById("previewDialogCheck"),
 		showCodeToggle : document.getElementById("dialogShowCodeCheck"),

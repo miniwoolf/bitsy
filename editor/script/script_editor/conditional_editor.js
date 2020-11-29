@@ -333,11 +333,15 @@ function ConditionalOptionEditor(conditionPair, parentEditor, index) {
 		this,
 		function() {
 			comparisonEditor.Select();
-			resultEditor.Select();
+			if (resultEditor.IsDialogExpression) {
+				resultEditor.Select();
+			}
 		},
 		function() {
 			comparisonEditor.Deselect();
-			resultEditor.Deselect();
+			if (resultEditor.IsDialogExpression) {
+				resultEditor.Deselect();
+			}
 		});
 }
 

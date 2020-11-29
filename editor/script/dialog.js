@@ -59,7 +59,7 @@ function DialogTool(controls) {
 			(insertNextToId != undefined && insertNextToId != null);
 
 		if (isHiddenOrShouldMove && showIfHidden) {
-			showPanel("dialogPanel", insertNextToId);
+			showPanel("scriptPanel", insertNextToId);
 		}
 	}
 
@@ -394,7 +394,7 @@ function TextEffectsControl() {
 						textEffectDrwId = id;
 					},
 					filters : ["avatar", "sprite", "tile", "item", "exit", "ending"],
-					toolId : "dialogPanel",
+					toolId : "scriptPanel",
 					getSelectMessage : function() {
 						// todo : localize
 						return "select drawing";
@@ -565,7 +565,7 @@ function DialogControl(parentPanelId) {
 				insertNextToId: parentPanelId,
 			});
 
-		showPanel("dialogPanel", parentPanelId);
+		showPanel("scriptPanel", parentPanelId);
 	};
 	controlDiv.appendChild(openButton);
 
@@ -710,7 +710,7 @@ function DialogControl(parentPanelId) {
 			selectEvent.appendChild(spacer);
 
 			dialogEvent.selectControl = findTool.CreateSelectControl(
-				"dialog",
+				"script",
 				{
 					onSelectChange : function(id) {
 						tile[drawingId][dialogEvent.propertyId] = id;
@@ -806,7 +806,7 @@ function DialogControl(parentPanelId) {
 		ChangeSettingsVisibility(!showSettings);
 
 		if (showSettings) {
-			labelTextSpan.innerText = "dialog events"; // todo : localize // todo : best name?
+			labelTextSpan.innerText = "script cues"; // "dialog events"; // todo : localize // todo : best name?
 		}
 		else {
 			setSelectedEvent(curEventId);

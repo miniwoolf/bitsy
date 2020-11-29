@@ -146,10 +146,12 @@
 					<span class="localize palette_tool_name">colors</span>
 				</label>
 
-				<input type="checkbox" value="dialogPanel" id="dialogCheck" onclick="togglePanelAnimated(event);"  checked/>
-				<label title="show / hide dialog window" for="dialogCheck">
+				<input type="checkbox" value="scriptPanel" id="scriptCheck" onclick="togglePanelAnimated(event);"  checked/>
+				<label title="show / hide dialog window" for="scriptCheck">
 					<span class="bitsy_icon icon_space_right">dialog</span>
-					<span class="localize dialog_tool_name">dialog</span>
+					<!-- <span class="localize dialog_tool_name">dialog</span> -->
+					<!-- todo : localize -->
+					<span>script</span>
 				</label>
 
 				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" />
@@ -811,7 +813,9 @@
 							<input type="checkbox" id="findFilterDialogCheck" checked/>
 							<label for="findFilterDialogCheck" title="show / hide dialogs">
 								<span class="bitsy_icon icon_space_right">dialog</span>
-								<span class="localize dialog_tool_name">dialog</span>
+								<!-- <span class="localize dialog_tool_name">dialog</span> -->
+								<!-- todo : localize -->
+								<span>script</span>
 							</label>
 
 							<input type="checkbox" id="findFilterCurRoomCheck" />
@@ -890,14 +894,16 @@
 					</div>
 				</div>
 
-				<div id="dialogPanel" class="panel color3">
+				<div id="scriptPanel" class="panel color3">
 					<div class="bar color3">
 						<div title="dialog window" class="panelBarTitle" onmousedown="grabCard(event);">
 							<span class="bitsy_icon icon_large icon_space_right">dialog</span>
-							<span class="localize dialog_tool_name">dialog</span>
+							<!-- <span class="localize dialog_tool_name">dialog</span> -->
+							<!-- TODO : localize -->
+							<span>script</span>
 						</div>
 
-						<button title="minimize dialog window" class="light panelBarClose" onclick="hidePanel('dialogPanel');">
+						<button title="minimize dialog window" class="light panelBarClose" onclick="hidePanel('scriptPanel');">
 							<span class="bitsy_icon">close</span>
 						</button>
 					</div>

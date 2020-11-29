@@ -104,7 +104,7 @@
 	background: #ccccff;
 }
 
-.actionEditor.altColor > .actionEditorMiddleColumn .customControlsRoot button {
+.actionEditor.altColor > .actionEditorMiddleColumn > .customControlsRoot button {
 	background: #ccccff;
 }
 
