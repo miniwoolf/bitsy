@@ -323,7 +323,7 @@ function update() {
 
 	updateInput();
 
-	updateScriptQueue();
+	updateCuedScripts();
 
 	prevTime = curTime;
 
@@ -437,7 +437,7 @@ function updateInput() {
 
 		function tryButtonDownActions(keyName, isButtonHeld, afterButtonPressFunc) {
 			if (player() && player().btn != null) {
-				queueScript(
+				cueScript(
 					player().btn,
 					player(),
 					function(result) {
@@ -446,16 +446,16 @@ function updateInput() {
 							afterButtonPressFunc();
 						}
 
-						queueButtonDownScripts(keyName, isButtonHeld);
+						cueButtonDownScripts(keyName);
 					},
-					[keyName, isButtonHeld]);
+					[keyName]);
 			}
 			else {
 				if (player() && !player().lok && afterButtonPressFunc) {
 					afterButtonPressFunc();
 				}
 
-				queueButtonDownScripts(keyName, isButtonHeld);
+				cueButtonDownScripts(keyName);
 			}
 		}
 
@@ -502,30 +502,30 @@ function updateInput() {
 }
 
 // TODO : should any of this live inside the script module?
-var scriptQueue = [];
+var scriptCues = [];
 var isScriptRunning = false;
-function isScriptQueueBusy() {
-	return isScriptRunning || scriptQueue.length > 0;
+function isScriptInterpreterBusy() {
+	return isScriptRunning || scriptCues.length > 0;
 }
 
-function updateScriptQueue() {
-	// animation frame tick scripts
-	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptQueueBusy()) {
+function updateCuedScripts() {
+	// add animation frame tick scripts
+	if (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptInterpreterBusy()) {
 		if (animationCounter === 0) {
 			for (var i in spriteInstances) {
 				var spr = spriteInstances[i];
 				if (spr.tik != null && spr.id in tile) {
-					queueScript(spr.tik, spr, function() {}, [tile[spr.drw].animation.frameIndex]);
+					cueScript(spr.tik, spr, function() {}, [tile[spr.drw].animation.frameIndex]);
 				}
 			}
 		}
 	}
 
 	// run as many scripts as we can this frame
-	while (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptQueue.length > 0) {
+	while (!isNarrating && !isEnding && !dialogBuffer.IsActive() && !transition.IsTransitionActive() && !isScriptRunning && scriptCues.length > 0) {
 		isScriptRunning = true;
 
-		var scriptInfo = scriptQueue.shift();
+		var scriptInfo = scriptCues.shift();
 
 		dialogRenderer.Reset();
 		dialogBuffer.Reset();
@@ -545,10 +545,8 @@ function updateScriptQueue() {
 
 		dialogRenderer.SetCentered(isNarrating);
 
-		if (scriptInfo.parameters != undefined && scriptInfo.parameters != null) {
-			// TODO : should script info have a bool for this?
-			// should the run function have a bool?
-			scriptInterpreter.RunCallback(dialog[scriptInfo.id], scriptInfo.instance, scriptInfo.parameters, onScriptEnd);
+		if (dialog[scriptInfo.id].type === ScriptType.Function) {
+			scriptInterpreter.RunFunction(dialog[scriptInfo.id], scriptInfo.instance, scriptInfo.parameters, onScriptEnd);
 		}
 		else {
 			scriptInterpreter.Run(dialog[scriptInfo.id], scriptInfo.instance, onScriptEnd);
@@ -556,12 +554,12 @@ function updateScriptQueue() {
 	}
 }
 
-function queueScript(scriptId, instance, callback, parameters, onStart) {
-	scriptQueue.push({
+function cueScript(scriptId, instance, callback, parameters, onStart) {
+	scriptCues.push({
 		id: scriptId,
 		instance: instance,
 		callback: callback,
-		parameters: parameters, // for scripts with callbacks: should I make that explicit?
+		parameters: parameters,
 		onStart: onStart,
 	});
 }
@@ -932,11 +930,11 @@ function movePlayer(direction) {
 	return !result.collision;
 }
 
-function queueButtonDownScripts(keyName, isButtonHeld) {
+function cueButtonDownScripts(keyName) {
 	for (var i in spriteInstances) {
 		var spr = spriteInstances[i];
 		if (spr.type != TYPE_KEY.AVATAR && spr.btn != null && (spr.btn in dialog)) {
-			queueScript(spr.btn, spr, function() {}, [keyName, isButtonHeld]);
+			cueScript(spr.btn, spr, function() {}, [keyName]);
 		}
 	}
 }
@@ -1005,16 +1003,16 @@ function move(instance, direction, canEnterNeighborRoom) {
 		}
 	}
 
-	// queue knock into scripts
+	// cue knock into scripts
 	for (var i = 0; i < knockIntoInstances.length; i++) {
 		var other = knockIntoInstances[i];
 
 		if (instance.nok && dialog[instance.nok]) {
-			queueScript(instance.nok, instance, function() {}, [other]);
+			cueScript(instance.nok, instance, function() {}, [other, reverseButtonDirection(direction)]);
 		}
 
 		if (other.nok && dialog[other.nok]) {
-			queueScript(other.nok, other, function() {}, [instance]);
+			cueScript(other.nok, other, function() {}, [instance, direction]);
 		}
 	}
 
@@ -1024,6 +1022,25 @@ function move(instance, direction, canEnterNeighborRoom) {
 	}
 
 	return { collision: collision, collidedWith: collisionSprite, };
+}
+
+function reverseButtonDirection(direction) {
+	var reverse = BUTTON_KEY.UP;
+
+	if (direction === BUTTON_KEY.UP) {
+		reverse = BUTTON_KEY.DOWN;
+	}
+	else if (direction === BUTTON_KEY.DOWN) {
+		reverse = BUTTON_KEY.UP;
+	}
+	else if (direction === BUTTON_KEY.LEFT) {
+		reverse = BUTTON_KEY.RIGHT;
+	}
+	else if (direction === BUTTON_KEY.RIGHT) {
+		reverse = BUTTON_KEY.LEFT;
+	}
+
+	return reverse;
 }
 
 function updateLockState(spr) {
@@ -1063,7 +1080,7 @@ function movePlayerThroughExit(ext) {
 	updateLockState(ext);
 
 	if (ext.dlg != undefined && ext.dlg != null) {
-		queueScript(
+		cueScript(
 			ext.dlg,
 			ext,
 			function(result) {
@@ -1699,7 +1716,7 @@ function startTitle() {
 	dialogBuffer.Reset();
 
 	scriptInterpreter.Run(dialog[titleId], null, function() {
-		// TODO : can we refactor this part? do script queue scripts need this?
+		// TODO : can we refactor this part? is it needed anywhere else?
 		dialogBuffer.OnDialogEnd(function() {
 			isNarrating = false;
 		});
@@ -1710,12 +1727,9 @@ function startEndingDialog(ending) {
 	// TODO : remove back compat with old endings once I'm sure I want to use this...
 	var endingId = "dlg" in ending ? ending.dlg : ending.id;
 
-	console.log(ending);
 	updateLockState(ending);
 
-	console.log("ENDING LOCKED? " + ending.lok);
-
-	queueScript(
+	cueScript(
 		endingId,
 		ending,
 		function() {
@@ -1745,7 +1759,7 @@ function startItemDialog(itemInstance, callback) {
 	var itemDlgId = itemInstance.dlg;
 
 	if (dialog[itemDlgId]) {
-		queueScript(itemDlgId, itemInstance, tryCallback);
+		cueScript(itemDlgId, itemInstance, tryCallback);
 	}
 	else {
 		tryCallback();
@@ -1754,8 +1768,9 @@ function startItemDialog(itemInstance, callback) {
 
 function startSpriteDialog(spriteInstance) {
 	var dialogId = spriteInstance.dlg;
+
 	if (dialog[dialogId]) {
-		queueScript(dialogId, spriteInstance, function() {});
+		cueScript(dialogId, spriteInstance, function() {});
 	}
 }
 

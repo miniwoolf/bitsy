@@ -52,7 +52,7 @@ this.Run = function(script, instance, callback) {
 	eval(compiledScripts[script.id], env, callback);
 }
 
-var RunCallback = function(script, instance, inputParameters, callback) {
+var RunFunction = function(script, instance, inputParameters, callback) {
 	this.Run(script, instance, function(result) {
 		if (result instanceof Function) {
 			result(inputParameters, callback);
@@ -62,7 +62,7 @@ var RunCallback = function(script, instance, inputParameters, callback) {
 		}
 	});
 }
-this.RunCallback = RunCallback;
+this.RunFunction = RunFunction;
 
 // do I want a monolithic reset function like this?
 this.Reset = function() {
