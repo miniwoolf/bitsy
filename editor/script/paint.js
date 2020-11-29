@@ -246,7 +246,7 @@ function PaintTool(controls) {
 			controls.dialogControl.style.display = "block";
 			controls.settings.container.style.display = "none";
 
-			UpdateDialogControl(true);
+			UpdateScriptCueControl(true);
 		}
 		else if (curSubPanel === SubPanel.Settings) {
 			controls.subPanelSelect.settings.checked = true;
@@ -265,10 +265,10 @@ function PaintTool(controls) {
 
 		// dialog UI
 		if (tile[drawingId].type === TYPE_KEY.TILE) {
-			UpdateDialogControl(false);
+			UpdateScriptCueControl(false);
 		}
 		else {
-			UpdateDialogControl(true);
+			UpdateScriptCueControl(true);
 		}
 
 		if (colorSettings.Update(drawingId)) {
@@ -674,16 +674,16 @@ function PaintTool(controls) {
 	this.PrevDrawing = prevDrawing;
 	controls.nav.prev.onclick = prevDrawing;
 
-	var dialogControl = null;
-	function UpdateDialogControl(isVisible) {
+	var scriptCueControl = null;
+	function UpdateScriptCueControl(isVisible) {
 		controls.dialogControl.style.display = isVisible ? "block" : "none";
 
-		if (!dialogControl) {
-			dialogControl = new DialogControl("paintPanel");
-			controls.dialogControl.appendChild(dialogControl.GetElement());
+		if (!scriptCueControl) {
+			scriptCueControl = new ScriptCueControl("paintPanel");
+			controls.dialogControl.appendChild(scriptCueControl.GetElement());
 		}
 
-		dialogControl.SetDrawing(drawingId);
+		scriptCueControl.SetDrawing(drawingId);
 
 		// todo : refactor?
 		// if (alwaysShowDrawingDialog && dialog[til.dlg]) {

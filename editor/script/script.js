@@ -518,7 +518,7 @@ function ScriptCues() {
 	}
 }
 
-function DialogControl(parentPanelId) {
+function ScriptCueControl(parentPanelId) {
 	var drawingId = null;
 
 	var curCueId = ARG_KEY.DIALOG_SCRIPT;
