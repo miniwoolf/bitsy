@@ -151,7 +151,7 @@ var expressionDescriptionMap = {
 };
 
 // hacky?
-expressionDescriptionMap[SYM_KEY.ENTRY] = {
+expressionDescriptionMap[CURLICUE_KEY.ENTRY] = {
 	GetName : function() { return "entry value"; }, // todo : localize
 	GetDescription : function() { return "_ of _[ is set to _]"; }, // todo : localize! and wording?
 	parameters : [

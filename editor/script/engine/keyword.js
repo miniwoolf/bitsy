@@ -10,6 +10,7 @@ var TYPE_KEY = {
 	EXIT : "EXT",
 	ENDING : "END",
 	DIALOG : "DLG",
+	SCRIPT : "CUE",
 	DEFAULT_FONT : "DEFAULT_FONT",
 	TEXT_DIRECTION : "TEXT_DIRECTION",
 	FONT : "FONT",
@@ -47,8 +48,7 @@ var BUTTON_KEY = {
 	// CANCEL : "X",
 };
 
-// move other symbol codes in here? SEQ? rename CURLY_KEY?
-var SYM_KEY = {
+var CURLICUE_KEY = {
 	OPEN : "{",
 	CLOSE : "}",
 	DIALOG : ">>",

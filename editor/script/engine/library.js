@@ -128,7 +128,7 @@ function valueToString(value) {
 	console.log(typeof value);
 
 	if (typeof value === "function") {
-		str += SYM_KEY.FUNCTION;
+		str += CURLICUE_KEY.FUNCTION;
 	}
 	else if (IsATable(value)) {
 		if (value.Has(ENTRY_KEY.SPRITE_NAME)) {
@@ -138,7 +138,7 @@ function valueToString(value) {
 			str += valueToString(value.Get(ENTRY_KEY.SPRITE_TYPE)) + " " + valueToString(value.Get(ENTRY_KEY.SPRITE_ID));
 		}
 		else {
-			str += SYM_KEY.TABLE;
+			str += CURLICUE_KEY.TABLE;
 		}
 	}
 	else if ((typeof value === "boolean") || value === undefined || value === null) {

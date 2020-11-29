@@ -203,7 +203,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 				input.appendChild(variableDatalist);
 
 				input.onchange = function(event) {
-					expression.value = SYM_KEY.ENTRY + event.target.value;
+					expression.value = CURLICUE_KEY.ENTRY + event.target.value;
 					parentEditor.NotifyUpdate();
 				}
 

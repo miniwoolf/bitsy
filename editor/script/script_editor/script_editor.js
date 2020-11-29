@@ -66,8 +66,8 @@ function ScriptEditor(dialogId) {
 
 		// handle one line scripts: a little hard coded
 		if (dialogStr.indexOf("\n") === -1) {
-			var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
-			var endOffset = startOffset + SYM_KEY.CLOSE.length;
+			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
 			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
 		}
 
@@ -245,8 +245,8 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 
 		// handle one line scripts: a little hard coded
 		if (dialogStr.indexOf("\n") === -1) {
-			var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
-			var endOffset = startOffset + SYM_KEY.CLOSE.length;
+			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
 			dialogStr = dialogStr.substr(startOffset, dialogStr.length - endOffset);
 		}
 

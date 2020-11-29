@@ -80,7 +80,7 @@ function parseWorld(file) {
 			// parse endings for back compat
 			i = parseEnding(lines, i, compatibilityFlags);
 		}
-		else if (getType(curLine) === SYM_KEY.VARIABLE) {
+		else if (getType(curLine) === CURLICUE_KEY.VARIABLE) {
 			i = parseVariable(lines, i);
 		}
 		else if (getType(curLine) === TYPE_KEY.DEFAULT_FONT) {
@@ -575,7 +575,7 @@ function parseScript(lines, i, options) {
 
 	id = backCompatPrefix + id;
 
-	var dialogStart = SYM_KEY.OPEN + SYM_KEY.DIALOG;
+	var dialogStart = CURLICUE_KEY.OPEN + CURLICUE_KEY.DIALOG;
 
 	var script = "";
 	var startsWithDialogExpression = (lines[i].length >= 3) && (lines[i].indexOf(dialogStart) === 0);
@@ -596,10 +596,10 @@ function parseScript(lines, i, options) {
 			else {
 				script += lines[i][charIndex];
 
-				if (lines[i][charIndex] === SYM_KEY.OPEN) {
+				if (lines[i][charIndex] === CURLICUE_KEY.OPEN) {
 					bracesCount++;
 				}
-				else if (lines[i][charIndex] === SYM_KEY.CLOSE) {
+				else if (lines[i][charIndex] === CURLICUE_KEY.CLOSE) {
 					bracesCount--;
 				}
 
@@ -874,7 +874,7 @@ function serializeWorld(skipFonts) {
 
 	/* VARIABLES */
 	for (id in variable) {
-		worldStr += SYM_KEY.VARIABLE + " " + id + "\n";
+		worldStr += CURLICUE_KEY.VARIABLE + " " + id + "\n";
 		worldStr += variable[id] + "\n";
 		worldStr += "\n";
 	}

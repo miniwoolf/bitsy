@@ -18,7 +18,7 @@ function compile(script, options) {
 	if (dialogWrapMode != DialogWrapMode.No && (dialogWrapMode === DialogWrapMode.Yes || scriptStr.indexOf("\n") < 0)) {
 		// wrap one-line dialogs in a dialog expression
 		// TODO : is this still what I want?
-		scriptStr = SYM_KEY.OPEN + SYM_KEY.DIALOG + " " + scriptStr + SYM_KEY.CLOSE;
+		scriptStr = CURLICUE_KEY.OPEN + CURLICUE_KEY.DIALOG + " " + scriptStr + CURLICUE_KEY.CLOSE;
 	}
 
 	var tokens = tokenize(scriptStr);
@@ -163,7 +163,7 @@ function serializeWrapped(expressionList, indentDepth) {
 	for (var i = 0; i < expressionList.length; i++) {
 		var exp = expressionList[i];
 		var expStr = serialize(expressionList[i], indentNext);
-		var nextWordLen = exp.type != "list" && exp.value != SYM_KEY.DIALOG ? expStr.length : 0;
+		var nextWordLen = exp.type != "list" && exp.value != CURLICUE_KEY.DIALOG ? expStr.length : 0;
 		var isMultiLine = exp.type === "list" && !isInlineFunction(exp.list[0].value);
 
 		if (prevLineIsMultiLine || isMultiLine || (curLineLen + nextWordLen + 1) > wordWrapLen) {
@@ -188,7 +188,7 @@ this.SerializeWrapped = serializeWrapped;
 function serializeUnwrapped(expression) {
 	var out = "";
 
-	if (expression.type === "list" && expression.list[0].value === SYM_KEY.DIALOG) {
+	if (expression.type === "list" && expression.list[0].value === CURLICUE_KEY.DIALOG) {
 		out = serializeWrapped(expression.list.slice(1));
 	}
 
@@ -197,7 +197,7 @@ function serializeUnwrapped(expression) {
 this.SerializeUnwrapped = serializeUnwrapped;
 
 function isDialogExpression(symbol) {
-	return symbol === SYM_KEY.DIALOG;
+	return symbol === CURLICUE_KEY.DIALOG;
 }
 this.IsDialogExpression = isDialogExpression;
 
@@ -233,7 +233,7 @@ function serializeList(expression, indentDepth) {
 		listType = expression.list[0].value;
 	}
 
-	var out = SYM_KEY.OPEN;
+	var out = CURLICUE_KEY.OPEN;
 
 	if (isDialogExpression(listType)) {
 		out += serializeWrapped(expression.list, indentDepth);
@@ -258,7 +258,7 @@ function serializeList(expression, indentDepth) {
 		out += "\n" + (" ".repeat(indentDepth));
 	}
 
-	out += SYM_KEY.CLOSE;
+	out += CURLICUE_KEY.CLOSE;
 
 	return out;
 }
@@ -367,13 +367,13 @@ function parse(tokens, list) {
 
 	while (tokens.length > 0) {
 		var token = tokens.shift();
-		if (token === SYM_KEY.OPEN) {
+		if (token === CURLICUE_KEY.OPEN) {
 			list.push({
 				type: "list",
 				list: parse(tokens),
 			});
 		}
-		else if (token === SYM_KEY.CLOSE) {
+		else if (token === CURLICUE_KEY.CLOSE) {
 			break;
 		}
 		else {
@@ -431,7 +431,7 @@ function eval(expression, environment, onReturn) {
 
 var special = {};
 
-special[SYM_KEY.DIALOG] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.DIALOG] = function(expression, environment, onReturn) {
 	var result = false;
 	var i = 1;
 	var evalNext;
@@ -477,7 +477,7 @@ special[SYM_KEY.DIALOG] = function(expression, environment, onReturn) {
 	evalNext();
 };
 
-special[SYM_KEY.SEQUENCE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.SEQUENCE] = function(expression, environment, onReturn) {
 	if ("index" in expression) {
 		expression.index = Math.min(expression.index + 1, expression.list.length - 1);
 	}
@@ -493,7 +493,7 @@ special[SYM_KEY.SEQUENCE] = function(expression, environment, onReturn) {
 	}
 };
 
-special[SYM_KEY.CYCLE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.CYCLE] = function(expression, environment, onReturn) {
 	if ("index" in expression) {
 		expression.index = Math.max(1, (expression.index + 1) % expression.list.length);
 	}
@@ -509,7 +509,7 @@ special[SYM_KEY.CYCLE] = function(expression, environment, onReturn) {
 	}
 };
 
-special[SYM_KEY.SHUFFLE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.SHUFFLE] = function(expression, environment, onReturn) {
 	if (("index" in expression) && (expression.index + 1 < expression.shuffle.length)) {
 		expression.index++;
 	}
@@ -534,7 +534,7 @@ special[SYM_KEY.SHUFFLE] = function(expression, environment, onReturn) {
 	}
 };
 
-special[SYM_KEY.CHOICE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.CHOICE] = function(expression, environment, onReturn) {
 	var i = 1;
 	var evalNext;
 
@@ -572,7 +572,7 @@ special[SYM_KEY.CHOICE] = function(expression, environment, onReturn) {
 	}
 };
 
-special[SYM_KEY.CONDITIONAL] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.CONDITIONAL] = function(expression, environment, onReturn) {
 	var result = null;
 	var i = 1;
 	var evalNext;
@@ -600,7 +600,7 @@ special[SYM_KEY.CONDITIONAL] = function(expression, environment, onReturn) {
 	evalNext();
 };
 
-special[SYM_KEY.FUNCTION] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.FUNCTION] = function(expression, environment, onReturn) {
 	var error = null;
 
 	// initialize parameter names
@@ -665,7 +665,7 @@ special[SYM_KEY.FUNCTION] = function(expression, environment, onReturn) {
 };
 
 // local variable
-special[SYM_KEY.VARIABLE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.VARIABLE] = function(expression, environment, onReturn) {
 	function setValue(value) {
 		environment.SetLocal(expression.list[1].value, value);
 		onReturn(value);
@@ -684,7 +684,7 @@ special[SYM_KEY.VARIABLE] = function(expression, environment, onReturn) {
 };
 
 // global variable / variable assignment
-special[SYM_KEY.ASSIGN] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.ASSIGN] = function(expression, environment, onReturn) {
 	function setValue(value) {
 		environment.SetGlobal(expression.list[1].value, value);
 		onReturn(value);
@@ -702,7 +702,7 @@ special[SYM_KEY.ASSIGN] = function(expression, environment, onReturn) {
 	}
 };
 
-special[SYM_KEY.TABLE] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.TABLE] = function(expression, environment, onReturn) {
 	var table = new Table();
 	var i = 1;
 	var evalNext;
@@ -712,7 +712,7 @@ special[SYM_KEY.TABLE] = function(expression, environment, onReturn) {
 			onReturn(table);
 		}
 		else {
-			if (expression.list[i].type === "symbol" && expression.list[i].value[0] === SYM_KEY.ENTRY) {
+			if (expression.list[i].type === "symbol" && expression.list[i].value[0] === CURLICUE_KEY.ENTRY) {
 				var name = expression.list[i].value.slice(1);
 				i++;
 
@@ -738,7 +738,7 @@ special[SYM_KEY.TABLE] = function(expression, environment, onReturn) {
 	evalNext();
 };
 
-special[SYM_KEY.ENTRY] = function(expression, environment, onReturn) {
+special[CURLICUE_KEY.ENTRY] = function(expression, environment, onReturn) {
 	if (expression.list.length < 2) {
 		PrintError("no TBL to get entry from", onReturn);
 	}
@@ -780,7 +780,7 @@ function Table(parent) {
 	var hasParent = parent != undefined && parent != null;
 
 	var GetInternalKey = function(key, isSecret) {
-		return isSecret ? key : SYM_KEY.ENTRY + key;
+		return isSecret ? key : CURLICUE_KEY.ENTRY + key;
 	}
 
 	function hasInternalKey(internalKey) {

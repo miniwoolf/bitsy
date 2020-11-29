@@ -643,8 +643,8 @@ function ScriptCueControl(parentPanelId) {
 
 			// handle one line scripts: a little hard coded
 			if (scriptStr.indexOf("\n") === -1) {
-				var startOffset = SYM_KEY.OPEN.length + SYM_KEY.DIALOG.length + 1;
-				var endOffset = startOffset + SYM_KEY.CLOSE.length;
+				var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+				var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
 				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
 			}
 
