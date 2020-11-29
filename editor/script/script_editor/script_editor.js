@@ -63,23 +63,30 @@ function ScriptEditor(scriptId) {
 	}
 
 	function OnUpdate() {
-		console.log(rootEditor);
 		var scriptStr = rootEditor.Serialize();
 
-		// handle one line scripts: a little hard coded
-		if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
-			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
-			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
-			scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+		var flatStr = scriptInterpreter.SerializeFlat(scriptRoot);
+
+		if (SCRIPT_SIZE && flatStr.length > SCRIPT_SIZE) {
+			alert("oh no, your script is too long! :(");
+			events.Raise("select_dialog", { id: scriptId });
 		}
+		else {
+			// handle one line scripts: a little hard coded
+			if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
+				var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+				var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
+				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+			}
 
-		dialog[scriptId].src = scriptStr;
+			dialog[scriptId].src = scriptStr;
 
-		refreshGameData();
+			refreshGameData();
 
-		plaintextEditor.Refresh();
+			plaintextEditor.Refresh();
 
-		events.Raise("dialog_update", { dialogId: scriptId, editorId: editorId });
+			events.Raise("dialog_update", { dialogId: scriptId, editorId: editorId, charCount: flatStr.length, });
+		}
 	}
 
 	this.NotifyUpdate = function() {
@@ -96,7 +103,6 @@ function ScriptEditor(scriptId) {
 				viewportDiv.style.display = "block";
 			},
 			function(expressionNode) { // accept
-				console.log(expressionNode.Serialize());
 				expressionBuilderDiv.style.display = "none";
 				viewportDiv.style.display = "block";
 				onAcceptHandler(expressionNode);
@@ -191,6 +197,18 @@ function ScriptEditor(scriptId) {
 		rootEditor.AddPut();
 	};
 
+	this.AddRid = function() {
+		rootEditor.AddRid();
+	};
+
+	this.AddHop = function() {
+		rootEditor.AddHop();
+	};
+
+	this.AddChangeDrawing = function() {
+		rootEditor.AddChangeDrawing();
+	};
+
 	this.AddExit = function() {
 		rootEditor.AddExit();
 	};
@@ -202,6 +220,11 @@ function ScriptEditor(scriptId) {
 	this.AddPaletteSwap = function() {
 		rootEditor.AddPaletteSwap();
 	};
+
+	this.GetCharCount = function() {
+		var flatStr = scriptInterpreter.SerializeFlat(scriptRoot);
+		return flatStr.length;
+	}
 }
 
 function PlaintextScriptEditor(scriptId, style, defaultDialogNameFunc) {
@@ -263,17 +286,24 @@ function PlaintextScriptEditor(scriptId, style, defaultDialogNameFunc) {
 
 	function OnUpdate() {
 		var scriptStr = scriptInterpreter.Serialize(scriptRoot);
+		var flatStr = scriptInterpreter.SerializeFlat(scriptRoot);
 
-		// handle one line scripts: a little hard coded
-		if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
-			var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
-			var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
-			scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+		if (SCRIPT_SIZE && flatStr.length > SCRIPT_SIZE) {
+			alert("oh no, your script is too long! :(");
+			events.Raise("select_dialog", { id: scriptId });
 		}
+		else {
+			// handle one line scripts: a little hard coded
+			if (dialog[scriptId].type === ScriptType.Dialog && scriptStr.indexOf("\n") === -1) {
+				var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+				var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
+				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+			}
 
-		dialog[scriptId].src = scriptStr;
+			dialog[scriptId].src = scriptStr;
 
-		refreshGameData();
+			refreshGameData();
+		}
 	}
 
 	this.GetEditorId = function() {

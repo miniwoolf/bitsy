@@ -763,18 +763,9 @@ function parseFlag(lines, i) {
 		WRITABLE_COLOR_START = COLOR_INDEX.TEXTBOX;
 	}
 
-	// TODO : ???
-	// if (id === SECRET_KEY.GRAPHICS_MODE && flags[id] === 2) {
-		// width = width * 2;
-		// height = height * 2;
-		// tilesize = tilesize * 2;
-		// scale = scale / 2;
-		// text_scale = scale;
-		// width = 256;
-		// height = 256;
-		// tilesize = 16;
-		// scale = 2;
-	// }
+	if (id === SECRET_KEY.SUPER_SCRIPT && flags[id] != 0) {
+		SCRIPT_SIZE = null;
+	}
 
 	i++;
 
@@ -792,7 +783,18 @@ function serializeWorld(skipFonts) {
 	var worldStr = "";
 
 	/* TITLE */
-	worldStr += getTitle() + "\n";
+	var titleStr = getTitle();
+	var titleScriptRoot = scriptInterpreter.Parse(titleStr, DialogWrapMode.No);
+	var titleFlat = scriptInterpreter.SerializeFlat(titleScriptRoot);
+	var titleCharCount = titleFlat.length;
+
+	if (SCRIPT_SIZE === null || titleCharCount <= SCRIPT_SIZE) {
+		worldStr += titleStr + "\n";
+	}
+	else {
+		worldStr += "\n";
+	}
+
 	worldStr += "\n";
 
 	/* VERSION */
@@ -883,14 +885,20 @@ function serializeWorld(skipFonts) {
 			continue;
 		}
 
-		worldStr += dialog[id].type + " " + id + "\n";
-		worldStr += dialog[id].src + "\n";
+		var scriptRoot = scriptInterpreter.Parse(dialog[id].src, DialogWrapMode.No);
+		var scriptFlat = scriptInterpreter.SerializeFlat(scriptRoot);
+		var charCount = scriptFlat.length;
 
-		if (dialog[id].name != null) {
-			worldStr += ARG_KEY.NAME + " " + dialog[id].name + "\n";
+		if (SCRIPT_SIZE === null || charCount <= SCRIPT_SIZE) {
+			worldStr += dialog[id].type + " " + id + "\n";
+			worldStr += dialog[id].src + "\n";
+
+			if (dialog[id].name != null) {
+				worldStr += ARG_KEY.NAME + " " + dialog[id].name + "\n";
+			}
+
+			worldStr += "\n";
 		}
-
-		worldStr += "\n";
 	}
 
 	/* VARIABLES */

@@ -706,6 +706,7 @@ function start() {
 		previewToggle : document.getElementById("previewDialogCheck"),
 		showCodeToggle : document.getElementById("dialogShowCodeCheck"),
 		scriptEditorViewport : document.getElementById("dialogEditor"),
+		charCount : document.getElementById("charCountSpan"),
 		nav : {
 			prev : document.getElementById("prevDialogButton"),
 			next : document.getElementById("nextDialogButton"),

@@ -301,6 +301,27 @@ function serialize(expression, indentDepth) {
 }
 this.Serialize = serialize;
 
+function serializeFlat(expression) {
+	var out = "";
+
+	var tmp = indentStep;
+	indentStep = 0;
+
+	if (expression.type === "list") {
+		out = serializeList(expression, 0);
+	}
+	else {
+		out = serializeAtom(expression.value, expression.type);
+	}
+
+	out = out.replaceAll("\n", " ");
+
+	indentStep = tmp;
+
+	return out;
+}
+this.SerializeFlat = serializeFlat;
+
 function tokenize(script) {
 	// store string literals and replace them with special token
 	var stringPattern = /"[\s\S]*?"/g;

@@ -14,6 +14,7 @@ var MAP_REGISTRY_SIZE = 5;
 
 var PALETTE_SIZE = 16;
 var ANIMATION_SIZE = 4;
+var SCRIPT_SIZE = 1024;
 
 var NULL_ID = "0"; // reserved for blank / default
 

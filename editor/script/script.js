@@ -83,6 +83,13 @@ function ScriptTool(controls) {
 			controls.editControls.editDialogSpriteActions.checked = true;
 			controls.editControls.editDialogSpriteActions.onclick();
 		}
+
+		if (SCRIPT_SIZE != null) {
+			controls.charCount.innerText = (SCRIPT_SIZE - curScriptEditor.GetCharCount());
+		}
+		else {
+			controls.charCount.innerText = "";
+		}
 	}
 
 	function onNameChange(event) {
@@ -315,6 +322,15 @@ function ScriptTool(controls) {
 	/* events */
 	events.Listen("select_dialog", function(e) {
 		OnSelect(e.id, e.insertNextToId, e.showIfHidden);
+	});
+
+	events.Listen("dialog_update", function(event) {
+		if (event.dialogId === curScriptId && event.charCount != null && SCRIPT_SIZE != null) {
+			controls.charCount.innerText = (SCRIPT_SIZE - event.charCount);
+		}
+		else {
+			controls.charCount.innerText = "";
+		}
 	});
 
 	// init to title
@@ -723,16 +739,24 @@ function ScriptCueControl(parentPanelId) {
 			var scriptRoot = scriptInterpreter.Parse(e.target.value, isDialogScript ? DialogWrapMode.Yes : DialogWrapMode.No);
 			var scriptStr = scriptInterpreter.Serialize(scriptRoot);
 
-			// handle one line scripts: a little hard coded
-			if (isDialogScript && scriptStr.indexOf("\n") === -1) {
-				var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
-				var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
-				scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+			var flatStr = scriptInterpreter.SerializeFlat(scriptRoot);
+
+			if (SCRIPT_SIZE && flatStr.length > SCRIPT_SIZE) {
+				alert("oh no, your script is too long! :(");
+				// TODO ?
 			}
+			else {
+				// handle one line scripts: a little hard coded
+				if (isDialogScript && scriptStr.indexOf("\n") === -1) {
+					var startOffset = CURLICUE_KEY.OPEN.length + CURLICUE_KEY.DIALOG.length + 1;
+					var endOffset = startOffset + CURLICUE_KEY.CLOSE.length;
+					scriptStr = scriptStr.substr(startOffset, scriptStr.length - endOffset);
+				}
 
-			dialog[curScriptId].src = scriptStr;
+				dialog[curScriptId].src = scriptStr;
 
-			refreshGameData();
+				refreshGameData();
+			}
 		}
 		else if (curCueId === ARG_KEY.DIALOG_SCRIPT && tile[drawingId].type != TYPE_KEY.AVATAR) {
 			createNewScript(cueTypes[curCueId], e.target.value, false);
