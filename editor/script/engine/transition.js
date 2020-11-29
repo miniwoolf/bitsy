@@ -173,10 +173,11 @@ var TransitionManager = function() {
 		transitionEffects[name] = effect;
 	}
 
-	// todo : name?
+	// todo : name? // todo : remove?
 	this.RegisterTransitionEffect("NONE", {
 		showPlayerStart : false,
 		showPlayerEnd : false,
+		duration : 500,
 		onStep : function() {},
 		pixelEffectFunc : function() {},
 	});

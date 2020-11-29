@@ -1120,7 +1120,7 @@ function ExitSettingsControl(controls) {
 	// exit transition controls
 	controls.transitionSelect.onchange = function(e) {
 		if (tile[drawingId].type === TYPE_KEY.EXIT) {
-			if (e.target.value === "none") {
+			if (e.target.value === "NONE") {
 				tile[drawingId].transition_effect = null;
 			}
 			else {
@@ -1231,7 +1231,7 @@ function ExitSettingsControl(controls) {
 			controls.xInput.value = tile[drawingId].dest.x;
 			controls.yInput.value = tile[drawingId].dest.y;
 
-			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "none";
+			var effectId = tile[drawingId].transition_effect ? tile[drawingId].transition_effect : "NONE";
 			controls.transitionSelect.value = effectId;
 		}
 	}

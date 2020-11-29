@@ -169,16 +169,18 @@ function RoomTool(controls) {
 
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
-			renderOnlyUpdate({ drawInstances: false, });
+			if (!isPlayMode) {
+				renderOnlyUpdate({ drawInstances: false, });
 
-			selectCornerAnimationTimer += deltaTime;
+				selectCornerAnimationTimer += deltaTime;
 
-			if (selectCornerAnimationTimer >= 400) {
-				selectCornerOffset = (selectCornerOffset === 1) ? 2 : 1;
-				selectCornerAnimationTimer = 0
+				if (selectCornerAnimationTimer >= 400) {
+					selectCornerOffset = (selectCornerOffset === 1) ? 2 : 1;
+					selectCornerAnimationTimer = 0
+				}
+
+				self.drawEditMap();
 			}
-
-			self.drawEditMap();
 		}, 16);
 	}
 
