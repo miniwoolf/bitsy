@@ -126,6 +126,13 @@ function PaletteTool(colorPicker, controls) {
 		}
 
 		updateColorPickerUI();
+
+		if (DEFAULT_REGISTRY_SIZE != null && sortedIdList(palette).length >= (DEFAULT_REGISTRY_SIZE - 1)) {
+			controls.addButton.disabled = true;
+		}
+		else {
+			controls.addButton.disabled = false;
+		}
 	}
 
 	events.Listen("game_data_change", function(event) {

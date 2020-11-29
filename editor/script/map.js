@@ -317,7 +317,11 @@ function MapTool(controls) {
 	events.Listen("select_map", function(e) {
 		curMapId = e.id;
 
-		if (sortedIdList(map).length > 0) {
+		var mapIdList = sortedIdList(map);
+
+		console.log(mapIdList);
+
+		if (mapIdList.length > 0) {
 			controls.editRoot.style.display = "block";
 			controls.noMapMessage.style.display = "none";
 
@@ -339,6 +343,13 @@ function MapTool(controls) {
 			controls.nameInput.placeholder = "";
 			controls.editRoot.style.display = "none";
 			controls.noMapMessage.style.display = "block";
+		}
+
+		if (MAP_REGISTRY_SIZE != null && mapIdList.length >= (MAP_REGISTRY_SIZE - 1)) {
+			controls.addButton.disabled = true;
+		}
+		else {
+			controls.addButton.disabled = false;
 		}
 	});
 

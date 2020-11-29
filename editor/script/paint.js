@@ -329,6 +329,13 @@ function PaintTool(controls) {
 
 		// todo : convert type code to localized string...
 		controls.typeButton.title = "change type (current: " + tile[drawingId].type + ")";
+
+		if (DEFAULT_REGISTRY_SIZE != null && sortedIdList(tile).length >= (DEFAULT_REGISTRY_SIZE - 1)) {
+			controls.nav.add.disabled = true;
+		}
+		else {
+			controls.nav.add.disabled = false;
+		}
 	}
 
 	// TODO : remove this after moving everything to events

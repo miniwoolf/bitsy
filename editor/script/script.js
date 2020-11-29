@@ -90,6 +90,13 @@ function ScriptTool(controls) {
 		else {
 			controls.charCount.innerText = "";
 		}
+
+		if (DEFAULT_REGISTRY_SIZE != null && sortedIdList(dialog).length >= (DEFAULT_REGISTRY_SIZE - 1)) {
+			controls.nav.add.disabled = true;
+		}
+		else {
+			controls.nav.add.disabled = false;
+		}
 	}
 
 	function onNameChange(event) {

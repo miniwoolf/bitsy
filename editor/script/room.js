@@ -589,6 +589,13 @@ function RoomTool(controls) {
 		selectPos = null;
 
 		selectRoom(e.id);
+
+		if (DEFAULT_REGISTRY_SIZE != null && sortedIdList(room).length >= (DEFAULT_REGISTRY_SIZE - 1)) {
+			controls.nav.add.disabled = true;
+		}
+		else {
+			controls.nav.add.disabled = false;
+		}
 	});
 } // RoomTool()
 
