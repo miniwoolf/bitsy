@@ -255,7 +255,6 @@ function parseRoom(lines, i, compatibilityFlags) {
 		if (getType(lines[i]) === ARG_KEY.NAME) {
 			var name = lines[i].split(/\s(.+)/)[1];
 			room[id].name = name;
-			names.room.set(name, id);
 		}
 		/* PALETTE */
 		else if (getType(lines[i]) === TYPE_KEY.PALETTE) {
@@ -655,7 +654,6 @@ function parseDialog(lines, i, compatibilityFlags) {
 
 	if (lines[i].length > 0 && getType(lines[i]) === ARG_KEY.NAME) {
 		dialog[id].name = lines[i].split(/\s(.+)/)[1]; // TODO : hacky to keep copying this regex around...
-		names.dialog.set(dialog[id].name, id);
 		i++;
 	}
 
