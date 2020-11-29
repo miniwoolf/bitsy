@@ -74,7 +74,7 @@ var textDirection = TEXT_DIRECTION_KEY.LEFT_TO_RIGHT;
 var version = {
 	major: 8, // major changes
 	minor: 0, // smaller changes
-	devBuildPhase: "DEV",
+	devBuildPhase: "BETA",
 };
 function getEngineVersion() {
 	return version.major + "." + version.minor;
