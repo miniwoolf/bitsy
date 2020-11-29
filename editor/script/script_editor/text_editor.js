@@ -6,16 +6,15 @@ function DialogTextEditor(expressionList, parentEditor) {
 	actionEditor.AddContentControl(div);
 
 	function OnDialogTextChange() {
-		console.log("TEXT CHANGE!!!");
 		// a bit wonky
-		var tempDialogExpression = scriptNext.Parse(textArea.value, DialogWrapMode.Yes);
+		var tempDialogExpression = scriptInterpreter.Parse(textArea.value, DialogWrapMode.Yes);
 		expressionList = tempDialogExpression.list.slice(1);
 		parentEditor.NotifyUpdate(true);
 	}
 
 	var textSelectionChangeHandler = createOnTextSelectionChange(OnDialogTextChange);
 
-	var dialogText = scriptNext.SerializeWrapped(expressionList);
+	var dialogText = scriptInterpreter.SerializeWrapped(expressionList);
 
 	var textHolderDiv = document.createElement("div");
 	textHolderDiv.classList.add("dialogBoxContainer");

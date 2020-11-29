@@ -31,7 +31,7 @@ function LiteralEditor(expression, parentEditor, isInline, valueName, onCreateIn
 			var valueSpan = document.createElement("span");
 			valueSpan.classList.add("parameterUneditable");
 			valueSpan.classList.add(GetColorClassForParameterType(expression.type));
-			valueSpan.innerText = getDisplayValue ? getDisplayValue() : scriptNext.SerializeValue(expression.value, expression.type);
+			valueSpan.innerText = getDisplayValue ? getDisplayValue() : scriptInterpreter.SerializeValue(expression.value, expression.type);
 			
 			span.appendChild(valueSpan)
 		}
@@ -210,7 +210,7 @@ function EntrySymbolEditor(expression, parentEditor, isInline) {
 				return input;
 			},
 			function() {
-				return scriptNext.SerializeValue(expression.value, expression.type).slice(1);
+				return scriptInterpreter.SerializeValue(expression.value, expression.type).slice(1);
 			},
 		));
 }

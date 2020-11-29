@@ -185,7 +185,7 @@ function load_game(game_data, startWithTitle) {
 	curGameData = game_data; //remember the current game (used to reset the game)
 
 	dialogBuffer.Reset();
-	scriptNext.Reset();
+	scriptInterpreter.Reset();
 
 	renderer.ResetRenderCache();
 
@@ -575,10 +575,10 @@ function updateScriptQueue() {
 		if (scriptInfo.parameters != undefined && scriptInfo.parameters != null) {
 			// TODO : should script info have a bool for this?
 			// should the run function have a bool?
-			scriptNext.RunCallback(dialog[scriptInfo.id], scriptInfo.instance, scriptInfo.parameters, onScriptEnd);
+			scriptInterpreter.RunCallback(dialog[scriptInfo.id], scriptInfo.instance, scriptInfo.parameters, onScriptEnd);
 		}
 		else {
-			scriptNext.Run(dialog[scriptInfo.id], scriptInfo.instance, onScriptEnd);
+			scriptInterpreter.Run(dialog[scriptInfo.id], scriptInfo.instance, onScriptEnd);
 		}
 	}
 }
@@ -1716,7 +1716,7 @@ function startTitle() {
 	dialogRenderer.SetCentered(true);
 	dialogBuffer.Reset();
 
-	scriptNext.Run(dialog[titleId], null, function() {
+	scriptInterpreter.Run(dialog[titleId], null, function() {
 		// TODO : can we refactor this part? do script queue scripts need this?
 		dialogBuffer.OnDialogEnd(function() {
 			isNarrating = false;
@@ -1785,4 +1785,4 @@ function startPreviewDialog(script, dialogCallback) {
 
 /* SCRIPTING */
 var library = new Library();
-var scriptNext = new ScriptNext();
+var scriptInterpreter = new CurlicueScript();

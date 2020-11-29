@@ -60,7 +60,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 			if (!isDialogExpression) {
 				childEditors.push(createExpressionEditor(expression, self));
 			}
-			else if (expression.type === "list" && !scriptNext.IsInlineFunction(listType)) {
+			else if (expression.type === "list" && !scriptInterpreter.IsInlineFunction(listType)) {
 				addText();
 				childEditors.push(createExpressionEditor(expression, self));
 			}
@@ -119,7 +119,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 	}
 
 	this.Serialize = function() {
-		return scriptNext.SerializeWrapped(expressionList);
+		return scriptInterpreter.SerializeWrapped(expressionList);
 	}
 
 	this.RemoveChild = function(childEditor) {
@@ -173,37 +173,37 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 
 	// default functions for creating add new dialog
 	this.AddDialog = function() {
-		var token = scriptNext.Parse("...", DialogWrapMode.No);
+		var token = scriptInterpreter.Parse("...", DialogWrapMode.No);
 		var editor = new DialogTextEditor([token], self);
 		self.AddChild(editor);
 	};
 
 	this.AddChoice = function() {
-		var token = scriptNext.Parse("{PIK {>> yes} {>> nice!} {>> no} {>> darn}}", DialogWrapMode.No);
+		var token = scriptInterpreter.Parse("{PIK {>> yes} {>> nice!} {>> no} {>> darn}}", DialogWrapMode.No);
 		var editor = new ChoiceEditor(token, self);
 		self.AddChild(editor);
 	};
 
 	this.AddSequence = function() {
-		var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var token = scriptInterpreter.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, self);
 		self.AddChild(editor);
 	};
 
 	this.AddCycle = function() {
-		var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var token = scriptInterpreter.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, self);
 		self.AddChild(editor);
 	};
 
 	this.AddShuffle = function() {
-		var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+		var token = scriptInterpreter.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 		var editor = new SequenceEditor(token, self);
 		self.AddChild(editor);
 	};
 
 	this.AddConditional = function() {
-		var token = scriptNext.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
+		var token = scriptInterpreter.Parse('{IF {GT {ITM "1"} 0} {>> a} {>> b}}', DialogWrapMode.No);
 		var editor = new ConditionalEditor(token, self);
 		self.AddChild(editor);
 	};
@@ -233,7 +233,7 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 	}
 
 	this.Serialize = function() {
-		return scriptNext.Serialize(dialogExpression);
+		return scriptInterpreter.Serialize(dialogExpression);
 	}
 
 	var blockEditor = new BlockEditor(dialogExpression.list.slice(1), this, true);
@@ -360,7 +360,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("dialog_block_basic", "dialog"),
 			function() {
-				var token = scriptNext.Parse("...", DialogWrapMode.No);
+				var token = scriptInterpreter.Parse("...", DialogWrapMode.No);
 				var editor = new DialogTextEditor([token], parentEditor);
 				return editor;
 			}));
@@ -370,7 +370,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			"choice", // todo : localize
 			function() {
-				var token = scriptNext.Parse("{PIK {>> A} {>> a} {>> B} {>> b}}", DialogWrapMode.No);
+				var token = scriptInterpreter.Parse("{PIK {>> A} {>> a} {>> B} {>> b}}", DialogWrapMode.No);
 				var editor = new ChoiceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -380,7 +380,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("sequence_name", "sequence"),
 			function() {
-				var token = scriptNext.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+				var token = scriptInterpreter.Parse("{SEQ {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -390,7 +390,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("cycle_name", "cycle"),
 			function() {
-				var token = scriptNext.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+				var token = scriptInterpreter.Parse("{CYC {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -400,7 +400,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("shuffle_name", "shuffle"),
 			function() {
-				var token = scriptNext.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
+				var token = scriptInterpreter.Parse("{SHF {>> a} {>> b} {>> c}}", DialogWrapMode.No);
 				var editor = new SequenceEditor(token, parentEditor);
 				return editor;
 			}));
@@ -410,7 +410,7 @@ function ActionBuilder(parentEditor) {
 			"dialog",
 			localization.GetStringOrFallback("dialog_block_conditional", "conditional"),
 			function() {
-				var token = scriptNext.Parse('{IF {GT {ITM "4"} 0} {>> a} {>> b}}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{IF {GT {ITM "4"} 0} {>> a} {>> b}}', DialogWrapMode.No);
 				var editor = new ConditionalEditor(token, parentEditor);
 				return editor;
 			}));
@@ -420,7 +420,7 @@ function ActionBuilder(parentEditor) {
 			"room",
 			localization.GetStringOrFallback("function_exit_name", "exit"),
 			function() {
-				var token = scriptNext.Parse('{EXT "1" 0 0}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{EXT "1" 0 0}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -430,7 +430,7 @@ function ActionBuilder(parentEditor) {
 			"room",
 			localization.GetStringOrFallback("function_end_name", "end"),
 			function() {
-				var token = scriptNext.Parse('{END}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{END}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -440,7 +440,7 @@ function ActionBuilder(parentEditor) {
 			"room",
 			"palette swap",
 			function() {
-				var token = scriptNext.Parse('{PAL "1"}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{PAL "1"}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -450,7 +450,7 @@ function ActionBuilder(parentEditor) {
 			"sprite",
 			"put new sprite", // todo : localize
 			function() {
-				var token = scriptNext.Parse('{PUT "2"}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{PUT "2"}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -460,7 +460,7 @@ function ActionBuilder(parentEditor) {
 			"sprite",
 			"get rid of sprite", // todo : localize
 			function() {
-				var token = scriptNext.Parse('{RID THIS}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{RID THIS}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -470,7 +470,7 @@ function ActionBuilder(parentEditor) {
 			"sprite",
 			"hop a space", // todo : localize
 			function() {
-				var token = scriptNext.Parse('{HOP THIS "DWN"}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{HOP THIS "DWN"}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -480,7 +480,7 @@ function ActionBuilder(parentEditor) {
 			"sprite",
 			"change sprite drawing", // todo : localize
 			function() {
-				var token = scriptNext.Parse('{: THIS TIL "2"}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{: THIS TIL "2"}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -490,7 +490,7 @@ function ActionBuilder(parentEditor) {
 			"sprite",
 			localization.GetStringOrFallback("dialog_action_locked_set", "lock / unlock"),
 			function() {
-				var token = scriptNext.Parse('{: THIS LOK YES}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{: THIS LOK YES}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -500,7 +500,7 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_item_set", "set item count"),
 			function() {
-				var token = scriptNext.Parse('{ITM "3" 10}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{ITM "3" 10}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -510,7 +510,7 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_item_increase", "increase item count"),
 			function() {
-				var token = scriptNext.Parse('{ITM "3" {ADD {ITM "3"} 1}}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{ITM "3" {ADD {ITM "3"} 1}}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -520,7 +520,7 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_variable_set", "set variable value"),
 			function() {
-				var token = scriptNext.Parse('{SET A 5}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{SET A 5}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -530,7 +530,7 @@ function ActionBuilder(parentEditor) {
 			"item",
 			localization.GetStringOrFallback("dialog_action_variable_change", "change variable value"),
 			function() {
-				var token = scriptNext.Parse('{SET A {ADD A 1}}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{SET A {ADD A 1}}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -540,7 +540,7 @@ function ActionBuilder(parentEditor) {
 			"item",
 			"make local variable", // todo localize
 			function() {
-				var token = scriptNext.Parse('{VAR X 5}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{VAR X 5}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -550,7 +550,7 @@ function ActionBuilder(parentEditor) {
 			"advanced",
 			"define function", // todo localize
 			function() {
-				var token = scriptNext.Parse('{VAR F {FN {X} {MLT X 2}}}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{VAR F {FN {X} {MLT X 2}}}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -560,7 +560,7 @@ function ActionBuilder(parentEditor) {
 			"advanced",
 			"make table", // todo localize
 			function() {
-				var token = scriptNext.Parse('{VAR T {TBL :A 5 :B 10}}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{VAR T {TBL :A 5 :B 10}}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -570,7 +570,7 @@ function ActionBuilder(parentEditor) {
 			"advanced",
 			"evaluate function", // todo localize
 			function() {
-				var token = scriptNext.Parse('{F X}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{F X}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -580,7 +580,7 @@ function ActionBuilder(parentEditor) {
 			"advanced",
 			"set table entry", // todo localize
 			function() {
-				var token = scriptNext.Parse('{: T A 10}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{: T A 10}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));
@@ -590,7 +590,7 @@ function ActionBuilder(parentEditor) {
 			"advanced",
 			"say variable value", // todo localize
 			function() {
-				var token = scriptNext.Parse('{SAY A}', DialogWrapMode.No);
+				var token = scriptInterpreter.Parse('{SAY A}', DialogWrapMode.No);
 				var editor = new ExpressionEditor(token, parentEditor);
 				return editor;
 			}));

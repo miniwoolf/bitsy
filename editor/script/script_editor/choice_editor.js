@@ -120,8 +120,8 @@ function ChoiceEditor(choiceExpression, parentEditor) {
 	addOptionButton.innerHTML = iconUtils.CreateIcon("add").outerHTML + " "
 		+ localization.GetStringOrFallback("dialog_conditional_add", "add option");
 	addOptionButton.onclick = function() {
-		var choiceExpression = scriptNext.Parse("{>> choice}", DialogWrapMode.No);
-		var resultExpression = scriptNext.Parse("{>> reply}", DialogWrapMode.No);
+		var choiceExpression = scriptInterpreter.Parse("{>> choice}", DialogWrapMode.No);
+		var resultExpression = scriptInterpreter.Parse("{>> reply}", DialogWrapMode.No);
 		var optionEditor = new ChoiceOptionEditor(choiceExpression, resultExpression, self);
 		optionEditors.push(optionEditor);
 

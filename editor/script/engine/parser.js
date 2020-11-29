@@ -660,7 +660,7 @@ function parseEnding(lines, i, compatibilityFlags) {
 function parseVariable(lines, i) {
 	var id = getId(lines[i]);
 	i++;
-	var value = scriptNext.ParseValue(lines[i]);
+	var value = scriptInterpreter.ParseValue(lines[i]);
 	i++;
 	variable[id] = value;
 	return i;

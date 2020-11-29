@@ -54,8 +54,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_item", "item branch");
 	addItemCondition.style.display = "none";
 	addItemCondition.onclick = function() {
-		var conditionToken = scriptNext.Parse('{GT {ITM "3"} 0}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{>> you have tea!}', DialogWrapMode.No);
+		var conditionToken = scriptInterpreter.Parse('{GT {ITM "3"} 0}', DialogWrapMode.No);
+		var resultToken = scriptInterpreter.Parse('{>> you have tea!}', DialogWrapMode.No);
 
 		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
@@ -75,8 +75,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_variable", "variable branch");
 	addVariableCondition.style.display = "none";
 	addVariableCondition.onclick = function() {
-		var conditionToken = scriptNext.Parse('{GT A 5}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse('{>> variable A is more than 5}', DialogWrapMode.No);
+		var conditionToken = scriptInterpreter.Parse('{GT A 5}', DialogWrapMode.No);
+		var resultToken = scriptInterpreter.Parse('{>> variable A is more than 5}', DialogWrapMode.No);
 
 		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
@@ -97,8 +97,8 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ "sprite state branch";
 	addSpriteEntryCondition.style.display = "none";
 	addSpriteEntryCondition.onclick = function() {
-		var conditionToken = scriptNext.Parse('{IS {: THIS TYPE} "SPR"}', DialogWrapMode.No);
-		var resultToken = scriptNext.Parse("{>> I'm a sprite!}", DialogWrapMode.No);
+		var conditionToken = scriptInterpreter.Parse('{IS {: THIS TYPE} "SPR"}', DialogWrapMode.No);
+		var resultToken = scriptInterpreter.Parse("{>> I'm a sprite!}", DialogWrapMode.No);
 
 		var insertIndex = HasElseCondition() ? optionEditors.length - 1 : optionEditors.length;
 		var optionEditor = new ConditionalOptionEditor([conditionToken, resultToken], self, insertIndex);
@@ -118,7 +118,7 @@ function ConditionalEditor(conditionalExpression, parentEditor) {
 		+ localization.GetStringOrFallback("branch_type_default", "default branch");
 	addDefaultCondition.style.display = "none";
 	addDefaultCondition.onclick = function() {
-		var resultToken = scriptNext.Parse('{>> ...}', DialogWrapMode.No);
+		var resultToken = scriptInterpreter.Parse('{>> ...}', DialogWrapMode.No);
 		var optionEditor = new ConditionalOptionEditor([resultToken], self, optionEditors.length);
 		optionEditors.push(optionEditor);
 

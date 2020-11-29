@@ -1,15 +1,10 @@
-/*
-NOTES
-- BUG: when scripts take too long they interrupt player keypresses!
-*/
-
 var DialogWrapMode = {
 	Auto : 0,
 	Yes : 1,
 	No : 2,
 };
 
-function ScriptNext() {
+function CurlicueScript() {
 
 var compiledScripts = {};
 
@@ -773,7 +768,7 @@ special[SYM_KEY.ENTRY] = function(expression, environment, onReturn) {
 	}
 };
 
-} // ScriptNext
+} // CurlicueScript
 
 function Table(parent) {
 	this["_is_table_"] = true;

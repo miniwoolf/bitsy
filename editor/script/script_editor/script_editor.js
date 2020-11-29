@@ -18,7 +18,7 @@ function ScriptEditor(dialogId) {
 
 	function RefreshEditorUI(width, height) {
 		div.innerHTML = "";
-		scriptRoot = scriptNext.Compile(dialog[dialogId]);
+		scriptRoot = scriptInterpreter.Compile(dialog[dialogId]);
 
 		rootEditor = createExpressionEditor(scriptRoot, self);
 
@@ -206,16 +206,16 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 		var dialogStr = dialog[dialogId].src;
 
 		div.innerHTML = "";
-		scriptRoot = scriptNext.Parse(dialogStr);
+		scriptRoot = scriptInterpreter.Parse(dialogStr);
 
 		codeTextArea = document.createElement("textarea");
 		codeTextArea.classList.add(style);
 		codeTextArea.rows = 2;
-		codeTextArea.value = scriptNext.SerializeUnwrapped(scriptRoot);
+		codeTextArea.value = scriptInterpreter.SerializeUnwrapped(scriptRoot);
 
 		function OnTextChangeHandler() {
 			var dialogStr = codeTextArea.value;
-			scriptRoot = scriptNext.Parse(dialogStr, DialogWrapMode.Yes);
+			scriptRoot = scriptInterpreter.Parse(dialogStr, DialogWrapMode.Yes);
 
 			OnUpdate();
 		}
@@ -241,7 +241,7 @@ function PlaintextScriptEditor(dialogId, style, defaultDialogNameFunc) {
 	}
 
 	function OnUpdate() {
-		var dialogStr = scriptNext.Serialize(scriptRoot);
+		var dialogStr = scriptInterpreter.Serialize(scriptRoot);
 
 		// handle one line scripts: a little hard coded
 		if (dialogStr.indexOf("\n") === -1) {
@@ -281,22 +281,22 @@ function createListEditor(expression, parent, isInline) {
 
 	var editor = null;
 
-	if (scriptNext.IsDialogExpression(listType)) {
+	if (scriptInterpreter.IsDialogExpression(listType)) {
 		editor = new DialogExpressionEditor(expression, parent);
 	}
-	else if (scriptNext.IsSequence(listType)) {
+	else if (scriptInterpreter.IsSequence(listType)) {
 		editor = new SequenceEditor(expression, parent);
 	}
-	else if (scriptNext.IsChoice(listType)) {
+	else if (scriptInterpreter.IsChoice(listType)) {
 		editor = new ChoiceEditor(expression, parent);
 	}
-	else if (scriptNext.IsConditional(listType)) {
+	else if (scriptInterpreter.IsConditional(listType)) {
 		editor = new ConditionalEditor(expression, parent);
 	}
-	else if (scriptNext.IsTable(listType)) {
+	else if (scriptInterpreter.IsTable(listType)) {
 		editor = new TableEditor(expression, parent, isInline);
 	}
-	else if (scriptNext.IsFunctionDefinition(listType)) {
+	else if (scriptInterpreter.IsFunctionDefinition(listType)) {
 		editor = new FunctionDefinitionEditor(expression, parent, isInline);
 	}
 	else if (library.IsMathExpression(listType)) {

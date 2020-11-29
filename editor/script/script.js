@@ -638,8 +638,8 @@ function ScriptCueControl(parentPanelId) {
 
 		if (curDlgId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
-			var scriptRoot = scriptNext.Parse(e.target.value, DialogWrapMode.Yes);
-			var scriptStr = scriptNext.Serialize(scriptRoot);
+			var scriptRoot = scriptInterpreter.Parse(e.target.value, DialogWrapMode.Yes);
+			var scriptStr = scriptInterpreter.Serialize(scriptRoot);
 
 			// handle one line scripts: a little hard coded
 			if (scriptStr.indexOf("\n") === -1) {
@@ -680,8 +680,8 @@ function ScriptCueControl(parentPanelId) {
 		var curDlgId = selectedDialogId();
 
 		if (curDlgId != null) {
-			var scriptRoot = scriptNext.Parse(dialog[curDlgId].src);
-			textArea.value = scriptNext.SerializeUnwrapped(scriptRoot);
+			var scriptRoot = scriptInterpreter.Parse(dialog[curDlgId].src);
+			textArea.value = scriptInterpreter.SerializeUnwrapped(scriptRoot);
 		}
 		else {
 			textArea.value = "";
@@ -837,6 +837,7 @@ function ScriptCueControl(parentPanelId) {
 	setSelected(ARG_KEY.DIALOG_SCRIPT);
 }
 
+// todo : broken -- fix this!
 // todo : keep as global for now?
 var isPreviewDialogMode = false;
 function togglePreviewDialog(event) {

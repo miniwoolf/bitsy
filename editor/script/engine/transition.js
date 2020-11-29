@@ -17,11 +17,6 @@ var TransitionManager = function() {
 			curEffect = transitionEffects[effectId];
 		}
 
-		// TODO : WIP
-		// else if (effectId in dialog) {
-		// 	curEffect = CreateTileEffect(effectId);
-		// }
-
 		var tmpRoom = player().room;
 		var tmpX = player().x;
 		var tmpY = player().y;
@@ -390,9 +385,9 @@ var TransitionManager = function() {
 		Tile : 0,
 	};
 
-	// TODO : WIP
-	// function CreateTileEffect(dlgId) {
-	// 	var script = dialog[dlgId];
+	// TODO : WIP prototype
+	// function CreateTileEffect() {
+	// 	var script = // TODO
 
 	// 	function CreateTileInfoTable(tileInfo) {
 	// 		var table = new Table();
@@ -422,7 +417,7 @@ var TransitionManager = function() {
 	// 			var startTile = CreateTileInfoTable(start.Buffer.GetTile(tileX, tileY));
 	// 			var endTile = CreateTileInfoTable(end.Buffer.GetTile(tileX, tileY));
 
-	// 			scriptNext.RunCallback(
+	// 			scriptInterpreter.RunCallback(
 	// 				script,
 	// 				null,
 	// 				[tileX, tileY, startTile, endTile, step], // param order?
