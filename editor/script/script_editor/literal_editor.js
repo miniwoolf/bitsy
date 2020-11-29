@@ -509,8 +509,8 @@ defaultSpriteEntries[ENTRY_KEY.SPRITE_Y] = { name: "y position", valueType: "num
 defaultSpriteEntries[ENTRY_KEY.SPRITE_TILE_ID] = { name: "drawing", valueType: "string", valueDefault: "0", };
 defaultSpriteEntries[ENTRY_KEY.SPRITE_BACKGROUND] = { name: "background color", valueType: "number", valueDefault: 0, };
 defaultSpriteEntries[ENTRY_KEY.SPRITE_COLOR] = { name: "color", valueType: "number", valueDefault: 1, };
-defaultSpriteEntries[ENTRY_KEY.SPRITE_WALL] = { name: "wall state", valueType: "boolean", valueDefault: false, }; // todo : name?
-defaultSpriteEntries[ENTRY_KEY.SPRITE_LOCKED] = { name: "locked state", valueType: "boolean", valueDefault: false, };
+defaultSpriteEntries[ENTRY_KEY.SPRITE_WALL] = { name: "is a wall", valueType: "boolean", valueDefault: false, }; // todo : name?
+defaultSpriteEntries[ENTRY_KEY.SPRITE_LOCKED] = { name: "is locked", valueType: "boolean", valueDefault: false, };
 
 function SpriteEntryKeyEditor(expression, parentEditor, isInline) {
 	Object.assign(
