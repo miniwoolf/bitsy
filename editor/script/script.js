@@ -64,6 +64,25 @@ function ScriptTool(controls) {
 		if (isHiddenOrShouldMove && showIfHidden) {
 			showPanel("scriptPanel", insertNextToId);
 		}
+
+		if (dialog[curScriptId].type === ScriptType.Dialog) {
+			controls.editControls.editDialogAddLabel.style.display = "inline";
+			controls.editControls.editDialogTextEffectsLabel.style.display = "inline";
+			controls.editControls.editDialogSpriteActionsLabel.style.display = "none";
+			controls.editControls.editDialogRoomActionsLabel.style.display = "none";
+
+			controls.editControls.editDialogAdd.checked = true;
+			controls.editControls.editDialogAdd.onclick();
+		}
+		else {
+			controls.editControls.editDialogAddLabel.style.display = "none";
+			controls.editControls.editDialogTextEffectsLabel.style.display = "none";
+			controls.editControls.editDialogSpriteActionsLabel.style.display = "inline";
+			controls.editControls.editDialogRoomActionsLabel.style.display = "inline";
+
+			controls.editControls.editDialogSpriteActions.checked = true;
+			controls.editControls.editDialogSpriteActions.onclick();
+		}
 	}
 
 	function onNameChange(event) {
@@ -212,13 +231,32 @@ function ScriptTool(controls) {
 	controls.editControls.editDialogAdd.onclick = function() {
 		controls.editControls.dialogAddControls.style.display = "flex";
 		textEffects.Update(false);
+		controls.editControls.spriteActionControls.style.display = "none";
+		controls.editControls.roomActionControls.style.display = "none";
 	};
 	controls.editControls.editDialogAdd.checked = true;
+	controls.editControls.editDialogAdd.onclick();
 
 	controls.editControls.editDialogTextEffects.onclick = function() {
 		controls.editControls.dialogAddControls.style.display = "none";
 		textEffects.Update(true);
+		controls.editControls.spriteActionControls.style.display = "none";
+		controls.editControls.roomActionControls.style.display = "none";
 	};
+
+	controls.editControls.editDialogSpriteActions.onclick = function() {
+		controls.editControls.dialogAddControls.style.display = "none";
+		textEffects.Update(false);
+		controls.editControls.spriteActionControls.style.display = "flex";
+		controls.editControls.roomActionControls.style.display = "none";
+	}
+
+	controls.editControls.editDialogRoomActions.onclick = function() {
+		controls.editControls.dialogAddControls.style.display = "none";
+		textEffects.Update(false);
+		controls.editControls.spriteActionControls.style.display = "none";
+		controls.editControls.roomActionControls.style.display = "flex";
+	}
 
 	controls.editControls.textEffectsControls.appendChild(textEffects.GetElement());
 
@@ -244,6 +282,34 @@ function ScriptTool(controls) {
 
 	controls.editControls.addDialogControls.conditional.onclick = function() {
 		curScriptEditor.AddConditional();
+	};
+
+	controls.editControls.addSpriteActionControls.put.onclick = function() {
+		curScriptEditor.AddPut();
+	};
+
+	controls.editControls.addSpriteActionControls.rid.onclick = function() {
+		curScriptEditor.AddRid();
+	};
+
+	controls.editControls.addSpriteActionControls.hop.onclick = function() {
+		curScriptEditor.AddHop();
+	};
+
+	controls.editControls.addSpriteActionControls.drawing.onclick = function() {
+		curScriptEditor.AddChangeDrawing();
+	};
+
+	controls.editControls.addRoomActionControls.exit.onclick = function() {
+		curScriptEditor.AddExit();
+	};
+
+	controls.editControls.addRoomActionControls.end.onclick = function() {
+		curScriptEditor.AddEnd();
+	};
+
+	controls.editControls.addRoomActionControls.palette.onclick = function() {
+		curScriptEditor.AddPaletteSwap();
 	};
 
 	/* events */

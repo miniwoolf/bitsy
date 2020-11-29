@@ -956,17 +956,31 @@
 							<div style="margin-bottom: 10px;">
 								<form>
 									<input type="radio" name="dialog edit controls" id="editDialogAdd" checked>
-									<label title="add dialog" for="editDialogAdd">
+									<label id="editDialogAddLabel" title="add dialog" for="editDialogAdd">
 										<!-- todo : localize -->
 										<span class="bitsy_icon">dialog</span>
 										<span>add dialog</span>
 									</label>
 
 									<input type="radio" name="dialog edit controls" id="editDialogTextEffects">
-									<label title="add text effects" for="editDialogTextEffects">
+									<label id="editDialogTextEffectsLabel" title="add text effects" for="editDialogTextEffects">
 										<!-- todo : localize -->
 										<span class="bitsy_icon">text_effects</span>
 										<span>text effects</span>
+									</label>
+
+									<input type="radio" name="dialog edit controls" id="editDialogSpriteActions" checked>
+									<label id="editDialogSpriteActionsLabel" title="add sprite actions" for="editDialogSpriteActions">
+										<!-- todo : localize -->
+										<span class="bitsy_icon">sprite</span>
+										<span>sprite actions</span>
+									</label>
+
+									<input type="radio" name="dialog edit controls" id="editDialogRoomActions">
+									<label id="editDialogRoomActionsLabel" title="add room actions" for="editDialogRoomActions">
+										<!-- todo : localize -->
+										<span class="bitsy_icon">room</span>
+										<span>room actions</span>
 									</label>
 								</form>
 							</div>
@@ -1001,6 +1015,48 @@
 								<button id="dialogAddConditional">
 									<span class="bitsy_icon">conditional</span>
 									<span>conditional</span>
+								</button>
+							</div>
+
+							<!-- TODO : localize -->
+							<!-- TODO : icons -->
+							<div id="editDialogSpriteActionControls">
+								<button id="scriptAddPutSprite">
+									<span class="bitsy_icon">set_exit_location</span>
+									<span>put new sprite</span>
+								</button>
+
+								<button id="scriptAddRidSprite">
+									<span class="bitsy_icon">delete</span>
+									<span>get rid of sprite</span>
+								</button>
+
+								<button id="scriptAddHopSprite">
+									<span class="bitsy_icon">pagesize_full</span>
+									<span>hop</span>
+								</button>
+
+								<button id="scriptAddChangeDrawing">
+									<span class="bitsy_icon">paint</span>
+									<span>change drawing</span>
+								</button>
+							</div>
+
+							<!-- TODO : localize -->
+							<div id="editDialogRoomActionControls">
+								<button id="scriptAddExit">
+									<span class="bitsy_icon">exit_one_way</span>
+									<span>exit</span>
+								</button>
+
+								<button id="scriptAddEnd">
+									<span class="bitsy_icon">ending</span>
+									<span>end</span>
+								</button>
+
+								<button id="scriptAddPaletteSwap">
+									<span class="bitsy_icon">colors</span>
+									<span>palette swap</span>
 								</button>
 							</div>
 

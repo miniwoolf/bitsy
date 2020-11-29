@@ -716,9 +716,17 @@ function start() {
 		editControls : {
 			container : document.getElementById("dialogEditControls"),
 			editDialogAdd : document.getElementById("editDialogAdd"),
+			editDialogAddLabel : document.getElementById("editDialogAddLabel"),
 			editDialogTextEffects : document.getElementById("editDialogTextEffects"),
+			editDialogTextEffectsLabel : document.getElementById("editDialogTextEffectsLabel"),
+			editDialogSpriteActions : document.getElementById("editDialogSpriteActions"),
+			editDialogSpriteActionsLabel : document.getElementById("editDialogSpriteActionsLabel"),
+			editDialogRoomActions : document.getElementById("editDialogRoomActions"),
+			editDialogRoomActionsLabel : document.getElementById("editDialogRoomActionsLabel"),
 			dialogAddControls : document.getElementById("editDialogAddControls"),
 			textEffectsControls : document.getElementById("editDialogTextEffectsControls"),
+			spriteActionControls : document.getElementById("editDialogSpriteActionControls"),
+			roomActionControls : document.getElementById("editDialogRoomActionControls"),
 			addDialogControls : {
 				dialog : document.getElementById("dialogAddDialog"),
 				choice : document.getElementById("dialogAddChoice"),
@@ -726,6 +734,17 @@ function start() {
 				cycle : document.getElementById("dialogAddCycle"),
 				shuffle : document.getElementById("dialogAddShuffle"),
 				conditional : document.getElementById("dialogAddConditional"),
+			},
+			addSpriteActionControls : {
+				put : document.getElementById("scriptAddPutSprite"),
+				rid : document.getElementById("scriptAddRidSprite"),
+				hop : document.getElementById("scriptAddHopSprite"),
+				drawing : document.getElementById("scriptAddChangeDrawing"),
+			},
+			addRoomActionControls : {
+				exit : document.getElementById("scriptAddExit"),
+				end : document.getElementById("scriptAddEnd"),
+				palette : document.getElementById("scriptAddPaletteSwap"),
 			},
 		},
 	});

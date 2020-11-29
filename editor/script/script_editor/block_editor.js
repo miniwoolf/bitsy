@@ -208,6 +208,48 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 		self.AddChild(editor);
 	};
 
+	this.AddPut = function() {
+		var token = scriptInterpreter.Parse('{PUT "2"}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddRid = function() {
+		var token = scriptInterpreter.Parse('{RID THIS}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddHop = function() {
+		var token = scriptInterpreter.Parse('{HOP THIS "LFT"}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddChangeDrawing = function() {
+		var token = scriptInterpreter.Parse('{: THIS TIL "2"}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddExit = function() {
+		var token = scriptInterpreter.Parse('{EXT "1" 0 0}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddEnd = function() {
+		var token = scriptInterpreter.Parse('{END}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
+	this.AddPaletteSwap = function() {
+		var token = scriptInterpreter.Parse('{PAL "1"}', DialogWrapMode.No);
+		var editor = createExpressionEditor(token, self);
+		self.AddChild(editor);
+	};
+
 	AddSelectionBehavior(this,
 		function() {},
 		function() {},

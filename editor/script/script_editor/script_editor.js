@@ -186,6 +186,22 @@ function ScriptEditor(scriptId) {
 	this.AddConditional = function() {
 		rootEditor.AddConditional();
 	};
+
+	this.AddPut = function() {
+		rootEditor.AddPut();
+	};
+
+	this.AddExit = function() {
+		rootEditor.AddExit();
+	};
+
+	this.AddEnd = function() {
+		rootEditor.AddEnd();
+	};
+
+	this.AddPaletteSwap = function() {
+		rootEditor.AddPaletteSwap();
+	};
 }
 
 function PlaintextScriptEditor(scriptId, style, defaultDialogNameFunc) {

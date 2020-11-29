@@ -50,6 +50,34 @@ function FunctionDefinitionEditor(expression, parentEditor, isInline) {
 	this.Serialize = function() {
 		return scriptInterpreter.Serialize(expression);
 	}
+
+	this.AddPut = function() {
+		blockEditor.AddPut();
+	};
+
+	this.AddRid = function() {
+		blockEditor.AddRid();
+	};
+
+	this.AddHop = function() {
+		blockEditor.AddHop();
+	};
+
+	this.AddChangeDrawing = function() {
+		blockEditor.AddChangeDrawing();
+	};
+
+	this.AddExit = function() {
+		blockEditor.AddExit();
+	};
+
+	this.AddEnd = function() {
+		blockEditor.AddEnd();
+	};
+
+	this.AddPaletteSwap = function() {
+		blockEditor.AddPaletteSwap();
+	};
 }
 
 // todo : name: input vs parameter?
