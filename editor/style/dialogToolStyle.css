@@ -723,6 +723,16 @@
 .dialogEvent {
 	display: flex;
 	margin-bottom: 5px;
+	flex-wrap: wrap;
+}
+
+.selectCueName {
+	margin-left: 5px;
+}
+
+.dialogEvent .selectControl {
+	flex-grow: 1;
+	justify-content: end;
 }
 
 #dialogEditControls {

@@ -570,7 +570,7 @@ function DialogControl(parentPanelId) {
 	labelSpan.appendChild(labelTextSpan);
 
 	var settingsButton = document.createElement("button");
-	settingsButton.appendChild(iconUtils.CreateIcon("settings"));
+	settingsButton.appendChild(iconUtils.CreateIcon("sequence"));
 	controlDiv.appendChild(settingsButton);
 
 	var openButton = document.createElement("button");
@@ -723,11 +723,8 @@ function DialogControl(parentPanelId) {
 
 			var selectCueName = document.createElement("span");
 			selectCueName.innerText = scriptCue.name + ":";
+			selectCueName.classList.add("selectCueName");
 			selectCue.appendChild(selectCueName);
-
-			var spacer = document.createElement("span");
-			spacer.classList.add("expandingSpacer");
-			selectCue.appendChild(spacer);
 
 			scriptCue.selectControl = findTool.CreateSelectControl(
 				"script",
@@ -803,7 +800,7 @@ function DialogControl(parentPanelId) {
 		}
 
 		settingsButton.innerHTML = "";
-		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "settings"));
+		settingsButton.appendChild(iconUtils.CreateIcon(visible ? "text_edit" : "sequence"));
 
 		UpdateSettingsButtonDisabled(visible);
 	}
