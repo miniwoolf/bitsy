@@ -15,7 +15,7 @@ function BlockEditor(expressionList, parentEditor, isDialogExpression) {
 	var childEditorRootDiv = document.createElement("div");
 	div.appendChild(childEditorRootDiv);
 
-	var actionBuilder = new ActionBuilder(this);
+	var actionBuilder = new ActionBuilder(this, isDialogExpression);
 	div.appendChild(actionBuilder.GetElement());
 
 	this.GetElement = function() {
@@ -273,8 +273,7 @@ function DialogExpressionEditor(dialogExpression, parentEditor) {
 	};
 }
 
-// TODO : rename? add new functions, etc
-function ActionBuilder(parentEditor) {
+function ActionBuilder(parentEditor, isDialogExpression) {
 	var div = document.createElement("div");
 	div.classList.add("actionBuilder");
 
@@ -355,15 +354,17 @@ function ActionBuilder(parentEditor) {
 	}
 
 	// TODO : localize these too! *** START FROM HERE ***
-	div.appendChild(
-		makeActionBuilderButton(
-			"dialog",
-			localization.GetStringOrFallback("dialog_block_basic", "dialog"),
-			function() {
-				var token = scriptInterpreter.Parse("...", DialogWrapMode.No);
-				var editor = new DialogTextEditor([token], parentEditor);
-				return editor;
-			}));
+	if (isDialogExpression) {
+		div.appendChild(
+			makeActionBuilderButton(
+				"dialog",
+				localization.GetStringOrFallback("dialog_block_basic", "dialog"),
+				function() {
+					var token = scriptInterpreter.Parse("...", DialogWrapMode.No);
+					var editor = new DialogTextEditor([token], parentEditor);
+					return editor;
+				}));
+	}
 
 	div.appendChild(
 		makeActionBuilderButton(
