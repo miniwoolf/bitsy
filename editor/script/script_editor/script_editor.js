@@ -23,7 +23,7 @@ function ScriptEditor(scriptId) {
 		scriptRoot = scriptInterpreter.Compile(dialog[scriptId]);
 
 		rootEditor = createExpressionEditor(scriptRoot, self, !isDialogScript);
-		console.log(rootEditor);
+		// console.log(rootEditor);
 
 		viewportDiv = document.createElement("div");
 		viewportDiv.classList.add("dialogContentViewport");

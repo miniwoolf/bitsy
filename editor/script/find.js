@@ -306,7 +306,7 @@ function FindTool(controls) {
 		name: "script",
 		categoryStore: dialog,
 		getCaption: function(script) {
-			console.log("name of script " + script.type + " " + script.id + " " + script.name);
+			// console.log("name of script " + script.type + " " + script.id + " " + script.name);
 			if (script.id === titleId) {
 				// todo : localize
 				return "title";
@@ -783,8 +783,8 @@ function ThumbnailRenderer(getRenderable, getHexPalette, onRender) {
 		var hexPalette = getHexPalette(renderable);
 		var drawingFrameData = onRender(renderable, drawingThumbnailCtx, options);
 
-		console.log(hexPalette);
-		console.log(drawingFrameData);
+		// console.log(hexPalette);
+		// console.log(drawingFrameData);
 
 		var cacheId = options && options.cacheId ? options.cacheId : id;
 
@@ -838,7 +838,7 @@ function CreateDrawingThumbnailRenderer() {
 	var getHexPalette = function(til) {
 		var palId = getRoomPal(curRoom);
 
-		console.log("HEX ROOM PAL " + palId);
+		// console.log("HEX ROOM PAL " + palId);
 
 		var hexPalette = [];
 		var roomColors = getPal(palId);

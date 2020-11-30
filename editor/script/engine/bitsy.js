@@ -251,21 +251,27 @@ function stopGame() {
 		canvas.removeEventListener('touchend', input.ontouchend);
 	}
 	else {
-		//check for touchTrigger and removes it
+		// check for touchTrigger and removes it
+		var existingTouchTrigger = document.querySelector('#touchTrigger');
+		if (existingTouchTrigger !== null){
+			existingTouchTrigger.removeEventListener('touchstart', input.ontouchstart);
+			existingTouchTrigger.removeEventListener('touchmove', input.ontouchmove);
+			existingTouchTrigger.removeEventListener('touchend', input.ontouchend);
 
-    		var existingTouchTrigger = document.querySelector('#touchTrigger');
-    		if (existingTouchTrigger !== null){
-    			existingTouchTrigger.removeEventListener('touchstart', input.ontouchstart);
-    			existingTouchTrigger.removeEventListener('touchmove', input.ontouchmove);
-    			existingTouchTrigger.removeEventListener('touchend', input.ontouchend);
-
-    			existingTouchTrigger.parentElement.removeChild(existingTouchTrigger);
-    		}
+			existingTouchTrigger.parentElement.removeChild(existingTouchTrigger);
+		}
 	}
 
 	window.onblur = null;
 
 	clearInterval(update_interval);
+
+	dialogBuffer.Reset();
+	scriptInterpreter.Reset();
+	renderer.ResetRenderCache();
+	transition.Cancel();
+	isNarrating = false;
+	isEnding = false;
 }
 
 function update() {

@@ -526,7 +526,7 @@ function parseDrawing(lines, i) {
 
 	// use first row to detect input tile size (must be square)
 	var inputTileSize = lines[i].length;
-	console.log(inputTileSize);
+	// console.log(inputTileSize);
 
 	while (y < inputTileSize) {
 		var l = lines[i + y];

@@ -52,6 +52,12 @@ function bitsyTextureSetPixel(textureId, x, y, scale, colorIndex) {
 	var img = textureCache[textureId].img;
 	var color = (colorIndex >= 0 && colorIndex < paletteMemory.length) ? paletteMemory[colorIndex] : paletteMemory[0];
 
+	if (!color) {
+		color = [255, 0, 255, 255]; // error!
+		// console.log("could not find color " + colorIndex);
+		// console.log(paletteMemory);
+	}
+
 	for (var sy = 0; sy < scale; sy++) {
 		for (var sx = 0; sx < scale; sx++) {
 			var pxl = (((y * scale) + sy) * img.width * 4) + (((x * scale) + sx) * 4);
@@ -101,6 +107,8 @@ function bitsyPaletteRequestSize(size) {
 	for (var i = 0; i < size; i++) {
 		paletteMemory.push([0, 0, 0, 255]);
 	}
+
+	// console.log(paletteMemory);
 }
 
 function bitsyPaletteSetColor(index, r, g, b, a) {

@@ -89,6 +89,10 @@ var TransitionManager = function() {
 		transitionCompleteCallback = null;
 	}
 
+	this.Cancel = function() {
+		EndTransition();
+	};
+
 	this.UpdateTransition = function(dt) {
 		if (!isTransitioning) {
 			return;

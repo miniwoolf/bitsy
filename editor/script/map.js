@@ -319,7 +319,7 @@ function MapTool(controls) {
 
 		var mapIdList = sortedIdList(map);
 
-		console.log(mapIdList);
+		// console.log(mapIdList);
 
 		if (mapIdList.length > 0) {
 			controls.editRoot.style.display = "block";

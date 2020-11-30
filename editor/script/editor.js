@@ -327,7 +327,7 @@ function getPanelPrefs() {
 
 var urlFlags = {};
 function readUrlFlags() {
-	console.log("@@@@@ FLAGGS")
+	// console.log("@@@@@ FLAGGS")
 	var urlSplit = window.location.href.split("?");
 	if (urlSplit.length > 1) {
 		for(var i = 1; i < urlSplit.length; i++) {
@@ -335,7 +335,7 @@ function readUrlFlags() {
 			urlFlags[ flagSplit[0] ] = flagSplit[1];
 		}
 	}
-	console.log(urlFlags);
+	// console.log(urlFlags);
 }
 
 function isPortraitOrientation() {
@@ -972,7 +972,7 @@ function on_game_data_change() {
 }
 
 function on_game_data_change_core() {
-	console.log(document.getElementById("game_data").value);
+	// console.log(document.getElementById("game_data").value);
 
 	clearGameData();
 	var version = parser.ParseWorld(document.getElementById("game_data").value); //reparse world if user directly manipulates game data

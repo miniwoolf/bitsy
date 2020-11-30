@@ -201,7 +201,7 @@ function rgbToHex(r, g, b) {
 }
 
 function hexToHsl(hex) {
-	console.log(hex);
+	// console.log(hex);
 	var rgb = hexToRgb(hex);
 	return rgbToHsl(rgb.r, rgb.g, rgb.b);
 }

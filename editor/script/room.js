@@ -159,6 +159,7 @@ function RoomTool(controls) {
 	var mapEditAnimationLoop;
 
 	this.listenEditEvents = function() {
+		console.log("LISTEN " + mapEditAnimationLoop);
 		controls.canvas.addEventListener("mousedown", onMouseDown);
 		controls.canvas.addEventListener("mousemove", onMouseMove);
 		controls.canvas.addEventListener("mouseup", onMouseUp);
@@ -182,9 +183,13 @@ function RoomTool(controls) {
 				self.drawEditMap();
 			}
 		}, 16);
+
+		console.log("::LISTEN " + mapEditAnimationLoop);
 	}
 
 	this.unlistenEditEvents = function() {
+		console.log("UNLISTEN " + mapEditAnimationLoop);
+
 		controls.canvas.removeEventListener("mousedown", onMouseDown);
 		controls.canvas.removeEventListener("mousemove", onMouseMove);
 		controls.canvas.removeEventListener("mouseup", onMouseUp);
@@ -194,6 +199,7 @@ function RoomTool(controls) {
 		controls.canvas.removeEventListener("touchend", onTouchEnd);
 
 		clearInterval(mapEditAnimationLoop);
+		console.log("::UNLISTEN " + mapEditAnimationLoop);
 	}
 
 	this.drawEditMap = function() {
