@@ -143,7 +143,7 @@ function resetGameData() {
 	updateInventoryUI();
 	updateFontSelectUI(); // hmm is this really the place for this?
 
-	paintTool.SelectDrawing(sortedIdList(tile)[0]);
+	paintTool.SelectDrawing((playerId in tile) ? playerId : sortedIdList(tile)[0]);
 
 	roomTool.drawEditMap();
 
@@ -592,7 +592,7 @@ function start() {
 
 	// todo : refactor to remove these...
 	//draw everything
-	paintTool.SelectDrawing(sortedIdList(tile)[0]);
+	paintTool.SelectDrawing((playerId in tile) ? playerId : sortedIdList(tile)[0]);
 	roomTool.Update();
 
 	updateInventoryUI();
@@ -758,6 +758,8 @@ function start() {
 	if (mapIds.length > 0) {
 		events.Raise("select_map", { id: mapIds[0] });
 	}
+
+	document.getElementById("editorWindow").scrollTo(0, 0);
 }
 
 // TODO : consolidate these function and rename them something nicer
@@ -986,7 +988,7 @@ function on_game_data_change_core() {
 	}
 
 	if (paintTool) {
-		paintTool.SelectDrawing(sortedIdList(tile)[0]);
+		paintTool.SelectDrawing((playerId in tile) ? playerId : sortedIdList(tile)[0]);
 	}
 
 	// if user pasted in a custom font into game data - update the stored custom font
