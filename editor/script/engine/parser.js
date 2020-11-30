@@ -673,7 +673,16 @@ function parseEnding(lines, i, compatibilityFlags) {
 }
 
 function parseFunctionScript(lines, i) {
-	return parseScript(lines, i, { type: ScriptType.Function, });
+	var id = getId(lines[i]);
+
+	i = parseScript(lines, i, { type: ScriptType.Function, });
+
+	if (lines[i].length > 0 && getType(lines[i]) === ARG_KEY.NAME) {
+		dialog[id].name = lines[i].split(/\s(.+)/)[1]; // TODO : hacky to keep copying this regex around...
+		i++;
+	}
+
+	return i;
 }
 
 function parseVariable(lines, i) {
