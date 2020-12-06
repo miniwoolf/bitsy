@@ -644,9 +644,10 @@ function ScriptCueControl(parentPanelId) {
 
 	function selectedDialogId() {
 		var id = null;
+		var propertyId = curCueId ? cueTypes[curCueId].propertyId : null;
 
-		if (tile[drawingId]) {
-			id = tile[drawingId][cueTypes[curCueId].propertyId];
+		if (propertyId && drawingId && tile[drawingId] && propertyId in tile[drawingId]) {
+			id = tile[drawingId][propertyId];
 		}
 
 		return id;
@@ -739,7 +740,7 @@ function ScriptCueControl(parentPanelId) {
 		// todo : delete empty dialogs?
 		var curScriptId = selectedDialogId();
 
-		var isDialogScript = (dialog[curScriptId].type === ScriptType.Dialog);
+		var isDialogScript = curScriptId != null && (dialog[curScriptId].type === ScriptType.Dialog);
 
 		if (curScriptId != null) {
 			// todo : ADD wrapping dialog block for multiline scripts
