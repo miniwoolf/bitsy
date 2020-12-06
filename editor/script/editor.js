@@ -38,7 +38,7 @@ function getContrastingColor(palId) {
 	}
 }
 
-function findAndReplaceTileInAllRooms( findTile, replaceTile ) {
+function findAndReplaceTileInAllRooms(findTile, replaceTile) {
 	for (roomId in room) {
 		for (y in room[roomId].tilemap) {
 			for (x in room[roomId].tilemap[y]) {

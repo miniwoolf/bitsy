@@ -578,22 +578,17 @@ function PaintTool(controls) {
 		}
 
 		if (confirm("Are you sure you want to delete this drawing?")) {
-			if (tile[drawingId].type === TYPE_KEY.TILE) {
-				findAndReplaceTileInAllRooms(drawingId, "0");
-			}
-			else {
-				removeAllSprites(drawingId);
-			}
+			var idToDelete = drawingId;
+
+			removeAllTiles(idToDelete);
 
 			// todo : is this ok?
-			var dlgId = tile[drawingId].dlg;
+			var dlgId = tile[idToDelete].dlg;
 			if (dlgId && dialog[dlgId]) {
 				delete dialog[dlgId];
 			}
 
-			delete tile[drawingId];
-
-			events.Raise("delete_drawing", { id: drawingId });
+			delete tile[idToDelete];
 
 			// TODO : replace these things with events!
 			refreshGameData();
@@ -601,6 +596,8 @@ function PaintTool(controls) {
 			updateInventoryItemUI();
 
 			nextDrawing();
+
+			events.Raise("delete_drawing", { id: idToDelete, });
 
 			// TODO : add event
 			// self.explorer.DeleteThumbnail(drawingId);

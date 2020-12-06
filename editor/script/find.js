@@ -233,7 +233,7 @@ function FindTool(controls) {
 		thumbnailRenderer: CreateDrawingThumbnailRenderer(),
 		getRenderOptions: function(til) {
 			return {
-				isAnimated : til.animation.isAnimated,
+				isAnimated : til ? til.animation.isAnimated : false,
 				frameIndex : 0,
 			};
 		},
@@ -892,7 +892,7 @@ function CreateDrawingThumbnailRenderer() {
 		var palId = getRoomPal(curRoom);
 		var drawingFrameData = [];
 
-		if (til.id in tile) {
+		if (til && til.id in tile) {
 			for (var i = 0; i < til.animation.frameCount; i++) {
 				if (options.isAnimated || options.frameIndex === i) {
 					var renderedTile = renderer.GetRenderedTile(til, i);
@@ -929,7 +929,7 @@ function CreateRoomThumbnailRenderer() {
 	}
 
 	var onRender = function(r, ctx, options) {
-		if (mapTool) {
+		if (mapTool && r) {
 			mapTool.DrawMiniRoom(r.id, 0, 0, 8 * scale, ctx);
 		}
 
@@ -958,19 +958,21 @@ function CreatePaletteThumbnailRenderer() {
 	}
 
 	var onRender = function(obj, ctx, options) {
-		var hexPalette = getHexPalette(obj);
+		if (obj) {
+			var hexPalette = getHexPalette(obj);
 
-		ctx.fillStyle = "black";
-		ctx.fillRect(0, 0, 8 * scale, 8 * scale);
+			ctx.fillStyle = "black";
+			ctx.fillRect(0, 0, 8 * scale, 8 * scale);
 
-		ctx.fillStyle = "#" + hexPalette[0];
-		ctx.fillRect(1 * scale, 1 * scale, 6 * scale, 2 * scale);
+			ctx.fillStyle = "#" + hexPalette[0];
+			ctx.fillRect(1 * scale, 1 * scale, 6 * scale, 2 * scale);
 
-		ctx.fillStyle = "#" + hexPalette[1];
-		ctx.fillRect(1 * scale, 3 * scale, 6 * scale, 2 * scale);
+			ctx.fillStyle = "#" + hexPalette[1];
+			ctx.fillRect(1 * scale, 3 * scale, 6 * scale, 2 * scale);
 
-		ctx.fillStyle = "#" + hexPalette[2];
-		ctx.fillRect(1 * scale, 5 * scale, 6 * scale, 2 * scale);
+			ctx.fillStyle = "#" + hexPalette[2];
+			ctx.fillRect(1 * scale, 5 * scale, 6 * scale, 2 * scale);
+		}
 
 		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
 	}
@@ -1015,13 +1017,15 @@ function CreateMapThumbnailRenderer() {
 		ctx.fillStyle = hexColorMap["0"];
 		ctx.fillRect(0, 0, 8 * scale, 8 * scale);
 
-		for (var y = 0; y < mapsize; y++) {
-			for (var x = 0; x < mapsize; x++) {
-				var roomId = m.map[y][x];
-				if (roomId != "0" && roomId in room) {
-					var hexStr = hexColorMap[roomId];
-					ctx.fillStyle = hexStr;
-					ctx.fillRect(x * scale, y * scale, 1 * scale, 1 * scale);
+		if (m) {
+			for (var y = 0; y < mapsize; y++) {
+				for (var x = 0; x < mapsize; x++) {
+					var roomId = m.map[y][x];
+					if (roomId != "0" && roomId in room) {
+						var hexStr = hexColorMap[roomId];
+						ctx.fillStyle = hexStr;
+						ctx.fillRect(x * scale, y * scale, 1 * scale, 1 * scale);
+					}
 				}
 			}
 		}
