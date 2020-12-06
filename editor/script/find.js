@@ -464,6 +464,7 @@ function FindTool(controls) {
 		if (categoryInfo.addEventId) {
 			events.Listen(categoryInfo.addEventId, function(e) {
 				addThumbToCategory(e.id);
+				renderOutOfDateThumbnailsInViewport();
 			});
 		}
 
@@ -476,6 +477,7 @@ function FindTool(controls) {
 		if (categoryInfo.refreshThumbEventIdList) {
 			var onRefreshThumb = function(e) {
 				markThumbnailOutOfDate(e.id);
+				renderOutOfDateThumbnailsInViewport();
 			}
 
 			for (var i = 0; i < categoryInfo.refreshThumbEventIdList.length; i++) {
@@ -494,6 +496,8 @@ function FindTool(controls) {
 						markThumbnailOutOfDate(id);
 					}
 				}
+
+				renderOutOfDateThumbnailsInViewport();
 			}
 
 			for (var i = 0; i < categoryInfo.refreshAllThumbsEventIdList.length; i++) {
@@ -522,10 +526,12 @@ function FindTool(controls) {
 
 		events.Listen("game_data_change", function() {
 			refreshThumbs();
+			renderOutOfDateThumbnailsInViewport();
 		});
 
 		events.Listen("change_find_filter", function(e) {
 			updateVisibility();
+			renderOutOfDateThumbnailsInViewport();
 		});
 
 		// init category
@@ -891,7 +897,10 @@ function CreateRoomThumbnailRenderer() {
 	}
 
 	var onRender = function(r, ctx, options) {
-		mapTool.DrawMiniRoom(r.id, 0, 0, 8 * scale, ctx);
+		if (mapTool) {
+			mapTool.DrawMiniRoom(r.id, 0, 0, 8 * scale, ctx);
+		}
+
 		return [ctx.getImageData(0, 0, 8 * scale, 8 * scale).data];
 	}
 
