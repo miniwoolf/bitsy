@@ -25,12 +25,19 @@ function selectedColorPal() {
 
 
 /* UTILS */
-function getContrastingColor(palId) {
-	if (!palId) palId = curPal();
-	var hsl = rgbToHsl( getPal(palId)[0][0], getPal(palId)[0][1], getPal(palId)[0][2] );
-	// console.log(hsl);
+function getContrastingColor(palId, reverse) {
+	if (!palId) {
+		palId = curPal();
+	}
+
+	var hsl = rgbToHsl(
+		getPal(palId)[0][0],
+		getPal(palId)[0][1],
+		getPal(palId)[0][2],);
+
 	var lightness = hsl[2];
-	if (lightness > 0.5) {
+
+	if (reverse ? lightness > 0.5 : lightness <= 0.5) {
 		return "#000";
 	}
 	else {
@@ -458,6 +465,7 @@ function start() {
 			gridIcon : document.getElementById("roomGridIcon"),
 			wallVisibility : document.getElementById("roomWallsCheck"),
 			wallIcon : document.getElementById("roomWallsIcon"),
+			exitAndEndingIcon : document.getElementById("roomMarkersIcon"),
 			exitAndEndingVisibility : document.getElementById("roomMarkersCheck"),
 		},
 		locationSelect : {

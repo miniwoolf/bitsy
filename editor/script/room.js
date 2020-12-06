@@ -26,6 +26,7 @@ function RoomTool(controls) {
 	// render flags
 	var drawMapGrid = true;
 	var drawCollisionMap = false;
+	var drawExitsAndEndings = false;
 
 	var selectPos = null;
 	var selectCornerAnimationTimer = 0;
@@ -112,6 +113,8 @@ function RoomTool(controls) {
 			onDragEdit(e);
 
 			isMouseDown = false;
+
+			initRoom(curRoom); // hacky
 		}
 	}
 
@@ -226,8 +229,30 @@ function RoomTool(controls) {
 			}
 		}
 
-		// TODO : new version of this!
-		//draw exits (and entrances) and endings
+		// draw exits (and entrances) and endings
+		if (drawExitsAndEndings) {
+			for (y in room[curRoom].tilemap) {
+				for (x in room[curRoom].tilemap[y]) {
+					var ext = getExit(x, y);
+					var ending = getEnding(x, y);
+
+					if (ext) {
+						ctx.fillStyle = getContrastingColor();
+						ctx.fillRect(x * tilesize * scale, y * tilesize * scale, tilesize * scale, tilesize * scale);
+
+						ctx.fillStyle = getContrastingColor(null, true);
+						drawIcon(x, y, exitIconData);
+					}
+					else if (ending) {
+						ctx.fillStyle = getContrastingColor();
+						ctx.fillRect(x * tilesize * scale, y * tilesize * scale, tilesize * scale, tilesize * scale);
+
+						ctx.fillStyle = getContrastingColor(null, true);
+						drawIcon(x, y, endingIconData);
+					}
+				}
+			}
+		}
 
 		// draw select cursor
 		if (selectPos != null) {
@@ -261,12 +286,52 @@ function RoomTool(controls) {
 		}
 	}
 
+	function drawIcon(tileX, tileY, iconData) {
+		var left = tileX * tilesize * scale;
+		var top = tileY * tilesize * scale;
+
+		for (var y = 0; y < tilesize; y++) {
+			for (var x = 0; x < tilesize; x++) {
+				if (iconData[(y * tilesize) + x] === 1) {
+					ctx.fillRect(left + (x * scale), top + (y * scale), scale, scale);
+				}
+			}
+		}
+	}
+
+	var exitIconData = [
+		0,0,0,1,1,1,1,1,
+		0,0,1,0,0,0,0,1,
+		1,1,1,1,0,0,0,1,
+		0,0,1,0,0,0,0,1,
+		0,0,0,0,0,1,0,1,
+		0,0,1,0,0,0,0,1,
+		0,0,1,0,0,0,0,1,
+		0,0,1,1,1,1,1,1,
+	];
+
+	var endingIconData = [
+		0,1,1,1,1,0,0,0,
+		0,1,0,0,0,1,1,0,
+		0,1,0,0,0,0,0,1,
+		0,1,0,0,0,1,1,0,
+		0,1,1,1,1,0,0,0,
+		0,1,0,0,0,0,0,0,
+		0,1,0,0,0,0,0,0,
+		1,1,1,0,0,0,0,0,
+	];
+
 	events.Listen("palette_change", function(event) {
 		self.drawEditMap();
 
 		if (event.id === room[curRoom].pal) {
 			events.Raise("change_room_palette", { id: curRoom, palId: event.id });
 		}
+	});
+
+	events.Listen("delete_drawing", function() {
+		initRoom(curRoom); // hacky
+		self.drawEditMap();
 	});
 
 	var paletteSelect;
@@ -565,11 +630,15 @@ function RoomTool(controls) {
 	controls.visibility.wallVisibility.onclick = function(e) {
 		drawCollisionMap = e.target.checked;
 		iconUtils.LoadIcon(controls.visibility.wallIcon, drawCollisionMap ? "visibility" : "visibility_off");
+		initRoom(curRoom); // hacky
 		self.drawEditMap();
 	};
 
 	controls.visibility.exitAndEndingVisibility.onclick = function(e) {
-		// TODO
+		drawExitsAndEndings = e.target.checked;
+		iconUtils.LoadIcon(controls.visibility.exitAndEndingIcon, drawExitsAndEndings ? "visibility" : "visibility_off");
+		initRoom(curRoom); // hacky
+		self.drawEditMap();
 	};
 
 	/* settings controls */
