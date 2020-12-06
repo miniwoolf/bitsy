@@ -30,9 +30,10 @@ function FindTool(controls) {
 	var resizeCheckTimer = setInterval(function() {
 		var viewportBounds = controls.scrollRoot.getBoundingClientRect();
 
-		if (viewportBounds.width != prevViewportBounds.width
-			|| viewportBounds.height != prevViewportBounds.height)
-		{
+		var didBoundsChange = (viewportBounds.width != prevViewportBounds.width)
+			|| (viewportBounds.height != prevViewportBounds.height);
+
+		if (didBoundsChange) {
 			renderOutOfDateThumbnailsInViewport();
 		}
 
@@ -40,7 +41,6 @@ function FindTool(controls) {
 	},100);
 
 	function renderOutOfDateThumbnailsInViewport() {
-		console.log("SCROLL END!");
 		var viewportBounds = controls.scrollRoot.getBoundingClientRect();
 
 		for (id in categories) {
@@ -119,6 +119,10 @@ function FindTool(controls) {
 		getCaption: function(til, forceDefault) {
 			var caption = "";
 
+			if (!til) {
+				return caption;
+			}
+
 			if (til.name != null && !forceDefault) {
 				caption = til.name;
 			}
@@ -149,6 +153,10 @@ function FindTool(controls) {
 		getIconId: function(til) {
 			var iconId = "tile";
 
+			if (!til) {
+				return iconId;
+			}
+
 			if (til.type === TYPE_KEY.AVATAR) {
 				iconId = "avatar";
 			}
@@ -169,6 +177,10 @@ function FindTool(controls) {
 		},
 		includedInFilter: function(til, filters) {
 			var result = false;
+
+			if (!til) {
+				return result;
+			}
 
 			if (til.type === TYPE_KEY.AVATAR) {
 				result = filters.indexOf("avatar") != -1;
@@ -244,7 +256,7 @@ function FindTool(controls) {
 		includedInFilter: function(r, filters) { 
 			var result = filters.indexOf("room") != -1;
 
-			if (result && filters.indexOf("cur_room") != -1) {
+			if (r && result && filters.indexOf("cur_room") != -1) {
 				result = r.id === curRoom;
 			}
 
@@ -264,7 +276,13 @@ function FindTool(controls) {
 	AddCategory({
 		name: "map",
 		categoryStore: map,
-		getCaption: function(m) { return m.name ? m.name : "map " + m.id; }, // TODO : localize
+		getCaption: function(m) {
+			if (!m) {
+				return "";
+			}
+
+			return m.name ? m.name : "map " + m.id;
+		}, // TODO : localize
 		getIconId: function(m) { return "room"; }, // TODO : real icon
 		includedInFilter: function(m, filters) {
 			return filters.indexOf("cur_room") === -1 && filters.indexOf("map") != -1;
@@ -282,13 +300,19 @@ function FindTool(controls) {
 	AddCategory({
 		name: "palette",
 		categoryStore: palette,
-		getCaption: function(pal) { return pal.name ? pal.name : "palette " + pal.id; }, // TODO : localize
+		getCaption: function(pal) {
+			if (!pal) {
+				return "";
+			}
+
+			return pal.name ? pal.name : "palette " + pal.id;
+		}, // TODO : localize
 		getIconId: function(pal) { return "colors"; },
 		includedInFilter: function(pal, filters) {
 			var result = filters.indexOf("palette") != -1;
 
-			if (result && filters.indexOf("cur_room") != -1) {
-				result = pal.id === room[curRoom].pal;
+			if (result && pal && filters.indexOf("cur_room") != -1) {
+				result = (pal.id === room[curRoom].pal);
 			}
 
 			return result;
@@ -306,6 +330,10 @@ function FindTool(controls) {
 		name: "script",
 		categoryStore: dialog,
 		getCaption: function(script) {
+			if (!script) {
+				return "";
+			}
+
 			// console.log("name of script " + script.type + " " + script.id + " " + script.name);
 			if (script.id === titleId) {
 				// todo : localize
@@ -320,11 +348,15 @@ function FindTool(controls) {
 				return script.name ? script.name : "cue " + script.id;
 			}
 		}, // TODO : localize
-		getIconId: function(dlg) { return "dialog"; },
-		includedInFilter: function(dlg, filters) {
+		getIconId: function(script) { return "dialog"; },
+		includedInFilter: function(script, filters) {
+			if (!script) {
+				return "";
+			}
+
 			return (filters.indexOf("cur_room") === -1
 				&& filters.indexOf("script") != -1
-				&& (dlg.id != titleId || filters.indexOf("no_title") === -1));
+				&& (script.id != titleId || filters.indexOf("no_title") === -1));
 		},
 		selectEventId: "select_dialog",
 		toolId: "scriptPanel",
