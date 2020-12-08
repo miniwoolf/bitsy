@@ -617,6 +617,7 @@ function start() {
 	paletteTool = new PaletteTool(
 		colorPicker,
 		{
+			paletteControls : document.getElementById("paletteControlRoot"),
 			colorSelectForm : document.getElementById("colorPaletteForm"),
 			nameInput : document.getElementById("paletteName"),
 			addButton : document.getElementById("addPaletteColor"),

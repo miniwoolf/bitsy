@@ -2,8 +2,14 @@
 
 // todo : localize
 var PaletteColorDescriptions = [
-	{ name: "textbox color", },
-	{ name: "text color", },
+	{
+		name: "textbox color",
+		icon: "text_effects", // todo : icon?
+	},
+	{
+		name: "text color",
+		icon: "text_effects", // todo : icon?
+	},
 	{ name: "rainbow color 1", },
 	{ name: "rainbow color 2", },
 	{ name: "rainbow color 3", },
@@ -14,7 +20,10 @@ var PaletteColorDescriptions = [
 	{ name: "rainbow color 8", },
 	{ name: "rainbow color 9", },
 	{ name: "rainbow color 10", },
-	{ name: "transparent", },
+	{
+		name: "transparent",
+		icon: "wall_off", // todo : icon?
+	},
 	{
 		name: "background color",
 		title: "pick background color",
@@ -52,11 +61,14 @@ function PaletteTool(colorPicker, controls) {
 
 	controls.deleteButton.onclick = function() {
 		var pal = palette[GetSelectedId()];
-		pal.colors.pop();
-		colorPickerIndex = pal.colors.length - 1;
-		refreshGameData();
-		initRoom(curRoom);
-		UpdatePaletteUI();
+
+		if (pal.colors.length > 3) {
+			pal.colors.pop();
+			colorPickerIndex = pal.colors.length - 1;
+			refreshGameData();
+			initRoom(curRoom);
+			UpdatePaletteUI();
+		}
 	};
 
 	function AppendColorSelectInput(form, index, shiftedIndex) {
@@ -92,7 +104,7 @@ function PaletteTool(colorPicker, controls) {
 		colorLabel.appendChild(iconSpan);
 
 		var textSpan = document.createElement("span");
-		textSpan.innerText = description ? description.name : "color " + index; // todo : localize
+		textSpan.innerText = description ? description.name : "super color (" + index + ")"; // todo : localize
 		colorLabel.appendChild(textSpan);
 
 		return colorLabel;
@@ -127,12 +139,24 @@ function PaletteTool(colorPicker, controls) {
 
 		updateColorPickerUI();
 
-		if (DEFAULT_REGISTRY_SIZE != null && sortedIdList(palette).length >= (DEFAULT_REGISTRY_SIZE - 1)) {
+		var isSuperPaletteEnabled = (SECRET_KEY.SUPER_PALETTE in flags) && (flags[SECRET_KEY.SUPER_PALETTE] != 0);
+		var isSecretColorEnabled = (SECRET_KEY.SECRET_COLOR in flags) && (flags[SECRET_KEY.SECRET_COLOR] != 0);
+
+		if (isSuperPaletteEnabled || isSecretColorEnabled) {
+			controls.paletteControls.classList.add("paletteEditEnabled");
+		}
+		else {
+			controls.paletteControls.classList.remove("paletteEditEnabled");
+		}
+
+		if (PALETTE_SIZE != null && (pal.colors.length >= (PALETTE_SIZE - WRITABLE_COLOR_START))) {
 			controls.addButton.disabled = true;
 		}
 		else {
 			controls.addButton.disabled = false;
 		}
+
+		controls.deleteButton.disabled = (pal.colors.length <= 3);
 	}
 
 	events.Listen("game_data_change", function(event) {

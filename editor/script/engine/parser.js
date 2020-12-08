@@ -752,6 +752,7 @@ function parseFlag(lines, i) {
 	if (id === SECRET_KEY.INFINITE_MEMORY && flags[id] != 0) {
 		DEFAULT_REGISTRY_SIZE = null;
 		MAP_REGISTRY_SIZE = null;
+		SCRIPT_SIZE = null;
 	}
 
 	if (id === SECRET_KEY.SUPER_PALETTE && flags[id] != 0) {
@@ -768,10 +769,6 @@ function parseFlag(lines, i) {
 
 	if (id === SECRET_KEY.SECRET_COLOR && flags[id] != 0) {
 		WRITABLE_COLOR_START = COLOR_INDEX.TEXTBOX;
-	}
-
-	if (id === SECRET_KEY.SUPER_SCRIPT && flags[id] != 0) {
-		SCRIPT_SIZE = null;
 	}
 
 	i++;

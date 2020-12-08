@@ -1,5 +1,9 @@
 #colorPaletteForm {
 	max-height: 180px;
+	overflow: hidden;
+}
+
+.paletteEditEnabled #colorPaletteForm {
 	overflow: scroll;
 }
 
@@ -74,4 +78,17 @@
 
 #colorPaletteForm input[type="radio"] + label.colorPaletteLabelLight {
 	color: black; /* black text for light backgrounds */
+}
+
+#colorPaletteForm .bitsy_icon.icon_space_right {
+	margin-right: 5px;
+}
+
+#paletteControlEdit {
+	display: none;
+}
+
+.paletteEditEnabled #paletteControlEdit {
+	display: flex;
+	margin-top: 10px;
 }
