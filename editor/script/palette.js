@@ -71,9 +71,26 @@ function PaletteTool(colorPicker, controls) {
 		}
 	};
 
-	function AppendColorSelectInput(form, index, shiftedIndex) {
-		console.log("SHIFTED INDEX " + shiftedIndex);
+	// init color index options;
+	for (var i = 0; i <= PaletteColorDescriptions.length; i++) {
+		var indexOption = document.createElement("option");
+		indexOption.value = i;
 
+		var optionName = (i < PaletteColorDescriptions.length) ?
+			PaletteColorDescriptions[i].name : "super color start";
+
+		indexOption.innerText = optionName + " (" + i + ")";
+
+		controls.indexOffsetSelect.appendChild(indexOption);
+	}
+
+	controls.indexOffsetSelect.onchange = function(e) {
+		palette[GetSelectedId()].indexOffset = e.target.value;
+		refreshGameData();
+		UpdatePaletteUI();
+	};
+
+	function AppendColorSelectInput(form, index, shiftedIndex) {
 		var description = shiftedIndex < PaletteColorDescriptions.length ?
 			PaletteColorDescriptions[shiftedIndex] : null;
 
@@ -148,6 +165,15 @@ function PaletteTool(colorPicker, controls) {
 		else {
 			controls.paletteControls.classList.remove("paletteEditEnabled");
 		}
+
+		if (ENABLE_PALETTE_INDEX_OFFSET) {
+			controls.paletteControls.classList.add("paletteIndexOffsetEnabled");
+		}
+		else {
+			controls.paletteControls.classList.remove("paletteIndexOffsetEnabled");
+		}
+
+		controls.indexOffsetSelect.value = pal.indexOffset;
 
 		if (PALETTE_SIZE != null && (pal.colors.length >= (PALETTE_SIZE - WRITABLE_COLOR_START))) {
 			controls.addButton.disabled = true;

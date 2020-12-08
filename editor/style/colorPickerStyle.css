@@ -92,3 +92,11 @@
 	display: flex;
 	margin-top: 10px;
 }
+
+#paletteControlIndexOffset {
+	display: none;
+}
+
+.paletteIndexOffsetEnabled #paletteControlIndexOffset {
+	display: block;
+}

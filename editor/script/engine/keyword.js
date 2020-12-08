@@ -32,6 +32,7 @@ var ARG_KEY = {
 	BUTTON_DOWN_SCRIPT : "BTN",
 	EXIT_DESTINATION : "OUT",
 	LOCK : "LOK",
+	PALETTE_INDEX_OFFSET : "IDX", // todo : is this name ok?
 };
 
 var BUTTON_KEY = {

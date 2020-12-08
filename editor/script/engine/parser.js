@@ -185,6 +185,8 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 	var colors = [];
 	var name = null;
 
+	var indexOffset = null;
+
 	var maxWritablePaletteSize = (PALETTE_SIZE ? (PALETTE_SIZE - WRITABLE_COLOR_START) : PALETTE_SIZE);
 
 	while (i < lines.length && lines[i].length > 0) { //look for empty line
@@ -192,6 +194,13 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 
 		if (args[0] === ARG_KEY.NAME) {
 			name = lines[i].split(/\s(.+)/)[1];
+		}
+		else if (ENABLE_PALETTE_INDEX_OFFSET && args[0] == ARG_KEY.PALETTE_INDEX_OFFSET) {
+			indexOffset = parseInt(args[1]);
+
+			if (indexOffset < COLOR_INDEX.TEXTBOX || indexOffset > (COLOR_INDEX.SPRITE + 1)) {
+				indexOffset = null;
+			}
 		}
 		else if (flags.PAL_FORMAT === 0) {
 			var col = [];
@@ -214,6 +223,10 @@ function parsePalette(lines, i) { //todo this has to go first right now :(
 	}
 
 	palette[id] = createPalette(id, name, colors);
+
+	if (indexOffset != null) {
+		palette[id].indexOffset = indexOffset;
+	}
 
 	return i;
 }
@@ -771,6 +784,11 @@ function parseFlag(lines, i) {
 		WRITABLE_COLOR_START = COLOR_INDEX.TEXTBOX;
 	}
 
+	// todo : best way to do this?
+	if (!ENABLE_PALETTE_INDEX_OFFSET && flags[SECRET_KEY.SUPER_PALETTE] && flags[SECRET_KEY.SECRET_COLOR]) {
+		ENABLE_PALETTE_INDEX_OFFSET = true;
+	}
+
 	i++;
 
 	return i;
@@ -944,6 +962,10 @@ function serializePalette(id) {
 
 	if (palette[id].name != null) {
 		out += ARG_KEY.NAME + " " + palette[id].name + "\n";
+	}
+
+	if (ENABLE_PALETTE_INDEX_OFFSET && palette[id].indexOffset != COLOR_INDEX.BACKGROUND) {
+		out += ARG_KEY.PALETTE_INDEX_OFFSET + " " + palette[id].indexOffset + "\n";
 	}
 
 	return out;

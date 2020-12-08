@@ -622,6 +622,7 @@ function start() {
 			nameInput : document.getElementById("paletteName"),
 			addButton : document.getElementById("addPaletteColor"),
 			deleteButton : document.getElementById("deletePaletteColor"),
+			indexOffsetSelect : document.getElementById("paletteIndexOffsetSelect"),
 		});
 
 	// tood... move into palette tool?
