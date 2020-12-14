@@ -159,6 +159,45 @@ function RoomTool(controls) {
 		e.preventDefault();
 	}
 
+	var isMouseOverCanvas = false;
+
+	function onMouseEnter() {
+		isMouseOverCanvas = true;
+	}
+
+	function onMouseLeave() {
+		isMouseOverCanvas = false;
+	}
+
+	var prevEditTool = null;
+
+	function onKeyDown(e) {
+		if (!isPlayMode && isMouseOverCanvas) {
+			if (e.key === "Control") {
+				if (curEditTool === EditTool.Paint) {
+					controls.toolSelect.erase.onclick();
+				}
+				else if (curEditTool === EditTool.Erase) {
+					controls.toolSelect.paint.onclick();
+				}
+			}
+			else if (e.key === "Alt") {
+				if (curEditTool != EditTool.Select) {
+					prevEditTool = curEditTool;
+					controls.toolSelect.select.onclick();
+				}
+				else if (prevEditTool === EditTool.Paint) {
+					prevEditTool = null;
+					controls.toolSelect.paint.onclick();
+				}
+				else if (prevEditTool === EditTool.Erase) {
+					prevEditTool = null;
+					controls.toolSelect.erase.onclick();
+				}
+			}
+		}
+	}
+
 	var mapEditAnimationLoop;
 
 	this.listenEditEvents = function() {
@@ -170,6 +209,11 @@ function RoomTool(controls) {
 		controls.canvas.addEventListener("touchstart", onTouchStart);
 		controls.canvas.addEventListener("touchmove", onTouchMove);
 		controls.canvas.addEventListener("touchend", onTouchEnd);
+
+		controls.canvas.addEventListener("mouseenter", onMouseEnter);
+		controls.canvas.addEventListener("mouseleave", onMouseLeave);
+
+		document.addEventListener('keydown', onKeyDown);
 
 		// todo : is this causing an animation speed up?
 		mapEditAnimationLoop = setInterval(function() {
@@ -200,6 +244,11 @@ function RoomTool(controls) {
 		controls.canvas.removeEventListener("touchstart", onTouchStart);
 		controls.canvas.removeEventListener("touchmove", onTouchMove);
 		controls.canvas.removeEventListener("touchend", onTouchEnd);
+
+		controls.canvas.removeEventListener("mouseenter", onMouseEnter);
+		controls.canvas.removeEventListener("mouseleave", onMouseLeave);
+
+		document.removeEventListener('keydown', onKeyDown);
 
 		clearInterval(mapEditAnimationLoop);
 		console.log("::UNLISTEN " + mapEditAnimationLoop);
@@ -586,13 +635,12 @@ function RoomTool(controls) {
 		controls.canvas.classList.remove("selectCursor");
 		controls.canvas.classList.remove("paintCursor");
 		controls.canvas.classList.add("paintCursor");
+
+		controls.toolSelect.paint.checked = true;
 	};
 
-	controls.toolSelect.paint.checked = true;
-	controls.canvas.classList.remove("eraseCursor");
-	controls.canvas.classList.remove("selectCursor");
-	controls.canvas.classList.remove("paintCursor");
-	controls.canvas.classList.add("paintCursor");
+	// start with paint tool selected
+	controls.toolSelect.paint.onclick();
 
 	controls.toolSelect.erase.onclick = function() {
 		if (onSelectBehavior) {
@@ -605,6 +653,8 @@ function RoomTool(controls) {
 		controls.canvas.classList.remove("selectCursor");
 		controls.canvas.classList.remove("paintCursor");
 		controls.canvas.classList.add("eraseCursor");
+
+		controls.toolSelect.erase.checked = true;
 	};
 
 	controls.toolSelect.select.onclick = function() {
@@ -614,6 +664,8 @@ function RoomTool(controls) {
 		controls.canvas.classList.remove("selectCursor");
 		controls.canvas.classList.remove("paintCursor");
 		controls.canvas.classList.add("selectCursor");
+
+		controls.toolSelect.select.checked = true;
 	};
 
 	/* visibility controls */
