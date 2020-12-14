@@ -1,3 +1,6 @@
+// for beta testing
+var betaIsOneChoicePerRow = true;
+
 function Dialog() {
 
 this.CreateRenderer = function() {
@@ -14,7 +17,7 @@ var DialogRenderer = function() {
 	var textboxInfo = {
 		textureId : null,
 		width : 8 + 96, // 8 for left-right padding, 96 for text
-		height : 8 + 4 + 2 + 6, //8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
+		height : 8 + 4 + 2 + 6, // 8 for text, 4 for top-bottom padding, 2 for line padding, 6 for arrow
 		top : 12,
 		left : 12,
 		bottom : 12, //for drawing it from the bottom
@@ -83,8 +86,26 @@ var DialogRenderer = function() {
 		0,0,1,0,0
 	];
 
+	var nextArrow = [
+		1,1,1,1,1,0,
+		0,1,1,1,0,0,
+		0,0,1,0,0,0,
+		0,0,0,0,0,0,
+		0,0,0,0,0,0,
+		0,0,0,0,0,0,
+	];
+
+	var choiceSelectArrow = [
+			1,0,0,0,0,0,
+			1,1,0,0,0,0,
+			1,1,1,0,0,0,
+			1,1,0,0,0,0,
+			1,0,0,0,0,0,
+			0,0,0,0,0,0,
+		];
+
 	this.DrawNextArrow = function() {
-		drawArrow(arrowdata, textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT);
+		drawArrow((betaIsOneChoicePerRow ? nextArrow : arrowdata), textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT);
 	};
 
 	var choiceArrowLeft = [
@@ -112,32 +133,52 @@ var DialogRenderer = function() {
 	];
 
 	this.DrawChoiceSelect = function(choiceIndex, choiceCount, areArrowsVisible) {
-		if (areArrowsVisible) {
-			drawArrow(choiceArrowLeft, true);
-			drawArrow(choiceArrowRight, false);
+		if (betaIsOneChoicePerRow) {
+			if (areArrowsVisible) {
+				var top = (choiceIndex % 2 === 0) ? 9 : 21; // todo : hardcoded
+				var left = 8; // todo : rtl
+				drawTextboxIcon(choiceSelectArrow, top, left);
+			}
 		}
+		else {
+			if (areArrowsVisible) {
+				drawArrow(choiceArrowLeft, true);
+				drawArrow(choiceArrowRight, false);
+			}
 
-		var top = (textboxInfo.height - 4);
-		var left = (textboxInfo.width / 2) - Math.floor((choiceCount * 5) / 2);
-		for (var i = 0; i < choiceCount; i++) {
-			drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top, left);
-			left += 5;
+			var top = (textboxInfo.height - 4);
+			var left = (textboxInfo.width / 2) - Math.floor((choiceCount * 5) / 2);
+			for (var i = 0; i < choiceCount; i++) {
+				drawTextboxIcon(i === choiceIndex ? choiceDotSelected : choiceDot, top, left);
+				left += 5;
+			}
 		}
 	}
 
 	function drawArrow(arrowImgData, isLeftSide) {
 		var top = (textboxInfo.height - 4);
 		var left = isLeftSide ? (4) : (textboxInfo.width - (5 + 4));
+
+		if (betaIsOneChoicePerRow) {
+			var screenScaleToTextScale = scale / text_scale;
+			top = (textboxInfo.height * screenScaleToTextScale) - 6;
+			left = (textboxInfo.width * screenScaleToTextScale) - 8; // todo : rtl mode
+		}
+
 		drawTextboxIcon(arrowImgData, top, left);
 	}
 
 	function drawTextboxIcon(imgData, top, left) {
 		var colorIndex = color.GetColorIndex(COLOR_INDEX.TEXT);
-		for (var y = 0; y < 3; y++) {
-			for (var x = 0; x < 5; x++) {
-				var i = (y * 5) + x;
+		var width = betaIsOneChoicePerRow ? 6 : 5;
+		var height = betaIsOneChoicePerRow ? 6 : 3;
+		var iconScale = betaIsOneChoicePerRow ? text_scale : scale;
+
+		for (var y = 0; y < height; y++) {
+			for (var x = 0; x < width; x++) {
+				var i = (y * width) + x;
 				if (imgData[i] == 1) {
-					bitsyTextureSetPixel(textboxInfo.textureId, left + x, top + y, scale, colorIndex);
+					bitsyTextureSetPixel(textboxInfo.textureId, left + x, top + y, iconScale, colorIndex);
 				}
 			}
 		}
@@ -252,6 +293,15 @@ var DialogBuffer = function() {
 			pages : [],
 		};
 
+		if (betaIsOneChoicePerRow) {
+			choice = {
+				isChoice : true,
+				rows : [],
+				choices : [],
+				isFinished : false, // what do I do with this?
+			};
+		}
+
 		buffer.push(choice);
 	}
 
@@ -260,24 +310,45 @@ var DialogBuffer = function() {
 			AddChoice();
 		}
 
-		var page = {
-			rows : [],
-			isFinished : false,
-			postPageScriptHandlers : [],
-		};
+		if (betaIsOneChoicePerRow) {
+			var lastChoicePage = buffer[buffer.length - 1];
 
-		var controlChar = new DialogScriptControlChar();
-		controlChar.SetHandler(function() {
-			console.log("CHOICE -- RETURN TO SCRIPT EXECUTION!");
-			LastPage().isFinished = true; // todo : any chance of bugs with this?
-			onReturnHandler();
-		});
+			var controlChar = new DialogScriptControlChar();
+			controlChar.SetHandler(function() {
+				console.log("CHOICE -- RETURN TO SCRIPT EXECUTION!");
+				LastPage().isFinished = true; // todo : any chance of bugs with this?
+				onReturnHandler();
+			});
 
-		page.postPageScriptHandlers.push(controlChar);
+			var choice = {
+				rowIndex : lastChoicePage.rows.length,
+				postPageScriptHandlers : [controlChar],
+			};
 
-		buffer[buffer.length - 1].pages.push(page);
+			lastChoicePage.choices.push(choice);
 
-		AddRow();
+			AddRow();
+		}
+		else {
+			var page = {
+				rows : [],
+				isFinished : false,
+				postPageScriptHandlers : [],
+			};
+
+			var controlChar = new DialogScriptControlChar();
+			controlChar.SetHandler(function() {
+				console.log("CHOICE -- RETURN TO SCRIPT EXECUTION!");
+				LastPage().isFinished = true; // todo : any chance of bugs with this?
+				onReturnHandler();
+			});
+
+			page.postPageScriptHandlers.push(controlChar);
+
+			buffer[buffer.length - 1].pages.push(page);
+
+			AddRow();
+		}
 	}
 
 	this.SetFont = function(f) {
@@ -286,7 +357,12 @@ var DialogBuffer = function() {
 
 	function CurPage() {
 		if (IsChoicePage()) {
-			return buffer[pageIndex].pages[choiceIndex];
+			if (betaIsOneChoicePerRow) {
+				return buffer[pageIndex];
+			}
+			else {
+				return buffer[pageIndex].pages[choiceIndex];
+			}
 		}
 		else {
 			return buffer[pageIndex];
@@ -310,7 +386,20 @@ var DialogBuffer = function() {
 	};
 
 	function CurRowCount() {
-		return CurPage().rows.length;
+		if (betaIsOneChoicePerRow && IsChoicePage()) {
+			// todo : hard to understand this code..
+			var rowAtEndOfChoicePage = CurPage().choices[choiceIndex].rowIndex;
+
+			// todo: still kind of hardcoded..
+			if ((choiceIndex % 2 === 0) && choiceIndex + 1 < CurPage().choices.length) {
+				rowAtEndOfChoicePage += 1;
+			}
+
+			return rowAtEndOfChoicePage;
+		}
+		else {
+			return CurPage().rows.length;
+		}
 	}
 
 	function CurCharCount() {
@@ -327,8 +416,13 @@ var DialogBuffer = function() {
 
 	function LastPage() {
 		if (IsLastPageChoice()) {
-			var choicePage = buffer[buffer.length - 1];
-			return choicePage.pages[choicePage.pages.length - 1];
+			if (betaIsOneChoicePerRow) {
+				return buffer[buffer.length - 1];
+			}
+			else {
+				var choicePage = buffer[buffer.length - 1];
+				return choicePage.pages[choicePage.pages.length - 1];
+			}
 		}
 		else {
 			return buffer[buffer.length - 1];
@@ -344,12 +438,30 @@ var DialogBuffer = function() {
 	this.ForEachActiveChar = function(handler) {
 		var rowArray = CurPage().rows;
 
-		for (var i = 0; i < Math.min(rowIndex + 1, rowArray.length); i++) {
+		var i = 0;
+		var maxRowIndex = Math.min(rowIndex + 1, rowArray.length);
+
+		if (betaIsOneChoicePerRow && IsChoicePage()) {
+			// todo : hardcoded..
+			var startRowOfPage = CurPage().choices[choiceIndex].rowIndex + (choiceIndex % 2 === 0 ? 0 : -1);
+			i = startRowOfPage;
+			maxRowIndex = Math.min(rowIndex + 1, startRowOfPage + 2); // todo : hardcoded
+		}
+
+		console.log(rowIndex + " / " + maxRowIndex);
+
+		// for (var i = 0; i < Math.min(rowIndex + 1, rowArray.length); i++) {
+		for (; i < maxRowIndex; i++) {
 			var row = rowArray[i];
 
 			var charCount = (i == rowIndex) ? (charIndex + 1) : row.chars.length;
 
 			var leftPos = 0;
+
+			if (betaIsOneChoicePerRow && IsChoicePage() && CanContinue() && (i === CurPage().choices[choiceIndex].rowIndex)) {
+				leftPos += 6; // todo : rtl
+			}
+
 			if (textDirection === TEXT_DIRECTION_KEY.RIGHT_TO_LEFT) {
 				leftPos = 24 * 8; // hack -- I think this is correct?
 			}
@@ -361,7 +473,13 @@ var DialogBuffer = function() {
 						leftPos -= char.spacing;
 					}
 
-					handler(char, i, /*rowIndex*/ j, /*colIndex*/ leftPos);
+					var relativeRowIndex = i;
+
+					if (betaIsOneChoicePerRow && IsChoicePage()) {
+						relativeRowIndex = (i % 2 === 0) ? 0 : 1; // todo : hardcoded..
+					}
+
+					handler(char, relativeRowIndex /*rowIndex*/, j /*colIndex*/, leftPos);
 
 					if (textDirection === TEXT_DIRECTION_KEY.LEFT_TO_RIGHT) {
 						leftPos += char.spacing;
@@ -426,9 +544,18 @@ var DialogBuffer = function() {
 	};
 
 	this.Continue = function() {
-		// todo... should these use callbacks? is it really possible to have more than one?
-		for (var i = 0; i < CurPage().postPageScriptHandlers.length; i++) {
-			CurPage().postPageScriptHandlers[i].ContinueScriptExecution();
+		if (betaIsOneChoicePerRow && IsChoicePage()) {
+			var choice = CurPage().choices[choiceIndex];
+
+			for (var i = 0; i < choice.postPageScriptHandlers.length; i++) {
+				choice.postPageScriptHandlers[i].ContinueScriptExecution();
+			}
+		}
+		else {
+			// todo... should these use callbacks? is it really possible to have more than one?
+			for (var i = 0; i < CurPage().postPageScriptHandlers.length; i++) {
+				CurPage().postPageScriptHandlers[i].ContinueScriptExecution();
+			}
 		}
 
 		pageIndex++;
@@ -452,29 +579,47 @@ var DialogBuffer = function() {
 
 	this.NextChoice = function() {
 		if (IsChoicePage()) {
-			choiceIndex++;
+			if (betaIsOneChoicePerRow) {
+				choiceIndex++;
 
-			if (choiceIndex >= buffer[pageIndex].pages.length) {
-				choiceIndex = 0;
+				if (choiceIndex >= buffer[pageIndex].choices.length) {
+					choiceIndex = 0;
+				}
 			}
+			else {
+				choiceIndex++;
 
-			rowIndex = 0;
-			charIndex = 0;
-			nextCharTimer = 0;
+				if (choiceIndex >= buffer[pageIndex].pages.length) {
+					choiceIndex = 0;
+				}
+
+				rowIndex = 0;
+				charIndex = 0;
+				nextCharTimer = 0;
+			}
 		}
 	}
 
 	this.PrevChoice = function() {
 		if (IsChoicePage()) {
-			choiceIndex--;
+			if (betaIsOneChoicePerRow) {
+				choiceIndex--;
 
-			if (choiceIndex < 0) {
-				choiceIndex = buffer[pageIndex].pages.length - 1;
+				if (choiceIndex < 0) {
+					choiceIndex = buffer[pageIndex].choices.length - 1;
+				}
 			}
+			else {
+				choiceIndex--;
 
-			rowIndex = 0;
-			charIndex = 0;
-			nextCharTimer = 0;
+				if (choiceIndex < 0) {
+					choiceIndex = buffer[pageIndex].pages.length - 1;
+				}
+
+				rowIndex = 0;
+				charIndex = 0;
+				nextCharTimer = 0;
+			}
 		}
 	}
 
@@ -502,12 +647,18 @@ var DialogBuffer = function() {
 	}
 
 	this.CurChoiceCount = function() {
-		return IsChoicePage() ? buffer[pageIndex].pages.length : 0;
+		if (betaIsOneChoicePerRow) {
+			return IsChoicePage() ? buffer[pageIndex].choices : 0;
+		}
+		else {
+			return IsChoicePage() ? buffer[pageIndex].pages.length : 0;
+		}
 	}
 
-	this.CanContinue = function() {
+	function CanContinue() {
 		return charIndex >= CurCharCount() && rowIndex >= CurRowCount();
 	};
+	this.CanContinue = CanContinue;
 
 	function DialogChar(effectList) {
 		this.effectList = effectList.slice(); // clone effect list (since it can change between chars)

@@ -336,18 +336,39 @@ function updateInput() {
 		// todo : can choice and non-choice input share anything?
 		if (dialogBuffer.IsChoicePage()) {
 			if (dialogBuffer.CanContinue()) {
-				if (input.isKeyDown(key.left) || input.isKeyDown(key.a) || input.swipeLeft()
-					|| input.isKeyDown(key.up) || input.isKeyDown(key.w) || input.swipeUp()) {
+				if (input.isKeyDown(key.left) || input.isKeyDown(key.a) || input.swipeLeft()) {
+					if (betaIsOneChoicePerRow) {
+						// ignore
+					}
+					else {
+						dialogBuffer.PrevChoice();
+					}
+				}
+				else if (input.isKeyDown(key.up) || input.isKeyDown(key.w) || input.swipeUp()) {
 					dialogBuffer.PrevChoice();
 				}
-				else if (input.isKeyDown(key.right) || input.isKeyDown(key.d) || input.swipeRight()
-					|| input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
+				else if (input.isKeyDown(key.right) || input.isKeyDown(key.d) || input.swipeRight()) {
+					if (betaIsOneChoicePerRow) {
+						// select choice!
+						dialogBuffer.Continue();
+					}
+					else {
+						dialogBuffer.NextChoice();
+					}
+				}
+				else if (input.isKeyDown(key.down) || input.isKeyDown(key.s) || input.swipeDown()) {
 					dialogBuffer.NextChoice();
 				}
 				else if (input.isKeyDown(key.enter) || input.isKeyDown(key.space) || input.isTapReleased()) {
-					// select choice!
-					dialogBuffer.Continue();
+					if (betaIsOneChoicePerRow) {
+						// ignore
+					}
+					else {
+						// select choice!
+						dialogBuffer.Continue();
+					}
 				}
+
 				input.ignoreHeldKeys(); // I think we want to do this for all choice input?
 			}
 			else {
