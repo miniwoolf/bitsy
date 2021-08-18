@@ -258,6 +258,13 @@ input[type=checkbox] + label:hover {
 	width: var(--bitsy-size-l);
 }
 
+/* my about panel addition*/
+.personalized {
+	font-family: Georgia, serif;
+	line-height: 150%;
+	letter-spacing: 0.01em;
+}
+
 .bitsy-card-titlebar {
 	display: flex;
 	padding: var(--bitsy-space-s);
