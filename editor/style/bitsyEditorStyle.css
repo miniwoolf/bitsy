@@ -391,7 +391,6 @@ input[type=checkbox] + label:hover {
 /* added to make the find panel resizable */
 .find-resize {
 	overflow: auto;
-	flex-grow: 8;
 }
 
 .bitsy-menu-scrollcontent {
