@@ -36,7 +36,9 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 	html = replaceTemplateMarker( html, "@@L", Resources["dialog.js"] );
 	html = replaceTemplateMarker( html, "@@R", Resources["renderer.js"] );
 	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
-
+	// bake in hacks
+	html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
+	
 	// export the default font in its own script tag (TODO : remove if unused)
 	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
 	html = replaceTemplateMarker( html, "@@M", fontManager.GetData("ascii_small") );
@@ -90,7 +92,7 @@ this.importGame = function( html ) {
 	var scriptStart = '<script type="bitsyGameData" id="exportedGameData">\n';
 	var scriptEnd = '</script>';
 
-	// this is kind of embarassing, but I broke import by making the export template pass w3c validation
+	// this is kind of embarrassing, but I broke import by making the export template pass w3c validation
 	// so we have to check for two slightly different versions of the script start line :(
 	i = html.indexOf( scriptStart );
 	if (i === -1) {
