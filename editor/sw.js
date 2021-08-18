@@ -38,6 +38,7 @@ self.addEventListener("install", function(event) {
 				"./script/engine/script.js",
 				"./script/engine/system.js",
 				"./script/engine/transition.js",
+				"./script/engine/transparent-sprites.js",
 				"./script/event_manager.js",
 				"./script/exporter.js",
 				"./script/find.js",
