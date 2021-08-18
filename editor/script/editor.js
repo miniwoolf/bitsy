@@ -3294,7 +3294,7 @@ function on_change_language_inner(language) {
 
 	// update title in new language IF the user hasn't made any changes to the default title
 	if (localization.LocalizationContains("default_title", getTitle())) {
-		setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
+		setTitle(localization.GetStringOrFallback("default_title", "Title"));
 		// make sure all editors with a title know to update
 		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
 	}
