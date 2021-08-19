@@ -259,7 +259,7 @@ function PaintTool(canvas, roomTool) {
 		}
 	}
 
-	// TODO -- sould these newDrawing methods be internal to PaintTool?
+	// TODO -- should these newDrawing methods be internal to PaintTool?
 	function newTile(imageData) {
 		var id = nextTileId();
 		makeTile(id, imageData);

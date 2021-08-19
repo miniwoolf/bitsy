@@ -284,7 +284,7 @@ var curDialogEditor = null;
 var curPlaintextDialogEditor = null; // the duplication is a bit weird, but better than recreating editors all the time?
 function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rename since it doesn't always "open" it?
 	if (showIfHidden === undefined || showIfHidden === null) {
-		showIfHidden = true;
+		showIfHidden = false;
 	}
 
 	document.getElementById("deleteDialogButton").disabled = dialogId === titleDialogId;
@@ -552,7 +552,7 @@ function resetGameData() {
 	setDefaultGameState();
 
 	// TODO : localize default_title
-	setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
+	setTitle(localization.GetStringOrFallback("default_title", "Title"));
 	dialog["0"] = {
 		src: localization.GetStringOrFallback("default_sprite_dlg", "I'm a cat"), // hacky to do this in two places :(
 		name: "cat dialog", // todo : localize
@@ -729,16 +729,16 @@ function hideUnsupportedFeatureWarning() {
 // This is the panel arrangement you get if you are new or your editor settings are out-of-date
 var defaultPanelPrefs = {
 	workspace : [
-		{ id:"aboutPanel", 			visible:true, 	position:0  },
+		{ id:"aboutPanel", 			visible:false, 	position:0  },
 		{ id:"roomPanel", 			visible:true, 	position:1  },
 		{ id:"paintPanel", 			visible:true, 	position:2  },
-		{ id:"colorsPanel", 		visible:true, 	position:3  },
-		{ id:"downloadPanel", 		visible:true, 	position:4  },
+		{ id:"colorsPanel", 		visible:false, 	position:3  },
+		{ id:"downloadPanel", 		visible:false, 	position:4  },
 		{ id:"gifPanel", 			visible:false, 	position:5  },
 		{ id:"dataPanel", 			visible:false, 	position:6  },
 		{ id:"exitsPanel", 			visible:false, 	position:7  },
-		{ id:"dialogPanel",			visible:false,	position:8 },
-		{ id:"findPanel",			visible:false,	position:9  },
+		{ id:"dialogPanel",			visible:false,	position:8  },
+		{ id:"findPanel",			visible:true,	position:9  },
 		{ id:"inventoryPanel",		visible:false,	position:10 },
 		{ id:"settingsPanel",		visible:false,	position:11 },
 	]
@@ -3294,7 +3294,7 @@ function on_change_language_inner(language) {
 
 	// update title in new language IF the user hasn't made any changes to the default title
 	if (localization.LocalizationContains("default_title", getTitle())) {
-		setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
+		setTitle(localization.GetStringOrFallback("default_title", "Title"));
 		// make sure all editors with a title know to update
 		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
 	}

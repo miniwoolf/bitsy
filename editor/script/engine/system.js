@@ -322,6 +322,7 @@ function bitsyLog(message, category) {
 	if (DebugLogCategory[category] === true) {
 		console.log(category + "::" + message);
 	}
+	// console.log(category + "::" + message);
 }
 
 // todo : should 0 be used for any instead of null/undefined?

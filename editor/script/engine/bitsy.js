@@ -1918,7 +1918,7 @@ function startPreviewDialog(script, dialogCallback) {
 	dialogBuffer.Reset();
 	scriptInterpreter.SetDialogBuffer(dialogBuffer);
 
-	// TODO : do I really need a seperate callback for this debug mode??
+	// TODO : do I really need a separate callback for this debug mode??
 	onDialogPreviewEnd = dialogCallback;
 
 	var onScriptEndCallback = function(scriptResult) {

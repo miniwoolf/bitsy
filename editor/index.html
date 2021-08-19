@@ -9,7 +9,7 @@
 		<title>Bitsy</title>
 
 		<!-- APP -->
-		<script src="app.js"></script>
+		<script src="app.js"></script> <!-- when will my updated thumbnails return from the war ;-; -->
 		<link rel="icon" type="image/png" href="image/cat5.png">
 		<link rel="manifest" href="manifest.json">
 
@@ -36,6 +36,9 @@
 		<script src="script/engine/dialog.js"></script>
 		<script src="script/engine/renderer.js"></script>
 		<script src="script/engine/bitsy.js"></script>
+		
+		<!-- HACK SCRIPTS -->
+		<script src="script/engine/transparent-sprites.js"></script>
 
 		<!-- EDITOR SCRIPTS -->
 		<script src="script/store.js"></script>
@@ -92,9 +95,10 @@
 
 			</div>
 
+			<!-- #Tools -->
 			<div id="toolsPanel">
 
-				<input type="checkbox" value="aboutPanel" id="aboutCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
+				<input type="checkbox" value="aboutPanel" id="aboutCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide about window" for="aboutCheck">
 					<span class="bitsy_icon icon_space_right">about</span>
 					<span class="localize about_tool_name">about</span>
@@ -118,31 +122,31 @@
 					<span class="localize paint_tool_name">paint</span>
 				</label>
 
-				<input type="checkbox" value="colorsPanel" id="colorsCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
+				<input type="checkbox" value="colorsPanel" id="colorsCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide color palette window" for="colorsCheck">
 					<span class="bitsy_icon icon_space_right">colors</span>
 					<span class="localize palette_tool_name">colors</span>
 				</label>
 
-				<input type="checkbox" value="dialogPanel" id="dialogCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
+				<input type="checkbox" value="dialogPanel" id="dialogCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide dialog window" for="dialogCheck">
 					<span class="bitsy_icon icon_space_right">dialog</span>
 					<span class="localize dialog_tool_name">dialog</span>
 				</label>
 
-				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
+				<input type="checkbox" value="findPanel" id="findCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
 				<label title="show / hide find window" for="findCheck">
 					<span class="bitsy_icon icon_space_right">search</span>
 					<span>find</span> <!-- todo : localize -->
 				</label>
 
-				<input type="checkbox" value="inventoryPanel" id="inventoryCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
+				<input type="checkbox" value="inventoryPanel" id="inventoryCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide inventory window" for="inventoryCheck">
 					<span class="bitsy_icon icon_space_right">item</span>
 					<span class="localize inventory_tool_name">inventory</span>
 				</label>
 				
-				<input type="checkbox" value="downloadPanel" id="downloadCheck" onclick="togglePanelAnimated(event);" autocomplete="off" checked/>
+				<input type="checkbox" value="downloadPanel" id="downloadCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide download window" for="downloadCheck">
 					<span class="bitsy_icon icon_space_right">file</span>
 					<span class="localize download_tool_name">download</span>
@@ -173,6 +177,7 @@
 			</div>
 		</div>
 
+		<!-- #WARNINGS -->
 		<div id="unsupportedFeatures" class="warning" style="display:none;">
 			<span class="localize unsupported_features">uh oh ~ your browser doesn't support all of bitsy's features, so some things might not work right. maybe try another browser, such as:</span>
 			<a href="https://www.google.com/chrome/browser" target="_blank">
@@ -202,10 +207,13 @@
 			</div>
 		</div>
 
+		<!-- #Editor -->
 		<div id="editorWindow" onmousewheel="blockScrollBackpage(event);">
 			<div id="editorContent">
 
-				<div id="aboutPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item">
+				<!-- #Cards #Panels -->
+				<!-- #About -->
+				<div id="aboutPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none; max-height: none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">about</span>
 
@@ -219,7 +227,7 @@
 						</button>
 					</div>
 
-					<div id="aboutInner" class="bitsy-card-main">
+					<div id="aboutInner" class="bitsy-card-main" style="margin-bottom: 0px;">
 						<p>
 							<span class="localize about1">hi! bitsy is a little editor for little games or worlds. the goal is to make it easy to make games where you can walk around and talk to people and be somewhere.</span>
 						</p>
@@ -255,8 +263,42 @@
 							<a target="_blank" href="https://github.com/le-doux/bitsy">source code</a>
 						</p>
 					</div>
+
+					<div id="aboutInner" class="bitsy-card-main personalized" style="font-size: 75%; margin-top: 0px;">
+						<p>
+							hello! i'm miniwoolf, and this is a hacked version of bitsy i use to edit my games. i'm also using it to learn about html, css, and javascript as i add, delete, and edit features to better suit my needs. i'm having a lot of fun, and i'm excited to see just what i can do!
+						</p>
+
+						<p>
+							- miniwoolf
+						</p>
+
+						<p>
+							sources: <br/>
+							<a target="_blank" href="https://ayolland.itch.io/borksy">borksy (inspiration)</a> |
+							<a target="_blank" href="https://github.com/seleb/bitsy-hacks/blob/main/dist/transparent-sprites.js">transparent sprites hack</a> |
+							<a target="_blank" href="https://github.com/miniwoolf/bitsy-personalized">source code</a>
+						</p>
+
+						<p>
+							tools i use for coding: <br/>
+							<a target="_blank" href="https://www.w3schools.com/default.asp">w3schools</a> |
+							<a target="_blank" href="https://www.sublimetext.com/">sublime text editor</a> |
+							<a target="_blank" href="https://desktop.github.com/">github desktop</a>
+						</p>
+
+						<p>
+							tools i use for making bitsy games: <br/>
+							<a target="_blank" href="https://ruin.itch.io/tilesy">tilesy</a> |
+							<a target="_blank" href="https://ruin.itch.io/pixsy">pixsy</a> |
+							<a target="_blank" href="https://seansleblanc.itch.io/bitsy-optimizer">bitsy optimizer</a> |
+							<a target="_blank" href="https://seansleblanc.itch.io/bitsy-merge">bitsy merge</a> |
+							<a target="_blank" href="https://www.palettelist.com/">palettes</a>
+						</p>
+					</div>
 				</div>
 
+				<!-- #Room -->
 				<div id="roomPanel" class="bitsy-card bitsy-card-l bitsy-workbench-item bitsy-playmode-enable">
 					<div class="bitsy-card-titlebar bitsy-playmode-reverse-color">
 						<span class="bitsy_icon bitsy-playmode-hide">room</span>
@@ -319,6 +361,7 @@
 							</button>
 						</div>
 
+						<!-- this is where the engine runs the game preview -->
 						<canvas id="game"></canvas>
 
 						<div class="controlBox bitsy-menu-group bitsy-playmode-hide">
@@ -366,6 +409,7 @@
 					</div>
 				</div>
 
+				<!-- #Exits & Endings -->
 				<div id="exitsPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">exits_endings</span>
@@ -392,7 +436,7 @@
 								<span class="bitsy_icon">next</span>
 							</button>
 
-							<!-- add / copy / dlete -->
+							<!-- add / copy / delete -->
 							<button title="add exit or ending" class="color0" onclick="startAddMarker();">
 								<span class="bitsy_icon">add</span>
 							</button>
@@ -606,7 +650,8 @@
 					</div>
 				</div>
 
-				<div id="paintPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item">
+				<!-- #Paint -->
+				<div id="paintPanel" class="bitsy-card bitsy-card-sm bitsy-workbench-item">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">paint</span>
 
@@ -619,8 +664,8 @@
 						</button>
 					</div>
 
-					<div class="bitsy-card-main">
-						<form id="paintModeRadio" style="margin-bottom: 5px;">
+					<div class="bitsy-card-main" style="display: flex;">
+						<form id="paintModeRadio" class="bitsy-menu-group" style="margin-bottom: 5px;">
 							<input type="radio" name="paint mode" value="avatar" onclick="on_paint_avatar();" id="paintOptionAvatar" checked>
 							<label title="edit the avatar: the player's character" for="paintOptionAvatar" class="left">
 								<span class="bitsy_icon icon_space_right">avatar</span>
@@ -746,7 +791,8 @@
 					</div>
 				</div>
 
-				<div id="findPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item">
+				<!-- #Find -->
+				<div id="findPanel" class="bitsy-card bitsy-card-ml bitsy-workbench-item">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">search</span>
 
@@ -757,10 +803,12 @@
 						</button>
 					</div>
 
-					<div id="findPanelMain" class="bitsy-card-main">
+					<div id="findPanelMain" class="bitsy-card-main" style="display: flex; height: 600px;"> 
+					<!-- added styling to make the find panel adjustable -->
 					</div>
 				</div>
 
+				<!-- #Colors -->
 				<div id="colorsPanel" class="bitsy-card bitsy-workbench-item">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">colors</span>
@@ -835,7 +883,8 @@
 					</div>
 				</div>
 
-				<div id="dialogPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item">
+				<!-- #Dialog -->
+				<div id="dialogPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">dialog</span>
 
@@ -914,7 +963,8 @@
 					</div>
 				</div>
 
-				<div id="inventoryPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item bitsy-playmode-enable">
+				<!-- #Inventory -->
+				<div id="inventoryPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item bitsy-playmode-enable" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">item</span>
 
@@ -953,7 +1003,8 @@
 					</div>
 				</div>
 
-				<div id="downloadPanel" class="bitsy-card bitsy-workbench-item">
+				<!-- #Download -->
+				<div id="downloadPanel" class="bitsy-card bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">file</span>
 
@@ -1000,6 +1051,7 @@
 					</div>
 				</div>
 
+				<!-- #Record GIF #gif -->
 				<div id="gifPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">record</span>
@@ -1060,6 +1112,7 @@
 					</div>
 				</div>
 
+				<!-- #Game Data -->
 				<div id="dataPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">game_data</span>
@@ -1093,6 +1146,7 @@
 					</div>
 				</div>
 
+				<!-- #Settings -->
 				<div id="settingsPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">settings</span>
@@ -1122,7 +1176,8 @@
 						<div class="controlBox">
 							<span class="localize option_page_color">html page color:</span>
 							<br/>
-							<input title="pick background color for exported html page" type="color" value="#ffffff" id="pageColor" onchange="on_change_color_page();" autocomplete="off">
+							<input title="pick background color for exported html page" type="color" value="#ffffff" id="pageColor" autocomplete="off" onchange="on_change_color_page();">
+							<!-- TODO: i want the background to always be white in the browser editor -->
 						</div>
 						<div class="controlBox">
 							<form>
@@ -1141,7 +1196,7 @@
 								</label>
 
 								<div style="margin-top:5px;">
-									<span class="controlBox" id="exportSizeFixedInputSpan" style="display:none;">
+									<span class="controlBox" id="exportSizeFixedInputSpan"> <!-- style="display:none;" -->
 										<input type="number" min="0" value="512" style="width:60px;" id="exportSizeFixedInput"> px
 									</span>
 								</div>

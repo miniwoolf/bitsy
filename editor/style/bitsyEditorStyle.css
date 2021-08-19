@@ -15,7 +15,9 @@
 	--bitsy-size-xxs: 4rem;
 	--bitsy-size-xs: 8rem;
 	--bitsy-size-s: 16rem;
+	--bitsy-size-sm: 16.5rem; /* #paint panel */
 	--bitsy-size-m: 24rem;
+	--bitsy-size-ml: 24.5rem; /* #find panel */
 	--bitsy-size-l: 32rem;
 }
 
@@ -232,6 +234,7 @@ input[type=checkbox] + label:hover {
 	max-height: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
+	flex-direction: column;
 }
 
 .bitsy-card-xs .bitsy-card-main {
@@ -242,12 +245,30 @@ input[type=checkbox] + label:hover {
 	width: var(--bitsy-size-s);
 }
 
+.bitsy-card-sm .bitsy-card-main {
+	/* resize #paint panel */
+	width: var(--bitsy-size-sm);
+}
+
 .bitsy-card-m .bitsy-card-main {
 	width: var(--bitsy-size-m);
 }
 
+.bitsy-card-ml .bitsy-card-main {
+	/* resize #find panel */
+	width: var(--bitsy-size-ml);
+	resize: vertical;
+}
+
 .bitsy-card-l .bitsy-card-main {
 	width: var(--bitsy-size-l);
+}
+
+/* my about panel addition*/
+.personalized {
+	font-family: Georgia, serif;
+	line-height: 150%;
+	letter-spacing: 0.01em;
 }
 
 .bitsy-card-titlebar {
@@ -371,6 +392,11 @@ input[type=checkbox] + label:hover {
 	overflow-y: auto;
 	border-radius: var(--bitsy-space-s);
 	height: var(--bitsy-size-m);
+}
+
+/* added to make the find panel resizable */
+.find-resize {
+	overflow: auto;
 }
 
 .bitsy-menu-scrollcontent {
