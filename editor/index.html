@@ -315,7 +315,7 @@
 						</button>
 					</div>
 
-					<div class="bitsy-card-main" style="overflow-y:hidden;"> <!-- added styling here because the scrollbar would sporadically appear in this panel in bitsy-savior -->
+					<div class="bitsy-card-main">
 						<div id="roomNav" class="navControl">
 							<!-- play -->
 							<input type="checkbox" id="playModeCheck" onclick="togglePlayMode(event);" autocomplete="off" />
@@ -651,7 +651,7 @@
 				</div>
 
 				<!-- #Paint -->
-				<div id="paintPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item">
+				<div id="paintPanel" class="bitsy-card bitsy-card-sm bitsy-workbench-item">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">paint</span>
 
@@ -664,8 +664,8 @@
 						</button>
 					</div>
 
-					<div class="bitsy-card-main">
-						<form id="paintModeRadio" style="margin-bottom: 5px;">
+					<div class="bitsy-card-main" style="display: flex;">
+						<form id="paintModeRadio" class="bitsy-menu-group" style="margin-bottom: 5px;">
 							<input type="radio" name="paint mode" value="avatar" onclick="on_paint_avatar();" id="paintOptionAvatar" checked>
 							<label title="edit the avatar: the player's character" for="paintOptionAvatar" class="left">
 								<span class="bitsy_icon icon_space_right">avatar</span>
@@ -803,7 +803,7 @@
 						</button>
 					</div>
 
-					<div id="findPanelMain" class="bitsy-card-main" style="display:flex; height: 600px;"> 
+					<div id="findPanelMain" class="bitsy-card-main" style="display: flex; height: 600px;"> 
 					<!-- added styling to make the find panel adjustable -->
 					</div>
 				</div>

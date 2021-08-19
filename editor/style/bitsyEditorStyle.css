@@ -15,8 +15,9 @@
 	--bitsy-size-xxs: 4rem;
 	--bitsy-size-xs: 8rem;
 	--bitsy-size-s: 16rem;
+	--bitsy-size-sm: 16.5rem; /* #paint panel */
 	--bitsy-size-m: 24rem;
-	--bitsy-size-ml: 24.5rem; /* the "find" panel is juuuuuust barely too small */
+	--bitsy-size-ml: 24.5rem; /* #find panel */
 	--bitsy-size-l: 32rem;
 }
 
@@ -233,6 +234,7 @@ input[type=checkbox] + label:hover {
 	max-height: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
+	flex-direction: column;
 }
 
 .bitsy-card-xs .bitsy-card-main {
@@ -243,15 +245,19 @@ input[type=checkbox] + label:hover {
 	width: var(--bitsy-size-s);
 }
 
+.bitsy-card-sm .bitsy-card-main {
+	/* resize #paint panel */
+	width: var(--bitsy-size-sm);
+}
+
 .bitsy-card-m .bitsy-card-main {
 	width: var(--bitsy-size-m);
 }
 
 .bitsy-card-ml .bitsy-card-main {
-	/* made this up just to make the "find" panel a better size and to sneak in a way to make it resizable*/
+	/* resize #find panel */
 	width: var(--bitsy-size-ml);
 	resize: vertical;
-	flex-direction: column;
 }
 
 .bitsy-card-l .bitsy-card-main {

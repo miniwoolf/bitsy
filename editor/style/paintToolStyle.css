@@ -1,5 +1,6 @@
 #paintModeRadio {
 	display: flex;
+	overflow-x: hidden;
 }
 
 #animationOuter {
