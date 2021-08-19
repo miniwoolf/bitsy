@@ -1507,6 +1507,24 @@ function duplicateDrawing() {
     paintTool.duplicateDrawing();
 }
 
+// paint hacks start
+function flipDrawing(dir) {
+    paintTool.flipDrawing(dir);
+}
+
+function nudgeDrawing(dir) {
+    paintTool.nudgeDrawing(dir);
+}
+
+function rotateDrawing(dir) {
+    paintTool.rotateDrawing(dir);
+}
+
+function mirrorDrawing(dir) {
+    paintTool.mirrorDrawing(dir);
+}
+// paint hacks end
+
 function removeAllItems( id ) {
 	function getFirstItemIndex(roomId, itemId) {
 		for(var i = 0; i < room[roomId].items.length; i++) {
@@ -3051,7 +3069,7 @@ var grabbedPanel = {
 
 function grabCard(e) {
 	// can't grab cards in vertical mode right now
-	if (window.innerHeight > window.innerWidth) { // TODO : change to portrait orientation check??
+	if (window.innerHeight > (window.innerWidth * 1.25)) { // TODO : change to portrait orientation check??
 		return;
 	}
 
