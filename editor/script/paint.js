@@ -152,6 +152,125 @@ function PaintTool(canvas, roomTool) {
 		}
 	}
 
+	// paint hacks start
+    this.flipDrawing = function (direction) {
+        var curDrawingCopy = curDrawingData().map(function (x) { return x.slice() });
+        for (var x = 0; x < 8; x++) {
+            for (var y = 0; y < 8; y++) {
+                var ypos = 8 - y - 1;
+                var xpos = 8 - x - 1;
+                if (direction == 0) {
+                    curDrawingData()[y][x] = curDrawingCopy[ypos][x];
+                } else {
+                    curDrawingData()[y][x] = curDrawingCopy[y][xpos];
+                }
+            }
+        }
+        self.updateCanvas();
+        updateDrawingData();
+        refreshGameData();
+        roomTool.drawEditMap();
+    }
+
+    this.rotateDrawing = function (direction) {
+        var curDrawingCopy = curDrawingData().map(function (x) { return x.slice() });
+        for (var x = 0; x < 8; x++) {
+            for (var y = 0; y < 8; y++) {
+                curDrawingData()[y][x] = curDrawingCopy[x][y];
+            }
+        }
+        self.flipDrawing(direction);
+        self.updateCanvas();
+    }
+
+    this.nudgeDrawing = function (direction) {
+        var curDrawingCopy = curDrawingData().map(function(x) {return x.slice() });
+        var addx = 0;
+        var addy = 0;
+        switch (direction) {
+            case 0://left
+                addx = 1;
+                break;
+            case 1://right
+                addx = -1;
+                break;
+            case 2://up
+                addy = 1;
+                break;
+            case 3://down
+                addy = -1;
+                break;
+        }
+        var maxTile = 8 - 1;
+        for (var x = 0; x < 8; x++) {
+            for (var y = 0; y < 8; y++) {
+                var ypos = y + addy;
+                var xpos = x + addx;
+                if (ypos < 0) { ypos = ypos + 8; } else if (ypos > maxTile) { ypos = ypos - 8; }
+                if (xpos < 0) { xpos = xpos + 8; } else if (xpos > maxTile) { xpos = xpos - 8; }
+                curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
+            }
+        }
+        self.updateCanvas();
+        updateDrawingData();
+        refreshGameData();
+        roomTool.drawEditMap();
+    }
+
+    this.mirrorDrawing = function (direction) {
+        var curDrawingCopy = curDrawingData().map(function (x) { return x.slice() });
+        var maxTile = 8 - 1;
+        var mirror = maxTile / 2;
+        console.log(maxTile + " mirrorpoint: " + mirror);
+        switch (direction) {
+            case 0://left to right
+                for (var x = 0; x < 8; x++) {
+                    for (var y = 0; y < 8; y++) {
+                        var ypos = y;
+                        var xpos = x;
+                        if (xpos < mirror) { xpos = 8 - x - 1; }
+                        curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
+                    }
+                }
+                break;
+            case 1://right to left
+                for (var x = 0; x < 8; x++) {
+                    for (var y = 0; y < 8; y++) {
+                        var ypos = y;
+                        var xpos = x;
+                        if (xpos > mirror) { xpos = 8 - x - 1; }
+                        curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
+                    }
+                }
+                break;
+            case 2://up to down
+                for (var x = 0; x < 8; x++) {
+                    for (var y = 0; y < 8; y++) {
+                        var ypos = y;
+                        var xpos = x;
+                        if (ypos < mirror) { ypos = 8 - y - 1; }
+                        curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
+                    }
+                }
+                break;
+            case 3://down to up
+                for (var x = 0; x < 8; x++) {
+                    for (var y = 0; y < 8; y++) {
+                        var ypos = y;
+                        var xpos = x;
+                        if (ypos > mirror) { ypos = 8 - y - 1; }
+                        curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
+                    }
+                }
+                break;
+        }
+        self.updateCanvas();
+        updateDrawingData();
+        refreshGameData();
+        roomTool.drawEditMap();
+    }
+    // paint hacks end
+
 	function curDrawingData() {
 		var frameIndex = (self.isCurDrawingAnimated ? self.curDrawingFrameIndex : 0);
 		return getDrawingFrameData(drawing, frameIndex);

@@ -264,6 +264,14 @@
 						</p>
 					</div>
 
+					<div class="bitsy-card-titlebar" style="margin: var(--bitsy-space-m); border-radius: var(--bitsy-space-s);">
+
+						<span class="bitsy-card-title personalized">
+							about bitsy personalized
+						</span>
+
+					</div>
+
 					<div id="aboutInner" class="bitsy-card-main personalized" style="font-size: 75%; margin-top: 0px;">
 						<p>
 							hello! i'm miniwoolf, and this is a hacked version of bitsy i use to edit my games. i'm also using it to learn about html, css, and javascript as i add, delete, and edit features to better suit my needs. i'm having a lot of fun, and i'm excited to see just what i can do!
@@ -275,8 +283,9 @@
 
 						<p>
 							sources: <br/>
-							<a target="_blank" href="https://ayolland.itch.io/borksy">borksy (inspiration)</a> |
+							<a target="_blank" href="https://ayolland.itch.io/borksy">borksy</a> |
 							<a target="_blank" href="https://github.com/seleb/bitsy-hacks/blob/main/dist/transparent-sprites.js">transparent sprites hack</a> |
+							<a target="_blank" href="https://github.com/AurySystem/bitsy-color">paint transformation tools</a> | <br/>
 							<a target="_blank" href="https://github.com/miniwoolf/bitsy-personalized">source code</a>
 						</p>
 
@@ -651,7 +660,7 @@
 				</div>
 
 				<!-- #Paint -->
-				<div id="paintPanel" class="bitsy-card bitsy-card-sm bitsy-workbench-item">
+				<div id="paintPanel" class="bitsy-card bitsy-card-s bitsy-workbench-item">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">paint</span>
 
@@ -664,7 +673,7 @@
 						</button>
 					</div>
 
-					<div class="bitsy-card-main" style="display: flex;">
+					<div class="bitsy-card-main" style="display: flex; flex-direction:column;">
 						<form id="paintModeRadio" class="bitsy-menu-group" style="margin-bottom: 5px;">
 							<input type="radio" name="paint mode" value="avatar" onclick="on_paint_avatar();" id="paintOptionAvatar" checked>
 							<label title="edit the avatar: the player's character" for="paintOptionAvatar" class="left">
@@ -726,6 +735,57 @@
 
 						<canvas id="paint"></canvas>
 
+						<!-- paint hacks -->
+						<div id="paintTransform">
+                            <div class="buttonGroup" style="margin-bottom: 5px; margin-right: 3px;">
+                                <button title="nudge left" class="color0" onclick="nudgeDrawing(0);">
+                                    <span class="bitsy_icon">previous</span>
+                                </button>
+                                <button title="nudge right" class="color0" onclick="nudgeDrawing(1);">
+                                    <span class="bitsy_icon">next</span>
+                                </button>
+                                <button title="nudge up" class="color0" onclick="nudgeDrawing(2);">
+                                    <span class="bitsy_icon">arrow_up</span>
+                                </button>
+                                <button title="nudge down" class="color0" onclick="nudgeDrawing(3);">
+                                    <span class="bitsy_icon">arrow_down</span>
+                                </button>
+                            </div>
+                            <div class="buttonGroup" style="margin-bottom: 5px; margin-right: 3px;">
+                                <button title="rotate clockwize" class="color0" onclick="rotateDrawing(1);">
+                                    <span class="bitsy_icon">rotate_right</span>
+                                </button>
+                                <button title="rotate counter-clockwize" class="color0" onclick="rotateDrawing(0);">
+                                    <span class="bitsy_icon">rotate_left</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="paintMirror">
+                            <div class="buttonGroup" style="margin-bottom: 5px; margin-right: 3px;">
+                                <button title="mirror to right" class="color0" onclick="mirrorDrawing(1);">
+                                    <span class="bitsy_icon">mirror_right</span>
+                                </button>
+                                <button title="mirror to left" class="color0" onclick="mirrorDrawing(0);">
+                                    <span class="bitsy_icon">mirror_left</span>
+                                </button>
+                                <button title="mirror to down" class="color0" onclick="mirrorDrawing(3);">
+                                    <span class="bitsy_icon">mirror_down</span>
+                                </button>
+                                <button title="mirror to up" class="color0" onclick="mirrorDrawing(2);">
+                                    <span class="bitsy_icon">mirror_up</span>
+                                </button>
+                            </div>
+                            <div class="buttonGroup" style="margin-bottom: 5px; margin-right: 3px;">
+                                <button title="horizontal flip" class="color0" onclick="flipDrawing(1);">
+                                    <span class="bitsy_icon">flip_horizontal</span>
+                                </button>
+                                <button title="vertical flip" class="color0" onclick="flipDrawing(0);">
+                                    <span class="bitsy_icon">flip_vertical</span>
+                                </button>
+                            </div>
+                        </div>
+						<!-- paint hacks end -->
+						
 						<div id="paintEditMain">
 							<div class="buttonGroup">
 								<input type="checkbox" id="paintGridCheck" onclick="togglePaintGrid(event);" autocomplete="off" checked/>

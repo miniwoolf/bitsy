@@ -82,6 +82,18 @@ button:disabled {
 	opacity: 0.5;
 }
 
+a:link, a:visited {
+	color: var(--bitsy-color-main-2);
+}
+
+a:hover {
+	color: var(--bitsy-color-accent-2);
+}
+
+a:active {
+	color: var(--bitsy-color-neutral-2);
+}
+
 /* label */
 label {
 	background: var(--bitsy-color-accent-1);
@@ -234,7 +246,6 @@ input[type=checkbox] + label:hover {
 	max-height: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
-	flex-direction: column;
 }
 
 .bitsy-card-xs .bitsy-card-main {
@@ -258,6 +269,7 @@ input[type=checkbox] + label:hover {
 	/* resize #find panel */
 	width: var(--bitsy-size-ml);
 	resize: vertical;
+	flex-direction: column;
 }
 
 .bitsy-card-l .bitsy-card-main {

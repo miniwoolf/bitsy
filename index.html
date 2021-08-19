@@ -8,37 +8,22 @@
 		<link href="editor/shared/style/googleNunito.css" rel="stylesheet">
 		<link href="editor/shared/style/googleMaterialIcons.css" rel="stylesheet">
 
-<!-- 		<style>
-			body {
-				font-family: "Nunito", Helvetica, Arial, sans-serif;
-
-				background: #ccccff;
-			}
-
-			#header {
-				background: #6767b2;
-				color: #fff;
-			}
-		</style> -->
-
 		<!-- STYLES -->
-		<link rel="stylesheet" type="text/css" href="editor/shared/style/editorStyle.css">
-		<link rel="stylesheet" type="text/css" href="editor/shared/style/editorButtons.css">
-		<link rel="stylesheet" type="text/css" href="editor/shared/style/editorColors.css">
-<!-- 		<link rel="stylesheet" type="text/css" href="shared/style/editorAnimations.css">
-		<link rel="stylesheet" type="text/css" href="shared/style/colorPickerStyle.css"> -->
+		<link rel="stylesheet" type="text/css" href="editor/style/bitsyEditorStyle.css">
+		<link rel="stylesheet" type="text/css" href="editor/style/aboutToolStyle.css">
 
 		<style>
 			#mainPanel {
-				width: calc(100% - 40px);
-				height: calc(100% - 60px);
+				margin: auto;
+				padding: 6px;
 			}
 
 			#launchBitsy {
 				background: #ccccff;
 				color: #6767b2;
-				border-radius: 4px;
-				padding: 4px;
+				border-radius: var(--bitsy-space-s);
+				padding: var(--bitsy-space-m);
+				margin-bottom: var(--bitsy-space-m);
 			}
 
 			#launchBitsy a {
@@ -54,25 +39,112 @@
 				color: white;
 			}
 
-			.bigButton {
-				font-size: 6em;
-				text-align: center;
+			.text {
+				text-align: left;
 			}
+
 		</style>
 	</head>
 
 	<body>
 		<center>
-		<div id="mainPanel" class="panel color0">
-			<div id="mainInner">
-				<a href="editor/index.html">
-					<div id="launchBitsy" class="bigButton">
+		<div id="aboutPanel" class="bitsy-card bitsy-card-l bitsy-workbench-item">
+			<div class="bitsy-card-titlebar">
+
+				<span class="bitsy-card-title text" title="about window">
+					about bitsy
+				</span>
+
+			</div>
+
+			<div id="aboutInner" class="bitsy-card-main text" style="margin-bottom: 0px;">
+				<p>
+					<span class="localize about1">hi! bitsy is a little editor for little games or worlds. the goal is to make it easy to make games where you can walk around and talk to people and be somewhere.</span>
+				</p>
+
+				<p>
+					<span class="localize about9">have fun making things with bitsy!</span>
+				</p>
+
+				<p>
+					- 
+					<a target="_blank" href="https://www.twitter.com/adamledoux">
+						<span class="localize about10_link_twitter">adam</span>
+					</a>
+				</p>
+
+				<p>
+					getting started: <br/>
+					<a target="_blank" href="https://www.shimmerwitch.space/bitsyTutorial.html">tutorial</a>
+				</p>
+
+				<p>
+					community: <br/>
+					<a target="_blank" href="https://itch.io/games/made-with-bitsy">made with bitsy</a> |
+					<a target="_blank" href="https://discordapp.com/invite/9rAjhtr">discord server</a> |
+					<a target="_blank" href="https://ledoux.itch.io/bitsy/community">itch.io forum</a>
+				</p>
+
+				<p>
+					development: <br/>
+					<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/CREDITS.md">contributors</a> |
+					<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/VERSION_NOTES.txt">version notes</a> |
+					<a target="_blank" href="https://github.com/le-doux/bitsy/issues">report a bug</a> |
+					<a target="_blank" href="https://github.com/le-doux/bitsy">source code</a>
+				</p>
+			</div>
+
+			<div class="bitsy-card-titlebar" style="margin: var(--bitsy-space-m); border-radius: var(--bitsy-space-s);">
+
+				<span class="bitsy-card-title personalized text">
+					about bitsy personalized
+				</span>
+
+			</div>
+
+			<div id="aboutInner" class="bitsy-card-main personalized text" style="font-size: 75%; margin-top: 0px;">
+				<p>
+					hello! i'm miniwoolf, and this is a hacked version of bitsy i use to edit my games. i'm also using it to learn about html, css, and javascript as i add, delete, and edit features to better suit my needs. i'm having a lot of fun, and i'm excited to see just what i can do!
+				</p>
+
+				<p>
+					- miniwoolf
+				</p>
+
+				<p>
+					sources: <br/>
+					<a target="_blank" href="https://ayolland.itch.io/borksy">borksy</a> |
+					<a target="_blank" href="https://github.com/seleb/bitsy-hacks/blob/main/dist/transparent-sprites.js">transparent sprites hack</a> |
+					<a target="_blank" href="https://github.com/AurySystem/bitsy-color">paint transformation tools</a> |
+					<a target="_blank" href="https://github.com/miniwoolf/bitsy-personalized">source code</a>
+				</p>
+
+				<p>
+					tools i use for coding: <br/>
+					<a target="_blank" href="https://www.w3schools.com/default.asp">w3schools</a> |
+					<a target="_blank" href="https://www.sublimetext.com/">sublime text editor</a> |
+					<a target="_blank" href="https://desktop.github.com/">github desktop</a>
+				</p>
+
+				<p>
+					tools i use for making bitsy games: <br/>
+					<a target="_blank" href="https://ruin.itch.io/tilesy">tilesy</a> |
+					<a target="_blank" href="https://ruin.itch.io/pixsy">pixsy</a> |
+					<a target="_blank" href="https://seansleblanc.itch.io/bitsy-optimizer">bitsy optimizer</a> |
+					<a target="_blank" href="https://seansleblanc.itch.io/bitsy-merge">bitsy merge</a> |
+					<a target="_blank" href="https://www.palettelist.com/">palettes</a>
+				</p>
+			</div>
+
+			<div id="mainPanel">
+				<a href="editor/index.html" style="text-decoration: none;">
+					<div id="launchBitsy" style="font-size: 150%;">
 						Make a game!
 					</div>
 				</a>
 			</div>
 		</div>
-		</center>
+	</center>
 	</body>
 
 </html>

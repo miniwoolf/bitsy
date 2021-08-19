@@ -5,6 +5,7 @@ var fs = require('fs');
 console.log("*** initializing bitsy ***");
 
 // load the bitsy engine
+eval(fs.readFileSync("../../editor/script/engine/system.js", "utf8"))
 eval(fs.readFileSync("../../editor/script/engine/color_util.js", "utf8"))
 eval(fs.readFileSync("../../editor/script/engine/font.js", "utf8"))
 eval(fs.readFileSync("../../editor/script/engine/transition.js", "utf8"))
