@@ -24,6 +24,8 @@ var resourceFiles = [
 	"../editor/script/engine/color_util.js",
 	"../editor/script/engine/renderer.js",
 	"../editor/script/engine/transition.js",
+		/* hacks */
+	"../editor/script/engine/transparent-sprites.js",
 ];
 
 var resourceDirectories = [
