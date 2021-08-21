@@ -2759,6 +2759,35 @@ function importGameFromFile(e) {
 	}
 }
 
+function importGameData(e) {
+	if (isPlayMode) {
+		alert("You can't upload a game while you're playing one! Sorry :(");
+		return;
+	}
+
+	resetGameData();
+
+	// load file chosen by user
+	var files = e.target.files;
+	var file = files[0];
+	var reader = new FileReader();
+	reader.readAsText( file );
+
+	reader.onloadend = function() {
+		var gameDataStr = reader.result;
+		// gameDataStr = importer.importData( fileText );
+
+		// change game data & reload everything
+		document.getElementById("game_data").value = gameDataStr;
+		on_game_data_change();
+
+		// reset find tool (a bit heavy handed?)
+		findTool = new FindTool({
+			mainElement : document.getElementById("findPanelMain"),
+		});
+	}
+}
+
 function importFontFromFile(e) {
 	// load file chosen by user
 	var files = e.target.files;
