@@ -146,12 +146,6 @@
 					<span class="localize inventory_tool_name">inventory</span>
 				</label>
 				
-				<input type="checkbox" value="downloadPanel" id="downloadCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
-				<label title="show / hide download window" for="downloadCheck">
-					<span class="bitsy_icon icon_space_right">file</span>
-					<span class="localize download_tool_name">download</span>
-				</label>
-				
 				<input type="checkbox" value="gifPanel" id="gifCheck" onclick="togglePanelAnimated(event);" autocomplete="off" />
 				<label title="show / hide gif recording window" for="gifCheck">
 					<span class="bitsy_icon icon_space_right">record</span>
@@ -1063,54 +1057,6 @@
 					</div>
 				</div>
 
-				<!-- #Download -->
-				<div id="downloadPanel" class="bitsy-card bitsy-workbench-item" style="display:none;">
-					<div class="bitsy-card-titlebar">
-						<span class="bitsy_icon">file</span>
-
-						<span class="bitsy-card-title" title="download window" onmousedown="grabCard(event);">
-							<span class="localize download_tool_name">download</span>
-						</span>
-
-						<button title="minimize download window" onclick="hidePanel('downloadPanel');">
-							<span class="bitsy_icon">close</span>
-						</button>
-					</div>
-
-					<div class="bitsy-card-main">
-						<div style="margin-bottom: var(--bitsy-space-s);">
-							<span class="localize download_html" style="margin-bottom: var(--bitsy-space-s);">download game as html file:</span>
-							<br>
-							<button title="download game as html file" class="color0" onclick="exportGame();">
-								<span class="bitsy_icon">download</span>
-								<span class="localize download_game">download game</span>
-							</button>
-						</div>
-
-						<div style="margin-bottom: var(--bitsy-space-s);">
-							<span class="localize import_html" style="margin-bottom: var(--bitsy-space-s);">import game from html file:</span>
-							<br style="margin-bottom: var(--bitsy-space-s);">
-							<label for="importGamePicker" class="filePickerLabel" title="import game from html file on your computer">
-								<span class="bitsy_icon">upload</span>
-								<span class="localize upload_game">upload game</span>
-							</label>
-							<input type="file" id="importGamePicker" style="display:none;" onchange="importGameFromFile(event);"/>
-						</div>
-
-						<!-- TODO LOCALIZE - word wrap -->
-						<div id="downloadHelp" class="helpMessage" style="display:none;">
-							Note: your browser doesn't support<br>
-							direct downloads, so sharing requires<br>
-							some extra steps:<br>
-							- press share <br>
-							- a new tab will open <br>
-							- save that tab <br>
-							- name it "mygame.html" <br>
-							- share your game as a web page!
-						</div>
-					</div>
-				</div>
-
 				<!-- #Record GIF #gif -->
 				<div id="gifPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
@@ -1172,7 +1118,7 @@
 					</div>
 				</div>
 
-				<!-- #Game Data -->
+				<!-- #Game Data and #Download -->
 				<div id="dataPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">game_data</span>
@@ -1189,20 +1135,60 @@
 					<div class="bitsy-card-main">
 						<textarea title="raw text of the bitsy game data file (be careful when editing)" id="game_data" onchange="on_game_data_change();"></textarea>
 						<br>
-						<button title="reset everything and start new game" class="bitsy-menu-label" onclick="newGameDialog();">
-							<span class="bitsy_icon">new_game</span>
-							<span class="localize reset_data">reset game data</span>
-						</button>
-						<button title="download game data" class="bitsy-menu-label" onclick="exportGameData();">
-							<span class="bitsy_icon">download</span>
-							<span class="localize download_data">download data</span>
-						</button>
-						<br/>
-						<input type="checkbox" id="fontDataCheck" onclick="toggleFontDataVisibility(event);" autocomplete="off" />
-						<label title="show / hide font data (WARNING: can be very slow for large fonts)" for="fontDataCheck" class="bitsy-menu-label">
-							<span id="fontDataIcon" class="bitsy_icon">visibility_off</span>
-							<span class="localize font_data_toggle_visible">font data</span>
-						</label>
+						<div class="bitsy-menu-group">
+							<button title="reset everything and start new game" class="bitsy-menu-label" onclick="newGameDialog();">
+								<span class="bitsy_icon">new_game</span>
+								<span class="localize reset_data">reset game data</span>
+							</button>
+							<button title="download game data" class="bitsy-menu-label" onclick="exportGameData();">
+								<span class="bitsy_icon">download</span>
+								<span class="localize download_data">download data</span>
+							</button>
+							<label for="importGameDataPicker" class="filePickerLabel" title="import game from text file on your computer">
+								<span class="bitsy_icon">upload</span>
+								<span class="upload_data">upload data</span>
+							</label>
+							<input type="file" id="importGameDataPicker" style="display:none;" onchange="importGameData(event);"/>
+							<br/>
+							<input type="checkbox" id="fontDataCheck" onclick="toggleFontDataVisibility(event);" autocomplete="off" />
+							<label title="show / hide font data (WARNING: can be very slow for large fonts)" for="fontDataCheck" class="bitsy-menu-label">
+								<span id="fontDataIcon" class="bitsy_icon">visibility_off</span>
+								<span class="localize font_data_toggle_visible">font data</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="bitsy-card-main">
+						<div style="margin-bottom: var(--bitsy-space-s);">
+							<span class="localize download_html" style="margin-bottom: var(--bitsy-space-s);">download game as html file:</span>
+							<br>
+							<button title="download game as html file" class="color0" onclick="exportGame();">
+								<span class="bitsy_icon">download</span>
+								<span class="localize download_game">download game</span>
+							</button>
+						</div>
+
+						<div style="margin-bottom: var(--bitsy-space-s);">
+							<span class="localize import_html" style="margin-bottom: var(--bitsy-space-s);">import game from html file:</span>
+							<br style="margin-bottom: var(--bitsy-space-s);">
+							<label for="importGamePicker" class="filePickerLabel" title="import game from html file on your computer">
+								<span class="bitsy_icon">upload</span>
+								<span class="localize upload_game">upload game</span>
+							</label>
+							<input type="file" id="importGamePicker" style="display:none;" onchange="importGameFromFile(event);"/>
+						</div>
+
+						<!-- TODO LOCALIZE - word wrap -->
+						<div id="downloadHelp" class="helpMessage" style="display:none;">
+							Note: your browser doesn't support<br>
+							direct downloads, so sharing requires<br>
+							some extra steps:<br>
+							- press share <br>
+							- a new tab will open <br>
+							- save that tab <br>
+							- name it "mygame.html" <br>
+							- share your game as a web page!
+						</div>
 					</div>
 				</div>
 
