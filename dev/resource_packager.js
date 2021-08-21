@@ -56,10 +56,23 @@ for (var i = 0; i < resourceDirectories.length; i++) {
 	}
 }
 
-var resourceJavascriptFile = "var Resources = " + JSON.stringify(resourcePackage, null, 2) + ";";
+// console.log(resourcePackage);
+
+var str = JSON.stringify(resourcePackage, null, 2);
+
+function fixCRLR() {
+	str = str.replace(/\\r\\n/g, '\\n');
+	return str;
+}
+
+fixCRLR();
+
+// console.log(str);
+
+var resourceJavascriptFile = "var Resources = " + str + ";";
+
+// console.log(resourceJavascriptFile);
 
 fs.writeFile("../editor/script/generated/resources.js", resourceJavascriptFile, function () {});
-
-// console.log(resourcePackage);
 
 console.log("done!");
