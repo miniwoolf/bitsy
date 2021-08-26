@@ -1,10 +1,10 @@
 {
-	"name": "Bitsy",
-	"short_name": "Bitsy",
+	"name": "Bitsy !",
+	"short_name": "Bitsy!",
 	"description": "A little editor for little games or worlds",
 	"start_url": "./index.html",
 	"icons": [{
-		"src": "image/cat5.png",
+		"src": "image/sammy.png",
 		"sizes": "256x256",
 		"type": "image/png"
 	}],
