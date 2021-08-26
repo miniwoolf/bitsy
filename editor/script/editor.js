@@ -284,7 +284,7 @@ var curDialogEditor = null;
 var curPlaintextDialogEditor = null; // the duplication is a bit weird, but better than recreating editors all the time?
 function openDialogTool(dialogId, insertNextToId, showIfHidden) { // todo : rename since it doesn't always "open" it?
 	if (showIfHidden === undefined || showIfHidden === null) {
-		showIfHidden = false;
+		showIfHidden = true;
 	}
 
 	document.getElementById("deleteDialogButton").disabled = dialogId === titleDialogId;
