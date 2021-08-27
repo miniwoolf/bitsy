@@ -286,6 +286,8 @@ function PaintTool(canvas, roomTool) {
 	function updateDrawingData() {
 		// this forces a renderer cache refresh but it's kind of wonky
 		renderer.SetImageSource(drawing.drw, getDrawingImageSource(drawing));
+		//console.log("updateDrawingData function ran");
+		events.Raise("game_data_change"); // hacky but I'm desperate
 	}
 
 	// methods for updating the UI

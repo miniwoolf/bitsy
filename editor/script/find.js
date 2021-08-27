@@ -375,6 +375,7 @@ function FindTool(options) {
 				thumbnailControl.LoadThumbnailImage();
 			}
 		}
+		//console.log("UpdateVisibleItems function ran");
 	}
 
 	function UpdateSelectedItems() {
