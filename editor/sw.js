@@ -76,9 +76,12 @@ self.addEventListener("fetch", function(event) {
 	event.respondWith(
 		caches.match(event.request).then(function(response) {
 			if (response) {
+				console.log(response);
 				return response;
 			}
-			return fetch(event.request);
+			else {
+				return fetch(event.request);
+			}
 		})
 	);
 });
