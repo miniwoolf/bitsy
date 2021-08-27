@@ -75,7 +75,17 @@ self.addEventListener("fetch", function(event) {
 	// if the object exists in the cache, return it, otherwise try the network
 	event.respondWith(
 		caches.match(event.request).then(function(response) {
+<<<<<<< HEAD
 			return response || fetch(event.request);
+=======
+			if (response) {
+				console.log(response);
+				return response;
+			}
+			else {
+				return fetch(event.request);
+			}
+>>>>>>> 8d29c79a6ed0445e2820b7a8c5cf02ec4e22c2cc
 		})
 	);
 });
