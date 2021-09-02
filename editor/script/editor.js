@@ -595,7 +595,7 @@ function resetGameData() {
 
 function refreshGameData() {
 	if (isPlayMode) {
-		return; //never store game data while in playmode (TODO: wouldn't be necessary if the game data was decoupled form editor data)
+		return; //never store game data while in playmode (TODO: wouldn't be necessary if the game data was decoupled from editor data)
 	}
 
 	flags.ROOM_FORMAT = 1; // always save out comma separated format, even if the old format is read in
@@ -2775,7 +2775,7 @@ function importGameData(e) {
 
 	reader.onloadend = function() {
 		var gameDataStr = reader.result;
-		// gameDataStr = importer.importData( fileText );
+		// gameDataStr = importer.importData( fileText ); // since it's already the straight game data, there's no need to run it thru the import cleaner
 
 		// change game data & reload everything
 		document.getElementById("game_data").value = gameDataStr;

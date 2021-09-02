@@ -286,8 +286,9 @@ function PaintTool(canvas, roomTool) {
 	function updateDrawingData() {
 		// this forces a renderer cache refresh but it's kind of wonky
 		renderer.SetImageSource(drawing.drw, getDrawingImageSource(drawing));
-		//console.log("updateDrawingData function ran");
-		events.Raise("game_data_change"); // hacky but I'm desperate
+		// console.log("updateDrawingData function ran");
+		events.Raise("game_data_refresh"); // i think this is going to get the find tool to refresh how i want
+		/* i'm pretty sure that this ^ is something the service worker is allegedly supposed to do */
 	}
 
 	// methods for updating the UI
