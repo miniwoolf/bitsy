@@ -26,6 +26,7 @@ self.addEventListener("install", function(event) {
 				"./image/cat5.png",
 				"./image/down_arrow.svg",
 				"./image/sammy.png",
+				"./image/sammy.svg",
 				"./index.html",
 				"./manifest.json",
 				"./script/color_picker.js",
