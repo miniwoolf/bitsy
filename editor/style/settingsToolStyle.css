@@ -5,3 +5,9 @@
 #settingsInner {
 	white-space: normal;
 }
+
+.bitsy-settings-group {
+	display: flex;
+	flex-wrap: wrap;
+	overflow: visible;
+}

@@ -12,7 +12,7 @@ function replaceTemplateMarker(template, marker, text) {
 	return template.substr( 0, markerIndex ) + text + template.substr( markerIndex + marker.length );
 }
 
-this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size) {
+this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size, transparentHackState) {
 	var html = Resources["exportTemplate.html"].substr(); //copy template
 	// bitsyLog(html, "editor");
 
@@ -36,8 +36,14 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 	html = replaceTemplateMarker( html, "@@L", Resources["dialog.js"] );
 	html = replaceTemplateMarker( html, "@@R", Resources["renderer.js"] );
 	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
+
 	// bake in hacks
-	html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
+	if( transparentHackState ) {
+		html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
+	}
+	else {
+		html = replaceTemplateMarker( html, "@@A", "" );
+	}
 	
 	// export the default font in its own script tag (TODO : remove if unused)
 	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
