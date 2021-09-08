@@ -277,7 +277,7 @@ input[type=checkbox] + label:hover {
 }
 
 /* my about panel addition*/
-.personalized {
+.for-me {
 	font-family: Georgia, serif;
 	line-height: 150%;
 	letter-spacing: 0.01em;
