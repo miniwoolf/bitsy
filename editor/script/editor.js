@@ -3341,7 +3341,7 @@ function togglePreviewDialog(event) {
 	updatePreviewDialogButton();
 }
 
-var isFixedSize = false;
+var isFixedSize = true;
 function chooseExportSizeFull() {
 	isFixedSize = false;
 	document.getElementById("exportSizeFixedInputSpan").style.display = "none";
@@ -3350,6 +3350,12 @@ function chooseExportSizeFull() {
 function chooseExportSizeFixed() {
 	isFixedSize = true;
 	document.getElementById("exportSizeFixedInputSpan").style.display = "inline-block";
+}
+
+// trans-prites hack
+var transparentHackState = true;
+function toggleTransparentSprites(e) {
+	transparentHackState = (e.target.checked);
 }
 
 // LOCALIZATION
@@ -3361,7 +3367,7 @@ function on_change_language(e) {
 }
 
 function on_change_language_inner(language) {
-	changeLnaguageStyle(language); // TODO : misspelled funciton name
+	changeLanguageStyle(language);
 
 	localization.ChangeLanguage(language);
 	updateInventoryUI();
@@ -3408,7 +3414,7 @@ function hackyUpdatePlaceholderText() {
 }
 
 var curEditorLanguageCode = "en";
-function changeLnaguageStyle(newCode) { // TODO : fix function name
+function changeLanguageStyle(newCode) {
 	document.body.classList.remove("lang_" + curEditorLanguageCode);
 	curEditorLanguageCode = newCode;
 	document.body.classList.add("lang_" + curEditorLanguageCode);
