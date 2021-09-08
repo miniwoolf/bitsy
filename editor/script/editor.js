@@ -202,7 +202,7 @@ function makeDrawing(id, imageData) {
 		];
 	}
 
-	renderer.SetImageSource(id, imageData);
+	renderer.SetDrawingSource(id, imageData);
 }
 
 /* EVENTS */
@@ -537,8 +537,8 @@ function setDefaultGameState() {
 	clearGameData();
 	parseWorld(document.getElementById("game_data").value); // load game
 
-	// TODO RENDERER : refresh images
-	// TODO -- more setup???
+	// refresh images
+	renderer.ClearCache();
 }
 
 function newGameDialog() {
@@ -570,7 +570,9 @@ function resetGameData() {
 
 	refreshGameData();
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
+
 	updateExitOptionsFromGameData();
 	updateRoomName();
 	updateInventoryUI();
@@ -611,7 +613,8 @@ function refreshGameData() {
 
 	Store.set("game_data", gameDataNoFonts);
 
-	// events.Raise("game_data_refresh");
+	// todo : test if re-enabling this going to mess up HTML imports?
+	events.Raise("game_data_refresh");
 }
 
 /* TIMER */
@@ -813,6 +816,8 @@ function isPortraitOrientation() {
 }
 
 function start() {
+	initSystem();
+
 	events.Listen("game_data_change", function(event) {
 		updatePaletteOptionsFromGameData();
 
@@ -1197,7 +1202,10 @@ function selectRoom(roomId) {
 
 	if (nextRoomIndex != -1) {
 		roomIndex = nextRoomIndex;
+
 		curRoom = ids[roomIndex];
+		initRoom(curRoom);
+
 		markerTool.SetRoom(curRoom);
 		roomTool.drawEditMap();
 		paintTool.updateCanvas();
@@ -1215,8 +1223,12 @@ function selectRoom(roomId) {
 
 function nextRoom() {
 	var ids = sortedRoomIdList();
+
 	roomIndex = (roomIndex + 1) % ids.length;
+
 	curRoom = ids[roomIndex];
+	initRoom(curRoom);
+
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
 	paintTool.updateCanvas();
@@ -1233,9 +1245,15 @@ function nextRoom() {
 
 function prevRoom() {
 	var ids = sortedRoomIdList();
+
 	roomIndex--;
-	if (roomIndex < 0) roomIndex = (ids.length-1);
+	if (roomIndex < 0) {
+		roomIndex = (ids.length - 1);
+	}
+
 	curRoom = ids[roomIndex];
+	initRoom(curRoom);
+
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
 	paintTool.updateCanvas();
@@ -1757,8 +1775,6 @@ function on_play_mode() {
 
 	roomTool.unlistenEditEvents();
 
-	// load_game(document.getElementById("game_data").value, !isPreviewDialogMode /* startWithTitle */);
-	// load_game(getFullGameData(), !isPreviewDialogMode /* startWithTitle */);
 	loadGame(getFullGameData());
 }
 
@@ -1880,7 +1896,12 @@ function deletePalette() {
 function roomPaletteChange(event) {
 	var palId = event.target.value;
 	room[curRoom].pal = palId;
+
+	// hacky?
+	initRoom(curRoom);
+
 	refreshGameData();
+
 	markerTool.SetRoom(curRoom);
 	roomTool.drawEditMap();
 	paintTool.updateCanvas();
@@ -2120,7 +2141,8 @@ function on_game_data_change_core() {
 		makeItem("0");
 	}
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	roomIndex = 0;
 	roomTool.drawEditMap();
@@ -2605,10 +2627,10 @@ function takeSnapshotGif(e) {
 	gifCaptureCanvas.width = 512; // stop hardcoding 512?
 	gifCaptureCanvas.height = 512;
 
-	drawRoom( room[curRoom], gifCaptureCtx, 0 );
+	renderGameScreenIntoContext(curRoom, gifCaptureCtx, 0);
 	var frame0 = gifCaptureCtx.getImageData(0,0,512,512);
 
-	drawRoom( room[curRoom], gifCaptureCtx, 1 );
+	renderGameScreenIntoContext(curRoom, gifCaptureCtx, 1);
 	var frame1 = gifCaptureCtx.getImageData(0,0,512,512);
 
 	if (isGifSnapshotLandscape) {
@@ -2876,7 +2898,8 @@ function addSpriteAnimation() {
 		addDrawingAnimation(spriteImageId);
 	}
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model
 	refreshGameData();
@@ -2900,7 +2923,8 @@ function removeSpriteAnimation() {
 	cacheDrawingAnimation( sprite[drawing.id], spriteImageId );
 	removeDrawingAnimation( spriteImageId );
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model
 	refreshGameData();
@@ -2929,7 +2953,8 @@ function addTileAnimation() {
 		addDrawingAnimation(tileImageId);
 	}
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model
 	refreshGameData();
@@ -2953,7 +2978,8 @@ function removeTileAnimation() {
 	cacheDrawingAnimation( tile[drawing.id], tileImageId );
 	removeDrawingAnimation( tileImageId );
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model
 	refreshGameData();
@@ -2983,7 +3009,8 @@ function addItemAnimation() {
 		addDrawingAnimation(itemImageId);
 	}
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model
 	refreshGameData();
@@ -3007,7 +3034,8 @@ function removeItemAnimation() {
 	cacheDrawingAnimation( item[drawing.id], itemImageId );
 	removeDrawingAnimation( itemImageId );
 
-	// TODO RENDERER : refresh images
+	// refresh images
+	renderer.ClearCache();
 
 	//refresh data model (TODO : these should really be a shared method)
 	refreshGameData();
@@ -3018,10 +3046,10 @@ function removeItemAnimation() {
 }
 
 function addDrawingAnimation(drwId, frameData) {
-	var imageSource = renderer.GetImageSource(drwId);
+	var drawingSource = renderer.GetDrawingSource(drwId);
 
 	if (!frameData) {
-		var firstFrame = imageSource[0];
+		var firstFrame = drawingSource[0];
 
 		// copy first frame data into second frame
 		frameData = [];
@@ -3033,22 +3061,22 @@ function addDrawingAnimation(drwId, frameData) {
 		}
 	}
 
-	imageSource[1] = frameData;
+	drawingSource[1] = frameData;
 
-	renderer.SetImageSource(drwId, imageSource);
+	renderer.SetDrawingSource(drwId, drawingSource);
 }
 
 function removeDrawingAnimation(drwId) {
-	var imageSource = renderer.GetImageSource(drwId);
-	var oldImageData = imageSource.slice(0);
-	renderer.SetImageSource(drwId, [oldImageData[0]]);
+	var drawingData = renderer.GetDrawingSource(drwId);
+	var oldDrawingData = drawingData.slice(0);
+	renderer.SetDrawingSource(drwId, [oldDrawingData[0]]);
 }
 
 // let's us restore the animation during the session if the user wants it back
 function cacheDrawingAnimation(drawing, sourceId) {
-	var imageSource = renderer.GetImageSource(sourceId);
-	var oldImageData = imageSource.slice(0);
-	drawing.cachedAnimation = [oldImageData[1]]; // ah the joys of javascript
+	var drawingData = renderer.GetDrawingSource(sourceId);
+	var oldDrawingData = drawingData.slice(0);
+	drawing.cachedAnimation = [oldDrawingData[1]]; // ah the joys of javascript
 }
 
 function on_paint_frame1() {
@@ -3313,7 +3341,7 @@ function togglePreviewDialog(event) {
 	updatePreviewDialogButton();
 }
 
-var isFixedSize = true;
+var isFixedSize = false;
 function chooseExportSizeFull() {
 	isFixedSize = false;
 	document.getElementById("exportSizeFixedInputSpan").style.display = "none";
@@ -3322,17 +3350,6 @@ function chooseExportSizeFull() {
 function chooseExportSizeFixed() {
 	isFixedSize = true;
 	document.getElementById("exportSizeFixedInputSpan").style.display = "inline-block";
-}
-
-// trans-prites hack
-var transparentHackState = true;
-function toggleTransparentSprites(e) {
-	if (e.target.checked) {
-		transparentHackState = true;
-	}
-	else {
-		transparentHackState = false;
-	}
 }
 
 // LOCALIZATION
@@ -3344,7 +3361,7 @@ function on_change_language(e) {
 }
 
 function on_change_language_inner(language) {
-	changeLanguageStyle(language);
+	changeLnaguageStyle(language); // TODO : misspelled funciton name
 
 	localization.ChangeLanguage(language);
 	updateInventoryUI();
@@ -3353,7 +3370,7 @@ function on_change_language_inner(language) {
 
 	// update title in new language IF the user hasn't made any changes to the default title
 	if (localization.LocalizationContains("default_title", getTitle())) {
-		setTitle(localization.GetStringOrFallback("default_title", "Title"));
+		setTitle(localization.GetStringOrFallback("default_title", "Write your game's title here"));
 		// make sure all editors with a title know to update
 		events.Raise("dialog_update", { dialogId:titleDialogId, editorId:null });
 	}
@@ -3391,7 +3408,7 @@ function hackyUpdatePlaceholderText() {
 }
 
 var curEditorLanguageCode = "en";
-function changeLanguageStyle(newCode) {
+function changeLnaguageStyle(newCode) { // TODO : fix function name
 	document.body.classList.remove("lang_" + curEditorLanguageCode);
 	curEditorLanguageCode = newCode;
 	document.body.classList.add("lang_" + curEditorLanguageCode);

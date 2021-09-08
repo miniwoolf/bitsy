@@ -77,6 +77,10 @@ function PaintTool(canvas, roomTool) {
 		bitsyLog("?????", "editor");
 		if (isPainting) {
 			isPainting = false;
+
+			// force all tiles to re-render
+			renderer.ClearCache();
+			
 			updateDrawingData();
 			refreshGameData();
 
@@ -285,7 +289,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : rename?
 	function updateDrawingData() {
 		// this forces a renderer cache refresh but it's kind of wonky
-		renderer.SetImageSource(drawing.drw, getDrawingImageSource(drawing));
+		renderer.SetDrawingSource(drawing.drw, getDrawingImageSource(drawing));
 		// console.log("updateDrawingData function ran");
 		events.Raise("game_data_refresh"); // i think this is going to get the find tool to refresh how i want
 		/* i'm pretty sure that this ^ is something the service worker is allegedly supposed to do */
