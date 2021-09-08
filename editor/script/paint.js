@@ -77,6 +77,10 @@ function PaintTool(canvas, roomTool) {
 		bitsyLog("?????", "editor");
 		if (isPainting) {
 			isPainting = false;
+
+			// force all tiles to re-render
+			renderer.ClearCache();
+			
 			updateDrawingData();
 			refreshGameData();
 
@@ -153,6 +157,21 @@ function PaintTool(canvas, roomTool) {
 	}
 
 	// paint hacks start
+	function rerenderPaintHacks() {
+		// force all tiles to re-render
+		renderer.ClearCache();
+
+        updateDrawingData();
+        refreshGameData();
+        
+        self.updateCanvas();
+        roomTool.drawEditMap();
+
+        if (self.isCurDrawingAnimated) {
+			renderAnimationPreview(drawing);
+		}
+    }
+
     this.flipDrawing = function (direction) {
         var curDrawingCopy = curDrawingData().map(function (x) { return x.slice() });
         for (var x = 0; x < 8; x++) {
@@ -166,10 +185,7 @@ function PaintTool(canvas, roomTool) {
                 }
             }
         }
-        self.updateCanvas();
-        updateDrawingData();
-        refreshGameData();
-        roomTool.drawEditMap();
+        rerenderPaintHacks();
     }
 
     this.rotateDrawing = function (direction) {
@@ -180,7 +196,6 @@ function PaintTool(canvas, roomTool) {
             }
         }
         self.flipDrawing(direction);
-        self.updateCanvas();
     }
 
     this.nudgeDrawing = function (direction) {
@@ -211,10 +226,7 @@ function PaintTool(canvas, roomTool) {
                 curDrawingData()[y][x] = curDrawingCopy[ypos][xpos];
             }
         }
-        self.updateCanvas();
-        updateDrawingData();
-        refreshGameData();
-        roomTool.drawEditMap();
+        rerenderPaintHacks();
     }
 
     this.mirrorDrawing = function (direction) {
@@ -264,10 +276,7 @@ function PaintTool(canvas, roomTool) {
                 }
                 break;
         }
-        self.updateCanvas();
-        updateDrawingData();
-        refreshGameData();
-        roomTool.drawEditMap();
+        rerenderPaintHacks();
     }
     // paint hacks end
 
@@ -285,10 +294,7 @@ function PaintTool(canvas, roomTool) {
 	// TODO : rename?
 	function updateDrawingData() {
 		// this forces a renderer cache refresh but it's kind of wonky
-		renderer.SetImageSource(drawing.drw, getDrawingImageSource(drawing));
-		// console.log("updateDrawingData function ran");
-		events.Raise("game_data_refresh"); // i think this is going to get the find tool to refresh how i want
-		/* i'm pretty sure that this ^ is something the service worker is allegedly supposed to do */
+		renderer.SetDrawingSource(drawing.drw, getDrawingImageSource(drawing));
 	}
 
 	// methods for updating the UI
