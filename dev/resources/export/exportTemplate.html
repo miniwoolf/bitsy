@@ -19,17 +19,16 @@
 <!-- SCRIPTS -->
 <script>
 function startExportedGame() {
-	attachCanvas(document.getElementById("game"));
-	loadGame(document.getElementById("exportedGameData").text.slice(1));
+	var gameCanvas = document.getElementById("game");
+	var exportedGameData = document.getElementById("exportedGameData").text.slice(1);
+	var exportedDefaultFontData = document.getElementById(defaultFontName).text.slice(1)
+	attachCanvas(gameCanvas);
+	loadGame(exportedGameData, exportedDefaultFontData);
 }
 </script>
 
 <script>
 @@Y
-</script>
-
-<script>
-@@U
 </script>
 
 <script>
@@ -56,10 +55,11 @@ function startExportedGame() {
 @@E
 </script>
 
-<!-- bake in transparent sprites hack -->
+<!-- TO-DO: make transparent-sprites hack compatible with bitsy v7.9
+bake in transparent sprites hack 
 <script>
 @@A
-</script>
+</script> -->
 
 <!-- store default font in separate script tag for back compat-->
 <script type="text/bitsyFontData" id="@@N">

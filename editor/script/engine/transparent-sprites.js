@@ -235,7 +235,7 @@ before('renderer.GetImage', function (drawing, paletteId, frameOverride) {
 	var cache = madeTransparent[drawing.drw] = madeTransparent[drawing.drw] || {};
 	var p = cache[paletteId] = cache[paletteId] || {};
 	var frameIndex = frameOverride || drawing.animation.frameIndex;
-	var source = bitsy.renderer.GetImageSource(drawing.drw);
+	var source = bitsy.renderer.GetDrawingSource(drawing.drw);
 	if (p[frameIndex] === source) {
 		// already made this transparent
 		return;
