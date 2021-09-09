@@ -37,13 +37,12 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
 
 	// bake in hacks
-	// TO-DO: make transparent-sprites hack compatible with bitsy v7.9
-	/* if( transparentHackState ) {
+	if( transparentHackState ) {
 		html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
 	}
 	else {
 		html = replaceTemplateMarker( html, "@@A", "" );
-	}*/
+	}
 	
 	// export the default font in its own script tag (TODO : remove if unused)
 	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
