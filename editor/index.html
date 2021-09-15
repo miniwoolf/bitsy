@@ -39,6 +39,7 @@
 		
 		<!-- HACK SCRIPTS -->
 		<script src="script/engine/transparent-sprites.js"></script>
+		<script src="script/hack_options.js"></script>
 
 		<!-- EDITOR SCRIPTS -->
 		<script src="script/store.js"></script>
@@ -168,6 +169,13 @@
 				<label title="show / hide settings window" for="settingsCheck">
 					<span class="bitsy_icon icon_space_right">settings</span>
 					<span class="localize settings_tool_name">settings</span>
+				</label>
+
+				<!-- HACK OPTIONS -->
+				<input type="checkbox" value="hacksPanel" onclick="togglePanelAnimated(event);" id="hacksCheck" autocomplete="off" />
+				<label title="show / hide hacks window" for="hacksCheck">
+					<span class="bitsy_icon icon_space_right">expression_edit</span>
+					<span class="hacks_tool_name">hacks</span>
 				</label>
 
 				<button id="resetGameButton" title="reset everything and start new game" onclick="newGameDialog();">
@@ -1206,12 +1214,12 @@
 							</div>
 
 							<div class="controlBox">
-								<span class="hacks_toggle_label">hacks</span>:
+								<span class="hacks_toggle_label">hacks:</span>
 								<br/>
-								<input type="checkbox" id="transparentSpritesCheck" onclick="toggleTransparentSprites(event);" autocomplete="off" checked/>
-								<label title="hack on / off" for="transparentSpritesCheck" class="bitsy-menu-label">
-									<span id="transparentSpritesIcon" class="bitsy_icon">visibility</span>
-									<span class="option_transparent_sprites">transparent sprites</span>
+								<input type="checkbox" id="transpritesCheck" onclick="toggleTransprites(event);" autocomplete="off" checked/>
+								<label title="hack on / off" for="transpritesCheck" class="bitsy-menu-label">
+									<span id="transpritesIcon" class="bitsy_icon">visibility</span>
+									<span class="option_transprites">transparent sprites</span>
 								</label>
 							</div>
 						</div>
@@ -1345,6 +1353,42 @@
 							<select id="languageSelect" onchange="on_change_language(event);"></select>
 							<br/>
 							<span class="localize language_translator_credit" style="font-size: 80%;">English text by Adam Le Doux</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- #Hacks -->
+				<div id="hacksPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
+					<div class="bitsy-card-titlebar">
+						<span class="bitsy_icon">expression_edit</span>
+
+						<span class="bitsy-card-title" title="hacks window" onmousedown="grabCard(event);">
+							<span class="hacks_tool_name">hacks</span>
+						</span>
+
+						<button title="minimize hacks window" onclick="hidePanel('hacksPanel');">
+							<span class="bitsy_icon">close</span>
+						</button>
+					</div>
+
+					<div id="settingsInner" class="bitsy-card-main">
+						<div>
+							<span class="hack-settings">edit active hack settings</span>
+							<div id="transpritesOptions" class="hack-settings-box" style="display: inline-flex;">
+								<span>transparent sprites:</span>
+								<br/>
+									<span class="showHackOptions">
+										<h3>specific transparent drawing</h3>
+										drawing.name == 'tea'<br/>
+										<h3>specific transparent drawing list</h3>
+										['tea', 'flower', 'hat'].indexOf(drawing.name) !== -1<br/>
+										<h3>transparent drawing flag in name</h3>
+										drawing.name && drawing.name.indexOf('TRANSPARENT') !== -1<br/>
+										<h3><span style="font-weight: bold;">default:</span> all drawings are transparent</h3>
+										true
+									</span>
+								<textarea title="transparent sprites setting" id="transprites_setting" onchange="getTranspritesHackSetting();">true</textarea>
+							</div>
 						</div>
 					</div>
 				</div>

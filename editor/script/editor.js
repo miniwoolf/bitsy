@@ -593,6 +593,8 @@ function resetGameData() {
 	findTool = new FindTool({
 		mainElement : document.getElementById("findPanelMain"),
 	});
+
+	resetHacksData();
 }
 
 function refreshGameData() {
@@ -744,6 +746,7 @@ var defaultPanelPrefs = {
 		{ id:"findPanel",			visible:true,	position:9  },
 		{ id:"inventoryPanel",		visible:false,	position:10 },
 		{ id:"settingsPanel",		visible:false,	position:11 },
+		{ id:"hacksPanel",			visible:false,	position:12 },
 	]
 };
 // bitsyLog(defaultPanelPrefs, "editor");
@@ -2251,7 +2254,8 @@ function exportGame() {
 		filenameFromGameTitle() + ".html",
 		isFixedSize,
 		size,
-		transparentHackState);
+		transpritesHackState,
+		transpritesHackSetting);
 }
 
 function exportGameData() {
@@ -3350,12 +3354,6 @@ function chooseExportSizeFull() {
 function chooseExportSizeFixed() {
 	isFixedSize = true;
 	document.getElementById("exportSizeFixedInputSpan").style.display = "inline-block";
-}
-
-// trans-prites hack
-var transparentHackState = true;
-function toggleTransparentSprites(e) {
-	transparentHackState = (e.target.checked);
 }
 
 // LOCALIZATION
