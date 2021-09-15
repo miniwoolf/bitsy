@@ -12,7 +12,7 @@ function replaceTemplateMarker(template, marker, text) {
 	return template.substr( 0, markerIndex ) + text + template.substr( markerIndex + marker.length );
 }
 
-this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size, transparentHackState) {
+this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size, transpritesHackState, transpritesHackSetting) {
 	var html = Resources["exportTemplate.html"].substr(); //copy template
 	// bitsyLog(html, "editor");
 
@@ -37,8 +37,9 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
 
 	// bake in hacks
-	if( transparentHackState ) {
+	if( transpritesHackState ) {
 		html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
+		html = replaceTemplateMarker( html, "@@G", transpritesHackSetting );
 	}
 	else {
 		html = replaceTemplateMarker( html, "@@A", "" );

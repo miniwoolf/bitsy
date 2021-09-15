@@ -11,3 +11,34 @@
 	flex-wrap: wrap;
 	overflow: visible;
 }
+
+.hack-settings-box {
+	padding: var(--bitsy-space-s);
+	margin: var(--bitsy-space-xs);
+	border-radius: var(--bitsy-space-s);
+	align-items: left;
+	flex-direction: column;
+	background: var(--bitsy-color-accent-1);
+}
+
+.showHackOptions {
+	background: var(--bitsy-color-neutral-1);
+	padding: var(--bitsy-space-s);
+	margin: var(--bitsy-space-xs);
+	display: block;
+	font-family: monospace;
+	font-size: 95%;
+	overflow: auto;
+}
+
+span > h3 {
+	background: var(--bitsy-color-main-1);
+	padding: var(--bitsy-space-s);
+	margin: var(--bitsy-space-xs);
+	border-radius: var(--bitsy-space-s);
+	display: block;
+	overflow: auto;
+	font-family: "Nunito", Helvetica, Arial, sans-serif;
+	font-size: 95%;
+	font-weight: normal;
+}
