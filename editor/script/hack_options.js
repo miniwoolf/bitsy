@@ -30,29 +30,3 @@ function resetHacksData() {
 	document.getElementById("transprites_setting").value = default_transparent_sprites_setting;
 	Store.set('transprites_setting', document.getElementById("transprites_setting").value); // save settings
 }
-
-/* var style = document.createElement("style");
-function hideScrollbar() {
-	style.innerHTML = `body::-webkit-scrollbar {display: none;}`;
-	document.head.appendChild(style);
-	document.getElementById("option_scrollbar").innerHTML = "hidden";
-	iconUtils.LoadIcon(document.getElementById("scrollbarIcon"), "visibility");
-}
-
-function showScrollbar() {
-	style.innerHTML = `body::-webkit-scrollbar {display: auto;}`;
-	document.head.appendChild(style);
-	document.getElementById("option_scrollbar").innerHTML = "visible";
-	iconUtils.LoadIcon(document.getElementById("scrollbarIcon"), "visibility_off");
-}
-
-var scrollbarShowing = true;
-function toggleScrollbar(e) {
-	scrollbarShowing = e.target.checked;
-	if (scrollbarShowing) {
-		showScrollbar();
-	}
-	else {
-		hideScrollbar();
-	}
-} */
