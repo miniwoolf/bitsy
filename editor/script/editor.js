@@ -672,6 +672,7 @@ var defaultFonts = [
 		"unicode_european_large.bitsyfont",
 		"unicode_asian.bitsyfont",
 		"arabic.bitsyfont",
+		"itsy_bitsy.bitsyfont",
 	];
 fontManager = new FontManager(defaultFonts); // replaces font manager in the engine with one containing all fonts loaded in the editor
 

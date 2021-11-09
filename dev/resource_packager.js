@@ -11,6 +11,7 @@ var resourceFiles = [
 	"resources/bitsyfont/unicode_european_large.bitsyfont",
 	"resources/bitsyfont/unicode_asian.bitsyfont",
 	"resources/bitsyfont/arabic.bitsyfont",
+	"resources/bitsyfont/itsy_bitsy.bitsyfont",
 	/* export */
 	"resources/export/exportTemplate.html",
 	"resources/export/exportStyleFixed.css",
