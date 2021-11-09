@@ -88,6 +88,7 @@ a:link, a:visited {
 
 a:hover {
 	color: var(--bitsy-color-accent-2);
+	text-decoration: none;
 }
 
 a:active {
