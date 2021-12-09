@@ -80,7 +80,7 @@ function PaintTool(canvas, roomTool) {
 
 			// force all tiles to re-render
 			renderer.ClearCache();
-			
+
 			updateDrawingData();
 			refreshGameData();
 
