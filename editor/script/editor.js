@@ -2247,6 +2247,7 @@ function exportGame() {
 	// var gameData = document.getElementById("game_data").value; //grab game data
 	var gameData = getFullGameData();
 	var size = document.getElementById("exportSizeFixedInput").value;
+	var transpritesHackSetting = document.getElementById("transprites_setting").value;
 	//download as html file
 	exporter.exportGame(
 		gameData,
