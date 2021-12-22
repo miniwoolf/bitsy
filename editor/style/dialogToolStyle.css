@@ -12,7 +12,7 @@
 
 .dialogContentViewport {
 	height: var(--bitsy-size-dialog-height);
-	overflow: scroll;
+	overflow: auto scroll;
 	display: block;
 	border: solid var(--bitsy-space-xs) var(--bitsy-color-accent-2);
 	border-radius: var(--bitsy-space-s);
@@ -26,7 +26,7 @@
 	background: var(--bitsy-color-dialog-text-background);
 	color: var(--bitsy-color-dialog-text-color);
 	border: none;
-	min-width: var(--bitsy-size-m);
+	min-width: calc(var(--bitsy-size-m) - 3 * (var(--bitsy-space-s)));
 	min-height: var(--bitsy-size-dialog-height);
 }
 
@@ -34,6 +34,7 @@
 	background: var(--bitsy-color-dialog-text-background);
 	color: var(--bitsy-color-dialog-text-color);
 	border: none;
+	min-width: calc(var(--bitsy-size-s) - 3 * (var(--bitsy-space-s)));
 	resize: vertical;
 }
 
@@ -305,9 +306,6 @@
 }
 
 /* dialog box */
-.dialogBoxContainer {
-	/* TODO : get rid of this whole wrapping thing? */
-}
 
 @font-face {
 	font-family: bitsy_ascii;

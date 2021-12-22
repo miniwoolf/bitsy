@@ -44,6 +44,8 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 	else {
 		html = replaceTemplateMarker( html, "@@A", "" );
 	}
+
+	html = replaceTemplateMarker( html, "@@P", Resources["long-dialog.js"] );
 	
 	// export the default font in its own script tag (TODO : remove if unused)
 	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
