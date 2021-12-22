@@ -258,7 +258,7 @@ input[type=checkbox] + label:hover {
 }
 
 .bitsy-card-sm .bitsy-card-main {
-	/* resize #paint panel */
+	/* widen #paint panel */
 	width: var(--bitsy-size-sm);
 }
 
@@ -267,10 +267,8 @@ input[type=checkbox] + label:hover {
 }
 
 .bitsy-card-ml .bitsy-card-main {
-	/* resize #find panel */
+	/* widen #find panel */
 	width: var(--bitsy-size-ml);
-	resize: vertical;
-	flex-direction: column;
 }
 
 .bitsy-card-l .bitsy-card-main {
@@ -407,10 +405,23 @@ input[type=checkbox] + label:hover {
 	height: var(--bitsy-size-m);
 }
 
-/* added to make the find panel resizable */
+/* to resize panel(s) */
 .find-resize {
 	overflow: auto;
 }
+
+.panel-resize {
+	display: flex;
+	flex-direction: column;
+}
+
+.find-panel-resize {
+	height: 600px;
+	display: flex;
+	flex-direction: column;
+	resize: vertical;
+}
+/* resizing end */
 
 .bitsy-menu-scrollcontent {
 	white-space: normal;

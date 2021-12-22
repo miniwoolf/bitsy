@@ -39,6 +39,7 @@
 		
 		<!-- HACK SCRIPTS -->
 		<script src="script/engine/transparent-sprites.js"></script>
+		<script src="script/engine/long-dialog.js"></script>
 		<script src="script/hack_options.js"></script>
 
 		<!-- EDITOR SCRIPTS -->
@@ -881,7 +882,7 @@
 						</button>
 					</div>
 
-					<div id="findPanelMain" class="bitsy-card-main" style="display: flex; height: 600px;"> 
+					<div id="findPanelMain" class="bitsy-card-main find-panel-resize"> 
 					<!-- added styling to make the find panel adjustable -->
 					</div>
 				</div>
@@ -1307,7 +1308,7 @@
 						</button>
 					</div>
 
-					<div class="bitsy-card-main">
+					<div class="bitsy-card-main panel-resize">
 						<textarea title="raw text of the bitsy game data file (be careful when editing)" id="game_data" onchange="on_game_data_change();"></textarea>
 						<br>
 						<div class="bitsy-menu-group">
@@ -1377,6 +1378,21 @@
 					<div id="settingsInner" class="bitsy-card-main">
 						<div>
 							<span class="hack-settings">edit active hack settings</span>
+							<div id="longdialogOptions" class="hack-settings-box" style="display: inline-flex;">
+								<span>dialog hacks:</span>
+									<span class="showHackOptions">
+										<h3>paragraph breaks</h3>
+										Usage: (p)<br/>
+										Example: I am a cat(p)and my dialogue contains multitudes<br/>
+										<h3>long dialog</h3>
+										Usage:<br/>
+											(textboxsize "[min],[max]")<br/>
+											(textboxsizeNow "[min],[max]")<br/>
+										Examples:<br/>
+											(textboxsize "2,6")<br/>
+											(textboxsizeNow "2,2")<br/>
+									</span>
+							</div>
 							<div id="transpritesOptions" class="hack-settings-box" style="display: inline-flex;">
 								<span>transparent sprites:</span>
 									<span class="showHackOptions">

@@ -3,5 +3,6 @@
 	width: calc(100% - var(--bitsy-space-m));
 	height: var(--bitsy-size-m);
 	margin-bottom: var(--bitsy-space-m);
-	resize: none; /* TODO : turn back on? */
+	overflow-y: scroll;
+	resize: vertical; /* TODO : turn back on? */
 }

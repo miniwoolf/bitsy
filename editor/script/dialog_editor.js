@@ -335,7 +335,7 @@ function DialogTool() {
 
 		var scriptRootNode, div;
 		div = document.createElement("div");
-		div.style.width = "100%"; // hack
+		// div.style.width = "100%"; // hack
 
 		var self = this;
 
