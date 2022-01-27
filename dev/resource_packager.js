@@ -37,25 +37,32 @@ var resourceDirectories = [
 
 var resourcePackage = {};
 
-// console.log(resourcePackage);
-
-var str = JSON.stringify(resourcePackage, null, 2);
-
-function fixCRLR() {
-	str = str.replace(/\\r\\n/g, '\\n');
-	return str;
+function getFileName(path) {
+	var splitPath = path.split("/");
+	return splitPath[splitPath.length - 1];
 }
 
-fixCRLR();
+for (var i = 0; i < resourceFiles.length; i++) {
+	var path = resourceFiles[i];
+	var fileName = getFileName(path);
+	var result = fs.readFileSync(path, "utf8");
+	// neater solution to CRLR errors
+	result = result.replace(/\r\n/g, "\n");
+	resourcePackage[fileName] = result;
+}
 
-// console.log(str);
+for (var i = 0; i < resourceDirectories.length; i++) {
+	var dir = resourceDirectories[i];
+	var fileNames = fs.readdirSync(dir);
+	for (var j = 0; j < fileNames.length; j++) {
+		var fileName = fileNames[j];
+		var result = fs.readFileSync(dir + "/" + fileName, "utf8");
+		resourcePackage[fileName] = result;
+	}
+}
 
-var resourceJavascriptFile = "var Resources = " + str + ";";
-
-// console.log(resourceJavascriptFile);
+var resourceJavascriptFile = "var Resources = " + JSON.stringify(resourcePackage, null, 2); + ";";
 
 fs.writeFile("../editor/script/generated/resources.js", resourceJavascriptFile, function () {});
-
-// console.log(resourcePackage);
 
 console.log("done!");
