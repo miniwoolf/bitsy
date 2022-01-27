@@ -10,7 +10,6 @@
 
 		<!-- APP -->
 		<!-- <script src="app.js"></script> -->
-		<script src="sw.js"></script>
 		<link rel="icon" type="image/png" href="image/sammy.png">
 		<link rel="manifest" href="manifest.json">
 
@@ -222,7 +221,7 @@
 
 				<!-- #Cards #Panels -->
 				<!-- #About -->
-				<div id="aboutPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none; max-height: none;">
+				<div id="aboutPanel" class="bitsy-card bitsy-card-m bitsy-workbench-item" style="display:none;">
 					<div class="bitsy-card-titlebar">
 						<span class="bitsy_icon">about</span>
 
@@ -236,84 +235,87 @@
 						</button>
 					</div>
 
-					<div id="aboutInner" class="bitsy-card-main" style="margin-bottom: 0px;">
-						<p>
-							<span class="localize about1">hi! bitsy is a little editor for little games or worlds. the goal is to make it easy to make games where you can walk around and talk to people and be somewhere.</span>
-						</p>
+					<div id="aboutInner" class="bitsy-card-main">
 
-						<p>
-							<span class="localize about9">have fun making things with bitsy!</span>
-						</p>
+						<div>
+							<p>
+								<span class="localize about1">hi! bitsy is a little editor for little games or worlds. the goal is to make it easy to make games where you can walk around and talk to people and be somewhere.</span>
+							</p>
 
-						<p>
-							- 
-							<a target="_blank" href="https://www.twitter.com/adamledoux">
-								<span class="localize about10_link_twitter">adam</span>
-							</a>
-						</p>
+							<p>
+								<span class="localize about9">have fun making things with bitsy!</span>
+							</p>
 
-						<p>
-							getting started: <br/>
-							<a target="_blank" href="https://www.shimmerwitch.space/bitsyTutorial.html">tutorial</a>
-						</p>
+							<p>
+								- 
+								<a target="_blank" href="https://www.twitter.com/adamledoux">
+									<span class="localize about10_link_twitter">adam</span>
+								</a>
+							</p>
 
-						<p>
-							community: <br/>
-							<a target="_blank" href="https://itch.io/games/made-with-bitsy">made with bitsy</a> |
-							<a target="_blank" href="https://discordapp.com/invite/9rAjhtr">discord server</a> |
-							<a target="_blank" href="https://ledoux.itch.io/bitsy/community">itch.io forum</a>
-						</p>
+							<p>
+								getting started: <br/>
+								<a target="_blank" href="https://www.shimmerwitch.space/bitsyTutorial.html">tutorial</a>
+							</p>
 
-						<p>
-							development: <br/>
-							<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/CREDITS.md">contributors</a> |
-							<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/VERSION_NOTES.txt">version notes</a> |
-							<a target="_blank" href="https://github.com/le-doux/bitsy/issues">report a bug</a> |
-							<a target="_blank" href="https://github.com/le-doux/bitsy">source code</a>
-						</p>
-					</div>
+							<p>
+								community: <br/>
+								<a target="_blank" href="https://itch.io/games/made-with-bitsy">made with bitsy</a> |
+								<a target="_blank" href="https://discordapp.com/invite/9rAjhtr">discord server</a> |
+								<a target="_blank" href="https://ledoux.itch.io/bitsy/community">itch.io forum</a>
+							</p>
 
-					<div class="bitsy-card-titlebar" style="margin: var(--bitsy-space-m); border-radius: var(--bitsy-space-s);">
+							<p>
+								development: <br/>
+								<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/CREDITS.md">contributors</a> |
+								<a target="_blank" href="https://github.com/le-doux/bitsy/blob/master/VERSION_NOTES.txt">version notes</a> |
+								<a target="_blank" href="https://github.com/le-doux/bitsy/issues">report a bug</a> |
+								<a target="_blank" href="https://github.com/le-doux/bitsy">source code</a>
+							</p>
+						</div>
 
-						<span class="bitsy-card-title for-me">
-							about Bitsy for Me
-						</span>
+						<div class="bitsy-card-titlebar" style="margin: var(--bitsy-space-m); border-radius: var(--bitsy-space-s);">
 
-					</div>
+							<span class="bitsy-card-title for-me">
+								about Bitsy for Me
+							</span>
 
-					<div id="aboutInner" class="bitsy-card-main for-me" style="font-size: 75%; margin-top: 0px;">
-						<p>
-							hello! i'm miniwoolf, and this is a hacked version of bitsy i use to edit my games. i'm also using it to learn about html, css, and javascript as i add, delete, and edit features to better suit my needs. i'm having a lot of fun, and i'm excited to see just what i can do!
-						</p>
+						</div>
 
-						<p>
-							- miniwoolf
-						</p>
+						<div class="for-me" style="margin-top: 0px;">
+							<p>
+								hello! i'm miniwoolf, and this is a hacked version of bitsy i use to edit my games. i'm also using it to learn about html, css, and javascript as i add, delete, and edit features to better suit my needs. i'm having a lot of fun, and i'm excited to see just what i can do!
+							</p>
 
-						<p>
-							sources: <br/>
-							<a target="_blank" href="https://ayolland.itch.io/borksy">borksy</a> |
-							<a target="_blank" href="https://github.com/seleb/bitsy-hacks/blob/main/dist/transparent-sprites.js">transparent sprites hack</a> |
-							<a target="_blank" href="https://github.com/AurySystem/bitsy-color">paint transformation tools</a> |
-							<a target="_blank" href="https://miniwoolf.itch.io/custom-bitsy-fonts">itsy_bitsy font</a> |
-							<a target="_blank" href="https://github.com/miniwoolf/bitsy-for-me">source code</a>
-						</p>
+							<p>
+								- <a href="https://miniwoolf.itch.io">miniwoolf</a>
+							</p>
 
-						<p>
-							tools i use for coding: <br/>
-							<a target="_blank" href="https://www.w3schools.com/default.asp">w3schools</a> |
-							<a target="_blank" href="https://www.sublimetext.com/">sublime text editor</a> |
-							<a target="_blank" href="https://desktop.github.com/">github desktop</a>
-						</p>
+							<p>
+								sources: <br/>
+								<a target="_blank" href="https://ayolland.itch.io/borksy">borksy</a> |
+								<a target="_blank" href="https://github.com/seleb/bitsy-hacks/blob/main/dist/transparent-sprites.js">hacks</a> |
+								<a target="_blank" href="https://github.com/AurySystem/bitsy-color">paint tools</a> |
+								<a target="_blank" href="https://miniwoolf.itch.io/custom-bitsy-fonts">itsy_bitsy font</a> |
+								<a target="_blank" href="https://github.com/miniwoolf/bitsy-for-me">source code</a>
+							</p>
 
-						<p>
-							tools i use for making bitsy games: <br/>
-							<a target="_blank" href="https://ruin.itch.io/tilesy">tilesy</a> |
-							<a target="_blank" href="https://ruin.itch.io/pixsy">pixsy</a> |
-							<a target="_blank" href="https://seansleblanc.itch.io/bitsy-optimizer">bitsy optimizer</a> |
-							<a target="_blank" href="https://seansleblanc.itch.io/bitsy-merge">bitsy merge</a> |
-							<a target="_blank" href="https://www.palettelist.com/">palettes</a>
-						</p>
+							<p>
+								tools i use for coding: <br/>
+								<a target="_blank" href="https://www.w3schools.com/default.asp">w3schools</a> |
+								<a target="_blank" href="https://www.sublimetext.com/">sublime text editor</a> |
+								<a target="_blank" href="https://desktop.github.com/">github desktop</a>
+							</p>
+
+							<p>
+								tools i use for making bitsy games: <br/>
+								<a target="_blank" href="https://ruin.itch.io/pixsy">pixsy</a> |
+								<a target="_blank" href="https://seansleblanc.itch.io/bitsy-optimizer">bitsy optimizer</a> |
+								<a target="_blank" href="https://seansleblanc.itch.io/bitsy-merge">bitsy merge</a> |
+								<a target="_blank" href="https://ljnic.github.io/awesome-bitsy">awesome-bitsy</a> |
+								<a target="_blank" href="https://www.palettelist.com/">palettes</a>
+							</p>
+						</div>
 					</div>
 				</div>
 
@@ -1098,7 +1100,7 @@
 
 					<div class="bitsy-card-main">
 						<div style="margin-bottom: var(--bitsy-space-s);">
-							<span class="download_html" style="margin-bottom: var(--bitsy-space-s);">download/import <br />game as html file:</span>
+							<span class="download_html" style="margin-bottom: var(--bitsy-space-s);">download/import <br/>game as html file:</span>
 							<br>
 						</div>
 						

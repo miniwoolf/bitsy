@@ -1,7 +1,7 @@
 {
-	"name": "Bitsy !",
-	"short_name": "Bitsy!",
-	"description": "A little editor for little games or worlds",
+	"name": "Bitsy For Me",
+	"short_name": "Bitsy For Me",
+	"description": "A hacked little editor for little games or worlds",
 	"start_url": "./index.html",
 	"icons": [{
 		"src": "image/sammy.png",
