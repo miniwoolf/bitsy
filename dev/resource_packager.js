@@ -1,5 +1,7 @@
 var fs = require("fs");
 
+/* NOTE: this is made to deal with text files. if you add binaries to it,
+ * it WILL break! */
 var resourceFiles = [
 	/* localization */
 	"resources/localization.tsv",
@@ -35,28 +37,6 @@ var resourceDirectories = [
 
 var resourcePackage = {};
 
-function getFileName(path) {
-	var splitPath = path.split("/");
-	return splitPath[splitPath.length - 1];
-}
-
-for (var i = 0; i < resourceFiles.length; i++) {
-	var path = resourceFiles[i];
-	var fileName = getFileName(path);
-	var result = fs.readFileSync(path, "utf8");
-	resourcePackage[fileName] = result;
-}
-
-for (var i = 0; i < resourceDirectories.length; i++) {
-	var dir = resourceDirectories[i];
-	var fileNames = fs.readdirSync(dir);
-	for (var j = 0; j < fileNames.length; j++) {
-		var fileName = fileNames[j];
-		var result = fs.readFileSync(dir + "/" + fileName, "utf8");
-		resourcePackage[fileName] = result;
-	}
-}
-
 // console.log(resourcePackage);
 
 var str = JSON.stringify(resourcePackage, null, 2);
@@ -75,5 +55,7 @@ var resourceJavascriptFile = "var Resources = " + str + ";";
 // console.log(resourceJavascriptFile);
 
 fs.writeFile("../editor/script/generated/resources.js", resourceJavascriptFile, function () {});
+
+// console.log(resourcePackage);
 
 console.log("done!");
