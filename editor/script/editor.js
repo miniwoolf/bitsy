@@ -829,7 +829,11 @@ function start() {
 		// on the other hand this is still sort of global thing that we don't want TOO much of
 
 		// force re-load the dialog tool
-		openDialogTool(titleDialogId);
+
+		/* for SOME REASON if I let this particular function run 
+		   at this particular time, it resets the panel preferences
+		   every time I refresh the page. highly obnoxious. */
+		// openDialogTool(titleDialogId);
 	});
 
 	isPlayerEmbeddedInEditor = true; // flag for game player to make changes specific to editor
