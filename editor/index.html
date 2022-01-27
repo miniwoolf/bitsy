@@ -686,8 +686,8 @@
 					</div>
 
 					<div class="bitsy-card-main">
-						<form id="paintModeRadio" style="margin-bottom: 5px;">
-							<input type="radio" name="paint mode" value="avatar" onclick="on_paint_avatar();" id="paintOptionAvatar">
+						<form id="paintModeRadio" class="bitsy-menu-group" style="margin-bottom: 5px;">
+							<input type="radio" name="paint mode" value="avatar" onclick="on_paint_avatar();" id="paintOptionAvatar" checked>
 							<label title="edit the avatar: the player's character" for="paintOptionAvatar" class="left">
 								<span class="bitsy_icon icon_space_right">avatar</span>
 								<span class="localize avatar_label">avatar</span>
@@ -1312,7 +1312,6 @@
 
 					<div class="bitsy-card-main panel-resize">
 						<textarea title="raw text of the bitsy game data file (be careful when editing)" id="game_data" onchange="on_game_data_change();"></textarea>
-						<br>
 						<div class="bitsy-menu-group">
 							<button title="reset everything and start new game" class="bitsy-menu-label" onclick="newGameDialog();">
 								<span class="bitsy_icon">new_game</span>

@@ -1,5 +1,7 @@
 var fs = require("fs");
 
+/* NOTE: this is made to deal with text files. if you add binaries to it,
+ * it WILL break! */
 var resourceFiles = [
 	/* localization */
 	"resources/localization.tsv",
@@ -44,6 +46,8 @@ for (var i = 0; i < resourceFiles.length; i++) {
 	var path = resourceFiles[i];
 	var fileName = getFileName(path);
 	var result = fs.readFileSync(path, "utf8");
+	// neater solution to CRLR errors
+	result = result.replace(/\r\n/g, "\n");
 	resourcePackage[fileName] = result;
 }
 
@@ -57,22 +61,7 @@ for (var i = 0; i < resourceDirectories.length; i++) {
 	}
 }
 
-// console.log(resourcePackage);
-
-var str = JSON.stringify(resourcePackage, null, 2);
-
-function fixCRLR() {
-	str = str.replace(/\\r\\n/g, '\\n');
-	return str;
-}
-
-fixCRLR();
-
-// console.log(str);
-
-var resourceJavascriptFile = "var Resources = " + str + ";";
-
-// console.log(resourceJavascriptFile);
+var resourceJavascriptFile = "var Resources = " + JSON.stringify(resourcePackage, null, 2); + ";";
 
 fs.writeFile("../editor/script/generated/resources.js", resourceJavascriptFile, function () {});
 
