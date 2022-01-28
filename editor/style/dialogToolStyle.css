@@ -12,7 +12,7 @@
 
 .dialogContentViewport {
 	height: var(--bitsy-size-dialog-height);
-	overflow: auto scroll;
+	overflow: scroll;
 	display: block;
 	border: solid var(--bitsy-space-xs) var(--bitsy-color-accent-2);
 	border-radius: var(--bitsy-space-s);
@@ -34,7 +34,6 @@
 	background: var(--bitsy-color-dialog-text-background);
 	color: var(--bitsy-color-dialog-text-color);
 	border: none;
-	min-width: calc(var(--bitsy-size-s) - 3 * (var(--bitsy-space-s)));
 	resize: vertical;
 }
 
