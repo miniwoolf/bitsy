@@ -305,7 +305,6 @@ function FindTool(options) {
 
 	var scrollviewDiv = document.createElement("div");
 	scrollviewDiv.classList.add("bitsy-menu-scrollview");
-	scrollviewDiv.classList.add("find-resize"); // added to make this panel resizable
 
 	options.mainElement.appendChild(scrollviewDiv);
 

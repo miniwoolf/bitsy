@@ -4,5 +4,6 @@
 	height: var(--bitsy-size-m);
 	margin-bottom: var(--bitsy-space-m);
 	overflow-y: scroll;
-	resize: vertical; /* TODO : turn back on? */
+	resize: none; /* TODO : turn back on? */
+	flex-grow: 1;
 }

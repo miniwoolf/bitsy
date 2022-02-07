@@ -275,8 +275,8 @@ input[type=checkbox] + label:hover {
 	width: var(--bitsy-size-l);
 }
 
-/* my about panel addition*/
-.for-me {
+
+.for-me { /* my about panel addition*/
 	font-family: Georgia, serif;
 	line-height: 150%;
 	letter-spacing: 0.01em;
@@ -406,20 +406,18 @@ input[type=checkbox] + label:hover {
 }
 
 /* to resize panel(s) */
-.find-resize {
-	overflow: auto;
-}
-
 .panel-resize {
 	display: flex;
 	flex-direction: column;
+	resize: both;
 }
 
-.find-panel-resize {
+#findPanelMain {
+	min-width: fit-content;
 	height: 600px;
 	display: flex;
 	flex-direction: column;
-	resize: vertical;
+	resize: both;
 }
 /* resizing end */
 
