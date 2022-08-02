@@ -1,5 +1,6 @@
 #animationOuter {
 	margin-top: var(--bitsy-space-s);
+	margin-bottom: var(--bitsy-space-m);
 }
 
 #animation .bitsy-thumbnail {
@@ -14,6 +15,7 @@
 	border-color: var(--bitsy-color-main-2);
 }
 
-.paintToolTop {
-	margin-top: var(--bitsy-space-m);
+#animation .bitsy-thumbnail img {
+	width: 3em;
+	height: 3em;
 }
