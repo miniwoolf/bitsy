@@ -3,7 +3,5 @@
 	width: calc(100% - var(--bitsy-space-m));
 	height: var(--bitsy-size-m);
 	margin-bottom: var(--bitsy-space-m);
-	overflow-y: scroll;
 	resize: none; /* TODO : turn back on? */
-	flex-grow: 1;
 }

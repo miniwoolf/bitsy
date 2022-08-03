@@ -12,7 +12,7 @@
 
 .dialogContentViewport {
 	height: var(--bitsy-size-dialog-height);
-	overflow-y: scroll;
+	overflow: scroll;
 	display: block;
 	border: solid var(--bitsy-space-xs) var(--bitsy-color-accent-2);
 	border-radius: var(--bitsy-space-s);
@@ -26,7 +26,7 @@
 	background: var(--bitsy-color-dialog-text-background);
 	color: var(--bitsy-color-dialog-text-color);
 	border: none;
-	min-width: calc(var(--bitsy-size-m) - 3 * (var(--bitsy-space-s)));
+	min-width: var(--bitsy-size-m);
 	min-height: var(--bitsy-size-dialog-height);
 }
 
@@ -199,6 +199,10 @@
 	display: block;
 }
 
+.actionBuilder_sound .actionBuilderButton_sound {
+	display: block;
+}
+
 .actionBuilder_dialog .actionBuilderButton_back {
 	display: block;
 }
@@ -212,6 +216,10 @@
 }
 
 .actionBuilder_item .actionBuilderButton_back {
+	display: block;
+}
+
+.actionBuilder_sound .actionBuilderButton_back {
 	display: block;
 }
 
@@ -305,6 +313,9 @@
 }
 
 /* dialog box */
+.dialogBoxContainer {
+	/* TODO : get rid of this whole wrapping thing? */
+}
 
 @font-face {
 	font-family: bitsy_ascii;

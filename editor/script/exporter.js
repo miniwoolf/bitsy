@@ -12,7 +12,7 @@ function replaceTemplateMarker(template, marker, text) {
 	return template.substr( 0, markerIndex ) + text + template.substr( markerIndex + marker.length );
 }
 
-this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size, transpritesHackState, transpritesHackSetting) {
+this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, size) {
 	var html = Resources["exportTemplate.html"].substr(); //copy template
 	// bitsyLog(html, "editor");
 
@@ -28,25 +28,20 @@ this.exportGame = function(gameData, title, pageColor, filename, isFixedSize, si
 
 	html = replaceTemplateMarker( html, "@@B", pageColor );
 
+	html = replaceTemplateMarker( html, "@@I", Resources["input.js"] );
+	html = replaceTemplateMarker( html, "@@P", Resources["soundchip.js"] );
+	html = replaceTemplateMarker( html, "@@G", Resources["graphics.js"] );
 	html = replaceTemplateMarker( html, "@@Y", Resources["system.js"] );
-	html = replaceTemplateMarker( html, "@@X", Resources["transition.js"] );
+
+	html = replaceTemplateMarker( html, "@@W", Resources["world.js"] );
+	html = replaceTemplateMarker( html, "@@O", Resources["sound.js"] );
 	html = replaceTemplateMarker( html, "@@F", Resources["font.js"] );
+	html = replaceTemplateMarker( html, "@@X", Resources["transition.js"] );
 	html = replaceTemplateMarker( html, "@@S", Resources["script.js"] );
 	html = replaceTemplateMarker( html, "@@L", Resources["dialog.js"] );
 	html = replaceTemplateMarker( html, "@@R", Resources["renderer.js"] );
 	html = replaceTemplateMarker( html, "@@E", Resources["bitsy.js"] );
 
-	// bake in hacks
-	if( transpritesHackState ) {
-		html = replaceTemplateMarker( html, "@@A", Resources["transparent-sprites.js"] );
-		html = replaceTemplateMarker( html, "@@G", transpritesHackSetting );
-	}
-	else {
-		html = replaceTemplateMarker( html, "@@A", "" );
-	}
-
-	html = replaceTemplateMarker( html, "@@P", Resources["long-dialog.js"] );
-	
 	// export the default font in its own script tag (TODO : remove if unused)
 	html = replaceTemplateMarker( html, "@@N", "ascii_small" );
 	html = replaceTemplateMarker( html, "@@M", fontManager.GetData("ascii_small") );
@@ -69,14 +64,15 @@ function unescapeSpecialCharacters(str) {
 this.importGame = function( html ) {
 	bitsyLog("IMPORT!!!", "editor");
 
-	// fix a regression with 7.11 where the template data in resources included CRLFs
+	// fix a regression with 7.11 where the template data in resources included
+	// CRLFs
 	html = html.replace(/\r\n/g, "\n")
 
 	// IMPORT : new style
 	var scriptStart = '<script type="bitsyGameData" id="exportedGameData">\n';
 	var scriptEnd = '</script>';
 
-	// this is kind of embarrassing, but I broke import by making the export template pass w3c validation
+	// this is kind of embarassing, but I broke import by making the export template pass w3c validation
 	// so we have to check for two slightly different versions of the script start line :(
 	var i = html.indexOf( scriptStart );
 	if (i === -1) {

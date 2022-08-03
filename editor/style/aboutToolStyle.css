@@ -4,6 +4,4 @@
 
 #aboutInner {
 	font-size: 80%; /* TODO : keep this? */
-	display: inline-flex;
-	flex-direction: column;
 }
